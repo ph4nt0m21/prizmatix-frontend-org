@@ -46,6 +46,7 @@ function AppContent() {
             <Route path="events/create" element={<CreateEventPage />} />
             <Route path="events/create/:eventId" element={<CreateEventPage />} />
             <Route path="events/create/:eventId/:step" element={<CreateEventPage />} />
+            <Route path="events/create/:eventId/:step/:subStep" element={<CreateEventPage />} />
             
             {/* Add more protected routes as needed */}
           </Route>
