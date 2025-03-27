@@ -1,0 +1,138 @@
+@import '../../../styles/variables.scss';
+@import '../../../styles/mixins.scss';
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: $border-radius;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  outline: none;
+  position: relative;
+  padding: 0 16px;
+  
+  &:focus {
+    box-shadow: 0 0 0 2px rgba($primary-color, 0.4);
+  }
+  
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+// Button sizes
+.small {
+  height: 32px;
+  font-size: 14px;
+}
+
+.medium {
+  height: 40px;
+  font-size: 14px;
+}
+
+.large {
+  height: 48px;
+  font-size: 16px;
+}
+
+// Button variants
+.primary {
+  background-color: $primary-color;
+  color: white;
+  
+  &:hover:not(:disabled) {
+    background-color: darken($primary-color, 7%);
+  }
+  
+  &:active:not(:disabled) {
+    background-color: darken($primary-color, 10%);
+  }
+}
+
+.secondary {
+  background-color: $secondary-color;
+  color: white;
+  
+  &:hover:not(:disabled) {
+    background-color: darken($secondary-color, 7%);
+  }
+  
+  &:active:not(:disabled) {
+    background-color: darken($secondary-color, 10%);
+  }
+}
+
+.outline {
+  background-color: transparent;
+  border: 1px solid $primary-color;
+  color: $primary-color;
+  
+  &:hover:not(:disabled) {
+    background-color: rgba($primary-color, 0.05);
+  }
+  
+  &:active:not(:disabled) {
+    background-color: rgba($primary-color, 0.1);
+  }
+}
+
+.text {
+  background-color: transparent;
+  color: $primary-color;
+  padding: 0 8px;
+  
+  &:hover:not(:disabled) {
+    background-color: rgba($primary-color, 0.05);
+  }
+  
+  &:active:not(:disabled) {
+    background-color: rgba($primary-color, 0.1);
+  }
+}
+
+// Full width button
+.fullWidth {
+  width: 100%;
+}
+
+// Icon styles
+.icon {
+  margin-right: 8px;
+  display: inline-flex;
+  
+  // Icon for creating events
+  &.icon-plus::before {
+    content: '+';
+    font-size: 18px;
+    font-weight: bold;
+  }
+}
+
+// Loading spinner
+.loading {
+  .content {
+    opacity: 0;
+  }
+  
+  .spinner {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: white;
+    animation: spin 0.8s linear infinite;
+  }
+}
+
+@keyframes spin {
+  to { transform: translate(-50%, -50%) rotate(360deg); }
+}

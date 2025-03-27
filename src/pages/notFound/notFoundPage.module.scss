@@ -1,0 +1,171 @@
+@import '../../styles/variables';
+@import '../../styles/mixins';
+
+.notFoundContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 70px); // Adjust based on your header height
+  width: 100%;
+  padding: 24px;
+  position: relative;
+  overflow: hidden;
+  
+  // Create diagonal background effect similar to homePage
+  &::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: 30%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(135deg, rgba(30, 30, 50, 0.6) 0%, rgba(20, 20, 40, 0.8) 100%);
+    transform: rotate(-12deg);
+    z-index: 1;
+    pointer-events: none;
+  }
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  max-width: 500px;
+  z-index: 2;
+  animation: slideInUp 0.5s ease-out;
+}
+
+.errorCode {
+  font-size: 120px;
+  font-weight: 700;
+  color: rgba($primary-color, 0.9);
+  margin-bottom: 8px;
+  line-height: 1;
+  background: linear-gradient(135deg, $primary-color 0%, darken($primary-color, 15%) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 4px 30px rgba($primary-color, 0.3);
+}
+
+.title {
+  font-size: 32px;
+  font-weight: 600;
+  color: $text-light;
+  margin-bottom: 16px;
+}
+
+.message {
+  font-size: 16px;
+  color: $text-muted;
+  margin-bottom: 32px;
+  line-height: 1.5;
+}
+
+.actions {
+  display: flex;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.homeButton {
+  min-width: 150px;
+}
+
+.decoration {
+  position: absolute;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  pointer-events: none;
+  
+  .circle, .square, .triangle {
+    position: absolute;
+    opacity: 0.1;
+  }
+  
+  .circle {
+    width: 300px;
+    height: 300px;
+    border-radius: 50%;
+    background-color: $primary-color;
+    top: -100px;
+    right: -50px;
+    animation: float 8s infinite ease-in-out;
+  }
+  
+  .square {
+    width: 150px;
+    height: 150px;
+    background-color: $accent-color;
+    bottom: 50px;
+    left: -30px;
+    transform: rotate(20deg);
+    animation: float 10s infinite ease-in-out 1s;
+  }
+  
+  .triangle {
+    width: 0;
+    height: 0;
+    border-left: 150px solid transparent;
+    border-right: 150px solid transparent;
+    border-bottom: 250px solid $secondary-color;
+    bottom: -100px;
+    right: 20%;
+    animation: float 9s infinite ease-in-out 2s;
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0) rotate(0);
+  }
+  50% {
+    transform: translateY(-20px) rotate(5deg);
+  }
+}
+
+// Responsive styles
+@include tablet {
+  .errorCode {
+    font-size: 100px;
+  }
+  
+  .title {
+    font-size: 28px;
+  }
+}
+
+@include mobile {
+  .errorCode {
+    font-size: 80px;
+  }
+  
+  .title {
+    font-size: 24px;
+  }
+  
+  .message {
+    font-size: 14px;
+  }
+  
+  .decoration {
+    .circle {
+      width: 200px;
+      height: 200px;
+    }
+    
+    .square {
+      width: 100px;
+      height: 100px;
+    }
+    
+    .triangle {
+      border-left: 100px solid transparent;
+      border-right: 100px solid transparent;
+      border-bottom: 180px solid $secondary-color;
+    }
+  }
+}

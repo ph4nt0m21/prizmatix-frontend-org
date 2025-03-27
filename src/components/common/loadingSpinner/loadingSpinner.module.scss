@@ -1,0 +1,94 @@
+@import '../../../styles/variables';
+@import '../../../styles/mixins';
+
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+.fullPage {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba($background-dark, 0.7);
+  z-index: $z-modal - 1;
+}
+
+.spinner {
+  display: flex;
+  align-items: center;
+  
+  > div {
+    width: 12px;
+    height: 12px;
+    margin: 0 3px;
+    border-radius: 50%;
+    display: inline-block;
+    animation: bounce 1.4s infinite ease-in-out both;
+  }
+}
+
+.bounce1 {
+  animation-delay: -0.32s !important;
+}
+
+.bounce2 {
+  animation-delay: -0.16s !important;
+}
+
+// Spinner sizes
+.small {
+  > div {
+    width: 8px;
+    height: 8px;
+    margin: 0 2px;
+  }
+}
+
+.medium {
+  > div {
+    width: 12px;
+    height: 12px;
+    margin: 0 3px;
+  }
+}
+
+.large {
+  > div {
+    width: 16px;
+    height: 16px;
+    margin: 0 4px;
+  }
+}
+
+// Spinner colors
+.primary {
+  > div {
+    background-color: $primary-color;
+  }
+}
+
+.secondary {
+  > div {
+    background-color: $secondary-color;
+  }
+}
+
+.light {
+  > div {
+    background-color: rgba($text-light, 0.8);
+  }
+}
+
+@keyframes bounce {
+  0%, 80%, 100% { 
+    transform: scale(0);
+  } 
+  40% { 
+    transform: scale(1.0);
+  }
+}

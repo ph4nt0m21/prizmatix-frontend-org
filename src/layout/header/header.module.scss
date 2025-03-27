@@ -1,0 +1,125 @@
+@import '../../styles/variables';
+@import '../../styles/mixins';
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 30px;
+  height: 70px;
+  width: 100%;
+  background-color: #0F0F1A;
+  color: #fff;
+}
+
+.titleContainer {
+  display: flex;
+  align-items: center;
+}
+
+.title {
+  font-size: 20px;
+  font-weight: 500;
+  margin: 0;
+  color: #fff;
+}
+
+.actionsContainer {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.createEventButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 16px;
+  background-color: #7B68EE;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out;
+  
+  &:hover {
+    background-color: darken(#7B68EE, 10%);
+  }
+  
+  &:active {
+    background-color: darken(#7B68EE, 15%);
+  }
+  
+  .plusIcon {
+    margin-right: 8px;
+    font-size: 16px;
+    font-weight: bold;
+  }
+}
+
+.loginButton {
+  padding: 6px 14px;
+  background-color: transparent;
+  color: #fff;
+  border: 1px solid #7B68EE;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background-color: rgba(123, 104, 238, 0.1);
+  }
+}
+
+.logoutButton {
+  padding: 6px 14px;
+  background-color: transparent;
+  color: #ff7070;
+  border: 1px solid #ff7070;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background-color: rgba(255, 112, 112, 0.1);
+  }
+}
+
+.userSection {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.userName {
+  font-size: 14px;
+  color: #a0a0c0;
+}
+
+// Responsive styles
+@media (max-width: 768px) {
+  .header {
+    padding: 15px 20px;
+  }
+  
+  .title {
+    font-size: 18px;
+  }
+  
+  .createEventButton, .loginButton, .logoutButton {
+    padding: 6px 12px;
+    font-size: 13px;
+  }
+  
+  .userSection {
+    gap: 8px;
+  }
+  
+  .userName {
+    font-size: 13px;
+  }
+}

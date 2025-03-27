@@ -1,0 +1,257 @@
+@import '../../../styles/variables';
+@import '../../../styles/mixins';
+
+.stepContainer {
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+
+  // Add subtle animation for step transitions
+  animation: fadeIn 0.3s ease-out;
+}
+
+.stepHeader {
+  margin-bottom: 24px;
+}
+
+.stepTitle {
+  font-size: 24px;
+  font-weight: 600;
+  color: $text-light;
+  margin-bottom: 8px;
+}
+
+.stepDescription {
+  font-size: 14px;
+  color: $text-muted;
+}
+
+.formSection {
+  padding: 20px 0;
+}
+
+.formGroup {
+  margin-bottom: 20px;
+  width: 100%;
+}
+
+.formLabel {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: $text-light;
+  margin-bottom: 8px;
+}
+
+.formInput {
+  width: 100%;
+  height: 40px;
+  padding: 0 12px;
+  background-color: $input-bg;
+  border: 1px solid $border-color;
+  border-radius: $border-radius;
+  color: $text-light;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  
+  &:focus {
+    outline: none;
+    border-color: $primary-color;
+    box-shadow: 0 0 0 2px rgba($primary-color, 0.2);
+  }
+  
+  &::placeholder {
+    color: $text-muted;
+  }
+}
+
+.formTextarea {
+  width: 100%;
+  min-height: 100px;
+  padding: 12px;
+  background-color: $input-bg;
+  border: 1px solid $border-color;
+  border-radius: $border-radius;
+  color: $text-light;
+  font-size: 14px;
+  resize: vertical;
+  font-family: inherit;
+  transition: all 0.2s ease;
+  
+  &:focus {
+    outline: none;
+    border-color: $primary-color;
+    box-shadow: 0 0 0 2px rgba($primary-color, 0.2);
+  }
+  
+  &::placeholder {
+    color: $text-muted;
+  }
+}
+
+.formSelect {
+  width: 100%;
+  height: 40px;
+  padding: 0 12px;
+  background-color: $input-bg;
+  border: 1px solid $border-color;
+  border-radius: $border-radius;
+  color: $text-light;
+  font-size: 14px;
+  appearance: none;
+  position: relative;
+  
+  &:focus {
+    outline: none;
+    border-color: $primary-color;
+    box-shadow: 0 0 0 2px rgba($primary-color, 0.2);
+  }
+}
+
+.selectWrapper {
+  position: relative;
+  
+  .selectArrow {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 10px;
+    color: $text-muted;
+    pointer-events: none;
+  }
+}
+
+.fieldError {
+  margin-top: 5px;
+  font-size: 12px;
+  color: $error-color;
+}
+
+.checkboxContainer {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.checkboxInput {
+  width: 18px;
+  height: 18px;
+  margin-right: 10px;
+  accent-color: $primary-color;
+  cursor: pointer;
+}
+
+.checkboxLabel {
+  font-size: 14px;
+  color: $text-light;
+  cursor: pointer;
+}
+
+.checkboxOptions {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 20px;
+}
+
+.formRow {
+  display: flex;
+  gap: 16px;
+  
+  .formGroup {
+    flex: 1;
+  }
+  
+  @include mobile {
+    flex-direction: column;
+    gap: 20px;
+  }
+}
+
+.mapContainer {
+  width: 100%;
+  height: 220px;
+  margin-bottom: 24px;
+  border-radius: $border-radius;
+  overflow: hidden;
+  background-color: #0e2736;
+  position: relative;
+}
+
+.mapPlaceholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $text-muted;
+  font-size: 14px;
+  background-color: #0e2736;
+}
+
+.mapImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.mapLoading {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $text-light;
+  font-size: 14px;
+  background-color: rgba($background-dark, 0.7);
+}
+
+.searchInputWrapper {
+  display: flex;
+  gap: 8px;
+  
+  .formInput {
+    flex: 1;
+  }
+}
+
+.searchButton {
+  padding: 0 16px;
+  height: 40px;
+  background-color: $primary-color;
+  color: white;
+  border: none;
+  border-radius: $border-radius;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover:not(:disabled) {
+    background-color: darken($primary-color, 5%);
+  }
+  
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.inputError {
+  border-color: $error-color;
+  
+  &:focus {
+    box-shadow: 0 0 0 2px rgba($error-color, 0.2);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

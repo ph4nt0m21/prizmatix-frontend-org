@@ -1,0 +1,37 @@
+@import '../../styles/variables';
+@import '../../styles/mixins';
+
+.footer {
+  padding: 15px 30px;
+  background-color: #0F0F1A;
+  color: #878787;
+  font-size: 12px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  border-top: 1px solid #1f1f2e;
+  
+  // Make footer stay at the bottom if content doesn't fill the page
+  margin-top: auto;
+}
+
+.footerContent {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  max-width: 1200px;
+}
+
+.copyright {
+  margin: 0;
+  text-align: center;
+}
+
+// Responsive styles
+@media (max-width: 768px) {
+  .footer {
+    padding: 10px 20px;
+    font-size: 11px;
+  }
+}

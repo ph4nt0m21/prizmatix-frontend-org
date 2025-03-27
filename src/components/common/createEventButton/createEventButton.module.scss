@@ -1,0 +1,56 @@
+@import '../../../styles/variables.scss';
+@import '../../../styles/mixins';
+
+.createEventButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 16px;
+  background-color: #7B68EE; // Exact color from the image
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  box-shadow: 0 2px 8px rgba(123, 104, 238, 0.25);
+  outline: none;
+  
+  &:hover {
+    background-color: darken(#7B68EE, 5%);
+    box-shadow: 0 4px 12px rgba(123, 104, 238, 0.35);
+    transform: translateY(-1px);
+  }
+  
+  &:active {
+    background-color: darken(#7B68EE, 10%);
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(123, 104, 238, 0.2);
+  }
+  
+  &:focus {
+    box-shadow: 0 0 0 2px rgba(123, 104, 238, 0.4), 0 2px 8px rgba(123, 104, 238, 0.25);
+  }
+}
+
+.plusIcon {
+  margin-right: 8px;
+  font-size: 16px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  // Ensure the plus sign is vertically aligned properly
+  line-height: 1;
+  height: 16px;
+}
+
+.buttonText {
+  // Ensure text is properly aligned
+  line-height: 1;
+  
+  // Match the font appearance from the image
+  letter-spacing: 0.3px;
+}

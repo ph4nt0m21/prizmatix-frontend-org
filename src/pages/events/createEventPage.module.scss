@@ -1,0 +1,111 @@
+@import '../../styles/variables';
+@import '../../styles/mixins';
+
+.createEventContainer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: calc(100vh - 70px);
+  width: 100%;
+  background-color: $background-dark;
+}
+
+.content {
+  display: flex;
+  flex-grow: 1;
+  height: 100%;
+  position: relative;
+}
+
+.mainContent {
+  flex-grow: 1;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  
+  @include desktop {
+    padding: 32px;
+  }
+}
+
+.stepContent {
+  flex-grow: 1;
+  margin-bottom: 24px;
+}
+
+.navigation {
+  display: flex;
+  justify-content: space-between;
+  margin-top: auto;
+  padding-top: 24px;
+  border-top: 1px solid $border-color;
+}
+
+.backButton, .nextButton {
+  padding: 8px 24px;
+  border-radius: 4px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.backButton {
+  background-color: transparent;
+  border: 1px solid $border-light;
+  color: $text-light;
+  
+  &:hover:not(:disabled) {
+    background-color: rgba($text-light, 0.1);
+  }
+}
+
+.nextButton {
+  background-color: $primary-color;
+  border: none;
+  color: white;
+  
+  &:hover:not(:disabled) {
+    background-color: darken($primary-color, 5%);
+  }
+}
+
+.loadingContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  
+  p {
+    margin-top: 16px;
+    color: $text-muted;
+  }
+}
+
+.errorMessage {
+  background-color: rgba($error-color, 0.1);
+  border: 1px solid rgba($error-color, 0.2);
+  border-radius: 4px;
+  color: $error-color;
+  padding: 12px 16px;
+  margin-bottom: 24px;
+  position: relative;
+  
+  .dismissButton {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: none;
+    border: none;
+    color: $error-color;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 4px;
+    line-height: 1;
+  }
+}

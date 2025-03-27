@@ -1,0 +1,39 @@
+// Color variables
+$primary-color: #6c6cd8;
+$secondary-color: #44c4a1;
+$accent-color: #f8b84e;
+$error-color: #e65c5c;
+$success-color: #58cc9c;
+$warning-color: #ffb444;
+$info-color: #4db6e5;
+
+// Background colors
+$background-dark: #13131f;
+$background-medium: #1a1a2e;
+$background-light: #2c2c54;
+$sidebar-bg: #1a1a2e;
+
+// Text colors
+$text-light: #ffffff;
+$text-muted: #a0a0c0;
+$text-dark: #333366;
+
+// Border colors
+$border-color: #33335c;
+$border-dark: #15152b;
+$border-light: #44447c;
+
+// Input colors
+$input-bg: #2a2a4a;
+$input-bg-focus: #333360;
+
+// Other variables
+$border-radius: 6px;
+$box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+$transition-speed: 0.3s;
+
+// z-index levels
+$z-modal: 1000;
+$z-dropdown: 100;
+$z-header: 50;
+$z-sidebar: 60;

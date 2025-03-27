@@ -1,0 +1,112 @@
+@import '../../../styles/variables';
+@import '../../../styles/mixins';
+
+.sidebar {
+  width: 160px;
+  background-color: $background-medium;
+  border-right: 1px solid $border-color;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  padding: 20px 0;
+}
+
+.stepsList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.step {
+  display: flex;
+  align-items: center;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  border-left: 3px solid transparent;
+  
+  &:hover:not(.active) {
+    background-color: rgba($primary-color, 0.05);
+  }
+  
+  &.active {
+    background-color: rgba($primary-color, 0.1);
+    border-left-color: $primary-color;
+  }
+  
+  &.completed {
+    color: $success-color;
+  }
+  
+  &.visited:not(.completed):not(.active) {
+    color: $text-muted;
+  }
+}
+
+.stepIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 12px;
+  width: 24px;
+  height: 24px;
+  position: relative;
+}
+
+.stepIndicator {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: $background-light;
+  color: $text-light;
+  font-size: 12px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  .active & {
+    background-color: $primary-color;
+  }
+  
+  .visited:not(.completed):not(.active) & {
+    background-color: $border-light;
+    color: $text-muted;
+  }
+}
+
+.completedIcon {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: $success-color;
+  color: white;
+  font-size: 12px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stepInfo {
+  display: flex;
+  flex-direction: column;
+}
+
+.stepLabel {
+  font-size: 14px;
+  font-weight: 500;
+  color: $text-light;
+  
+  .active & {
+    color: $primary-color;
+  }
+  
+  .completed & {
+    color: $success-color;
+  }
+  
+  .visited:not(.completed):not(.active) & {
+    color: $text-muted;
+  }
+}

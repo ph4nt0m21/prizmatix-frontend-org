@@ -1,0 +1,77 @@
+@import '../../styles/variables.scss';
+@import '../../styles/mixins.scss';
+
+.inputContainer {
+  margin-bottom: 16px;
+  width: 100%;
+}
+
+.label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  color: $text-light;
+}
+
+.required {
+  color: $error-color;
+  margin-left: 4px;
+}
+
+.inputWrapper {
+  position: relative;
+}
+
+.input {
+  width: 100%;
+  height: 40px;
+  padding: 0 12px;
+  font-size: 14px;
+  color: $text-light;
+  background-color: $input-bg;
+  border: 1px solid $border-color;
+  border-radius: $border-radius;
+  transition: all 0.2s ease;
+  
+  &::placeholder {
+    color: $text-muted;
+  }
+  
+  &:focus {
+    outline: none;
+    border-color: $primary-color;
+    box-shadow: 0 0 0 2px rgba($primary-color, 0.2);
+  }
+}
+
+.hasError {
+  .input {
+    border-color: $error-color;
+    
+    &:focus {
+      box-shadow: 0 0 0 2px rgba($error-color, 0.2);
+    }
+  }
+}
+
+.disabled {
+  opacity: 0.7;
+  
+  .input {
+    background-color: darken($input-bg, 5%);
+    cursor: not-allowed;
+  }
+}
+
+.focused {
+  .label {
+    color: $primary-color;
+  }
+}
+
+.errorMessage {
+  margin-top: 4px;
+  font-size: 12px;
+  color: $error-color;
+}
