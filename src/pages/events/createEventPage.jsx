@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { useAuth } from '../../context/authContext';
+import Cookies from 'js-cookie';
+import { LoginAPI } from '../../services/allApis';
 import { setLoading } from '../../redux/slices/uiSlice';
 import EventCreationSidebar from './components/eventCreationSidebar';
 import EventHeaderNav from './components/eventHeaderNav';
@@ -27,8 +28,9 @@ const CreateEventPage = () => {
   const dispatch = useDispatch();
   const { eventId, step } = useParams();
   
-  // Get auth context to access current user info
-  const { currentUser } = useAuth();
+  // User state - replaced AuthContext with direct user management
+  const [currentUser, setCurrentUser] = useState(null);
+  const [userLoading, setUserLoading] = useState(true);
   
   // Get loading state from Redux
   const { isLoading } = useSelector((state) => state.ui);
@@ -81,6 +83,26 @@ const CreateEventPage = () => {
   // Error state
   const [error, setError] = useState(null);
   
+  // Fetch user data on component mount
+  useEffect(() => {
+    const fetchUserData = async () => {
+      setUserLoading(true);
+      try {
+        const token = Cookies.get('token');
+        if (token) {
+          const response = await LoginAPI(token);
+          setCurrentUser(response.data);
+        }
+      } catch (error) {
+        console.error('Error fetching user profile:', error);
+      } finally {
+        setUserLoading(false);
+      }
+    };
+    
+    fetchUserData();
+  }, []);
+  
   /**
    * Update step status based on event data
    * @param {Object} data - Event data
@@ -110,7 +132,7 @@ const CreateEventPage = () => {
     setStepStatus(newStepStatus);
   }, [stepStatus]);
   
-  // Set user info when component loads
+  // Set user info when user data is loaded
   useEffect(() => {
     if (currentUser) {
       setEventData(prevData => ({
@@ -415,7 +437,7 @@ const CreateEventPage = () => {
    */
   const renderCurrentStep = () => {
     // Check if event data is loading
-    if (isLoading?.['fetchEvent']) {
+    if (isLoading?.['fetchEvent'] || userLoading) {
       return (
         <div className={styles.loadingContainer}>
           <LoadingSpinner size="large" />

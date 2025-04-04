@@ -1,16 +1,37 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/authContext';
+import Cookies from 'js-cookie';
+import { LoginAPI } from '../../services/allApis';
 import styles from './sideNavBar.module.scss';
 
-// Import your icons or use an icon library
 const SideNavBar = () => {
   const navigate = useNavigate();
-  const { currentUser, logout, isAuthenticated } = useAuth();
+  const [currentUser, setCurrentUser] = useState(null);
+  
+  // Check authentication directly using cookie
+  const isAuthenticated = !!Cookies.get('token');
+  
+  // Fetch user data on component mount
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (isAuthenticated) {
+        try {
+          const token = Cookies.get('token');
+          const response = await LoginAPI(token);
+          setCurrentUser(response.data);
+        } catch (error) {
+          console.error('Error fetching user profile:', error);
+        }
+      }
+    };
+    
+    fetchUserData();
+  }, [isAuthenticated]);
   
   // Handle logout
   const handleLogout = () => {
-    logout();
+    Cookies.remove('token');
+    setCurrentUser(null);
     navigate('/login');
   };
   

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/authContext';
+import Cookies from 'js-cookie';
 import styles from './header.module.scss';
 
 /**
@@ -10,8 +10,8 @@ const Header = () => {
   const location = useLocation();
   const navigate = useNavigate();
   
-  // Get auth state from AuthContext
-  const { isAuthenticated } = useAuth();
+  // Check if authenticated directly using cookies
+  const isAuthenticated = !!Cookies.get('token');
   
   // Determine if we're on the home page
   const isHomePage = location.pathname === '/';

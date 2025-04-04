@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Route, Routes, Navigate } from "react-router-dom";
-import { AuthProvider, useAuth } from './context/authContext';
+import Cookies from 'js-cookie';
+import { LoginAPI } from "./services/allApis";
 import MainLayout from "./layout/mainLayout/mainLayout";
 import "./App.css";
 import HomePage from "./pages/homePage/homePage";
@@ -11,9 +12,43 @@ import NotFoundPage from "./pages/notFound/notFoundPage";
 import LoadingSpinner from "./components/common/loadingSpinner/loadingSpinner";
 import CreateEventPage from "./pages/events/createEventPage";
 
-// Main App component
-function AppContent() {
-  const { isAuthenticated, isLoading } = useAuth();
+/**
+ * App component defines the main routing structure and handles authentication
+ * @returns {JSX.Element} The App component
+ */
+function App() {
+  // Authentication loading state only
+  const [isLoading, setIsLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  
+  // Check if user is authenticated on initial load - just to handle loading state
+  useEffect(() => {
+    const checkAuthStatus = async () => {
+      setIsLoading(true);
+      try {
+        const token = Cookies.get('token');
+        
+        if (token) {
+          try {
+            await LoginAPI(token);
+            setIsAuthenticated(true);
+          } catch (error) {
+            console.error('Error fetching user profile:', error);
+            // Even if profile fetch fails, if token exists, consider authenticated
+            setIsAuthenticated(true);
+          }
+        } else {
+          setIsAuthenticated(false);
+        }
+      } catch (error) {
+        console.error('Auth check error:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    checkAuthStatus();
+  }, []);
   
   // Show loading spinner while checking authentication
   if (isLoading) {
@@ -37,7 +72,7 @@ function AppContent() {
           element={isAuthenticated ? <Navigate to="/" /> : <RegisterPage />} 
         />
         
-        {/* Protected Routes within MainLayout */}
+        {/* Protected Routes using ProtectedRoute component */}
         <Route element={<ProtectedRoute />}>
           <Route path="/" element={<MainLayout />}>
             <Route index element={<HomePage />} />
@@ -46,29 +81,18 @@ function AppContent() {
             <Route path="events/create" element={<CreateEventPage />} />
             <Route path="events/create/:eventId" element={<CreateEventPage />} />
             <Route path="events/create/:eventId/:step" element={<CreateEventPage />} />
-            <Route path="events/create/:eventId/:step/:subStep" element={<CreateEventPage />} />
             
             {/* Add more protected routes as needed */}
           </Route>
-          <Route 
-          path="*" 
-          element={isAuthenticated ? <NotFoundPage /> : <Navigate to="/login" />} 
-        />
         </Route>
         
-        {/* Redirect and 404 handler */}
-        
+        {/* 404 handler */}
+        <Route 
+          path="*" 
+          element={<NotFoundPage />} 
+        />
       </Routes>
     </div>
-  );
-}
-
-// Wrapper App component with AuthProvider
-function App() {
-  return (
-    <AuthProvider>
-      <AppContent />
-    </AuthProvider>
   );
 }
 
