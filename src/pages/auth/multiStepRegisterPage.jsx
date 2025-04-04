@@ -1,9 +1,10 @@
 // src/pages/auth/multiStepRegisterPage.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/authContext';
 import { useSelector, useDispatch } from 'react-redux';
 import { setLoading } from '../../redux/slices/uiSlice';
+import Cookies from 'js-cookie';
+import { RegisterAPI, ProfileAPI } from '../../services/allApis';
 import Step1OrganizationInfo from './registerSteps/step1OrganizationInfo';
 import Step2AccountDetails from './registerSteps/step2AccountDetails';
 import LoadingSpinner from '../../components/common/loadingSpinner/loadingSpinner';
@@ -19,11 +20,14 @@ const MultiStepRegisterPage = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   
-  // Get auth context
-  const { register, isAuthenticated, error: authError, clearError } = useAuth();
-  
   // Get UI loading state from Redux
   const { isLoading } = useSelector((state) => state.ui);
+  
+  // Auth state management (moved from AuthContext)
+  const [currentUser, setCurrentUser] = useState(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [authLoading, setAuthLoading] = useState(true);
+  const [authError, setAuthError] = useState(null);
   
   // Step state
   const [currentStep, setCurrentStep] = useState(1);
@@ -55,6 +59,11 @@ const MultiStepRegisterPage = () => {
   // Progress state (for progress indicator)
   const [progress, setProgress] = useState(50);
   
+  // Check authentication status on component mount
+  useEffect(() => {
+    checkAuthStatus();
+  }, []);
+  
   // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
@@ -67,12 +76,119 @@ const MultiStepRegisterPage = () => {
       clearError();
       setError(null);
     };
-  }, [isAuthenticated, navigate, clearError]);
+  }, [isAuthenticated, navigate]);
   
   // Update progress indicator based on current step
   useEffect(() => {
     setProgress(currentStep === 1 ? 50 : 100);
   }, [currentStep]);
+  
+  /**
+   * Check if the user is authenticated based on token presence
+   */
+  const checkAuthStatus = async () => {
+    setAuthLoading(true);
+    try {
+      const token = Cookies.get('token');
+      
+      if (token) {
+        // Token exists, try to fetch user profile
+        try {
+          const response = await ProfileAPI(token);
+          setCurrentUser(response.data);
+          setIsAuthenticated(true);
+        } catch (error) {
+          console.error('Error fetching user profile:', error);
+          // Even if profile fetch fails, if token exists, consider authenticated
+          setIsAuthenticated(true);
+        }
+      } else {
+        // No token, not authenticated
+        setCurrentUser(null);
+        setIsAuthenticated(false);
+      }
+    } catch (error) {
+      console.error('Auth check error:', error);
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+  
+  /**
+   * Register a new organization
+   * @param {Object} userData - Registration data
+   * @returns {Promise} Promise resolving to registration result
+   */
+  const register = async (userData) => {
+    setAuthLoading(true);
+    setAuthError(null);
+    
+    try {
+      // Use registration data as-is, without adding username from email
+      const registrationData = {
+        ...userData
+      };
+      
+      console.log('Sending registration data:', registrationData);
+      const response = await RegisterAPI(registrationData);
+      console.log('Registration response:', response);
+      
+      // Store token in cookie if provided
+      if (response.data && response.data.token) {
+        Cookies.set('token', response.data.token, { 
+          expires: 1, // 1 day
+        });
+      } else if (typeof response.data === 'string') {
+        Cookies.set('token', response.data, { 
+          expires: 1,
+        });
+      } else if (response.data) {
+        // Check for nested token
+        const token = response.data.accessToken || response.data.jwt || response.data.auth_token;
+        if (token) {
+          Cookies.set('token', token, {
+            expires: 1,
+          });
+        }
+      }
+      
+      // Ensure the user object contains necessary fields
+      const user = response.data.user || {};
+      if (!user.name) {
+        user.name = `${userData.firstName} ${userData.lastName}`;
+      }
+      
+      // Set user and authentication state
+      setCurrentUser(user);
+      setIsAuthenticated(true);
+      return response.data;
+    } catch (error) {
+      console.error('Registration error:', error);
+      const errorMessage = error.response?.data?.message || 
+                          error.response?.data?.error ||
+                          'Registration failed. Please try again.';
+      setAuthError(errorMessage);
+      throw errorMessage;
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+  
+  /**
+   * Logout user
+   */
+  const logout = () => {
+    Cookies.remove('token');
+    setCurrentUser(null);
+    setIsAuthenticated(false);
+  };
+  
+  /**
+   * Clear auth errors
+   */
+  const clearError = () => {
+    setAuthError(null);
+  };
   
   /**
    * Handle input changes for both steps
@@ -254,10 +370,19 @@ const MultiStepRegisterPage = () => {
   };
   
   // Determine if register button should be disabled
-  const isRegisterDisabled = isLoading?.['register'];
+  const isRegisterDisabled = isLoading?.['register'] || authLoading;
   
-  // Show error message from either local state or auth context
+  // Show error message from either local state or auth state
   const errorMessage = error || authError;
+  
+  // If still checking auth status, show loading state
+  if (authLoading && !isRegisterDisabled) {
+    return (
+      <div className={styles.authContainer}>
+        <div className={styles.loadingSpinner}></div>
+      </div>
+    );
+  }
   
   // Render the appropriate step
   const renderStep = () => {
