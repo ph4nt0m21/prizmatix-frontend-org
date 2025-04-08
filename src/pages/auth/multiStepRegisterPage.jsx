@@ -1,8 +1,6 @@
 // src/pages/auth/multiStepRegisterPage.jsx
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useSelector, useDispatch } from 'react-redux';
-import { setLoading } from '../../redux/slices/uiSlice';
+import { useNavigate, useLocation } from 'react-router-dom';
 import Cookies from 'js-cookie';
 import { RegisterAPI, ProfileAPI } from '../../services/allApis';
 import Step1OrganizationInfo from './registerSteps/step1OrganizationInfo';
@@ -18,12 +16,12 @@ import styles from './authPages.module.scss';
  */
 const MultiStepRegisterPage = () => {
   const navigate = useNavigate();
-  const dispatch = useDispatch();
+  const location = useLocation();
   
-  // Get UI loading state from Redux
-  const { isLoading } = useSelector((state) => state.ui);
+  // UI loading state (moved from Redux)
+  const [isLoading, setIsLoading] = useState({});
   
-  // Auth state management (moved from AuthContext)
+  // Auth state management
   const [currentUser, setCurrentUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authLoading, setAuthLoading] = useState(true);
@@ -67,8 +65,10 @@ const MultiStepRegisterPage = () => {
   // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
-      console.log('User is authenticated, redirecting to home page');
-      navigate('/');
+      console.log('User is authenticated, redirecting to previous page or home');
+      // Redirect to previous location or home
+      const from = location.state?.from?.pathname || "/";
+      navigate(from, { replace: true });
     }
     
     // Clear errors when component unmounts
@@ -76,13 +76,39 @@ const MultiStepRegisterPage = () => {
       clearError();
       setError(null);
     };
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, navigate, location]);
   
   // Update progress indicator based on current step
   useEffect(() => {
     setProgress(currentStep === 1 ? 50 : 100);
   }, [currentStep]);
   
+  /**
+   * Set loading state for a specific action
+   * @param {string} key - The key to identify the loading state
+   * @param {boolean} loadingState - Whether the action is loading
+   */
+  const setLoadingState = (key, loadingState) => {
+    setIsLoading(prevState => ({
+      ...prevState,
+      [key]: loadingState
+    }));
+  };
+  
+  /**
+   * Shows error message in UI
+   * @param {string} message - Error message to display
+   * @param {string} type - Type of error (error, warning, info)
+   */
+  const showError = (message, type = "error") => {
+    setError({ message, type });
+    
+    // Auto-clear error after 5 seconds
+    setTimeout(() => {
+      setError(null);
+    }, 5000);
+  };
+
   /**
    * Check if the user is authenticated based on token presence
    */
@@ -124,51 +150,76 @@ const MultiStepRegisterPage = () => {
     setAuthError(null);
     
     try {
-      // Use registration data as-is, without adding username from email
+      // Add username from email if not provided
       const registrationData = {
-        ...userData
+        ...userData,
+        username: userData.username || userData.email // Use email as username if not provided
       };
       
       console.log('Sending registration data:', registrationData);
       const response = await RegisterAPI(registrationData);
       console.log('Registration response:', response);
       
-      // Store token in cookie if provided
-      if (response.data && response.data.token) {
-        Cookies.set('token', response.data.token, { 
-          expires: 1, // 1 day
-        });
-      } else if (typeof response.data === 'string') {
-        Cookies.set('token', response.data, { 
-          expires: 1,
-        });
-      } else if (response.data) {
-        // Check for nested token
-        const token = response.data.accessToken || response.data.jwt || response.data.auth_token;
-        if (token) {
-          Cookies.set('token', token, {
+      // Standard token handling logic
+      if (response.status === 200) {
+        // Store token in cookie if provided
+        if (response.data && response.data.token) {
+          Cookies.set('token', response.data.token, { 
+            expires: 1, // 1 day
+          });
+        } else if (typeof response.data === 'string') {
+          Cookies.set('token', response.data, { 
             expires: 1,
           });
+        } else if (response.data) {
+          // Check for nested token
+          const token = response.data.accessToken || response.data.jwt || response.data.auth_token;
+          if (token) {
+            Cookies.set('token', token, {
+              expires: 1,
+            });
+          }
         }
+        
+        // Ensure the user object contains necessary fields
+        const user = response.data.user || {};
+        if (!user.name) {
+          user.name = `${userData.firstName} ${userData.lastName}`;
+        }
+        
+        // Set user and authentication state
+        setCurrentUser(user);
+        setIsAuthenticated(true);
+        return response.data;
+      } else {
+        throw new Error(response?.data?.message || 'Registration failed');
       }
-      
-      // Ensure the user object contains necessary fields
-      const user = response.data.user || {};
-      if (!user.name) {
-        user.name = `${userData.firstName} ${userData.lastName}`;
-      }
-      
-      // Set user and authentication state
-      setCurrentUser(user);
-      setIsAuthenticated(true);
-      return response.data;
     } catch (error) {
       console.error('Registration error:', error);
-      const errorMessage = error.response?.data?.message || 
-                          error.response?.data?.error ||
-                          'Registration failed. Please try again.';
-      setAuthError(errorMessage);
-      throw errorMessage;
+      
+      // Extract error message from response
+      if (error.response?.data?.message) {
+        const { message } = error.response.data;
+        
+        if (Array.isArray(message)) {
+          // Filter only string messages and join them
+          const filteredMessages = message
+            .filter((msg) => typeof msg === "string")
+            .join("\n");
+          
+          setAuthError(filteredMessages || 'Registration failed. Please check your details.');
+          throw filteredMessages || 'Registration failed. Please check your details.';
+        } else {
+          setAuthError(message);
+          throw message;
+        }
+      } else {
+        const errorMessage = error.response?.data?.error || 
+                            error.message || 
+                            'Registration failed. Please try again.';
+        setAuthError(errorMessage);
+        throw errorMessage;
+      }
     } finally {
       setAuthLoading(false);
     }
@@ -345,6 +396,7 @@ const MultiStepRegisterPage = () => {
       name: formData.name,
       description: formData.description,
       email: formData.email,
+      username: formData.email, // Use email as username
       region: formData.region,
       state: formData.state,
       firstName: formData.firstName,
@@ -354,18 +406,32 @@ const MultiStepRegisterPage = () => {
     };
     
     // Set loading state
-    dispatch(setLoading({ key: 'register', isLoading: true }));
+    setLoadingState('register', true);
     
     try {
       await register(registrationData);
       console.log('Registration successful');
       
+      // Clear form data on success
+      setFormData({
+        name: '',
+        description: '',
+        email: '',
+        region: '',
+        state: '',
+        firstName: '',
+        lastName: '',
+        mobileNumber: '',
+        password: '',
+        confirmPassword: ''
+      });
+      
       // Navigation will be handled by the useEffect that watches isAuthenticated
     } catch (err) {
       console.error('Registration failed:', err);
-      setError(typeof err === 'string' ? err : 'Registration failed');
+      showError(typeof err === 'string' ? err : 'Registration failed');
     } finally {
-      dispatch(setLoading({ key: 'register', isLoading: false }));
+      setLoadingState('register', false);
     }
   };
   
@@ -373,7 +439,17 @@ const MultiStepRegisterPage = () => {
   const isRegisterDisabled = isLoading?.['register'] || authLoading;
   
   // Show error message from either local state or auth state
-  const errorMessage = error || authError;
+  const errorMessage = error?.message || authError;
+  
+  // Render error message if exists
+  const renderErrorMessage = () => {
+    if (!errorMessage) return null;
+    
+    const className = styles.errorMessage + 
+      (error?.type === "warning" ? ` ${styles.warningMessage}` : '');
+    
+    return <div className={className}>{errorMessage}</div>;
+  };
   
   // If still checking auth status, show loading state
   if (authLoading && !isRegisterDisabled) {
@@ -415,27 +491,58 @@ const MultiStepRegisterPage = () => {
   };
   
   return (
-    <div className={styles.authContainer}>
-      <div className={`${styles.authCard} ${styles.registerCard}`}>
-        <div className={styles.logoContainer}>
-          <div className={styles.logo}>▲</div>
+    <div className={styles.modernAuthContainer}>
+      {/* Left side - background image */}
+      <div className={styles.leftPanel}>
+        <img 
+          src="/images/auth-bg.png" 
+          alt="Background" 
+          className={styles.backgroundImage} 
+        />
+      </div>
+      
+      {/* Right side - registration form */}
+      <div className={styles.rightPanel}>
+        <div className={styles.topBar}>
+          <button 
+            type="button" 
+            className={styles.goBackButton}
+            onClick={() => navigate('/login')}
+          >
+            ‹
+          </button>
+          <div className={styles.logoContainer}>
+            <img 
+              src="/images/logo.svg" 
+              alt="PRIZMATIX" 
+              className={styles.logo} 
+            />
+          </div>
         </div>
         
-        <div className={styles.progressContainer}>
-          <div className={styles.progressBar}>
-            <div 
-              className={styles.progressFill} 
-              style={{ width: `${progress}%` }}
-            ></div>
+        <div className={styles.registerFormContainer}>
+          <div className={styles.progressContainer}>
+            <div className={styles.progressBar}>
+              <div 
+                className={styles.progressFill} 
+                style={{ width: `${progress}%` }}
+              ></div>
+            </div>
+            <div className={styles.stepIndicator}>
+              Step {currentStep} of 2
+            </div>
           </div>
-          <div className={styles.stepIndicator}>
-            Step {currentStep} of 2
-          </div>
+          
+          {isRegisterDisabled && <LoadingSpinner size="small" />}
+          
+          {renderErrorMessage()}
+          
+          {renderStep()}
         </div>
         
-        {isRegisterDisabled && <LoadingSpinner size="small" />}
-        
-        {renderStep()}
+        <div className={styles.footerContainer}>
+          <p className={styles.copyrightText}>Copyright© 2025 PRIZMATIX</p>
+        </div>
       </div>
     </div>
   );
