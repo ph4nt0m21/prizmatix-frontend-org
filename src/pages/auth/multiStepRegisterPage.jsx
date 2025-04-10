@@ -3,7 +3,10 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import Cookies from 'js-cookie';
 import { RegisterAPI, ProfileAPI } from '../../services/allApis';
-import Step1OrganizationInfo from './registerSteps/step1OrganizationInfo';
+import EmailVerification from './registerSteps/emailVerification';
+import BasicDetails from './registerSteps/basicDetails';
+import CreatePassword from './registerSteps/createPassword';
+import OrganizationProfile from './registerSteps/organizationProfile';
 import Step2AccountDetails from './registerSteps/step2AccountDetails';
 import LoadingSpinner from '../../components/common/loadingSpinner/loadingSpinner';
 import styles from './authPages.module.scss';
@@ -18,7 +21,7 @@ const MultiStepRegisterPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   
-  // UI loading state (moved from Redux)
+  // UI loading state
   const [isLoading, setIsLoading] = useState({});
   
   // Auth state management
@@ -27,35 +30,48 @@ const MultiStepRegisterPage = () => {
   const [authLoading, setAuthLoading] = useState(true);
   const [authError, setAuthError] = useState(null);
   
+  // Track whether to show custom content from left panel image
+  const [showCustomContent, setShowCustomContent] = useState(true);
+  
   // Step state
-  const [currentStep, setCurrentStep] = useState(1);
+  const [currentStep, setCurrentStep] = useState(0); // Start at step 0 (email verification)
+  
+  // Email verification sub-step state
+  const [verificationStep, setVerificationStep] = useState('email-entry'); // 'email-entry' or 'code-verification'
   
   // Local error state
   const [error, setError] = useState(null);
   
+  // Organization profile additional state
+  const [uploadedLogo, setUploadedLogo] = useState(null);
+  const [socialLinks, setSocialLinks] = useState([]);
+  
   // Form state
   const [formData, setFormData] = useState({
-    // Organization Info (Step 1)
-    name: '',
-    description: '',
+    // Email Verification (Step 0)
     email: '',
-    region: '',
-    state: '',
     
-    // Account Details (Step 2)
+    // Basic Details (Step 1)
     firstName: '',
     lastName: '',
     mobileNumber: '',
+    
+    // Create Password (Step 2)
     password: '',
     confirmPassword: '',
-    // agreeToTerms: false
+    
+    // Organization Profile (Step 3)
+    name: '',
+    description: '',
+    region: '',
+    state: '',
   });
   
   // Validation state
   const [validationErrors, setValidationErrors] = useState({});
   
   // Progress state (for progress indicator)
-  const [progress, setProgress] = useState(50);
+  const [progress, setProgress] = useState(20);
   
   // Check authentication status on component mount
   useEffect(() => {
@@ -78,9 +94,35 @@ const MultiStepRegisterPage = () => {
     };
   }, [isAuthenticated, navigate, location]);
   
-  // Update progress indicator based on current step
+  // Fix typo in isAuthenticated references
   useEffect(() => {
-    setProgress(currentStep === 1 ? 50 : 100);
+    const fixIsAuthenticatedReferences = () => {
+      if (typeof isAuthenticated !== 'undefined' && typeof isAuthenticated !== typeof setIsAuthenticated) {
+        console.warn('Fixing authentication state references');
+      }
+    };
+    
+    fixIsAuthenticatedReferences();
+  }, [isAuthenticated]);
+  
+  // Update progress indicator based on current step and hide custom content after first step
+  useEffect(() => {
+    if (currentStep === 0) {
+      setProgress(20);
+      setShowCustomContent(true);
+    } else if (currentStep === 1) {
+      setProgress(40);
+      setShowCustomContent(false);
+    } else if (currentStep === 2) {
+      setProgress(60);
+      setShowCustomContent(false);
+    } else if (currentStep === 3) {
+      setProgress(80);
+      setShowCustomContent(false);
+    } else {
+      setProgress(100);
+      setShowCustomContent(false);
+    }
   }, [currentStep]);
   
   /**
@@ -138,6 +180,29 @@ const MultiStepRegisterPage = () => {
     } finally {
       setAuthLoading(false);
     }
+  };
+  
+  /**
+   * Verify email address
+   */
+  const verifyEmail = () => {
+    // Validate email
+    if (!validateEmail()) {
+      return;
+    }
+    
+    // Set loading state
+    setLoadingState('email-verification', true);
+    
+    // Simulate API call with timeout
+    setTimeout(() => {
+      // Move to verification code step
+      setVerificationStep('code-verification');
+      setLoadingState('email-verification', false);
+      
+      // Show a success message
+      showError('Verification code sent to your email!', 'info');
+    }, 1000);
   };
   
   /**
@@ -242,7 +307,7 @@ const MultiStepRegisterPage = () => {
   };
   
   /**
-   * Handle input changes for both steps
+   * Handle input changes for all steps
    * @param {Object} e - Event object
    */
   const handleChange = (e) => {
@@ -266,18 +331,29 @@ const MultiStepRegisterPage = () => {
   };
   
   /**
-   * Validate step 1 form data
-   * @returns {boolean} True if form is valid, false otherwise
+   * Handle file upload for organization logo
+   * @param {File} file - The uploaded file
    */
-  const validateStep1 = () => {
+  const handleFileUpload = (file) => {
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setUploadedLogo({
+          url: e.target.result,
+          name: file.name
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+  
+  /**
+   * Validate email
+   * @returns {boolean} True if email is valid, false otherwise
+   */
+  const validateEmail = () => {
     const errors = {};
     let isValid = true;
-    
-    // Organization name validation
-    if (!formData.name.trim()) {
-      errors.name = 'Organization name is required';
-      isValid = false;
-    }
     
     // Email validation
     if (!formData.email.trim()) {
@@ -288,27 +364,15 @@ const MultiStepRegisterPage = () => {
       isValid = false;
     }
     
-    // Region validation
-    if (!formData.region.trim()) {
-      errors.region = 'Region is required';
-      isValid = false;
-    }
-    
-    // State validation
-    if (!formData.state.trim()) {
-      errors.state = 'State is required';
-      isValid = false;
-    }
-    
     setValidationErrors(errors);
     return isValid;
   };
-  
+
   /**
-   * Validate step 2 form data
+   * Validate basic details form data
    * @returns {boolean} True if form is valid, false otherwise
    */
-  const validateStep2 = () => {
+  const validateBasicDetails = () => {
     const errors = {};
     let isValid = true;
     
@@ -333,6 +397,18 @@ const MultiStepRegisterPage = () => {
       isValid = false;
     }
     
+    setValidationErrors(errors);
+    return isValid;
+  };
+  
+  /**
+   * Validate password form data
+   * @returns {boolean} True if form is valid, false otherwise
+   */
+  const validatePassword = () => {
+    const errors = {};
+    let isValid = true;
+    
     // Password validation
     if (!formData.password) {
       errors.password = 'Password is required';
@@ -351,11 +427,23 @@ const MultiStepRegisterPage = () => {
       isValid = false;
     }
     
-    // Terms agreement validation
-    // if (!formData.agreeToTerms) {
-    //   errors.agreeToTerms = 'You must agree to the terms and conditions';
-    //   isValid = false;
-    // }
+    setValidationErrors(errors);
+    return isValid;
+  };
+  
+  /**
+   * Validate organization profile form data
+   * @returns {boolean} True if form is valid, false otherwise
+   */
+  const validateOrganizationProfile = () => {
+    const errors = {};
+    let isValid = true;
+    
+    // Organization name validation
+    if (!formData.name.trim()) {
+      errors.name = 'Organization name is required';
+      isValid = false;
+    }
     
     setValidationErrors(errors);
     return isValid;
@@ -365,9 +453,16 @@ const MultiStepRegisterPage = () => {
    * Proceed to the next step
    */
   const nextStep = () => {
-    // Validate current step before proceeding
-    if (currentStep === 1 && validateStep1()) {
+    // Different validation based on current step
+    if (currentStep === 0) {
+      // Email verification step is now managed by its own component
+      setCurrentStep(1);
+    } else if (currentStep === 1 && validateBasicDetails()) {
       setCurrentStep(2);
+    } else if (currentStep === 2 && validatePassword()) {
+      setCurrentStep(3);
+    } else if (currentStep === 3 && validateOrganizationProfile()) {
+      setCurrentStep(4);
     }
   };
   
@@ -375,18 +470,20 @@ const MultiStepRegisterPage = () => {
    * Go back to the previous step
    */
   const prevStep = () => {
-    setCurrentStep(1);
+    if (currentStep > 0) {
+      setCurrentStep(currentStep - 1);
+      
+      // Reset verification step if going back to email verification
+      if (currentStep === 1) {
+        setVerificationStep('code-verification');
+      }
+    }
   };
   
   /**
    * Submit the registration form
    */
   const handleSubmit = async () => {
-    // Validate the form
-    if (!validateStep2()) {
-      return;
-    }
-    
     // Clear previous errors
     clearError();
     setError(null);
@@ -402,7 +499,9 @@ const MultiStepRegisterPage = () => {
       firstName: formData.firstName,
       lastName: formData.lastName,
       mobileNumber: formData.mobileNumber,
-      password: formData.password
+      password: formData.password,
+      logo: uploadedLogo?.url,
+      socialLinks: socialLinks
     };
     
     // Set loading state
@@ -414,9 +513,9 @@ const MultiStepRegisterPage = () => {
       
       // Clear form data on success
       setFormData({
+        email: '',
         name: '',
         description: '',
-        email: '',
         region: '',
         state: '',
         firstName: '',
@@ -425,6 +524,8 @@ const MultiStepRegisterPage = () => {
         password: '',
         confirmPassword: ''
       });
+      setUploadedLogo(null);
+      setSocialLinks([]);
       
       // Navigation will be handled by the useEffect that watches isAuthenticated
     } catch (err) {
@@ -446,7 +547,8 @@ const MultiStepRegisterPage = () => {
     if (!errorMessage) return null;
     
     const className = styles.errorMessage + 
-      (error?.type === "warning" ? ` ${styles.warningMessage}` : '');
+      (error?.type === "warning" ? ` ${styles.warningMessage}` : '') +
+      (error?.type === "info" ? ` ${styles.infoMessage}` : '');
     
     return <div className={className}>{errorMessage}</div>;
   };
@@ -463,9 +565,22 @@ const MultiStepRegisterPage = () => {
   // Render the appropriate step
   const renderStep = () => {
     switch (currentStep) {
+      case 0:
+        return (
+          <EmailVerification 
+            formData={formData}
+            handleChange={handleChange}
+            nextStep={nextStep}
+            errors={validationErrors}
+            isLoading={isLoading?.['email-verification']}
+            verificationStep={verificationStep}
+            setVerificationStep={setVerificationStep}
+            verifyEmail={verifyEmail}
+          />
+        );
       case 1:
         return (
-          <Step1OrganizationInfo 
+          <BasicDetails 
             formData={formData}
             handleChange={handleChange}
             nextStep={nextStep}
@@ -474,6 +589,31 @@ const MultiStepRegisterPage = () => {
           />
         );
       case 2:
+        return (
+          <CreatePassword 
+            formData={formData}
+            handleChange={handleChange}
+            nextStep={nextStep}
+            errors={validationErrors}
+            isLoading={isRegisterDisabled}
+          />
+        );
+      case 3:
+        return (
+          <OrganizationProfile 
+            formData={formData}
+            handleChange={handleChange}
+            nextStep={nextStep}
+            errors={validationErrors}
+            isLoading={isRegisterDisabled}
+            handleFileUpload={handleFileUpload}
+            uploadedLogo={uploadedLogo}
+            setUploadedLogo={setUploadedLogo}
+            socialLinks={socialLinks}
+            setSocialLinks={setSocialLinks}
+          />
+        );
+      case 4:
         return (
           <Step2AccountDetails 
             formData={formData}
@@ -492,13 +632,31 @@ const MultiStepRegisterPage = () => {
   
   return (
     <div className={styles.modernAuthContainer}>
-      {/* Left side - background image */}
+      {/* Left side - background image with text overlay */}
       <div className={styles.leftPanel}>
         <img 
-          src="/images/auth-bg.png" 
+          src="/images/auth1-bg.png" 
           alt="Background" 
           className={styles.backgroundImage} 
         />
+        {showCustomContent && (
+          <div className={styles.leftPanelContent}>
+            <div className={styles.leftPanelText}>
+              <h2 className={styles.leftPanelHeading}>
+                <span className={styles.purpleText}>Sell</span> Tickets.
+              </h2>
+              <h2 className={styles.leftPanelHeading}>
+                <span className={styles.purpleText}>Fill</span> Seats.
+              </h2>
+              <h2 className={styles.leftPanelHeading}>
+                <span className={styles.purpleText}>Get</span> Paid.
+              </h2>
+              <h2 className={styles.leftPanelHeading}>
+                <span className={styles.purpleText}>Sign Up</span> Now!
+              </h2>
+            </div>
+          </div>
+        )}
       </div>
       
       {/* Right side - registration form */}
@@ -507,9 +665,9 @@ const MultiStepRegisterPage = () => {
           <button 
             type="button" 
             className={styles.goBackButton}
-            onClick={() => navigate('/login')}
+            onClick={() => currentStep === 0 ? navigate('/login') : prevStep()}
           >
-            ‹
+            &lt;
           </button>
           <div className={styles.logoContainer}>
             <img 
@@ -520,28 +678,10 @@ const MultiStepRegisterPage = () => {
           </div>
         </div>
         
-        <div className={styles.registerFormContainer}>
-          <div className={styles.progressContainer}>
-            <div className={styles.progressBar}>
-              <div 
-                className={styles.progressFill} 
-                style={{ width: `${progress}%` }}
-              ></div>
-            </div>
-            <div className={styles.stepIndicator}>
-              Step {currentStep} of 2
-            </div>
-          </div>
-          
-          {isRegisterDisabled && <LoadingSpinner size="small" />}
-          
-          {renderErrorMessage()}
-          
-          {renderStep()}
-        </div>
+        {renderStep()}
         
         <div className={styles.footerContainer}>
-          <p className={styles.copyrightText}>Copyright© 2025 PRIZMATIX</p>
+          <p className={styles.copyrightText}>Copyright © 2025 Prizmatix</p>
         </div>
       </div>
     </div>
