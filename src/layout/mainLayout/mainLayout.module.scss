@@ -11,8 +11,8 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  margin-left: 60px; // Width of the sidebar
-  width: calc(100% - 60px);
+  margin-left: 70px; // Updated to match your sidebar width (70px)
+  width: calc(100% - 70px);
   min-height: 100vh;
 }
 
@@ -21,7 +21,7 @@
   padding: 20px 30px;
   position: relative;
   overflow-y: auto;
-  background-color: #0F0F1A;
+  background-color: #ffffff;
   
   // Create a subtle gradient overlay for the background
   &::before {
@@ -35,16 +35,30 @@
     z-index: -1;
     pointer-events: none;
   }
+  
+  // For event creation routes, ensure full height and no background
+  &.fullHeight {
+    padding: 0;
+    background-color: #ffffff;
+    
+    &::before {
+      display: none; // Remove the gradient overlay for event creation pages
+    }
+  }
 }
 
 // Responsive styles
 @media (max-width: 768px) {
   .mainContent {
-    width: calc(100% - 50px);
-    margin-left: 50px;
+    width: calc(100% - 70px);
+    margin-left: 70px;
   }
   
   .contentArea {
     padding: 15px 20px;
+    
+    &.fullHeight {
+      padding: 0;
+    }
   }
 }

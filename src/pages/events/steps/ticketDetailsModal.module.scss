@@ -1,0 +1,316 @@
+@import '../../../styles/variables';
+@import '../../../styles/mixins';
+
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modalContainer {
+  width: 100%;
+  max-width: 560px;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh;
+  overflow: hidden;
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 20px 24px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.modalTitle {
+  flex: 1;
+  
+  h2 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+    margin: 0 0 16px 0;
+  }
+}
+
+.modalTabs {
+  display: flex;
+  gap: 16px;
+  margin-top: 8px;
+}
+
+.tabButton {
+  background: none;
+  border: none;
+  padding: 8px 4px;
+  font-size: 14px;
+  color: #666;
+  cursor: pointer;
+  position: relative;
+  
+  &:hover {
+    color: #7C3AED;
+  }
+  
+  &.active {
+    color: #7C3AED;
+    font-weight: 500;
+    
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background-color: #7C3AED;
+    }
+  }
+}
+
+.closeButton {
+  background: none;
+  border: none;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border-radius: 4px;
+  
+  &:hover {
+    background-color: #f3f4f6;
+  }
+}
+
+.modalContent {
+  padding: 24px;
+  overflow-y: auto;
+  max-height: calc(90vh - 140px);
+}
+
+.sectionTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 16px 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.saleTypeSelector {
+  display: flex;
+  align-items: center;
+  background-color: #f3f4f6;
+  border-radius: 4px;
+  padding: 2px;
+  font-size: 12px;
+}
+
+.saleTypeBtn {
+  padding: 4px 10px;
+  border: none;
+  background: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  
+  &.active {
+    background-color: white;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    font-weight: 500;
+  }
+}
+
+.formGroup {
+  margin-bottom: 20px;
+  
+  &.indented {
+    margin-left: 24px;
+    margin-top: 12px;
+  }
+}
+
+.formLabel {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 6px;
+}
+
+.formDescription {
+  font-size: 12px;
+  color: #666;
+  margin: 0 0 8px 0;
+}
+
+.formInput {
+  width: 100%;
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+  color: #333;
+  transition: all 0.2s ease;
+  
+  &:focus {
+    outline: none;
+    border-color: #7C3AED;
+    box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.1);
+  }
+  
+  &::placeholder {
+    color: #9ca3af;
+  }
+  
+  &.inputError {
+    border-color: #ef4444;
+    
+    &:focus {
+      box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.1);
+    }
+  }
+  
+  &.withPrefix {
+    padding-left: 24px;
+  }
+}
+
+.fieldError {
+  margin-top: 4px;
+  font-size: 12px;
+  color: #ef4444;
+}
+
+.formSelect {
+  width: 100%;
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+  color: #333;
+  background-color: white;
+  transition: all 0.2s ease;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M5 5.5L0 0.5H10L5 5.5Z' fill='%236B7280'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 32px;
+  
+  &:focus {
+    outline: none;
+    border-color: #7C3AED;
+    box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.1);
+  }
+}
+
+.inputWithPrefix {
+  position: relative;
+  
+  .prefix {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6b7280;
+  }
+}
+
+.inputWithIcon {
+  position: relative;
+  
+  .inputIcon {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6b7280;
+    pointer-events: none;
+  }
+}
+
+.formRow {
+  display: flex;
+  gap: 16px;
+  
+  .formGroup {
+    flex: 1;
+  }
+}
+
+.checkboxContainer {
+  display: flex;
+  align-items: center;
+  
+  .checkboxInput {
+    width: 16px;
+    height: 16px;
+    margin-right: 8px;
+    accent-color: #7C3AED;
+  }
+  
+  .checkboxLabel {
+    font-size: 14px;
+    color: #333;
+  }
+}
+
+.modalFooter {
+  padding: 16px 24px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.backButton {
+  height: 40px;
+  padding: 0 16px;
+  border: 1px solid #d1d5db;
+  background-color: white;
+  color: #4b5563;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background-color: #f9fafb;
+    border-color: #9ca3af;
+  }
+}
+
+.saveButton {
+  height: 40px;
+  padding: 0 16px;
+  border: none;
+  background-color: #7C3AED;
+  color: white;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background-color: #6d28d9;
+  }
+}

@@ -1,9 +1,9 @@
+// src/pages/events/createEventPage.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
 import Cookies from 'js-cookie';
 import { LoginAPI } from '../../services/allApis';
-import { setLoading } from '../../redux/slices/uiSlice';
+import SideNavBar from '../../layout/sideNavBar/sideNavbar';
 import EventCreationSidebar from './components/eventCreationSidebar';
 import EventHeaderNav from './components/eventHeaderNav';
 import BasicInfoStep from './steps/basicInfoStep';
@@ -15,8 +15,7 @@ import TicketsStep from './steps/ticketsStep';
 import DiscountCodesStep from './steps/discountCodesStep';
 import PublishStep from './steps/publishStep';
 import LoadingSpinner from '../../components/common/loadingSpinner/loadingSpinner';
-import ErrorBoundary from '../../components/common/errorBoundary/errorBoundary';
-import { CreateEventAPI, GetEventAPI, UpdateEventLocationAPI } from '../../services/allApis';
+import { CreateEventAPI, GetEventAPI, UpdateEventAPI } from '../../services/allApis';
 import styles from './createEventPage.module.scss';
 
 /**
@@ -25,22 +24,28 @@ import styles from './createEventPage.module.scss';
  */
 const CreateEventPage = () => {
   const navigate = useNavigate();
-  const dispatch = useDispatch();
   const { eventId, step } = useParams();
   
-  // User state - replaced AuthContext with direct user management
+  // Loading state
+  const [isLoading, setIsLoading] = useState({
+    saveEvent: false,
+    fetchEvent: false,
+    publishEvent: false
+  });
+  
+  // User state
   const [currentUser, setCurrentUser] = useState(null);
   const [userLoading, setUserLoading] = useState(true);
   
-  // Get loading state from Redux
-  const { isLoading } = useSelector((state) => state.ui);
+  // Success message state
+  const [successMessage, setSuccessMessage] = useState(null);
   
   // Event data state
   const [eventData, setEventData] = useState({
     // Basic Info (Step 1)
     name: '',
-    eventType: 'public', // Default to public (will be translated to private: false/true)
-    showHostProfile: false,
+    eventType: 'public', // Default to public
+    showHostProfile: true,
     organizationId: null, // Will be set from user context
     createdBy: null, // Will be set from user context
     
@@ -61,8 +66,40 @@ const CreateEventPage = () => {
       longitude: ''
     },
     
-    // Additional event data for other steps will be added here
-    // as we implement them
+    // Date/Time (Step 3)
+    dateTime: {
+      startDate: '',
+      startTime: '',
+      endDate: '',
+      endTime: ''
+    },
+    
+    // Description (Step 4)
+    description: '',
+    
+    // Art (Step 5)
+    art: {
+      thumbnailFile: null,
+      thumbnailUrl: null,
+      thumbnailName: null,
+      bannerFile: null,
+      bannerUrl: null,
+      bannerName: null
+    },
+
+    // Tickets (Step 6)
+    tickets: [],
+
+     // Discount Codes (Step 7)
+    discountCodes: [],
+    
+    // Publish (Step 8)
+    publishStatus: 'draft', // 'draft', 'published', 'archived'
+    publishedAt: null,
+  
+    // Additional organizer info for publish preview
+    organizerName: 'City Music Festival Ltd.',
+    organizerMeta: '23 Events Conducted'
   });
   
   // Track completion status for each step
@@ -83,6 +120,13 @@ const CreateEventPage = () => {
   // Error state
   const [error, setError] = useState(null);
   
+  // Constants for file validations
+  const supportedImageTypes = ['.jpg', '.png', '.webp'];
+  const maxFileSizes = {
+    thumbnail: 10, // 10MB
+    banner: 10 // 10MB
+  };
+  
   // Fetch user data on component mount
   useEffect(() => {
     const fetchUserData = async () => {
@@ -102,35 +146,6 @@ const CreateEventPage = () => {
     
     fetchUserData();
   }, []);
-  
-  /**
-   * Update step status based on event data
-   * @param {Object} data - Event data
-   */
-  const updateStepStatusFromData = React.useCallback((data) => {
-    // This is a placeholder implementation
-    // In a real app, you would check specific fields to determine completion
-    const newStepStatus = { ...stepStatus };
-    
-    // Check if basic info is complete
-    if (data.name) {
-      newStepStatus.basicInfo = { completed: true, valid: true, visited: true };
-    }
-    
-    // Check if location is complete
-    if (data.location) {
-      const locationComplete = data.location.isToBeAnnounced || 
-        (data.location.venue && data.location.street && data.location.city && data.location.state);
-      
-      if (locationComplete) {
-        newStepStatus.location = { completed: true, valid: true, visited: true };
-      }
-    }
-    
-    // Add similar checks for other steps
-    
-    setStepStatus(newStepStatus);
-  }, [stepStatus]);
   
   // Set user info when user data is loaded
   useEffect(() => {
@@ -172,7 +187,7 @@ const CreateEventPage = () => {
     const fetchEventData = async () => {
       if (eventId) {
         try {
-          dispatch(setLoading({ key: 'fetchEvent', isLoading: true }));
+          setIsLoading(prev => ({ ...prev, fetchEvent: true }));
           const response = await GetEventAPI(eventId);
           
           // Update event data
@@ -190,13 +205,72 @@ const CreateEventPage = () => {
           console.error('Error fetching event data:', error);
           setError('Failed to load event data. Please try again.');
         } finally {
-          dispatch(setLoading({ key: 'fetchEvent', isLoading: false }));
+          setIsLoading(prev => ({ ...prev, fetchEvent: false }));
         }
       }
     };
     
     fetchEventData();
-  }, [eventId, dispatch, updateStepStatusFromData]);
+  }, [eventId]);
+  
+  /**
+   * Update step status based on event data
+   * @param {Object} data - Event data
+   */
+  const updateStepStatusFromData = (data) => {
+    // This is a simplified implementation
+    const newStepStatus = { ...stepStatus };
+    
+    // Check if basic info is complete
+    if (data.name) {
+      newStepStatus.basicInfo = { completed: true, valid: true, visited: true };
+    }
+    
+    // Check if location is complete
+    if (data.location) {
+      const locationComplete = data.location.isToBeAnnounced || 
+        (data.location.venue && data.location.street && data.location.city && data.location.state);
+      
+      if (locationComplete) {
+        newStepStatus.location = { completed: true, valid: true, visited: true };
+      }
+    }
+    
+    // Check if date/time is complete
+    if (data.dateTime) {
+      const dateTimeComplete = data.dateTime.startDate && data.dateTime.startTime && 
+                              data.dateTime.endDate && data.dateTime.endTime;
+      
+      if (dateTimeComplete) {
+        newStepStatus.dateTime = { completed: true, valid: true, visited: true };
+      }
+    }
+    
+    // Check if description is complete
+    if (data.description) {
+      newStepStatus.description = { completed: true, valid: true, visited: true };
+    }
+    
+    // Check if art is complete
+    if (data.art) {
+      // Art step is optional, so mark as complete if visited
+      if (data.art.thumbnailFile || data.art.bannerFile) {
+        newStepStatus.art = { completed: true, valid: true, visited: true };
+      }
+    }
+    
+    // Check if tickets are complete
+    if (data.tickets && data.tickets.length > 0) {
+      newStepStatus.tickets = { completed: true, valid: true, visited: true };
+    }
+    
+    // Check if discount codes are complete
+    if (data.discountCodes && data.discountCodes.length > 0) {
+      newStepStatus.discountCodes = { completed: true, valid: true, visited: true };
+    }
+    
+    setStepStatus(newStepStatus);
+  };
   
   /**
    * Handle input changes for the current step
@@ -209,31 +283,36 @@ const CreateEventPage = () => {
       ? e.target.checked 
       : (e.target?.value ?? e);
     
-    // Handle special case for location object
-    if (field === 'location') {
+    // Special case handlers
+    if (field === 'location' || field === 'dateTime' || field === 'art' || 
+        field === 'tickets' || field === 'discountCodes') {
       setEventData(prevData => ({
         ...prevData,
-        location: value.location
+        [field]: value
       }));
       return;
     }
     
-    // Handle special case for location validity
-    if (field === 'locationValid') {
+    // Handle validation flags for steps
+    if (field === 'locationValid' || field === 'dateTimeValid' || 
+        field === 'descriptionValid' || field === 'artValid' ||
+        field === 'ticketsValid' || field === 'discountCodesValid') {
+      const stepName = field.replace('Valid', '');
       setStepStatus(prevStatus => ({
         ...prevStatus,
-        location: {
-          ...prevStatus.location,
+        [stepName]: {
+          ...prevStatus[stepName],
           valid: value
         }
       }));
       return;
     }
     
-    setEventData({
-      ...eventData,
+    // Standard field handling
+    setEventData(prevData => ({
+      ...prevData,
       [field]: value
-    });
+    }));
   };
   
   /**
@@ -247,17 +326,17 @@ const CreateEventPage = () => {
       case 2: // Location
         return validateLocation();
       case 3: // Date & Time
-        return true; // To be implemented
+        return validateDateTime();
       case 4: // Description
-        return true; // To be implemented
+        return validateDescription();
       case 5: // Art
-        return true; // To be implemented
+        return validateArt();
       case 6: // Tickets
-        return true; // To be implemented
+        return validateTickets();
       case 7: // Discount Codes
-        return true; // To be implemented
+        return validateDiscountCodes();
       case 8: // Publish
-        return true; // To be implemented
+        return validatePublish();
       default:
         return false;
     }
@@ -268,7 +347,7 @@ const CreateEventPage = () => {
    * @returns {boolean} Is the Basic Info step valid
    */
   const validateBasicInfo = () => {
-    // Check if name is filled, eventType is always valid as it defaults to 'public'
+    // Check if name is filled
     return eventData.name.trim() !== '';
   };
   
@@ -294,21 +373,149 @@ const CreateEventPage = () => {
   };
   
   /**
-   * Update the status of the current step
-   * @param {boolean} completed - Whether the step is completed
-   * @param {boolean} valid - Whether the step is valid
+   * Validate the Date & Time step
+   * @returns {boolean} Is the Date & Time step valid
    */
-  const updateCurrentStepStatus = (completed = false, valid = false) => {
-    const stepKey = getStepKeyByNumber(currentStep);
+  const validateDateTime = () => {
+    const dateTime = eventData.dateTime || {};
     
-    setStepStatus(prevStatus => ({
-      ...prevStatus,
-      [stepKey]: {
-        completed,
-        valid,
-        visited: true
+    // Check if required fields are filled
+    if (!dateTime.startDate || !dateTime.startTime || !dateTime.endDate || !dateTime.endTime) {
+      return false;
+    }
+    
+    // Check if end date/time is after start date/time
+    const startDateTime = new Date(`${dateTime.startDate}T${dateTime.startTime}`);
+    const endDateTime = new Date(`${dateTime.endDate}T${dateTime.endTime}`);
+    
+    if (endDateTime <= startDateTime) {
+      return false;
+    }
+    
+    return true;
+  };
+  
+  /**
+   * Validate the Description step
+   * @returns {boolean} Is the Description step valid
+   */
+  const validateDescription = () => {
+    // Check if description is filled
+    return eventData.description?.trim() !== '';
+  };
+  
+  /**
+   * Validate the Art step
+   * @returns {boolean} Is the Art step valid
+   */
+  const validateArt = () => {
+    // Art uploads are optional but if files are uploaded, they must be valid
+    const artData = eventData.art || {};
+    
+    // Helper function to validate a file
+    const isFileValid = (file, supportedTypes, maxSizeMB) => {
+      if (!file) return true;
+      
+      // Check file type
+      const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+      if (!supportedTypes.includes(fileExtension)) {
+        return false;
       }
-    }));
+      
+      // Check file size
+      const fileSizeMB = file.size / (1024 * 1024);
+      if (fileSizeMB > maxSizeMB) {
+        return false;
+      }
+      
+      return true;
+    };
+    
+    // Check for validation errors in uploaded files
+    const hasThumbnailError = artData.thumbnailFile && 
+                             !isFileValid(artData.thumbnailFile, supportedImageTypes, maxFileSizes.thumbnail);
+    const hasBannerError = artData.bannerFile && 
+                          !isFileValid(artData.bannerFile, supportedImageTypes, maxFileSizes.banner);
+    
+    // Return true if there are no errors
+    return !hasThumbnailError && !hasBannerError;
+  };
+
+  /**
+   * Validate the Tickets step
+   * @returns {boolean} Is the Tickets step valid
+   */
+  const validateTickets = () => {
+    // Check if there is at least one ticket
+    if (!eventData.tickets || eventData.tickets.length === 0) {
+      return false;
+    }
+    
+    // Check if all tickets have required fields
+    const invalidTickets = eventData.tickets.filter(ticket => {
+      return !ticket.name || !ticket.price || !ticket.quantity;
+    });
+    
+    return invalidTickets.length === 0;
+  };  
+
+  /**
+   * Validate the Discount Codes step
+   * @returns {boolean} Is the Discount Codes step valid
+   */
+  const validateDiscountCodes = () => {
+    // Discount codes are optional, so it's always valid
+    // But if there are discount codes, they must be valid
+    if (!eventData.discountCodes || eventData.discountCodes.length === 0) {
+      return true;
+    }
+    
+    // Check if all discount codes have required fields
+    const invalidDiscountCodes = eventData.discountCodes.filter(code => {
+      return !code.code || !code.discountPercentage || 
+             !code.maxDiscountAmount || !code.minDiscountAmount || 
+             !code.quantity;
+    });
+    
+    return invalidDiscountCodes.length === 0;
+  };
+  
+  /**
+   * Validate the Publish step
+   * @returns {boolean} Is the Publish step valid
+   */
+  const validatePublish = () => {
+    // Check if all required event information is available
+    
+    // Basic Info validation
+    if (!eventData.name) {
+      return false;
+    }
+    
+    // Location validation - either TBA or has location details
+    if (!eventData.location.isToBeAnnounced && 
+        (!eventData.location.venue || !eventData.location.city || !eventData.location.country)) {
+      return false;
+    }
+    
+    // Date/Time validation
+    if (!eventData.dateTime.startDate || !eventData.dateTime.startTime || 
+        !eventData.dateTime.endDate || !eventData.dateTime.endTime) {
+      return false;
+    }
+    
+    // Description validation
+    if (!eventData.description) {
+      return false;
+    }
+    
+    // Tickets validation - at least one ticket is required
+    if (!eventData.tickets || eventData.tickets.length === 0) {
+      return false;
+    }
+    
+    // All required steps are valid
+    return true;
   };
   
   /**
@@ -329,26 +536,72 @@ const CreateEventPage = () => {
       default: return 'basicInfo';
     }
   };
-  
+
   /**
-   * Navigate to the next step
+   * Handle publishing the event
+   */
+  const handlePublishEvent = async () => {
+    try {
+      // Set loading state
+      setIsLoading(prev => ({ ...prev, publishEvent: true }));
+      
+      // Prepare the event data for publishing
+      const publishEventData = {
+        ...eventData,
+        publishStatus: 'published',
+        publishedAt: new Date().toISOString()
+      };
+      
+      // Make API call to publish the event
+      // Uncomment for actual implementation
+      // const response = await PublishEventAPI(eventId, publishEventData);
+      
+      // Simulate API call for now
+      const mockResponse = { data: { id: eventId || 'new-event-123' } };
+      
+      // Redirect to the published event page
+      if (mockResponse.data && mockResponse.data.id) {
+        // Show success message
+        setSuccessMessage('Event published successfully!');
+        
+        // Redirect to the published event page after a short delay
+        setTimeout(() => {
+          navigate(`/events/${mockResponse.data.id}`);
+        }, 1500);
+      }
+    } catch (error) {
+      console.error('Error publishing event:', error);
+      setError('Failed to publish event. Please try again.');
+    } finally {
+      setIsLoading(prev => ({ ...prev, publishEvent: false }));
+    }
+  };
+
+  /**
+   * Handle next step navigation
    */
   const handleNextStep = async () => {
     // Validate current step
     const isValid = validateCurrentStep();
     
     if (!isValid) {
-      // Mark current step as visited but not valid
-      updateCurrentStepStatus(false, false);
+      // Show validation error
+      setError('Please complete all required fields');
       return;
     }
     
     try {
+      // Special case for the last step (publish)
+      if (currentStep === 8) {
+        await handlePublishEvent();
+        return;
+      }
+      
       // Set loading state
-      dispatch(setLoading({ key: 'saveEvent', isLoading: true }));
+      setIsLoading(prev => ({ ...prev, saveEvent: true }));
       
       // Save current step data
-      let updatedEventId = eventId;
+      let updatedEventId = eventId || 'draft-event-123'; // Placeholder for demo
       
       if (currentStep === 1 && !eventId) {
         try {
@@ -357,47 +610,106 @@ const CreateEventPage = () => {
             name: eventData.name,
             organizationId: eventData.organizationId,
             createdBy: eventData.createdBy,
-            private: eventData.eventType === 'private'
+            private: eventData.eventType === 'private',
+            showHostProfile: eventData.showHostProfile
           };
           
-          // Log the data being sent to help with debugging
-          console.log('Sending to API:', basicInfoData);
+          // Uncomment for actual API call
+          // const response = await CreateEventAPI(basicInfoData);
+          // updatedEventId = response.data.id;
           
-          const response = await CreateEventAPI(basicInfoData);
-          updatedEventId = response.data.id;
+          // For now, just use a placeholder ID
+          updatedEventId = 'new-event-123';
         } catch (error) {
           console.error('API Error Details:', error.response?.data || error.message);
-          throw error; // Re-throw to be caught by the outer try/catch
+          throw error;
         }
-      } else if (currentStep === 2 && updatedEventId) {
-        // Handle location step save
+      } else if (eventId) {
+        // Update existing event
         try {
-          const locationData = {
-            ...eventData.location,
-            eventId: updatedEventId
+          const updateData = {
+            id: eventId,
+            // Add appropriate data based on current step
+            ...getStepDataForUpdate(currentStep)
           };
           
-          await UpdateEventLocationAPI(updatedEventId, locationData);
+          // Uncomment for actual API call
+          // await UpdateEventAPI(updateData);
         } catch (error) {
-          console.error('Error saving location data:', error);
+          console.error('API Error Details:', error.response?.data || error.message);
           throw error;
         }
       }
-      // For subsequent steps, add similar implementations
       
-      // Mark current step as completed and valid
-      updateCurrentStepStatus(true, true);
+      // Mark current step as completed
+      const stepKey = getStepKeyByNumber(currentStep);
+      setStepStatus(prevStatus => ({
+        ...prevStatus,
+        [stepKey]: {
+          completed: true,
+          valid: true,
+          visited: true
+        }
+      }));
       
       // Navigate to the next step
-      if (currentStep < 8) {
-        navigate(`/events/create/${updatedEventId}/${currentStep + 1}`);
-        setCurrentStep(prevStep => prevStep + 1);
-      }
+      navigate(`/events/create/${updatedEventId}/${currentStep + 1}`);
+      setCurrentStep(prevStep => prevStep + 1);
     } catch (error) {
       console.error('Error saving event data:', error);
       setError('Failed to save event data. Please try again.');
     } finally {
-      dispatch(setLoading({ key: 'saveEvent', isLoading: false }));
+      setIsLoading(prev => ({ ...prev, saveEvent: false }));
+    }
+  };
+  
+  /**
+   * Get data for the current step to update
+   * @param {number} step - Current step
+   * @returns {Object} Data for update
+   */
+  const getStepDataForUpdate = (step) => {
+    switch (step) {
+      case 1: // Basic Info
+        return {
+          name: eventData.name,
+          private: eventData.eventType === 'private',
+          showHostProfile: eventData.showHostProfile
+        };
+      case 2: // Location
+        return {
+          location: eventData.location
+        };
+      case 3: // Date & Time
+        return {
+          dateTime: eventData.dateTime
+        };
+      case 4: // Description
+        return {
+          description: eventData.description
+        };
+      case 5: // Art
+        // Handle file uploads separately
+        return {
+          art: {
+            thumbnailName: eventData.art?.thumbnailName,
+            bannerName: eventData.art?.bannerName
+          }
+        };
+      case 6: // Tickets
+        return {
+          tickets: eventData.tickets
+        };
+      case 7: // Discount Codes
+        return {
+          discountCodes: eventData.discountCodes
+        };
+      case 8: // Publish
+        return {
+          publishStatus: eventData.publishStatus
+        };
+      default:
+        return {};
     }
   };
   
@@ -407,7 +719,7 @@ const CreateEventPage = () => {
   const handlePrevStep = () => {
     if (currentStep > 1) {
       const prevStep = currentStep - 1;
-      navigate(`/events/create/${eventId}/${prevStep}`);
+      navigate(`/events/create/${eventId || 'draft-event-123'}/${prevStep}`);
       setCurrentStep(prevStep);
     }
   };
@@ -426,7 +738,7 @@ const CreateEventPage = () => {
                         stepStatus[getStepKeyByNumber(stepNumber - 1)].completed;
     
     if (canNavigate) {
-      navigate(`/events/create/${eventId}/${stepNumber}`);
+      navigate(`/events/create/${eventId || 'draft-event-123'}/${stepNumber}`);
       setCurrentStep(stepNumber);
     }
   };
@@ -437,7 +749,7 @@ const CreateEventPage = () => {
    */
   const renderCurrentStep = () => {
     // Check if event data is loading
-    if (isLoading?.['fetchEvent'] || userLoading) {
+    if (isLoading.fetchEvent || userLoading) {
       return (
         <div className={styles.loadingContainer}>
           <LoadingSpinner size="large" />
@@ -466,17 +778,61 @@ const CreateEventPage = () => {
           />
         );
       case 3:
-        return <DateTimeStep />;
+        return (
+          <DateTimeStep
+            eventData={eventData}
+            handleInputChange={handleInputChange}
+            isValid={validateDateTime()}
+            stepStatus={stepStatus.dateTime}
+          />
+        );
       case 4:
-        return <DescriptionStep />;
+        return (
+          <DescriptionStep
+            eventData={eventData}
+            handleInputChange={handleInputChange}
+            isValid={validateDescription()}
+            stepStatus={stepStatus.description}
+          />
+        );
       case 5:
-        return <ArtStep />;
+        return (
+          <ArtStep
+            eventData={eventData}
+            handleInputChange={handleInputChange}
+            isValid={validateArt()}
+            stepStatus={stepStatus.art}
+          />
+        );
       case 6:
-        return <TicketsStep />;
+        return (
+          <TicketsStep
+            eventData={eventData}
+            handleInputChange={handleInputChange}
+            isValid={validateTickets()}
+            stepStatus={stepStatus.tickets}
+          />
+        );
       case 7:
-        return <DiscountCodesStep />;
+        return (
+          <DiscountCodesStep
+            eventData={eventData}
+            handleInputChange={handleInputChange}
+            isValid={validateDiscountCodes()}
+            stepStatus={stepStatus.discountCodes}
+          />
+        );
       case 8:
-        return <PublishStep />;
+        return (
+          <PublishStep
+            eventData={eventData}
+            handleInputChange={handleInputChange}
+            handlePublish={handlePublishEvent}
+            isValid={validatePublish()}
+            stepStatus={stepStatus.publish}
+            isPublishing={isLoading.publishEvent}
+          />
+        );
       default:
         return <div>Invalid Step</div>;
     }
@@ -489,7 +845,7 @@ const CreateEventPage = () => {
       case 2: return 'Location';
       case 3: return 'Date & Time';
       case 4: return 'Description';
-      case 5: return 'Art';
+      case 5: return 'Thumbnail and Banner';
       case 6: return 'Tickets';
       case 7: return 'Discount Codes';
       case 8: return 'Publish';
@@ -498,38 +854,49 @@ const CreateEventPage = () => {
   };
   
   // Determine if the Next button should be disabled
-  const isNextDisabled = !validateCurrentStep() || isLoading?.['saveEvent'];
+  const isNextDisabled = !validateCurrentStep() || isLoading.saveEvent;
   
   // Determine if the Preview button should be available
   const canPreview = Object.values(stepStatus).some(step => step.completed);
   
   return (
-    <div className={styles.createEventContainer}>
-      {/* Header with breadcrumb navigation */}
-      <EventHeaderNav 
-        currentStep={getCurrentStepName()} 
-        eventName={eventData.name || 'Untitled Event'} 
-        isDraft={true}
-        canPreview={canPreview}
-      />
+    <div className={styles.pageWrapper}>
+      <SideNavBar />
       
-      <div className={styles.content}>
-        {/* Sidebar for step navigation */}
-        <EventCreationSidebar 
-          currentStep={currentStep}
-          stepStatus={stepStatus}
-          navigateToStep={navigateToStep}
+      <div className={styles.createEventContainer}>
+        <EventHeaderNav 
+          currentStep={getCurrentStepName()} 
+          eventName={eventData.name || 'NORR Festival 2022'} 
+          isDraft={true}
+          canPreview={canPreview}
         />
         
-        {/* Main content area */}
-        <div className={styles.mainContent}>
-          <ErrorBoundary>
+        <div className={styles.content}>
+          <EventCreationSidebar 
+            currentStep={currentStep}
+            stepStatus={stepStatus}
+            navigateToStep={navigateToStep}
+          />
+          
+          <div className={styles.mainContent}>
             {error && (
               <div className={styles.errorMessage}>
                 {error}
                 <button 
                   className={styles.dismissButton}
                   onClick={() => setError(null)}
+                >
+                  ✕
+                </button>
+              </div>
+            )}
+            
+            {successMessage && (
+              <div className={styles.successMessage}>
+                {successMessage}
+                <button 
+                  className={styles.dismissButton}
+                  onClick={() => setSuccessMessage(null)}
                 >
                   ✕
                 </button>
@@ -550,16 +917,18 @@ const CreateEventPage = () => {
                 Back
               </button>
               
-              <button
-                type="button"
-                onClick={handleNextStep}
-                disabled={isNextDisabled}
-                className={styles.nextButton}
-              >
-                {isLoading?.['saveEvent'] ? 'Saving...' : 'Next'}
-              </button>
+              {currentStep < 8 && (
+                <button
+                  type="button"
+                  onClick={handleNextStep}
+                  disabled={isNextDisabled}
+                  className={styles.nextButton}
+                >
+                  {isLoading.saveEvent ? 'Saving...' : 'Next'}
+                </button>
+              )}
             </div>
-          </ErrorBoundary>
+          </div>
         </div>
       </div>
     </div>

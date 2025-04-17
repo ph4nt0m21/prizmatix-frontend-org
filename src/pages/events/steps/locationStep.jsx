@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+// src/pages/events/steps/locationStep.jsx
+import React, { useState, useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
 import styles from './steps.module.scss';
 
 /**
  * LocationStep component - Second step of event creation
- * Collects event location information with options for TBA or manual entry
+ * Collects event location information with options for different location types
  * 
  * @param {Object} props Component props
  * @param {Object} props.eventData Event data from parent component
@@ -22,8 +23,13 @@ const LocationStep = ({
   // Extract location data from eventData or use defaults
   const locationData = eventData.location || {};
   
+  // Map references
+  const mapRef = useRef(null);
+  const googleMapRef = useRef(null);
+  
   // Local state for form management
   const [location, setLocation] = useState({
+    locationType: locationData.locationType || 'public',
     isToBeAnnounced: locationData.isToBeAnnounced || false,
     isPrivateLocation: locationData.isPrivateLocation || false,
     searchQuery: locationData.searchQuery || '',
@@ -44,6 +50,75 @@ const LocationStep = ({
   
   // State for map visibility and loading
   const [isLoadingMap, setIsLoadingMap] = useState(false);
+  const [activeTab, setActiveTab] = useState('map'); // 'map' or 'satellite'
+  
+  /**
+   * Initialize Google Maps
+   */
+  useEffect(() => {
+    // Check if Google Maps API is loaded
+    if (!window.google || !window.google.maps) {
+      const script = document.createElement('script');
+      script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyBAp9QrQIKe6JRxSiF5xV4HPMIym8GBi_0&libraries=places`;
+      script.async = true;
+      script.defer = true;
+      script.onload = initializeMap;
+      document.head.appendChild(script);
+      
+      return () => {
+        document.head.removeChild(script);
+      };
+    } else {
+      initializeMap();
+    }
+  }, []);
+  
+  /**
+   * Initialize the Google Map
+   */
+  const initializeMap = () => {
+    if (!mapRef.current) return;
+    
+    // Default to Australia if no coordinates are provided
+    const defaultPosition = { lat: -25.2744, lng: 133.7751 };
+    const position = location.latitude && location.longitude
+      ? { lat: parseFloat(location.latitude), lng: parseFloat(location.longitude) }
+      : defaultPosition;
+      
+    const mapOptions = {
+      center: position,
+      zoom: 4,
+      mapTypeId: activeTab === 'map' ? 'roadmap' : 'satellite',
+      mapTypeControl: false,
+      streetViewControl: false,
+      fullscreenControl: true,
+      zoomControl: true
+    };
+    
+    // Create the map
+    const map = new window.google.maps.Map(mapRef.current, mapOptions);
+    googleMapRef.current = map;
+    
+    // Create a marker if location is set
+    if (location.latitude && location.longitude) {
+      new window.google.maps.Marker({
+        position,
+        map,
+        title: location.venue || 'Selected Location'
+      });
+    }
+  };
+  
+  /**
+   * Switch map type (map or satellite)
+   * @param {string} type - 'map' or 'satellite'
+   */
+  const switchMapType = (type) => {
+    setActiveTab(type);
+    if (googleMapRef.current) {
+      googleMapRef.current.setMapTypeId(type === 'map' ? 'roadmap' : 'satellite');
+    }
+  };
   
   /**
    * Validate the location form
@@ -86,38 +161,25 @@ const LocationStep = ({
   }, [location, stepStatus, handleInputChange]);
   
   /**
-   * Handle checkbox changes
-   * @param {Object} e Event object
+   * Handle location type selection (public, private, to be announced)
+   * @param {string} type - Location type
    */
-  const handleCheckboxChange = (e) => {
-    const { name, checked } = e.target;
+  const handleLocationTypeChange = (type) => {
+    let updatedLocation = { ...location, locationType: type };
     
-    // If "To be announced" is checked, reset the form fields
-    if (name === 'isToBeAnnounced' && checked) {
-      setLocation(prev => ({
-        ...prev,
-        isToBeAnnounced: checked,
-        // Keep private location setting
-        searchQuery: '',
-        venue: '',
-        street: '',
-        streetNumber: '',
-        city: '',
-        postalCode: '',
-        state: '',
-        country: '',
-        additionalInfo: '',
-        latitude: '',
-        longitude: ''
-      }));
-      
-      // Clear validation errors
-      setErrors({});
+    // Update isToBeAnnounced flag based on type
+    if (type === 'tba') {
+      updatedLocation.isToBeAnnounced = true;
     } else {
-      setLocation(prev => ({
-        ...prev,
-        [name]: checked
-      }));
+      updatedLocation.isToBeAnnounced = false;
+      updatedLocation.isPrivateLocation = type === 'private';
+    }
+    
+    setLocation(updatedLocation);
+    
+    // Clear validation errors if switching to TBA
+    if (type === 'tba') {
+      setErrors({});
     }
   };
   
@@ -163,251 +225,421 @@ const LocationStep = ({
     // Show loading state
     setIsLoadingMap(true);
     
-    // Mock Google Maps API response with a timeout
-    // In a real app, you would call the Google Maps API here
-    setTimeout(() => {
-      // Mock response - would be replaced with actual API response
-      const mockResponse = {
-        venue: 'Auckland Convention Centre',
-        street: 'Example Street',
-        streetNumber: '123',
-        city: 'Auckland',
-        postalCode: '1010',
-        state: 'Auckland',
-        country: 'New Zealand',
-        latitude: '-36.848461',
-        longitude: '174.763336'
-      };
-      
-      // Update location with search results
-      setLocation(prev => ({
-        ...prev,
-        ...mockResponse
-      }));
-      
-      // Hide loading state
-      setIsLoadingMap(false);
-    }, 1000);
+    // Use Google Maps Geocoding API to search for location
+    if (window.google && window.google.maps) {
+      const geocoder = new window.google.maps.Geocoder();
+      geocoder.geocode({ address: location.searchQuery }, (results, status) => {
+        if (status === 'OK' && results[0]) {
+          const result = results[0];
+          const position = result.geometry.location;
+          
+          // Extract address components
+          let updatedLocation = {
+            ...location,
+            latitude: position.lat(),
+            longitude: position.lng()
+          };
+          
+          // Process address components
+          for (const component of result.address_components) {
+            const types = component.types;
+            
+            if (types.includes('street_number')) {
+              updatedLocation.streetNumber = component.long_name;
+            } else if (types.includes('route')) {
+              updatedLocation.street = component.long_name;
+            } else if (types.includes('locality')) {
+              updatedLocation.city = component.long_name;
+            } else if (types.includes('administrative_area_level_1')) {
+              updatedLocation.state = component.long_name;
+            } else if (types.includes('country')) {
+              updatedLocation.country = component.long_name;
+            } else if (types.includes('postal_code')) {
+              updatedLocation.postalCode = component.long_name;
+            }
+          }
+          
+          // Update venue if not set
+          if (!updatedLocation.venue) {
+            updatedLocation.venue = result.formatted_address.split(',')[0];
+          }
+          
+          // Update location state
+          setLocation(updatedLocation);
+          
+          // Update map
+          if (googleMapRef.current) {
+            googleMapRef.current.setCenter(position);
+            googleMapRef.current.setZoom(15);
+            
+            // Add marker
+            new window.google.maps.Marker({
+              position,
+              map: googleMapRef.current,
+              title: updatedLocation.venue || 'Selected Location'
+            });
+          }
+        } else {
+          setErrors(prev => ({
+            ...prev,
+            searchQuery: 'Location not found. Please try a different search.'
+          }));
+        }
+        
+        setIsLoadingMap(false);
+      });
+    } else {
+      // Fallback if Google Maps API is not available
+      setTimeout(() => {
+        // Mock response - would be replaced with actual API response
+        const mockResponse = {
+          venue: 'Sydney Convention Centre',
+          street: 'Example Street',
+          streetNumber: '123',
+          city: 'Sydney',
+          postalCode: '2000',
+          state: 'New South Wales',
+          country: 'Australia',
+          latitude: '-33.865143',
+          longitude: '151.209900'
+        };
+        
+        // Update location with search results
+        setLocation(prev => ({
+          ...prev,
+          ...mockResponse
+        }));
+        
+        setIsLoadingMap(false);
+      }, 1000);
+    }
   };
   
   return (
     <div className={styles.stepContainer}>
-      <div className={styles.stepHeader}>
-        <h2 className={styles.stepTitle}>Event Location Information</h2>
-        <p className={styles.stepDescription}>List your basic event details below.</p>
-      </div>
-      
       <div className={styles.formSection}>
-        {/* Checkbox options */}
-        <div className={styles.checkboxOptions}>
-          <div className={styles.checkboxContainer}>
-            <input
-              type="checkbox"
-              id="isToBeAnnounced"
-              name="isToBeAnnounced"
-              checked={location.isToBeAnnounced}
-              onChange={handleCheckboxChange}
-              className={styles.checkboxInput}
-            />
-            <label htmlFor="isToBeAnnounced" className={styles.checkboxLabel}>
-              To be announced
-            </label>
-          </div>
+        {/* Location Type Section */}
+        <div className={styles.formGroup}>
+          <label className={styles.formLabel}>
+            Location Type
+          </label>
+          <p className={styles.formDescription}>
+            Choose how your event will appear to potential attendees
+          </p>
           
-          <div className={styles.checkboxContainer}>
-            <input
-              type="checkbox"
-              id="isPrivateLocation"
-              name="isPrivateLocation"
-              checked={location.isPrivateLocation}
-              onChange={handleCheckboxChange}
-              className={styles.checkboxInput}
-            />
-            <label htmlFor="isPrivateLocation" className={styles.checkboxLabel}>
-              Private Location
-            </label>
+          <div className={styles.locationOptions}>
+            <div 
+              className={`${styles.locationOption} ${location.locationType === 'public' && !location.isToBeAnnounced ? styles.selected : ''}`}
+              onClick={() => handleLocationTypeChange('public')}
+            >
+              <div className={styles.locationIcon}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9C9.5 7.62 10.62 6.5 12 6.5C13.38 6.5 14.5 7.62 14.5 9C14.5 10.38 13.38 11.5 12 11.5Z" fill={location.locationType === 'public' && !location.isToBeAnnounced ? "#7C3AED" : "#666666"}/>
+                </svg>
+              </div>
+              <div className={styles.locationContent}>
+                <h3 className={styles.locationTitle}>Public Location</h3>
+                <p className={styles.locationDescription}>
+                  Choose how your event will appear to potential attendees
+                </p>
+              </div>
+              <div className={styles.locationSelector}>
+                {location.locationType === 'public' && !location.isToBeAnnounced && (
+                  <div className={styles.selectedDot}></div>
+                )}
+              </div>
+            </div>
+            
+            <div 
+              className={`${styles.locationOption} ${location.locationType === 'private' ? styles.selected : ''}`}
+              onClick={() => handleLocationTypeChange('private')}
+            >
+              <div className={styles.locationIcon}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9C9.5 7.62 10.62 6.5 12 6.5C13.38 6.5 14.5 7.62 14.5 9C14.5 10.38 13.38 11.5 12 11.5Z" fill={location.locationType === 'private' ? "#7C3AED" : "#666666"}/>
+                  <path d="M18 8H17V6C17 3.24 14.76 1 12 1C9.24 1 7 3.24 7 6V8H6C4.9 8 4 8.9 4 10V20C4 21.1 4.9 22 6 22H18C19.1 22 20 21.1 20 20V10C20 8.9 19.1 8 18 8Z" fill={location.locationType === 'private' ? "#7C3AED" : "#666666"} fillOpacity="0.2"/>
+                </svg>
+              </div>
+              <div className={styles.locationContent}>
+                <h3 className={styles.locationTitle}>Private Location</h3>
+                <p className={styles.locationDescription}>
+                  Choose how your event will appear to potential attendees
+                </p>
+              </div>
+              <div className={styles.locationSelector}>
+                {location.locationType === 'private' && (
+                  <div className={styles.selectedDot}></div>
+                )}
+              </div>
+            </div>
+            
+            <div 
+              className={`${styles.locationOption} ${location.isToBeAnnounced ? styles.selected : ''}`}
+              onClick={() => handleLocationTypeChange('tba')}
+            >
+              <div className={styles.locationIcon}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M19 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V5C21 3.9 20.1 3 19 3ZM19 19H5V5H19V19Z" fill={location.isToBeAnnounced ? "#7C3AED" : "#666666"}/>
+                  <path d="M7 12H9V17H7V12ZM15 7H17V17H15V7ZM11 14H13V17H11V14ZM11 10H13V12H11V10Z" fill={location.isToBeAnnounced ? "#7C3AED" : "#666666"}/>
+                </svg>
+              </div>
+              <div className={styles.locationContent}>
+                <h3 className={styles.locationTitle}>To be announced</h3>
+                <p className={styles.locationDescription}>
+                  Choose how your event will appear to potential attendees
+                </p>
+              </div>
+              <div className={styles.locationSelector}>
+                {location.isToBeAnnounced && (
+                  <div className={styles.selectedDot}></div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
         
-        {/* Location search and map (only shown if not TBA) */}
+        {/* Location Details Section - Only show if not TBA */}
         {!location.isToBeAnnounced && (
-          <>
-            <div className={styles.formGroup}>
-              <label htmlFor="searchQuery" className={styles.formLabel}>
-                Search
-              </label>
-              <div className={styles.searchInputWrapper}>
-                <input
-                  type="text"
-                  id="searchQuery"
-                  name="searchQuery"
-                  className={`${styles.formInput} ${errors.searchQuery ? styles.inputError : ''}`}
-                  placeholder="Enter address or location name"
-                  value={location.searchQuery}
-                  onChange={handleFieldChange}
-                  onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                />
+          <div className={styles.formGroup}>
+            <label className={styles.formLabel}>
+              Location Details
+            </label>
+            <p className={styles.formDescription}>
+              The exact location to showcase on your event page and calendar events
+            </p>
+            
+            {/* Search Field */}
+            <div className={styles.searchContainer}>
+              <input
+                type="text"
+                name="searchQuery"
+                className={`${styles.searchInput} ${errors.searchQuery ? styles.inputError : ''}`}
+                placeholder="eg. The great Music Festival 2025"
+                value={location.searchQuery}
+                onChange={handleFieldChange}
+                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+              />
+              <button 
+                type="button" 
+                className={styles.searchButton}
+                onClick={handleSearch}
+                disabled={isLoadingMap}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M15.5 14H14.71L14.43 13.73C15.41 12.59 16 11.11 16 9.5C16 5.91 13.09 3 9.5 3C5.91 3 3 5.91 3 9.5C3 13.09 5.91 16 9.5 16C11.11 16 12.59 15.41 13.73 14.43L14 14.71V15.5L19 20.49L20.49 19L15.5 14ZM9.5 14C7.01 14 5 11.99 5 9.5C5 7.01 7.01 5 9.5 5C11.99 5 14 7.01 14 9.5C14 11.99 11.99 14 9.5 14Z" fill="#7C3AED"/>
+                </svg>
+              </button>
+            </div>
+            {errors.searchQuery && (
+              <div className={styles.fieldError}>{errors.searchQuery}</div>
+            )}
+            
+            {/* Map Container */}
+            <div className={styles.mapContainerWithControls}>
+              <div className={styles.mapTabControls}>
                 <button 
                   type="button" 
-                  className={styles.searchButton}
-                  onClick={handleSearch}
-                  disabled={isLoadingMap}
+                  className={`${styles.mapTabButton} ${activeTab === 'map' ? styles.activeTab : ''}`}
+                  onClick={() => switchMapType('map')}
                 >
-                  {isLoadingMap ? 'Loading...' : 'Search'}
+                  Map
+                </button>
+                <button 
+                  type="button" 
+                  className={`${styles.mapTabButton} ${activeTab === 'satellite' ? styles.activeTab : ''}`}
+                  onClick={() => switchMapType('satellite')}
+                >
+                  Satellite
                 </button>
               </div>
-              {errors.searchQuery && (
-                <div className={styles.fieldError}>{errors.searchQuery}</div>
-              )}
-            </div>
-            
-            {/* Map container - would be replaced with actual Google Maps component */}
-            <div className={styles.mapContainer}>
-              {isLoadingMap ? (
-                <div className={styles.mapLoading}>Loading map...</div>
-              ) : (
-                <div className={styles.mapPlaceholder}>
-                  {/* This would be replaced with an actual Google Maps component */}
-                  <img 
-                    src="/mock-map-auckland.png" 
-                    alt="Map of Auckland"
-                    onError={(e) => {
-                      e.target.onerror = null;
-                      e.target.src = 'data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22500%22%20height%3D%22250%22%20viewBox%3D%220%200%20500%20250%22%20preserveAspectRatio%3D%22none%22%3E%3Crect%20width%3D%22500%22%20height%3D%22250%22%20fill%3D%22%23004080%22%2F%3E%3Ctext%20x%3D%22250%22%20y%3D%22125%22%20font-family%3D%22Arial%2C%20sans-serif%22%20font-size%3D%2220%22%20fill%3D%22%23FFFFFF%22%20text-anchor%3D%22middle%22%3EGoogle%20Maps%20would%20display%20here%3C%2Ftext%3E%3C%2Fsvg%3E';
-                    }}
-                    className={styles.mapImage}
+              
+              <div className={styles.mapContainer}>
+                {isLoadingMap ? (
+                  <div className={styles.mapLoading}>Loading map...</div>
+                ) : (
+                  <div 
+                    ref={mapRef}
+                    className={styles.googleMap}
                   />
-                </div>
-              )}
+                )}
+              </div>
             </div>
             
-            {/* Location details form */}
+            {/* Location Form Fields */}
+            {/* Venue */}
             <div className={styles.formGroup}>
               <label htmlFor="venue" className={styles.formLabel}>
                 Venue
               </label>
-              <input
-                type="text"
-                id="venue"
-                name="venue"
-                className={`${styles.formInput} ${errors.venue ? styles.inputError : ''}`}
-                placeholder="Enter venue name"
-                value={location.venue}
-                onChange={handleFieldChange}
-              />
+              <div className={styles.dropdownInput}>
+                <input
+                  type="text"
+                  id="venue"
+                  name="venue"
+                  className={`${styles.formInput} ${errors.venue ? styles.inputError : ''}`}
+                  placeholder="eg. The great Music Festival 2025"
+                  value={location.venue}
+                  onChange={handleFieldChange}
+                />
+                <div className={styles.dropdownArrow}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M7 10L12 15L17 10H7Z" fill="#666666"/>
+                  </svg>
+                </div>
+              </div>
               {errors.venue && (
                 <div className={styles.fieldError}>{errors.venue}</div>
               )}
             </div>
             
+            {/* Street & Street No */}
             <div className={styles.formRow}>
               <div className={styles.formGroup}>
                 <label htmlFor="street" className={styles.formLabel}>
                   Street
                 </label>
-                <input
-                  type="text"
-                  id="street"
-                  name="street"
-                  className={`${styles.formInput} ${errors.street ? styles.inputError : ''}`}
-                  placeholder="Enter street name"
-                  value={location.street}
-                  onChange={handleFieldChange}
-                />
+                <div className={styles.dropdownInput}>
+                  <input
+                    type="text"
+                    id="street"
+                    name="street"
+                    className={`${styles.formInput} ${errors.street ? styles.inputError : ''}`}
+                    placeholder="eg. The great Music Festival 2025"
+                    value={location.street}
+                    onChange={handleFieldChange}
+                  />
+                  <div className={styles.dropdownArrow}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M7 10L12 15L17 10H7Z" fill="#666666"/>
+                    </svg>
+                  </div>
+                </div>
                 {errors.street && (
                   <div className={styles.fieldError}>{errors.street}</div>
                 )}
               </div>
-              
               <div className={styles.formGroup}>
                 <label htmlFor="streetNumber" className={styles.formLabel}>
                   Street No.
                 </label>
-                <input
-                  type="text"
-                  id="streetNumber"
-                  name="streetNumber"
-                  className={styles.formInput}
-                  placeholder="Enter street number"
-                  value={location.streetNumber}
-                  onChange={handleFieldChange}
-                />
+                <div className={styles.dropdownInput}>
+                  <input
+                    type="text"
+                    id="streetNumber"
+                    name="streetNumber"
+                    className={styles.formInput}
+                    placeholder="eg. The great Music Festival 2025"
+                    value={location.streetNumber}
+                    onChange={handleFieldChange}
+                  />
+                  <div className={styles.dropdownArrow}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M7 10L12 15L17 10H7Z" fill="#666666"/>
+                    </svg>
+                  </div>
+                </div>
               </div>
             </div>
             
+            {/* City & Postal Code */}
             <div className={styles.formRow}>
               <div className={styles.formGroup}>
                 <label htmlFor="city" className={styles.formLabel}>
                   City
                 </label>
-                <input
-                  type="text"
-                  id="city"
-                  name="city"
-                  className={`${styles.formInput} ${errors.city ? styles.inputError : ''}`}
-                  placeholder="Enter city"
-                  value={location.city}
-                  onChange={handleFieldChange}
-                />
+                <div className={styles.dropdownInput}>
+                  <input
+                    type="text"
+                    id="city"
+                    name="city"
+                    className={`${styles.formInput} ${errors.city ? styles.inputError : ''}`}
+                    placeholder="eg. The great Music Festival 2025"
+                    value={location.city}
+                    onChange={handleFieldChange}
+                  />
+                  <div className={styles.dropdownArrow}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M7 10L12 15L17 10H7Z" fill="#666666"/>
+                    </svg>
+                  </div>
+                </div>
                 {errors.city && (
                   <div className={styles.fieldError}>{errors.city}</div>
                 )}
               </div>
-              
               <div className={styles.formGroup}>
                 <label htmlFor="postalCode" className={styles.formLabel}>
                   Postal Code
                 </label>
-                <input
-                  type="text"
-                  id="postalCode"
-                  name="postalCode"
-                  className={styles.formInput}
-                  placeholder="Enter postal code"
-                  value={location.postalCode}
-                  onChange={handleFieldChange}
-                />
+                <div className={styles.dropdownInput}>
+                  <input
+                    type="text"
+                    id="postalCode"
+                    name="postalCode"
+                    className={styles.formInput}
+                    placeholder="eg. The great Music Festival 2025"
+                    value={location.postalCode}
+                    onChange={handleFieldChange}
+                  />
+                  <div className={styles.dropdownArrow}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M7 10L12 15L17 10H7Z" fill="#666666"/>
+                    </svg>
+                  </div>
+                </div>
               </div>
             </div>
             
+            {/* State & Country */}
             <div className={styles.formRow}>
               <div className={styles.formGroup}>
                 <label htmlFor="state" className={styles.formLabel}>
                   State/Province
                 </label>
-                <div className={styles.selectWrapper}>
+                <div className={styles.dropdownInput}>
                   <input
                     type="text"
                     id="state"
                     name="state"
                     className={`${styles.formInput} ${errors.state ? styles.inputError : ''}`}
-                    placeholder="Enter state or province"
+                    placeholder="eg. The great Music Festival 2025"
                     value={location.state}
                     onChange={handleFieldChange}
                   />
-                  <div className={styles.selectArrow}>▼</div>
+                  <div className={styles.dropdownArrow}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M7 10L12 15L17 10H7Z" fill="#666666"/>
+                    </svg>
+                  </div>
                 </div>
                 {errors.state && (
                   <div className={styles.fieldError}>{errors.state}</div>
                 )}
               </div>
-              
               <div className={styles.formGroup}>
                 <label htmlFor="country" className={styles.formLabel}>
                   Country
                 </label>
-                <input
-                  type="text"
-                  id="country"
-                  name="country"
-                  className={styles.formInput}
-                  placeholder="Enter country"
-                  value={location.country}
-                  onChange={handleFieldChange}
-                />
+                <div className={styles.dropdownInput}>
+                  <input
+                    type="text"
+                    id="country"
+                    name="country"
+                    className={styles.formInput}
+                    placeholder="eg. The great Music Festival 2025"
+                    value={location.country}
+                    onChange={handleFieldChange}
+                  />
+                  <div className={styles.dropdownArrow}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M7 10L12 15L17 10H7Z" fill="#666666"/>
+                    </svg>
+                  </div>
+                </div>
               </div>
             </div>
             
+            {/* Additional Information */}
             <div className={styles.formGroup}>
               <label htmlFor="additionalInfo" className={styles.formLabel}>
                 Additional Information
@@ -416,13 +648,13 @@ const LocationStep = ({
                 id="additionalInfo"
                 name="additionalInfo"
                 className={styles.formTextarea}
-                placeholder="Provide any additional details about the location"
+                placeholder="eg. The great Music Festival 2025"
                 value={location.additionalInfo}
                 onChange={handleFieldChange}
                 rows={4}
               />
             </div>
-          </>
+          </div>
         )}
       </div>
     </div>

@@ -1,20 +1,25 @@
 @import '../../styles/variables';
 @import '../../styles/mixins';
 
+.pageWrapper {
+  display: flex;
+  min-height: 100vh;
+  background-color: white;
+}
+
 .createEventContainer {
   display: flex;
   flex-direction: column;
-  height: 100%;
-  min-height: calc(100vh - 70px);
-  width: 100%;
-  background-color: $background-dark;
+  width: calc(100% - 70px);
+  margin-left: 70px;
+  min-height: 100vh;
 }
 
 .content {
   display: flex;
   flex-grow: 1;
-  height: 100%;
-  position: relative;
+  height: calc(100vh - 100px);
+  overflow: hidden;
 }
 
 .mainContent {
@@ -22,10 +27,8 @@
   padding: 24px;
   display: flex;
   flex-direction: column;
-  
-  @include desktop {
-    padding: 32px;
-  }
+  overflow-y: auto;
+  background-color: #f7f8f9;
 }
 
 .stepContent {
@@ -38,13 +41,14 @@
   justify-content: space-between;
   margin-top: auto;
   padding-top: 24px;
-  border-top: 1px solid $border-color;
+  border-top: 1px solid #e5e7eb;
 }
 
 .backButton, .nextButton {
-  padding: 8px 24px;
-  border-radius: 4px;
+  padding: 10px 24px;
+  border-radius: 6px;
   font-weight: 500;
+  font-size: 14px;
   cursor: pointer;
   transition: all 0.2s ease;
   
@@ -55,22 +59,22 @@
 }
 
 .backButton {
-  background-color: transparent;
-  border: 1px solid $border-light;
-  color: $text-light;
+  background-color: white;
+  border: 1px solid #d1d5db;
+  color: #4b5563;
   
   &:hover:not(:disabled) {
-    background-color: rgba($text-light, 0.1);
+    background-color: #f9fafb;
   }
 }
 
 .nextButton {
-  background-color: $primary-color;
+  background-color: #7C3AED;
   border: none;
   color: white;
   
   &:hover:not(:disabled) {
-    background-color: darken($primary-color, 5%);
+    background-color: #6d28d9;
   }
 }
 
@@ -79,19 +83,19 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 200px;
+  height: 300px;
   
   p {
     margin-top: 16px;
-    color: $text-muted;
+    color: #6b7280;
   }
 }
 
 .errorMessage {
-  background-color: rgba($error-color, 0.1);
-  border: 1px solid rgba($error-color, 0.2);
-  border-radius: 4px;
-  color: $error-color;
+  background-color: #fee2e2;
+  border: 1px solid #fca5a5;
+  border-radius: 6px;
+  color: #b91c1c;
   padding: 12px 16px;
   margin-bottom: 24px;
   position: relative;
@@ -102,7 +106,7 @@
     right: 8px;
     background: none;
     border: none;
-    color: $error-color;
+    color: #b91c1c;
     cursor: pointer;
     font-size: 16px;
     padding: 4px;

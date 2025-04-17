@@ -18,6 +18,16 @@ export const LoginAPI = async (data) => {
   return await apiClient.post("/login", data);
 };
 
+// API for forgot password
+export const ForgotPasswordAPI = async (data) => {
+  return await apiClient.post("/forgot-password", data);
+};
+
+// API for reset password
+export const ResetPasswordAPI = async (data) => {
+  return await apiClient.post("/reset-password", data);
+};
+
 // Profile API
 export const ProfileAPI = async () => {
   return await apiClient.get("/user/profile");

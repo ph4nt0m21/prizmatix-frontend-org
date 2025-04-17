@@ -18,6 +18,9 @@ const MainLayout = () => {
   // For example, login, registration, or error pages might not need the standard layout
   const isFullPageLayout = ['/login', '/register', '/error'].includes(location.pathname);
   
+  // Check if we're in the event creation flow
+  const isEventCreationRoute = location.pathname.includes('/events/create');
+  
   if (isFullPageLayout) {
     return <Outlet />;
   }
@@ -26,13 +29,17 @@ const MainLayout = () => {
     <div className={styles.layoutContainer}>
       <SideNavBar />
       <div className={styles.mainContent}>
-        <Header />
-        <main className={styles.contentArea}>
+        {/* Only show header if not in event creation flow */}
+        {!isEventCreationRoute && <Header />}
+        
+        <main className={`${styles.contentArea} ${isEventCreationRoute ? styles.fullHeight : ''}`}>
           <ErrorBoundary>
             <Outlet />
           </ErrorBoundary>
         </main>
-        <Footer />
+        
+        {/* Only show footer if not in event creation flow */}
+        {!isEventCreationRoute && <Footer />}
       </div>
     </div>
   );

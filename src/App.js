@@ -7,6 +7,9 @@ import "./App.css";
 import HomePage from "./pages/homePage/homePage";
 import LoginPage from "./pages/auth/loginPage";
 import RegisterPage from "./pages/auth/multiStepRegisterPage";
+import ForgotPasswordPage from "./pages/auth/forgotPasswordPage";
+import ResetLinkSentPage from "./pages/auth/resetLinkSentPage";
+import ResetPasswordPage from "./pages/auth/resetPasswordPage";
 import ProtectedRoute from "./security/protectedRoute";
 import NotFoundPage from "./pages/notFound/notFoundPage";
 import LoadingSpinner from "./components/common/loadingSpinner/loadingSpinner";
@@ -70,6 +73,18 @@ function App() {
         <Route 
           path="/register" 
           element={isAuthenticated ? <Navigate to="/" /> : <RegisterPage />} 
+        />
+        <Route 
+          path="/forgot-password" 
+          element={isAuthenticated ? <Navigate to="/" /> : <ForgotPasswordPage />} 
+        />
+        <Route 
+          path="/reset-link-sent" 
+          element={isAuthenticated ? <Navigate to="/" /> : <ResetLinkSentPage />} 
+        />
+        <Route 
+          path="/reset-password" 
+          element={isAuthenticated ? <Navigate to="/" /> : <ResetPasswordPage />} 
         />
         
         {/* Protected Routes using ProtectedRoute component */}

@@ -4,6 +4,11 @@ import Cookies from 'js-cookie';
 import { LoginAPI } from '../../services/allApis';
 import styles from './sideNavBar.module.scss';
 
+/**
+ * SideNavBar component provides the main navigation for the application
+ * 
+ * @returns {JSX.Element} SideNavBar component
+ */
 const SideNavBar = () => {
   const navigate = useNavigate();
   const [currentUser, setCurrentUser] = useState(null);
@@ -37,20 +42,31 @@ const SideNavBar = () => {
   
   // Navigation items with their respective routes and icons
   const navItems = [
-    { id: 'home', path: '/', icon: '🏠', label: 'Home' }, 
-    { id: 'events', path: '/events', icon: '📅', label: 'Events' },
-    { id: 'analytics', path: '/analytics', icon: '📊', label: 'Analytics' },
-    { id: 'notifications', path: '/notifications', icon: '🔔', label: 'Notifications' }
+    { id: 'overview', path: '/', icon: '/icons/overview-icon.svg', label: 'Overview' }, 
+    { id: 'events', path: '/events', icon: '/icons/events-icon.svg', label: 'Events' },
+    { id: 'reports', path: '/reports', icon: '/icons/reports-icon.svg', label: 'Reports' },
+    { id: 'notifications', path: '/notifications', icon: '/icons/notifications-icon.svg', label: 'Notifications' }
+  ];
+
+  // Bottom navigation items
+  const bottomItems = [
+    { id: 'help', path: '/help', icon: '/icons/help-icon.svg', label: 'Help & Support' },
+    { id: 'settings', path: '/settings', icon: '/icons/settings-icon.svg', label: 'Account Settings' }
   ];
 
   return (
     <nav className={styles.sideNav}>
       <div className={styles.logo}>
         <NavLink to="/" className={styles.logoLink}>
-          <div className={styles.logoIcon}>
-            {/* Replace with your actual logo */}
-            <span className={styles.triangleLogo}>▼</span>
-          </div>
+          <img 
+            src="/images/small-logo.svg" 
+            alt="App Logo"
+            className={styles.logoImage}
+            onError={(e) => {
+              e.target.onerror = null;
+              e.target.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><circle cx="16" cy="16" r="15" fill="%237C3AED" /><text x="16" y="20" text-anchor="middle" fill="white" font-family="Arial" font-size="16">P</text></svg>';
+            }}
+          />
         </NavLink>
       </div>
       
@@ -62,34 +78,52 @@ const SideNavBar = () => {
               className={({ isActive }) => isActive ? `${styles.navLink} ${styles.active}` : styles.navLink}
               title={item.label}
             >
-              <span className={styles.icon}>{item.icon}</span>
+              <div className={styles.iconWrapper}>
+                <img 
+                  src={item.icon} 
+                  alt={`${item.label} icon`}
+                  className={styles.icon}
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 32 32"><rect width="32" height="32" fill="%23404040" opacity="0.2" rx="4" /></svg>';
+                  }}
+                />
+              </div>
+              <span className={styles.navLabel}></span>
             </NavLink>
           </li>
         ))}
       </ul>
       
       <div className={styles.bottomNav}>
-        <NavLink to="/help" className={styles.navLink} title="Help">
-          <span className={styles.icon}>💬</span>
-        </NavLink>
-        <NavLink to="/settings" className={styles.navLink} title="Settings">
-          <span className={styles.icon}>⚙️</span>
-        </NavLink>
+        {bottomItems.map((item) => (
+          <NavLink 
+            key={item.id}
+            to={item.path} 
+            className={({ isActive }) => isActive ? `${styles.navLink} ${styles.active}` : styles.navLink}
+            title={item.label}
+          >
+            <div className={styles.iconWrapper}>
+              <img 
+                src={item.icon} 
+                alt={`${item.label} icon`}
+                className={styles.icon}
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 32 32"><rect width="32" height="32" fill="%23404040" opacity="0.2" rx="4" /></svg>';
+                }}
+              />
+            </div>
+            <span className={styles.navLabel}></span>
+          </NavLink>
+        ))}
         
         {isAuthenticated && (
-          <>
-            <NavLink to="/profile" className={styles.navLink} title="Profile">
-              <div className={styles.profileIcon}>{currentUser?.name ? currentUser.name.substring(0, 2) : 'Us'}</div>
-            </NavLink>
-            
-            <button 
-              onClick={handleLogout} 
-              className={`${styles.navLink} ${styles.logoutButton}`}
-              title="Logout"
-            >
-              <span className={styles.icon}>🚪</span>
-            </button>
-          </>
+          <NavLink to="/profile" className={styles.profileLink} title="Profile">
+            <div className={styles.profileIcon}>
+              {currentUser?.name ? currentUser.name.substring(0, 2) : 'Sa'}
+            </div>
+          </NavLink>
         )}
       </div>
     </nav>

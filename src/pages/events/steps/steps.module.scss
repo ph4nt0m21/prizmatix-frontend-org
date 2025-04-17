@@ -5,194 +5,425 @@
   width: 100%;
   max-width: 800px;
   margin: 0 auto;
-
-  // Add subtle animation for step transitions
-  animation: fadeIn 0.3s ease-out;
+  padding: 20px;
+  background-color: white;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .stepHeader {
+  display: flex;
+  align-items: center;
   margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.stepIcon {
+  margin-right: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .stepTitle {
-  font-size: 24px;
+  font-size: 18px;
   font-weight: 600;
-  color: $text-light;
-  margin-bottom: 8px;
+  color: #333;
+  margin: 0;
 }
 
 .stepDescription {
   font-size: 14px;
-  color: $text-muted;
+  color: #666;
+  margin-top: 0;
 }
 
 .formSection {
-  padding: 20px 0;
+  padding: 0;
 }
 
 .formGroup {
-  margin-bottom: 20px;
+  margin-bottom: 24px;
   width: 100%;
 }
 
 .formLabel {
   display: block;
   font-size: 14px;
-  font-weight: 500;
-  color: $text-light;
-  margin-bottom: 8px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 4px;
+}
+
+.formDescription {
+  font-size: 13px;
+  color: #666;
+  margin-top: 0;
+  margin-bottom: 12px;
 }
 
 .formInput {
   width: 100%;
-  height: 40px;
-  padding: 0 12px;
-  background-color: $input-bg;
-  border: 1px solid $border-color;
-  border-radius: $border-radius;
-  color: $text-light;
+  height: 44px;
+  padding: 0 16px;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  color: #333;
   font-size: 14px;
   transition: all 0.2s ease;
   
   &:focus {
     outline: none;
-    border-color: $primary-color;
-    box-shadow: 0 0 0 2px rgba($primary-color, 0.2);
+    border-color: #7C3AED;
+    box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.2);
   }
   
   &::placeholder {
-    color: $text-muted;
-  }
-}
-
-.formTextarea {
-  width: 100%;
-  min-height: 100px;
-  padding: 12px;
-  background-color: $input-bg;
-  border: 1px solid $border-color;
-  border-radius: $border-radius;
-  color: $text-light;
-  font-size: 14px;
-  resize: vertical;
-  font-family: inherit;
-  transition: all 0.2s ease;
-  
-  &:focus {
-    outline: none;
-    border-color: $primary-color;
-    box-shadow: 0 0 0 2px rgba($primary-color, 0.2);
-  }
-  
-  &::placeholder {
-    color: $text-muted;
-  }
-}
-
-.formSelect {
-  width: 100%;
-  height: 40px;
-  padding: 0 12px;
-  background-color: $input-bg;
-  border: 1px solid $border-color;
-  border-radius: $border-radius;
-  color: $text-light;
-  font-size: 14px;
-  appearance: none;
-  position: relative;
-  
-  &:focus {
-    outline: none;
-    border-color: $primary-color;
-    box-shadow: 0 0 0 2px rgba($primary-color, 0.2);
-  }
-}
-
-.selectWrapper {
-  position: relative;
-  
-  .selectArrow {
-    position: absolute;
-    right: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: 10px;
-    color: $text-muted;
-    pointer-events: none;
+    color: #999;
   }
 }
 
 .fieldError {
   margin-top: 5px;
   font-size: 12px;
-  color: $error-color;
+  color: #e53e3e;
+}
+
+// Visibility options
+.visibilityOptions {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 8px;
+  
+  @media (max-width: 640px) {
+    flex-direction: column;
+  }
+}
+
+.visibilityOption {
+  flex: 1;
+  display: flex;
+  align-items: flex-start;
+  padding: 16px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    border-color: #7C3AED;
+    background-color: rgba(124, 58, 237, 0.05);
+  }
+  
+  &.selected {
+    border-color: #7C3AED;
+    background-color: rgba(124, 58, 237, 0.1);
+  }
+}
+
+.visibilityIcon {
+  margin-right: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.visibilityContent {
+  flex: 1;
+}
+
+.visibilityTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 4px 0;
+}
+
+.visibilityDescription {
+  font-size: 12px;
+  color: #666;
+  margin: 0;
+}
+
+.visibilitySelector {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #ddd;
+  border-radius: 50%;
+  margin-left: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  .selected & {
+    border-color: #7C3AED;
+  }
+}
+
+.selectedDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: #7C3AED;
+}
+
+// Host Profile
+.hostProfileSection {
+  margin-top: 12px;
 }
 
 .checkboxContainer {
   display: flex;
   align-items: center;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
 }
 
 .checkboxInput {
   width: 18px;
   height: 18px;
   margin-right: 10px;
-  accent-color: $primary-color;
+  accent-color: #7C3AED;
   cursor: pointer;
 }
 
 .checkboxLabel {
   font-size: 14px;
-  color: $text-light;
+  color: #333;
   cursor: pointer;
 }
 
-.checkboxOptions {
+.hostInfoCard {
   display: flex;
-  gap: 24px;
-  margin-bottom: 20px;
+  align-items: center;
+  padding: 12px;
+  background-color: #f8f8f8;
+  border-radius: 6px;
+  border: 1px solid #eee;
 }
 
-.formRow {
+.hostLogo {
+  width: 40px;
+  height: 40px;
+  border-radius: 4px;
+  background-color: #333;
   display: flex;
-  gap: 16px;
+  align-items: center;
+  justify-content: center;
+  margin-right: 12px;
+  overflow: hidden;
   
-  .formGroup {
-    flex: 1;
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.hostDetails {
+  flex: 1;
+}
+
+.hostName {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 2px 0;
+}
+
+.hostStats {
+  font-size: 12px;
+  color: #666;
+  margin: 0;
+}
+
+.hostOptionsButton {
+  background: none;
+  border: none;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border-radius: 4px;
+  
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+  }
+}
+
+// Add these styles to your existing steps.module.scss file
+
+.formTextarea {
+  width: 100%;
+  min-height: 100px;
+  padding: 12px 16px;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  color: #333;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  resize: vertical;
+  
+  &:focus {
+    outline: none;
+    border-color: #7C3AED;
+    box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.2);
   }
   
-  @include mobile {
+  &::placeholder {
+    color: #999;
+  }
+}
+
+// Location Options for Location Step
+.locationOptions {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 24px;
+  
+  @media (max-width: 640px) {
     flex-direction: column;
-    gap: 20px;
+  }
+}
+
+.locationOption {
+  flex: 1;
+  display: flex;
+  align-items: flex-start;
+  padding: 16px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    border-color: #7C3AED;
+    background-color: rgba(124, 58, 237, 0.05);
+  }
+  
+  &.selected {
+    border-color: #7C3AED;
+    background-color: rgba(124, 58, 237, 0.05);
+  }
+}
+
+.locationIcon {
+  margin-right: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.locationContent {
+  flex: 1;
+}
+
+.locationTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 4px 0;
+}
+
+.locationDescription {
+  font-size: 12px;
+  color: #666;
+  margin: 0;
+}
+
+// Search Container for Location Step
+.searchContainer {
+  position: relative;
+  margin-bottom: 16px;
+}
+
+.searchInput {
+  width: 100%;
+  height: 44px;
+  padding: 0 44px 0 16px;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  color: #333;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  
+  &:focus {
+    outline: none;
+    border-color: #7C3AED;
+    box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.2);
+  }
+}
+
+.searchButton {
+  position: absolute;
+  right: 0;
+  top: 0;
+  height: 44px;
+  width: 44px;
+  background: none;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  
+  &:hover {
+    opacity: 0.8;
+  }
+}
+
+// Map Container for Location Step
+.mapContainerWithControls {
+  margin-bottom: 24px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #ddd;
+}
+
+.mapTabControls {
+  display: flex;
+  background-color: #f5f5f7;
+  border-bottom: 1px solid #ddd;
+}
+
+.mapTabButton {
+  padding: 8px 16px;
+  background: none;
+  border: none;
+  font-size: 13px;
+  font-weight: 500;
+  color: #666;
+  cursor: pointer;
+  
+  &.activeTab {
+    color: #7C3AED;
+    position: relative;
+    
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background-color: #7C3AED;
+    }
   }
 }
 
 .mapContainer {
   width: 100%;
-  height: 220px;
-  margin-bottom: 24px;
-  border-radius: $border-radius;
-  overflow: hidden;
-  background-color: #0e2736;
-  position: relative;
+  height: 300px;
 }
 
-.mapPlaceholder {
+.googleMap {
   width: 100%;
   height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: $text-muted;
-  font-size: 14px;
-  background-color: #0e2736;
-}
-
-.mapImage {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
 }
 
 .mapLoading {
@@ -201,34 +432,973 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: $text-light;
+  color: #666;
   font-size: 14px;
-  background-color: rgba($background-dark, 0.7);
+  background-color: #f5f5f7;
 }
 
-.searchInputWrapper {
+// Form Rows & Dropdown Inputs
+.formRow {
   display: flex;
-  gap: 8px;
+  gap: 16px;
   
-  .formInput {
+  @media (max-width: 640px) {
+    flex-direction: column;
+    gap: 20px;
+  }
+  
+  .formGroup {
     flex: 1;
   }
 }
 
-.searchButton {
-  padding: 0 16px;
+.dropdownInput {
+  position: relative;
+}
+
+.dropdownArrow {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+// Add these additional styles for the Date & Time step
+
+// Input with icon styling
+.inputWithIcon {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.inputIcon {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+// Style for date and time inputs
+input[type="date"].formInput,
+input[type="time"].formInput {
+  padding-right: 44px; // Extra padding for the icon
+  
+  // Remove default calendar icon in Chrome
+  &::-webkit-calendar-picker-indicator {
+    opacity: 0;
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+  }
+  
+  // Remove default calendar icon in Firefox
+  &::-webkit-clear-button,
+  &::-webkit-inner-spin-button {
+    display: none;
+  }
+}
+
+// Error styling for inputs
+.inputError {
+  border-color: #e53e3e;
+  
+  &:focus {
+    box-shadow: 0 0 0 2px rgba(229, 62, 62, 0.2);
+  }
+}
+
+// Add these additional styles for the Description step
+
+// Rich Text Editor Toolbar
+.editorToolbar {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  background-color: #f9f9f9;
+  border: 1px solid #ddd;
+  border-bottom: none;
+  border-top-left-radius: 6px;
+  border-top-right-radius: 6px;
+  flex-wrap: wrap;
+}
+
+.editorButton {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  border-radius: 4px;
+  color: #666;
+  cursor: pointer;
+  margin-right: 2px;
+  
+  &:hover {
+    background-color: #f0f0f0;
+    color: #333;
+  }
+  
+  &:active {
+    background-color: #e0e0e0;
+  }
+  
+  svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+.editorDivider {
+  width: 1px;
+  height: 20px;
+  background-color: #ddd;
+  margin: 0 8px;
+}
+
+.editorAvatarGroup {
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+}
+
+.editorAvatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  overflow: hidden;
+  margin-left: -8px;
+  border: 2px solid #f9f9f9;
+  
+  &:first-child {
+    margin-left: 0;
+  }
+  
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+// Rich Text Editor Content
+.editorContent {
+  width: 100%;
+  min-height: 200px;
+  padding: 16px;
+  border: 1px solid #ddd;
+  border-bottom-left-radius: 6px;
+  border-bottom-right-radius: 6px;
+  background-color: white;
+  color: #333;
+  font-size: 14px;
+  line-height: 1.5;
+  outline: none;
+  
+  &:focus {
+    border-color: #7C3AED;
+    box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.2);
+  }
+  
+  &[placeholder]:empty:before {
+    content: attr(placeholder);
+    color: #999;
+  }
+  
+  p {
+    margin: 0 0 16px 0;
+  }
+  
+  ul, ol {
+    margin: 0 0 16px 0;
+    padding-left: 20px;
+  }
+  
+  blockquote {
+    margin: 0 0 16px 0;
+    padding-left: 16px;
+    border-left: 4px solid #ddd;
+    color: #666;
+  }
+  
+  a {
+    color: #7C3AED;
+    text-decoration: none;
+    
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+  
+  img {
+    max-width: 100%;
+    height: auto;
+    margin: 8px 0;
+  }
+}
+
+// Add these styles to your existing steps.module.scss file
+
+// File upload dropzone
+.uploadDropzone {
+  width: 100%;
+  min-height: 200px;
+  border: 2px dashed #ddd;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #fafafa;
+  margin-bottom: 10px;
+  position: relative;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  
+  &:hover {
+    border-color: #7C3AED;
+    background-color: rgba(124, 58, 237, 0.02);
+  }
+  
+  &.dragActive {
+    border-color: #7C3AED;
+    background-color: rgba(124, 58, 237, 0.05);
+  }
+  
+  &.hasFile {
+    border-style: solid;
+    background-color: white;
+  }
+}
+
+.uploadInterface {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  width: 100%;
+}
+
+.uploadIcon {
+  width: 64px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background-color: rgba(124, 58, 237, 0.1);
+  margin-bottom: 16px;
+  
+  svg {
+    width: 32px;
+    height: 32px;
+  }
+}
+
+.uploadText {
+  text-align: center;
+  font-size: 14px;
+  color: #666;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.browseButton {
+  background: none;
+  border: none;
+  color: #7C3AED;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0;
+  font-size: inherit;
+  text-decoration: none;
+  
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.fileInput {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  overflow: hidden;
+}
+
+.fileInfoText {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8px;
+  padding: 0 4px;
+}
+
+.supportedTypes, .maxSize {
+  display: flex;
+  align-items: center;
+  font-size: 12px;
+  color: #666;
+  
+  svg {
+    margin-right: 6px;
+  }
+}
+
+// Image preview styles
+.imagePreview {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.previewImage {
+  width: 100%;
+  max-height: 200px;
+  object-fit: contain;
+  border-radius: 4px;
+}
+
+.fileInfo {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background-color: #f5f5f7;
+  border-radius: 0 0 6px 6px;
+  margin-top: -4px;
+}
+
+.fileName {
+  font-size: 12px;
+  font-weight: 500;
+  color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 70%;
+}
+
+.fileSize {
+  font-size: 12px;
+  color: #666;
+}
+
+.removeButton {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: rgba(0, 0, 0, 0.6);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.8);
+  }
+  
+  svg {
+    width: 14px;
+    height: 14px;
+  }
+}
+
+// Additional styles for the ArtStep component
+
+// File upload dropzone
+.uploadDropzone {
+  width: 100%;
+  min-height: 200px;
+  border: 2px dashed #ddd;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #fafafa;
+  margin-bottom: 10px;
+  position: relative;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  
+  &:hover {
+    border-color: #7C3AED;
+    background-color: rgba(124, 58, 237, 0.02);
+  }
+  
+  &.dragActive {
+    border-color: #7C3AED;
+    background-color: rgba(124, 58, 237, 0.05);
+  }
+  
+  &.hasFile {
+    border-style: solid;
+    background-color: white;
+  }
+}
+
+.uploadInterface {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  width: 100%;
+}
+
+.uploadIcon {
+  width: 64px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background-color: rgba(124, 58, 237, 0.1);
+  margin-bottom: 16px;
+  
+  svg {
+    width: 32px;
+    height: 32px;
+  }
+}
+
+.uploadText {
+  text-align: center;
+  font-size: 14px;
+  color: #666;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.browseButton {
+  background: none;
+  border: none;
+  color: #7C3AED;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0;
+  font-size: inherit;
+  text-decoration: none;
+  display: inline-block; // important for proper styling
+  
+  &:hover {
+    text-decoration: underline;
+  }
+  
+  &:focus {
+    outline: none;
+    text-decoration: underline;
+  }
+}
+
+.fileInput {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  overflow: hidden;
+}
+
+.fileInfoText {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8px;
+  padding: 0 4px;
+  font-size: 12px;
+}
+
+.supportedTypes, .maxSize {
+  display: flex;
+  align-items: center;
+  font-size: 12px;
+  color: #666;
+  
+  svg {
+    margin-right: 6px;
+    min-width: 16px;
+  }
+}
+
+// Image preview styles
+.imagePreview {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.previewImage {
+  width: 100%;
+  max-height: 200px;
+  object-fit: contain;
+  border-radius: 4px;
+}
+
+.fileInfo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background-color: #f5f5f7;
+  border-radius: 0 0 6px 6px;
+  margin-top: -4px;
+}
+
+.fileName {
+  font-size: 12px;
+  font-weight: 500;
+  color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 70%;
+}
+
+.fileSize {
+  font-size: 12px;
+  color: #666;
+}
+
+.removeButton {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: rgba(0, 0, 0, 0.6);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.8);
+  }
+  
+  svg {
+    width: 14px;
+    height: 14px;
+  }
+}
+
+// Add these styles to your existing steps.module.scss file
+
+// Tickets container styles
+.emptyTicketsContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 240px;
+  background-color: #f9fafb;
+  border: 1px dashed #d1d5db;
+  border-radius: 8px;
+  padding: 32px;
+  text-align: center;
+}
+
+.addTicketButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   height: 40px;
-  background-color: $primary-color;
+  padding: 0 16px;
+  background-color: #7C3AED;
   color: white;
   border: none;
-  border-radius: $border-radius;
+  border-radius: 6px;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
   
-  &:hover:not(:disabled) {
-    background-color: darken($primary-color, 5%);
+  svg {
+    margin-right: 8px;
+  }
+  
+  &:hover {
+    background-color: #6d28d9;
+  }
+}
+
+.ticketsContainer {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.ticketTableHeader {
+  display: flex;
+  align-items: center;
+  background-color: #f3f4f6;
+  padding: 12px 16px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #4b5563;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.ticketItem {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid #e5e7eb;
+  transition: background-color 0.2s ease;
+  
+  &:hover {
+    background-color: #f9fafb;
+  }
+  
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.ticketHandle {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #9ca3af;
+  cursor: move;
+  margin-right: 8px;
+}
+
+.ticketType {
+  flex: 3;
+  font-weight: 500;
+  color: #333;
+  cursor: pointer;
+  
+  &:hover {
+    color: #7C3AED;
+  }
+}
+
+.ticketQuantity {
+  flex: 1;
+  text-align: center;
+  color: #4b5563;
+}
+
+.ticketPrice {
+  flex: 1;
+  text-align: center;
+  color: #4b5563;
+}
+
+.ticketAdvance {
+  flex: 1;
+  text-align: center;
+  color: #4b5563;
+}
+
+.ticketActions {
+  display: flex;
+  gap: 8px;
+  margin-left: 16px;
+}
+
+.ticketActionButton {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  border-radius: 4px;
+  color: #6b7280;
+  cursor: pointer;
+  
+  &:hover {
+    background-color: #f3f4f6;
+    color: #333;
+  }
+}
+
+.addTicketRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  border-top: 1px solid #e5e7eb;
+  background-color: #f9fafb;
+}
+
+.addTicketInlineButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 36px;
+  padding: 0 16px;
+  background-color: white;
+  color: #7C3AED;
+  border: 1px solid #7C3AED;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  svg {
+    margin-right: 8px;
+  }
+  
+  &:hover {
+    background-color: rgba(124, 58, 237, 0.05);
+  }
+}
+
+// Add these styles to your existing steps.module.scss file
+
+// Discount Codes container styles
+.emptyDiscountCodesContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 240px;
+  background-color: #f9fafb;
+  border: 1px dashed #d1d5db;
+  border-radius: 8px;
+  padding: 32px;
+  text-align: center;
+}
+
+.addDiscountCodeButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  padding: 0 16px;
+  background-color: #7C3AED;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  svg {
+    margin-right: 8px;
+  }
+  
+  &:hover {
+    background-color: #6d28d9;
+  }
+}
+
+.discountCodesContainer {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.discountCodeTableHeader {
+  display: flex;
+  align-items: center;
+  background-color: #f3f4f6;
+  padding: 12px 16px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #4b5563;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.discountCodeItem {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid #e5e7eb;
+  transition: background-color 0.2s ease;
+  
+  &:hover {
+    background-color: #f9fafb;
+  }
+  
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.discountCode {
+  flex: 2;
+  font-weight: 500;
+  color: #333;
+  cursor: pointer;
+  
+  &:hover {
+    color: #7C3AED;
+  }
+}
+
+.discountPercentage {
+  flex: 1;
+  text-align: center;
+  color: #4b5563;
+}
+
+.maxDiscountAmount {
+  flex: 1;
+  text-align: center;
+  color: #4b5563;
+}
+
+.minDiscountAmount {
+  flex: 1;
+  text-align: center;
+  color: #4b5563;
+}
+
+.discountQuantity {
+  flex: 1;
+  text-align: center;
+  color: #4b5563;
+}
+
+.discountActions {
+  width: 40px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.discountActionButton {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  border-radius: 4px;
+  color: #6b7280;
+  cursor: pointer;
+  
+  &:hover {
+    background-color: #f3f4f6;
+    color: #333;
+  }
+}
+
+.addDiscountCodeRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  border-top: 1px solid #e5e7eb;
+  background-color: #f9fafb;
+}
+
+.addDiscountCodeInlineButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 36px;
+  padding: 0 16px;
+  background-color: white;
+  color: #7C3AED;
+  border: 1px solid #7C3AED;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  svg {
+    margin-right: 8px;
+  }
+  
+  &:hover {
+    background-color: rgba(124, 58, 237, 0.05);
+  }
+}
+
+// Add these styles to your existing steps.module.scss file
+
+// Publish step specific styles
+.publishHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.publishActions {
+  display: flex;
+  width: 100%;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.publishTitle {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+}
+
+.publishButtons {
+  display: flex;
+  gap: 12px;
+}
+
+.previewButton {
+  height: 40px;
+  padding: 0 16px;
+  border: 1px solid #d1d5db;
+  background-color: white;
+  color: #4b5563;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background-color: #f9fafb;
+    border-color: #9ca3af;
+  }
+}
+
+.publishButton {
+  height: 40px;
+  padding: 0 16px;
+  border: none;
+  background-color: #7C3AED;
+  color: white;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background-color: #6d28d9;
   }
   
   &:disabled {
@@ -237,21 +1407,198 @@
   }
 }
 
-.inputError {
-  border-color: $error-color;
+.publishPreviewContainer {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.eventBanner {
+  width: 100%;
+  height: 180px;
+  background-color: #333;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.eventBannerTitle {
+  font-family: 'Inter', sans-serif;
+  font-size: 42px;
+  font-weight: 700;
+  color: white;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  text-align: center;
+  margin: 0;
+  padding: 0 24px;
+  z-index: 1;
+}
+
+.eventDetailsContainer {
+  display: flex;
+  padding: 24px;
+  gap: 24px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.eventThumbnail {
+  flex: 0 0 auto;
+  width: 180px;
+  height: 180px;
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
   
-  &:focus {
-    box-shadow: 0 0 0 2px rgba($error-color, 0.2);
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
   }
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
+.eventInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.eventTitle {
+  font-size: 28px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 16px 0;
+}
+
+.eventMetadata {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.eventMetaItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.eventMetaIcon {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #7C3AED;
+}
+
+.eventMetaText {
+  font-size: 14px;
+  color: #4b5563;
+}
+
+.eventOrganizer {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  background-color: #f9fafb;
+  border-radius: 6px;
+  margin-top: auto;
+}
+
+.organizerLogo {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: #f3f4f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 12px;
+}
+
+.organizerInfo {
+  flex: 1;
+}
+
+.organizerName {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 4px 0;
+}
+
+.organizerMeta {
+  font-size: 12px;
+  color: #6b7280;
+  margin: 0;
+}
+
+.contactHostButton {
+  padding: 6px 12px;
+  background-color: #7C3AED;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background-color: #6d28d9;
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+}
+
+.eventAboutSection {
+  padding: 24px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.sectionTitle {
+  font-size: 18px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 16px 0;
+}
+
+.eventDescription {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #4b5563;
+  
+  p {
+    margin: 0 0 16px 0;
+    
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+}
+
+.eventTicketsCta {
+  padding: 24px;
+  display: flex;
+  justify-content: center;
+}
+
+.buyTicketsButton {
+  width: 100%;
+  max-width: 240px;
+  height: 44px;
+  background-color: #7C3AED;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background-color: #6d28d9;
   }
 }
