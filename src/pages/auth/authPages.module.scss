@@ -1241,3 +1241,670 @@
     background-color: #6d28d9;
   }
 }
+
+/* Updated styles to add to authPages.module.scss for Organization Profile */
+
+/* Container specifically for organization form to prevent scrolling */
+.organizationFormContainer {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  max-width: 460px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 0 20px;
+  overflow: hidden;
+}
+
+/* Profile photo upload styles */
+.photoSizeHint {
+  font-size: 12px;
+  color: #6b7280;
+  margin-top: 2px;
+  margin-bottom: 10px;
+}
+
+.profilePhotoUploadContainer {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 20px;
+}
+
+.profilePhotoUpload {
+  width: 80px;
+  height: 80px;
+  border: 1px dashed #7c3aed;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  background-color: rgba(124, 58, 237, 0.05);
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background-color: rgba(124, 58, 237, 0.1);
+  }
+}
+
+.uploadIcon {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.fileInput {
+  display: none;
+}
+
+.uploadedProfileContainer {
+  display: flex;
+  align-items: center;
+  background-color: #f9fafb;
+  border-radius: 8px;
+  padding: 8px;
+  margin-bottom: 20px;
+}
+
+.uploadedProfile {
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
+.profileImage {
+  width: 40px;
+  height: 40px;
+  border-radius: 4px;
+  object-fit: cover;
+  margin-right: 12px;
+}
+
+.profileInfo {
+  display: flex;
+  flex-direction: column;
+}
+
+.profileLabel {
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+}
+
+.profileFilename {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.removeProfileBtn {
+  background: none;
+  border: none;
+  color: #6b7280;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 0 8px;
+  
+  &:hover {
+    color: #ef4444;
+  }
+}
+
+/* Textarea styling */
+.textareaContainer {
+  position: relative;
+  margin-bottom: 16px;
+}
+
+.modernTextarea {
+  width: 100%;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  color: #4b5563;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  
+  &:hover {
+    background-color: #f3f4f6;
+  }
+}
+
+.uploadCropBtn {
+  padding: 8px 16px;
+  background-color: #7c3aed;
+  border: none;
+  border-radius: 6px;
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  
+  &:hover {
+    background-color: #6d28d9;
+  }
+}
+
+/* Adjust the Next button to match the design */
+.purpleButton {
+  width: 100%;
+  padding: 14px 16px;
+  background-color: #7C3AED;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  margin-top: 8px;
+  
+  &:hover {
+    background-color: #6D28D9;
+  }
+  
+  &:disabled {
+    background-color: #a78bfa;
+    cursor: not-allowed;
+  }
+}
+
+/* Fix form layouts for more compact presentation */
+.loginForm {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.formGroup {
+  margin-bottom: 8px;
+}
+
+.inputLabelModern {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 6px;
+}
+
+.inputContainer {
+  position: relative;
+  display: flex;
+  align-items: center;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background-color: #f9f9f9;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  margin-bottom: 12px;
+  
+  &:focus-within {
+    border-color: #7c3aed;
+    box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.1);
+  }
+}
+
+/* Adjusted spacing */
+.loginHeader {
+  margin-bottom: 20px;
+  
+  @media screen and (max-width: 768px) {
+    margin-bottom: 16px;
+  }
+}
+
+.welcomeTitle {
+  font-size: 24px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 4px;
+}
+
+.welcomeSubtitle {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 0;
+}
+
+/* This selector was missing - looks like it should be for modernTextarea */
+.modernTextarea {
+  border-radius: 6px;
+  padding: 12px 16px;
+  font-size: 15px;
+  background-color: #f9f9f9;
+  color: #333;
+  resize: vertical;
+  min-height: 100px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  
+  &:focus {
+    outline: none;
+    border-color: #7c3aed;
+    box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.1);
+  }
+  
+  &::placeholder {
+    color: #a0aec0;
+  }
+  
+  &:disabled {
+    background-color: #f9fafb;
+    color: #9ca3af;
+  }
+}
+
+/* Social media links styling */
+.socialLinksGrid {
+  margin-bottom: 16px;
+}
+
+.socialLinkRow {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 12px;
+  
+  @media screen and (max-width: 576px) {
+    flex-direction: column;
+    gap: 8px;
+  }
+}
+
+.socialLinkItem {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  padding: 10px 12px;
+  background-color: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  
+  &:hover {
+    background-color: #f3f4f6;
+  }
+}
+
+.socialPlatformIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 8px;
+  color: #6b7280;
+}
+
+.socialPlatformName {
+  flex: 1;
+  font-size: 14px;
+  color: #4b5563;
+}
+
+.socialAddIcon {
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  color: #6b7280;
+}
+
+/* Modal styling for image cropping */
+.cropModalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.cropModal {
+  background-color: white;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.cropModalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid #e5e7eb;
+  
+  h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 500;
+    color: #333;
+  }
+}
+
+.closeCropModal {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #6b7280;
+  cursor: pointer;
+  
+  &:hover {
+    color: #333;
+  }
+}
+
+.cropImageContainer {
+  position: relative;
+  width: 100%;
+  height: 300px;
+  background-color: black;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cropImageWrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease;
+}
+
+.imageToCrop {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.cropSelectionBox {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 180px;
+  height: 180px;
+  border: 2px solid white;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+}
+
+.cropCorner {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background-color: white;
+  border: 1px solid rgba(0, 0, 0, 0.3);
+}
+
+.cropControls {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.cropToolOptions {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+}
+
+.cropToolBtn {
+  background: none;
+  border: 1px solid #e5e7eb;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: #6b7280;
+  
+  &:hover {
+    background-color: #f3f4f6;
+  }
+  
+  &.active {
+    border-color: #7c3aed;
+    color: #7c3aed;
+    background-color: rgba(124, 58, 237, 0.1);
+  }
+}
+
+.zoomSliderContainer {
+  width: 100%;
+  padding: 0 8px;
+}
+
+.zoomSlider {
+  width: 100%;
+  height: 4px;
+  background: #e5e7eb;
+  outline: none;
+  -webkit-appearance: none;
+  
+  &::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #7c3aed;
+    cursor: pointer;
+  }
+  
+  &::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #7c3aed;
+    cursor: pointer;
+    border: none;
+  }
+}
+
+.cropActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.cancelCropBtn {
+  padding: 8px 16px;
+  background-color: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.2s;
+  
+  &:hover {
+    background-color: #f3f4f6;
+  }
+  
+  &:active {
+    background-color: #e5e7eb;
+  }
+}
+
+/* Add these styles to your authPages.module.scss file for Create Event component */
+
+.eventNameHint {
+  font-size: 12px;
+  color: #6b7280;
+  margin-top: 2px;
+  margin-bottom: 10px;
+}
+
+.eventActionsRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 16px;
+  gap: 16px;
+  
+  @media screen and (max-width: 576px) {
+    flex-direction: column-reverse;
+    gap: 12px;
+  }
+}
+
+.skipEventButton {
+  background: none;
+  border: none;
+  padding: 12px 0;
+  font-size: 14px;
+  color: #7c3aed;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  white-space: nowrap;
+  
+  &:hover {
+    opacity: 0.8;
+  }
+  
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  
+  @media screen and (max-width: 576px) {
+    width: 100%;
+    padding: 8px 0;
+  }
+}
+
+.createEventButton {
+  padding: 12px 24px;
+  background-color: #7c3aed;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  min-width: 120px;
+  
+  &:hover {
+    background-color: #6d28d9;
+  }
+  
+  &:disabled {
+    background-color: #a78bfa;
+    cursor: not-allowed;
+  }
+  
+  @media screen and (max-width: 576px) {
+    width: 100%;
+  }
+}
+
+/* Add these new styles to your authPages.module.scss file */
+
+/* Email Sent Page Styles */
+.emailSentContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 20px 0;
+}
+
+.emailIconContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 80px;
+  height: 80px;
+  background-color: rgba(124, 58, 237, 0.1);
+  border-radius: 50%;
+  margin-bottom: 24px;
+}
+
+.resetInstructions {
+  font-size: 15px;
+  color: #6b7280;
+  line-height: 1.6;
+  margin-bottom: 30px;
+  max-width: 400px;
+}
+
+.emailHighlight {
+  color: #7c3aed;
+  font-weight: 500;
+}
+
+/* Password reset specific styles */
+.resetPasswordContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.passwordRequirements {
+  margin-top: -10px;
+  margin-bottom: 10px;
+}
+
+.requirementList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.requirementItem {
+  display: flex;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.requirementIcon {
+  margin-right: 8px;
+  display: flex;
+  align-items: center;
+}
+
+.validRequirement {
+  color: #7c3aed;
+}
+
+.invalidRequirement {
+  color: #9ca3af;
+}
+
+/* Mobile adjustments */
+@media screen and (max-width: 768px) {
+  .emailSentContainer {
+    padding: 10px 0;
+  }
+  
+  .emailIconContainer {
+    width: 60px;
+    height: 60px;
+    margin-bottom: 16px;
+  }
+  
+  .resetInstructions {
+    font-size: 14px;
+    margin-bottom: 24px;
+  }
+}

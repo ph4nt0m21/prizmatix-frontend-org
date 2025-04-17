@@ -7,7 +7,7 @@ import EmailVerification from './registerSteps/emailVerification';
 import BasicDetails from './registerSteps/basicDetails';
 import CreatePassword from './registerSteps/createPassword';
 import OrganizationProfile from './registerSteps/organizationProfile';
-import Step2AccountDetails from './registerSteps/step2AccountDetails';
+import CreateEvent from './registerSteps/createEvent';
 import LoadingSpinner from '../../components/common/loadingSpinner/loadingSpinner';
 import styles from './authPages.module.scss';
 
@@ -65,6 +65,9 @@ const MultiStepRegisterPage = () => {
     description: '',
     region: '',
     state: '',
+
+    // Create Event (Step 4)
+    eventName: '',
   });
   
   // Validation state
@@ -448,6 +451,24 @@ const MultiStepRegisterPage = () => {
     setValidationErrors(errors);
     return isValid;
   };
+
+  /**
+   * Validate event form data
+   * @returns {boolean} True if form is valid, false otherwise
+   */
+  const validateEvent = () => {
+    const errors = {};
+    let isValid = true;
+    
+    // Event name validation (only if not skipping)
+    if (formData.eventName && !formData.eventName.trim()) {
+      errors.eventName = 'Event name is required if creating an event';
+      isValid = false;
+    }
+    
+    setValidationErrors(errors);
+    return isValid;
+  };
   
   /**
    * Proceed to the next step
@@ -494,14 +515,13 @@ const MultiStepRegisterPage = () => {
       description: formData.description,
       email: formData.email,
       username: formData.email, // Use email as username
-      region: formData.region,
-      state: formData.state,
       firstName: formData.firstName,
       lastName: formData.lastName,
       mobileNumber: formData.mobileNumber,
       password: formData.password,
       logo: uploadedLogo?.url,
-      socialLinks: socialLinks
+      socialLinks: socialLinks,
+      eventName: formData.eventName // Include event name if provided
     };
     
     // Set loading state
@@ -522,7 +542,8 @@ const MultiStepRegisterPage = () => {
         lastName: '',
         mobileNumber: '',
         password: '',
-        confirmPassword: ''
+        confirmPassword: '',
+        eventName: ''
       });
       setUploadedLogo(null);
       setSocialLinks([]);
@@ -615,14 +636,13 @@ const MultiStepRegisterPage = () => {
         );
       case 4:
         return (
-          <Step2AccountDetails 
+          <CreateEvent
             formData={formData}
             handleChange={handleChange}
-            prevStep={prevStep}
+            nextStep={nextStep}
             handleSubmit={handleSubmit}
             errors={validationErrors}
             isLoading={isRegisterDisabled}
-            serverError={errorMessage}
           />
         );
       default:
