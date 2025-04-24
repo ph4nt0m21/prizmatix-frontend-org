@@ -17,6 +17,7 @@
   width: 420px;
   background-color: #1d1c3a;
   overflow: hidden;
+  border-radius: 16px; /* Added rounded corners to all sides */
   
   @media (max-width: 768px) {
     width: 100%;
@@ -30,15 +31,33 @@
   object-fit: cover;
 }
 
-/* Right panel with the login form - updated with exact dimensions from the box model */
+/* Right panel with the login form - with vector background */
 .rightPanel {
   flex: 1;
   display: flex;
   flex-direction: column;
-  background-color: #E9EAEC;
+  background: linear-gradient(180deg, #F5F6FA 0%, #EEEEF9 100%);
+  position: relative;
   overflow: hidden;
   border-radius: 16px;
   box-sizing: border-box;
+  margin-left: 4px;
+  
+  /* Vector background overlay */
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 50%;
+    background-image: url('../../assets/images/wave-bg.png'); /* Update path to your vector image */
+    background-position: bottom center;
+    background-repeat: no-repeat;
+    background-size: 100% auto;
+    z-index: 0;
+    opacity: 0.8;
+  }
 }
 
 /* Header with back button and logo */
@@ -47,8 +66,10 @@
   justify-content: space-between;
   align-items: center;
   padding: 24px 48px;
-  background-color: #ffffff;
+  background: transparent;
   border-bottom: 1px solid #f3f3f3;
+  position: relative;
+  z-index: 1;
 }
 
 .backButton {
@@ -57,9 +78,9 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: rgba(240, 240, 245, 0.8);
+  background: transparent;
   border-radius: 50%;
-  border: none;
+  border: grey;
   cursor: pointer;
   
   &:hover {
@@ -90,10 +111,12 @@
   justify-content: center;
   align-items: center;
   padding: 24px 48px;
-  max-width: 480px;
+  max-width: 440px;
   margin: 0 auto;
   width: 100%;
   box-sizing: border-box;
+  position: relative;
+  z-index: 1;
 }
 
 .welcomeSection {
@@ -142,10 +165,10 @@
   align-items: center;
   padding: 0 16px;
   height: 48px;
-  background-color: #ffffff;
+  background: transparent;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition: border-color 0.2s;
   
   &:focus-within {
     border-color: #7c3aed;
@@ -290,7 +313,9 @@
 .footer {
   padding: 24px 48px;
   text-align: center;
-  background-color: #E9EAEC;
+  background: transparent;
+  position: relative;
+  z-index: 1;
 }
 
 .copyright {
