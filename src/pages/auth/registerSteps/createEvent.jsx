@@ -1,4 +1,3 @@
-// src/pages/auth/registerSteps/createEvent.jsx
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import styles from '../authPages.module.scss';
