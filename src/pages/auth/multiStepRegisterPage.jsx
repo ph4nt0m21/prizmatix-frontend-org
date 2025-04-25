@@ -1,4 +1,3 @@
-// src/pages/auth/multiStepRegisterPage.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import Cookies from 'js-cookie';
@@ -9,7 +8,7 @@ import CreatePassword from './registerSteps/createPassword';
 import OrganizationProfile from './registerSteps/organizationProfile';
 import CreateEvent from './registerSteps/createEvent';
 import LoadingSpinner from '../../components/common/loadingSpinner/loadingSpinner';
-import styles from './authPages.module.scss';
+import styles from './register.module.scss';
 
 /**
  * MultiStepRegisterPage component 
@@ -29,9 +28,6 @@ const MultiStepRegisterPage = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authLoading, setAuthLoading] = useState(true);
   const [authError, setAuthError] = useState(null);
-  
-  // Track whether to show custom content from left panel image
-  const [showCustomContent, setShowCustomContent] = useState(true);
   
   // Step state
   const [currentStep, setCurrentStep] = useState(0); // Start at step 0 (email verification)
@@ -97,35 +93,13 @@ const MultiStepRegisterPage = () => {
     };
   }, [isAuthenticated, navigate, location]);
   
-  // Fix typo in isAuthenticated references
+  // Update progress indicator based on current step
   useEffect(() => {
-    const fixIsAuthenticatedReferences = () => {
-      if (typeof isAuthenticated !== 'undefined' && typeof isAuthenticated !== typeof setIsAuthenticated) {
-        console.warn('Fixing authentication state references');
-      }
-    };
-    
-    fixIsAuthenticatedReferences();
-  }, [isAuthenticated]);
-  
-  // Update progress indicator based on current step and ensure background image visibility
-  useEffect(() => {
-    if (currentStep === 0) {
-      setProgress(20);
-      setShowCustomContent(true);
-    } else if (currentStep === 1) {
-      setProgress(40);
-      setShowCustomContent(true); // Keep background visible for all steps
-    } else if (currentStep === 2) {
-      setProgress(60);
-      setShowCustomContent(true); // Keep background visible for all steps
-    } else if (currentStep === 3) {
-      setProgress(80);
-      setShowCustomContent(true); // Keep background visible for all steps
-    } else {
-      setProgress(100);
-      setShowCustomContent(true); // Keep background visible for all steps
-    }
+    if (currentStep === 0) setProgress(20);
+    else if (currentStep === 1) setProgress(40);
+    else if (currentStep === 2) setProgress(60);
+    else if (currentStep === 3) setProgress(80);
+    else setProgress(100);
   }, [currentStep]);
   
   /**
@@ -291,15 +265,6 @@ const MultiStepRegisterPage = () => {
     } finally {
       setAuthLoading(false);
     }
-  };
-  
-  /**
-   * Logout user
-   */
-  const logout = () => {
-    Cookies.remove('token');
-    setCurrentUser(null);
-    setIsAuthenticated(false);
   };
   
   /**
@@ -577,7 +542,7 @@ const MultiStepRegisterPage = () => {
   // If still checking auth status, show loading state
   if (authLoading && !isRegisterDisabled) {
     return (
-      <div className={styles.authContainer}>
+      <div className={styles.loadingContainer}>
         <div className={styles.loadingSpinner}></div>
       </div>
     );
@@ -597,6 +562,7 @@ const MultiStepRegisterPage = () => {
             verificationStep={verificationStep}
             setVerificationStep={setVerificationStep}
             verifyEmail={verifyEmail}
+            onGoBack={() => navigate('/login')}
           />
         );
       case 1:
@@ -607,6 +573,7 @@ const MultiStepRegisterPage = () => {
             nextStep={nextStep}
             errors={validationErrors}
             isLoading={isRegisterDisabled}
+            onGoBack={prevStep}
           />
         );
       case 2:
@@ -617,6 +584,7 @@ const MultiStepRegisterPage = () => {
             nextStep={nextStep}
             errors={validationErrors}
             isLoading={isRegisterDisabled}
+            onGoBack={prevStep}
           />
         );
       case 3:
@@ -632,6 +600,7 @@ const MultiStepRegisterPage = () => {
             setUploadedLogo={setUploadedLogo}
             socialLinks={socialLinks}
             setSocialLinks={setSocialLinks}
+            onGoBack={prevStep}
           />
         );
       case 4:
@@ -643,70 +612,15 @@ const MultiStepRegisterPage = () => {
             handleSubmit={handleSubmit}
             errors={validationErrors}
             isLoading={isRegisterDisabled}
+            onGoBack={prevStep}
           />
         );
       default:
         return null;
     }
   };
-  
-  return (
-    <div className={styles.modernAuthContainer}>
-      {/* Left side - background image with text overlay */}
-      <div className={styles.leftPanel}>
-        <img 
-          src="/images/register1-bg.png" 
-          alt="Background" 
-          className={styles.backgroundImage} 
-        />
-        {showCustomContent && (
-          <div className={styles.leftPanelContent}>
-            <div className={styles.leftPanelText}>
-              <h2 className={styles.leftPanelHeading}>
-                <span className={styles.purpleText}>Sell</span> Tickets.
-              </h2>
-              <h2 className={styles.leftPanelHeading}>
-                <span className={styles.purpleText}>Fill</span> Seats.
-              </h2>
-              <h2 className={styles.leftPanelHeading}>
-                <span className={styles.purpleText}>Get</span> Paid.
-              </h2>
-              <h2 className={styles.leftPanelHeading}>
-                <span className={styles.purpleText}>Sign Up</span> Now!
-              </h2>
-            </div>
-          </div>
-        )}
-      </div>
-      
-      {/* Right side - registration form */}
-      <div className={styles.rightPanel}>
-        <div className={styles.topBar}>
-          <button 
-            type="button" 
-            className={styles.goBackButton}
-            onClick={() => currentStep === 0 ? navigate('/login') : prevStep()}
-          >
-            &lt;
-          </button>
-          <div className={styles.logoContainer}>
-            <img 
-              src="/images/logo.svg" 
-              alt="PRIZMATIX" 
-              className={styles.logo} 
-            />
-          </div>
-        </div>
-        
-        {renderErrorMessage()}
-        {renderStep()}
-        
-        <div className={styles.footerContainer}>
-          <p className={styles.copyrightText}>Copyright © 2025 Prizmatix</p>
-        </div>
-      </div>
-    </div>
-  );
+
+  return renderStep();
 };
 
 export default MultiStepRegisterPage;

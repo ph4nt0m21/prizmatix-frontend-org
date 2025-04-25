@@ -1,8 +1,18 @@
-// src/pages/auth/registerSteps/EmailVerification.jsx
 import React, { useState, useRef, useEffect } from 'react';
 import PropTypes from 'prop-types';
-import { Link } from 'react-router-dom';
-import styles from '../authPages.module.scss';
+import { Link, useNavigate } from 'react-router-dom';
+import styles from './emailVerification.module.scss';
+
+// Import SVG components
+import { ReactComponent as MailIcon } from "../../../assets/icons/mail-icon.svg";
+import { ReactComponent as ArrowIcon } from "../../../assets/icons/arrow-icon.svg";
+import { ReactComponent as EyeIcon } from "../../../assets/icons/eye-icon.svg";
+import { ReactComponent as EyeOffIcon } from "../../../assets/icons/eye-off-icon.svg";
+
+// Import images
+import wallpaperBg from "../../../assets/images/register1-bg.png";
+import logoImage from "../../../assets/images/logo.svg";
+import emojiSparkles from "../../../assets/images/emoji-sparkles_.svg";
 
 /**
  * EmailVerification component - Initial step of the registration process
@@ -14,6 +24,10 @@ import styles from '../authPages.module.scss';
  * @param {Function} props.nextStep - Function to proceed to next step
  * @param {Object} props.errors - Validation errors
  * @param {boolean} props.isLoading - Loading state
+ * @param {string} props.verificationStep - Current verification sub-step
+ * @param {Function} props.setVerificationStep - Function to set verification sub-step
+ * @param {Function} props.verifyEmail - Function to verify email
+ * @param {Function} props.onGoBack - Function to handle going back
  * @returns {JSX.Element} EmailVerification component
  */
 const EmailVerification = ({ 
@@ -24,18 +38,42 @@ const EmailVerification = ({
   isLoading,
   verificationStep,
   setVerificationStep,
-  verifyEmail
+  verifyEmail,
+  onGoBack
 }) => {
+  const navigate = useNavigate();
+  
   // State for verification code inputs
   const [verificationCode, setVerificationCode] = useState(['', '', '', '', '', '']);
   const inputRefs = useRef([]);
+  
+  // Timer state
+  const [timeLeft, setTimeLeft] = useState(59);
+  const [timerActive, setTimerActive] = useState(false);
   
   // Focus first input on mount when showing verification step
   useEffect(() => {
     if (verificationStep === 'code-verification' && inputRefs.current[0]) {
       inputRefs.current[0].focus();
+      setTimerActive(true);
     }
   }, [verificationStep]);
+  
+  // Handle timer countdown
+  useEffect(() => {
+    let timer;
+    if (timerActive && timeLeft > 0) {
+      timer = setTimeout(() => {
+        setTimeLeft(timeLeft - 1);
+      }, 1000);
+    } else if (timeLeft === 0) {
+      setTimerActive(false);
+    }
+    
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [timerActive, timeLeft]);
   
   /**
    * Handle form submission for email entry
@@ -139,11 +177,18 @@ const EmailVerification = ({
    * Resend verification code
    */
   const resendCode = () => {
+    // Only allow resend when timer is not active
+    if (timerActive) return;
+    
     // Clear the current code
     setVerificationCode(['', '', '', '', '', '']);
     
-    // Show resend message (this would trigger the actual resend in a real implementation)
-    alert('Verification code resent!');
+    // Reset and start the timer
+    setTimeLeft(59);
+    setTimerActive(true);
+    
+    // Simulated API call to resend code
+    verifyEmail();
     
     // Focus the first input
     if (inputRefs.current[0]) {
@@ -151,114 +196,191 @@ const EmailVerification = ({
     }
   };
   
-  // Render the appropriate step
-  if (verificationStep === 'email-entry') {
-    return (
-      <div className={styles.loginFormContainer}>
-        <div className={styles.loginHeader}>
-          <h1 className={styles.welcomeTitle}>Create Account</h1>
-          <p className={styles.welcomeSubtitle}>Enter your details to create an account</p>
+  // Format timer display
+  const formatTime = (seconds) => {
+    return `00:${seconds < 10 ? '0' + seconds : seconds}`;
+  };
+  
+  // Render error message if exists
+  const renderErrorMessage = () => {
+    if (!errors || !errors.email) return null;
+    
+    return <div className={styles.errorMessage}>{errors.email}</div>;
+  };
+  
+  // Handle going back
+  const handleGoBack = () => {
+    if (verificationStep === 'code-verification') {
+      setVerificationStep('email-entry');
+    } else {
+      onGoBack ? onGoBack() : navigate('/login');
+    }
+  };
+  
+  // Email verification form content
+  const renderEmailEntryForm = () => (
+    <>
+      <div className={styles.welcomeSection}>
+        <h1 className={styles.welcomeTitle}>
+          Create Account <img src={emojiSparkles} alt="✨" className={styles.sparkleIcon} />
+        </h1>
+        <p className={styles.welcomeSubtitle}>Enter your details to create an account</p>
+      </div>
+      
+      {renderErrorMessage()}
+      
+      <form onSubmit={handleEmailSubmit} className={styles.form}>
+        <div className={styles.inputGroup}>
+          <div className={styles.inputField}>
+            <MailIcon className={styles.fieldIcon} />
+            <input
+              type="email"
+              name="email"
+              placeholder="Email"
+              className={styles.input}
+              value={formData.email}
+              onChange={handleChange}
+              disabled={isLoading}
+              aria-label="Email Address"
+            />
+          </div>
         </div>
         
-        {errors.email && (
-          <div className={styles.errorMessage}>{errors.email}</div>
-        )}
+        <button
+          type="submit"
+          className={styles.signInButton}
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <div className={styles.spinner}></div>
+          ) : (
+            "Next"
+          )}
+        </button>
+      </form>
+      
+      <div className={styles.signupPrompt}>
+        Already have an account? <Link to="/login" className={styles.signupLink}>Login</Link>
+      </div>
+    </>
+  );
+  
+  // Verification code form content
+  const renderVerificationForm = () => (
+    <>
+      <div className={styles.welcomeSection}>
+        <h1 className={styles.welcomeTitle}>
+          Email Verification <img src={emojiSparkles} alt="✨" className={styles.sparkleIcon} />
+        </h1>
+        <p className={styles.welcomeSubtitle}>
+          Enter the 6-digit verification code sent to<br />
+          <strong className={styles.emailHighlight}>{formData.email}</strong>
+        </p>
+      </div>
+      
+      {renderErrorMessage()}
+      
+      <div className={styles.form}>
+        <div className={styles.codeInputGroup}>
+          {verificationCode.map((digit, index) => (
+            <input
+              key={index}
+              ref={el => inputRefs.current[index] = el}
+              type="text"
+              className={styles.codeInput}
+              maxLength={1}
+              value={digit}
+              onChange={(e) => handleCodeChange(index, e)}
+              onKeyDown={(e) => handleKeyDown(index, e)}
+              onPaste={index === 0 ? handlePaste : undefined}
+              disabled={isLoading}
+              aria-label={`Verification code digit ${index + 1}`}
+            />
+          ))}
+        </div>
         
-        <form className={styles.loginForm} onSubmit={handleEmailSubmit}>
-          <div className={styles.formGroup}>
-            <div className={styles.inputContainer}>
-              <span className={styles.inputIcon}>
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16">
-                  <path fill="currentColor" d="M20,4H4C2.9,4,2,4.9,2,6v12c0,1.1,0.9,2,2,2h16c1.1,0,2-0.9,2-2V6C22,4.9,21.1,4,20,4z M20,8l-8,5L4,8V6l8,5l8-5V8z"/>
-                </svg>
-              </span>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                className={styles.modernInput}
-                placeholder="eg. johndoe@gmail.com"
-                value={formData.email}
-                onChange={handleChange}
-                disabled={isLoading}
-              />
-            </div>
-          </div>
-          
-          <button
-            type="submit"
-            className={styles.signInButton}
-            disabled={isLoading}
+        <div className={styles.resendCodeContainer}>
+          <button 
+            type="button" 
+            className={styles.resendCodeButton}
+            onClick={resendCode}
+            disabled={isLoading || timerActive}
           >
-            {isLoading ? (
-              <span className={styles.buttonSpinner}></span>
-            ) : (
-              "Next"
+            Resend Code {timerActive && (
+              <span className={styles.timer}>{formatTime(timeLeft)}</span>
             )}
           </button>
-          
-          <div className={styles.signupPrompt}>
-            Already have an account? <Link to="/login" className={styles.signupLink}>Login</Link>
-          </div>
-        </form>
+        </div>
+        
+        <button
+          type="button"
+          className={styles.signInButton}
+          onClick={nextStep}
+          disabled={isLoading || verificationCode.includes('')}
+        >
+          {isLoading ? (
+            <div className={styles.spinner}></div>
+          ) : (
+            "Continue"
+          )}
+        </button>
       </div>
-    );
-  } else {
-    return (
-      <div className={styles.loginFormContainer}>
-        <div className={styles.loginHeader}>
-          <h1 className={styles.welcomeTitle}>Email Verification</h1>
-          <p className={styles.welcomeSubtitle}>
-            Enter the 6-digit verification code sent to<br />
-            <strong>{formData.email}</strong>
+    </>
+  );
+  
+  return (
+    <div className={styles.loginPanel}>
+      {/* Left Panel with dark background */}
+      <div className={styles.leftPanel}>
+        <img className={styles.wallpaper} alt="Background" src={wallpaperBg} />
+        <div className={styles.leftPanelContent}>
+          <div className={styles.leftPanelText}>
+            <h2 className={styles.leftPanelHeading}>
+              <span className={styles.purpleText}>Sell</span> Tickets.
+            </h2>
+            <h2 className={styles.leftPanelHeading}>
+              <span className={styles.purpleText}>Fill</span> Seats.
+            </h2>
+            <h2 className={styles.leftPanelHeading}>
+              <span className={styles.purpleText}>Get</span> Paid.
+            </h2>
+          </div>
+        </div>
+      </div>
+
+      {/* Right Panel with form */}
+      <div className={styles.rightPanel}>
+        {/* Header with back button and logo */}
+        <div className={styles.header}>
+          <button 
+            className={styles.backButton}
+            onClick={handleGoBack}
+            aria-label="Go back"
+          >
+            <ArrowIcon className={styles.backIcon} />
+          </button>
+          <div className={styles.logoContainer}>
+            <img src={logoImage} alt="Prizmatix Logo" className={styles.logo} />
+          </div>
+        </div>
+        
+        {/* Main content with form */}
+        <div className={styles.formContainer}>
+          {verificationStep === 'email-entry' 
+            ? renderEmailEntryForm() 
+            : renderVerificationForm()
+          }
+        </div>
+        
+        {/* Footer */}
+        <div className={styles.footer}>
+          <p className={styles.copyright}>
+            Copyright © 2025 <span className={styles.companyName}>Prizmatix</span>
           </p>
         </div>
-        
-        <div className={styles.verificationContainer}>
-          <div className={styles.codeInputGroup}>
-            {verificationCode.map((digit, index) => (
-              <input
-                key={index}
-                ref={el => inputRefs.current[index] = el}
-                type="text"
-                className={styles.codeInput}
-                maxLength={1}
-                value={digit}
-                onChange={(e) => handleCodeChange(index, e)}
-                onKeyDown={(e) => handleKeyDown(index, e)}
-                onPaste={index === 0 ? handlePaste : undefined}
-                disabled={isLoading}
-              />
-            ))}
-          </div>
-          
-          <div className={styles.resendCodeContainer}>
-            <button 
-              type="button" 
-              className={styles.resendCodeButton}
-              onClick={resendCode}
-              disabled={isLoading}
-            >
-              Resend Code in <span className={styles.timer}>00:59</span>
-            </button>
-          </div>
-          
-          <button
-            type="button"
-            className={styles.signInButton}
-            onClick={nextStep}
-            disabled={isLoading || verificationCode.includes('')}
-          >
-            {isLoading ? (
-              <span className={styles.buttonSpinner}></span>
-            ) : (
-              "Continue"
-            )}
-          </button>
-        </div>
       </div>
-    );
-  }
+    </div>
+  );
 };
 
 EmailVerification.propTypes = {
@@ -269,7 +391,8 @@ EmailVerification.propTypes = {
   isLoading: PropTypes.bool,
   verificationStep: PropTypes.string.isRequired,
   setVerificationStep: PropTypes.func.isRequired,
-  verifyEmail: PropTypes.func.isRequired
+  verifyEmail: PropTypes.func.isRequired,
+  onGoBack: PropTypes.func
 };
 
 export default EmailVerification;

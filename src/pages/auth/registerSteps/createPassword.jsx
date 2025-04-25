@@ -1,4 +1,3 @@
-// src/pages/auth/registerSteps/createPassword.jsx
 import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import styles from '../authPages.module.scss';

@@ -1,4 +1,3 @@
-// src/pages/auth/registerSteps/organizationProfile.jsx
 import React, { useState, useRef } from 'react';
 import PropTypes from 'prop-types';
 import styles from '../authPages.module.scss';
