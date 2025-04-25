@@ -108,23 +108,23 @@ const MultiStepRegisterPage = () => {
     fixIsAuthenticatedReferences();
   }, [isAuthenticated]);
   
-  // Update progress indicator based on current step and hide custom content after first step
+  // Update progress indicator based on current step and ensure background image visibility
   useEffect(() => {
     if (currentStep === 0) {
       setProgress(20);
       setShowCustomContent(true);
     } else if (currentStep === 1) {
       setProgress(40);
-      setShowCustomContent(false);
+      setShowCustomContent(true); // Keep background visible for all steps
     } else if (currentStep === 2) {
       setProgress(60);
-      setShowCustomContent(false);
+      setShowCustomContent(true); // Keep background visible for all steps
     } else if (currentStep === 3) {
       setProgress(80);
-      setShowCustomContent(false);
+      setShowCustomContent(true); // Keep background visible for all steps
     } else {
       setProgress(100);
-      setShowCustomContent(false);
+      setShowCustomContent(true); // Keep background visible for all steps
     }
   }, [currentStep]);
   
@@ -655,7 +655,7 @@ const MultiStepRegisterPage = () => {
       {/* Left side - background image with text overlay */}
       <div className={styles.leftPanel}>
         <img 
-          src="/images/auth1-bg.png" 
+          src="/images/register1-bg.png" 
           alt="Background" 
           className={styles.backgroundImage} 
         />
@@ -698,6 +698,7 @@ const MultiStepRegisterPage = () => {
           </div>
         </div>
         
+        {renderErrorMessage()}
         {renderStep()}
         
         <div className={styles.footerContainer}>
