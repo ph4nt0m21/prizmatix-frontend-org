@@ -7,8 +7,8 @@ import styles from './basicDetails.module.scss';
 import { ReactComponent as ArrowIcon } from "../../../assets/icons/arrow-icon.svg";
 
 // Import images
-import wallpaperBg from "../../../assets/images/register1-bg.png";
-import logoImage from "../../../assets/images/logo.svg";
+import wallpaperBg from "../../../assets/images/register2-bg.png";
+import logoImage from "../../../assets/images/logo2.svg";
 import emojiSparkles from "../../../assets/images/emoji-sparkles_.svg";
 
 /**
@@ -60,23 +60,12 @@ const BasicDetails = ({
           <div className={styles.leftPanelLogo}>
             <img src={logoImage} alt="Prizmatix Logo" className={styles.leftLogo} />
           </div>
-          <div className={styles.leftPanelText}>
-            <h2 className={styles.leftPanelHeading}>
-              <span className={styles.purpleText}>Sell</span> Tickets.
-            </h2>
-            <h2 className={styles.leftPanelHeading}>
-              <span className={styles.purpleText}>Fill</span> Seats.
-            </h2>
-            <h2 className={styles.leftPanelHeading}>
-              <span className={styles.purpleText}>Get</span> Paid.
-            </h2>
-          </div>
         </div>
       </div>
 
       {/* Right Panel with form */}
       <div className={styles.rightPanel}>
-        {/* Header with back button, steps indicator, and logo */}
+        {/* Header with back button and steps indicator */}
         <div className={styles.header}>
           <button 
             className={styles.backButton}
@@ -88,15 +77,13 @@ const BasicDetails = ({
           
           {/* Step indicator */}
           <div className={styles.stepsIndicator}>
-            <div className={`${styles.step} ${styles.completed}`}></div>
             <div className={`${styles.step} ${styles.active}`}></div>
+            <div className={styles.step}></div>
             <div className={styles.step}></div>
             <div className={styles.step}></div>
           </div>
           
-          <div className={styles.logoContainer}>
-            <img src={logoImage} alt="Prizmatix Logo" className={styles.logo} />
-          </div>
+          <div className={styles.emptySpace}></div>
         </div>
         
         {/* Main content with form */}

@@ -1,155 +1,18 @@
 @import '../../../styles/variables';
 @import '../../../styles/mixins';
 
-.headerNav {
+.eventNav {
   display: flex;
-  flex-direction: column;
-  width: 100%;
-  background-color: white;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 24px;
+  background-color: #ffffff;
   border-bottom: 1px solid #e5e7eb;
 }
 
-.headerContent {
+.breadcrumbContainer {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 8px 16px;
-  border-bottom: 1px solid #f0f0f0;
-}
-
-.orgSection {
-  display: flex;
-  align-items: center;
-}
-
-.orgLogo {
-  display: flex;
-  align-items: center;
-  
-  img {
-    width: 24px;
-    height: 24px;
-    border-radius: 4px;
-    margin-right: 8px;
-  }
-}
-
-.orgName {
-  font-size: 14px;
-  font-weight: 600;
-  color: #333;
-  margin-right: 4px;
-}
-
-.verifiedBadge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 16px;
-  height: 16px;
-  background-color: #7C3AED;
-  color: white;
-  border-radius: 50%;
-  font-size: 10px;
-}
-
-.orgDropdown {
-  background: none;
-  border: none;
-  padding: 4px;
-  margin-left: 4px;
-  cursor: pointer;
-  color: #666;
-  
-  &:hover {
-    color: #333;
-  }
-}
-
-.searchContainer {
-  flex: 1;
-  display: flex;
-  justify-content: center;
-  max-width: 600px;
-  margin: 0 16px;
-}
-
-.searchWrapper {
-  position: relative;
-  width: 100%;
-}
-
-.searchInput {
-  width: 100%;
-  height: 36px;
-  padding: 0 36px 0 16px;
-  background-color: #f5f5f7;
-  border: 1px solid #e5e7eb;
-  border-radius: 18px;
-  color: #333;
-  font-size: 14px;
-  
-  &:focus {
-    outline: none;
-    border-color: #7C3AED;
-    box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.1);
-  }
-  
-  &::placeholder {
-    color: #999;
-  }
-}
-
-.searchButton {
-  position: absolute;
-  right: 8px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: none;
-  border: none;
-  padding: 4px;
-  color: #999;
-  cursor: pointer;
-  
-  &:hover {
-    color: #7C3AED;
-  }
-}
-
-.actions {
-  display: flex;
-  align-items: center;
-}
-
-.previewButton {
-  display: flex;
-  align-items: center;
-  padding: 6px 12px;
-  background-color: transparent;
-  border: 1px solid #e5e7eb;
-  border-radius: 4px;
-  color: #333;
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  
-  svg {
-    margin-right: 6px;
-  }
-  
-  &:hover:not(:disabled) {
-    background-color: #f5f5f7;
-    border-color: #d1d5db;
-  }
-  
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-}
-
-.eventNav {
-  padding: 10px 16px;
 }
 
 .breadcrumb {
@@ -159,21 +22,85 @@
 }
 
 .breadcrumbLink {
-  color: #666;
+  color: #6b7280;
   text-decoration: none;
+  transition: color 0.2s;
   
   &:hover {
-    color: #7C3AED;
+    color: #8b5cf6;
     text-decoration: underline;
+  }
+  
+  /* Special styling for the event name link - make it bold and purple */
+  &:nth-of-type(2) {
+    color: #8b5cf6;
+    font-weight: 700;
   }
 }
 
 .breadcrumbSeparator {
-  margin: 0 8px;
-  color: #999;
+  margin: 0 6px;
+  color: #d1d5db;
+  display: flex;
+  align-items: center;
 }
 
-.breadcrumbCurrent {
-  color: #333;
+.breadcrumbDraft {
+  margin-left: 8px;
+  padding: 2px 8px;
+  background-color: #fef3c7; /* Yellow background */
+  color: #d97706; /* Yellow/amber text */
+  font-size: 12px;
   font-weight: 500;
+  border-radius: 4px;
+}
+
+.actionButtons {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.previewButton {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 16px;
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  color: #4b5563;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  
+  svg {
+    color: #6b7280;
+  }
+  
+  &:hover:not(:disabled) {
+    background-color: #f9fafb;
+    border-color: #d1d5db;
+  }
+  
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+// Responsive styles
+@media (max-width: 768px) {
+  .eventNav {
+    padding: 8px 16px;
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  
+  .actionButtons {
+    width: 100%;
+    justify-content: flex-end;
+  }
 }

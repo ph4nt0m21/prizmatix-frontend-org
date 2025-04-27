@@ -3,9 +3,9 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Cookies from 'js-cookie';
 import { LoginAPI } from '../../services/allApis';
-import SideNavBar from '../../layout/sideNavBar/sideNavbar';
-import EventCreationSidebar from './components/eventCreationSidebar';
+import Header from '../../layout/header/header';
 import EventHeaderNav from './components/eventHeaderNav';
+import EventCreationSidebar from './components/eventCreationSidebar';
 import BasicInfoStep from './steps/basicInfoStep';
 import LocationStep from './steps/locationStep';
 import DateTimeStep from './steps/dateTimeStep';
@@ -700,7 +700,7 @@ const CreateEventPage = () => {
         return {
           tickets: eventData.tickets
         };
-      case 7: // Discount Codes
+        case 7: // Discount Codes
         return {
           discountCodes: eventData.discountCodes
         };
@@ -719,7 +719,7 @@ const CreateEventPage = () => {
   const handlePrevStep = () => {
     if (currentStep > 1) {
       const prevStep = currentStep - 1;
-      navigate(`/events/create/${eventId || 'draft-event-123'}/${prevStep}`);
+      navigate(`/events/create/${eventId}/${prevStep}`);
       setCurrentStep(prevStep);
     }
   };
@@ -861,16 +861,18 @@ const CreateEventPage = () => {
   
   return (
     <div className={styles.pageWrapper}>
-      <SideNavBar />
+      {/* Main Header - reused from the main layout */}
+      <Header />
+      
+      {/* Event-specific sub-header with breadcrumbs and actions */}
+      <EventHeaderNav 
+        currentStep={getCurrentStepName()} 
+        eventName={eventData.name || 'NORR Festival 2022'} 
+        isDraft={true}
+        canPreview={canPreview}
+      />
       
       <div className={styles.createEventContainer}>
-        <EventHeaderNav 
-          currentStep={getCurrentStepName()} 
-          eventName={eventData.name || 'NORR Festival 2022'} 
-          isDraft={true}
-          canPreview={canPreview}
-        />
-        
         <div className={styles.content}>
           <EventCreationSidebar 
             currentStep={currentStep}

@@ -1,6 +1,7 @@
 // src/pages/events/steps/publishStep.jsx
 import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
+import { PublishEventAPI } from '../../../services/allApis';
 import styles from './steps.module.scss';
 
 /**
@@ -12,16 +13,21 @@ import styles from './steps.module.scss';
  * @param {Function} props.handleInputChange Function to handle input changes
  * @param {boolean} props.isValid Whether the form is valid
  * @param {Object} props.stepStatus Status of this step
+ * @param {Function} props.handlePublish Function to handle event publish
+ * @param {boolean} props.isPublishing Whether the event is being published
  * @returns {JSX.Element} PublishStep component
  */
 const PublishStep = ({ 
   eventData = {}, 
   handleInputChange = () => {}, 
   isValid = false, 
-  stepStatus = { visited: false }
+  stepStatus = { visited: false },
+  handlePublish = () => {},
+  isPublishing = false
 }) => {
-  // State for indicating if event is being published
-  const [isPublishing, setIsPublishing] = useState(false);
+  // API-related state
+  const [apiError, setApiError] = useState(null);
+  const [publishSuccess, setPublishSuccess] = useState(false);
   
   // Format date for display
   const formatEventDate = () => {
@@ -48,16 +54,42 @@ const PublishStep = ({
     return `${hour12}${ampm}`;
   };
   
-  // Handle publish button click
-  const handlePublish = () => {
-    setIsPublishing(true);
+  /**
+   * Handle publish button click with API call
+   * @param {string} eventId - Event ID
+   * @param {Object} userData - Current user data for updatedBy field
+   */
+  const publishEvent = async (eventId, userData) => {
+    if (!isValid || !eventId) {
+      setApiError('Please complete all required steps before publishing.');
+      return;
+    }
     
-    // Simulate API call
-    setTimeout(() => {
-      setIsPublishing(false);
-      // Here you would redirect to the published event page
-      alert('Event published successfully!');
-    }, 1500);
+    setApiError(null);
+    
+    try {
+      // Prepare the publish data for API
+      const publishData = {
+        id: eventId,
+        publishEvent: true,
+        updatedBy: userData?.id || 0
+      };
+      
+      // Call the publish API
+      await PublishEventAPI(eventId, publishData);
+      
+      // Show success message
+      setPublishSuccess(true);
+      
+      // Call parent's handlePublish if provided
+      if (handlePublish) {
+        handlePublish();
+      }
+      
+    } catch (error) {
+      console.error('Error publishing event:', error);
+      setApiError('Failed to publish event. Please try again.');
+    }
   };
   
   // Handle preview button click
@@ -98,9 +130,63 @@ const PublishStep = ({
     
     return 'Location not specified';
   };
+
+  /**
+   * Check for incomplete steps and return a list of them
+   * @returns {Array} List of incomplete steps
+   */
+  const getIncompleteSteps = () => {
+    const incompleteSteps = [];
+    
+    if (!eventData.name) {
+      incompleteSteps.push('Basic Info');
+    }
+    
+    if (!eventData.location.isToBeAnnounced && 
+        (!eventData.location.venue || !eventData.location.city || !eventData.location.country)) {
+      incompleteSteps.push('Location');
+    }
+    
+    if (!eventData.dateTime.startDate || !eventData.dateTime.startTime || 
+        !eventData.dateTime.endDate || !eventData.dateTime.endTime) {
+      incompleteSteps.push('Date & Time');
+    }
+    
+    if (!eventData.description) {
+      incompleteSteps.push('Description');
+    }
+    
+    if (!eventData.tickets || eventData.tickets.length === 0) {
+      incompleteSteps.push('Tickets');
+    }
+    
+    return incompleteSteps;
+  };
+  
+  // Check if event is ready to publish
+  const incompleteSteps = getIncompleteSteps();
+  const isReadyToPublish = incompleteSteps.length === 0;
   
   return (
     <div className={styles.stepContainer}>
+      {apiError && (
+        <div className={styles.errorAlert}>
+          {apiError}
+          <button 
+            className={styles.dismissButton}
+            onClick={() => setApiError(null)}
+          >
+            ×
+          </button>
+        </div>
+      )}
+      
+      {publishSuccess && (
+        <div className={styles.successAlert}>
+          Your event has been published successfully! Redirecting to event page...
+        </div>
+      )}
+      
       <div className={styles.publishHeader}>
         <div className={styles.publishActions}>
           <h2 className={styles.publishTitle}>Preview</h2>
@@ -109,20 +195,37 @@ const PublishStep = ({
               type="button"
               onClick={handlePreview}
               className={styles.previewButton}
+              disabled={isPublishing}
             >
               Open in new tab
             </button>
             <button 
               type="button" 
-              onClick={handlePublish}
+              onClick={() => publishEvent(eventData.id, eventData)}
               className={styles.publishButton}
-              disabled={isPublishing}
+              disabled={isPublishing || !isReadyToPublish}
             >
-              {isPublishing ? 'Publishing...' : 'Publish'}
+              {isPublishing ? 'Publishing...' : 'Publish Event'}
             </button>
           </div>
         </div>
       </div>
+      
+      {!isReadyToPublish && (
+        <div className={styles.incompleteStepsWarning}>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 20C7.59 20 4 16.41 4 12C4 7.59 7.59 4 12 4C16.41 4 20 7.59 20 12C20 16.41 16.41 20 12 20ZM11 15H13V17H11V15ZM11 7H13V13H11V7Z" fill="#ef4444"/>
+          </svg>
+          <div>
+            <h3>Complete these steps before publishing:</h3>
+            <ul>
+              {incompleteSteps.map((step, index) => (
+                <li key={index}>{step}</li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      )}
       
       <div className={styles.publishPreviewContainer}>
         {/* Banner Image */}
@@ -219,6 +322,30 @@ const PublishStep = ({
           </div>
         </div>
         
+        {/* Tickets Section */}
+        <div className={styles.eventTicketsSection}>
+          <h3 className={styles.sectionTitle}>Tickets</h3>
+          {eventData.tickets && eventData.tickets.length > 0 ? (
+            <div className={styles.ticketsList}>
+              {eventData.tickets.map((ticket, index) => (
+                <div key={index} className={styles.ticketItem}>
+                  <div className={styles.ticketDetails}>
+                    <h4 className={styles.ticketName}>{ticket.name}</h4>
+                    <p className={styles.ticketPrice}>${parseFloat(ticket.price).toFixed(2)}</p>
+                  </div>
+                  <p className={styles.ticketQuantity}>
+                    {ticket.quantity} available
+                  </p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className={styles.noTicketsMessage}>
+              No tickets have been created yet. Add tickets to complete your event.
+            </p>
+          )}
+        </div>
+        
         {/* Buy Tickets CTA */}
         <div className={styles.eventTicketsCta}>
           <button type="button" className={styles.buyTicketsButton}>
@@ -234,7 +361,9 @@ PublishStep.propTypes = {
   eventData: PropTypes.object,
   handleInputChange: PropTypes.func,
   isValid: PropTypes.bool,
-  stepStatus: PropTypes.object
+  stepStatus: PropTypes.object,
+  handlePublish: PropTypes.func,
+  isPublishing: PropTypes.bool
 };
 
 export default PublishStep;

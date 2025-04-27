@@ -1,103 +1,61 @@
 @import '../../styles/variables';
 @import '../../styles/mixins';
 
+// Main container for the create event page
 .pageWrapper {
   display: flex;
+  flex-direction: column;
   min-height: 100vh;
-  background-color: white;
+  background-color: #F8F8F8;
 }
 
+// Container for the content area that accounts for the sidebar
 .createEventContainer {
   display: flex;
   flex-direction: column;
   width: calc(100% - 70px);
-  margin-left: 70px;
-  min-height: 100vh;
+  margin-left: 70px; // Sidebar width
+  flex: 1;
 }
 
+// Flex container for sidebar and main content
 .content {
   display: flex;
-  flex-grow: 1;
-  height: calc(100vh - 100px);
+  gap: 16px;
+  padding: 16px;
+  flex: 1;
+  height: calc(100vh - 140px); // Adjusted for both headers
+  min-height: 600px;
+  max-height: calc(100vh - 140px);
   overflow: hidden;
 }
 
+// Main content area that contains the form
 .mainContent {
-  flex-grow: 1;
-  padding: 24px;
+  flex: 1;
   display: flex;
   flex-direction: column;
-  overflow-y: auto;
-  background-color: #f7f8f9;
+  overflow: hidden;
+  background-color: #FFFFFF;
+  border-radius: 8px;
+  box-shadow: 0px 2px 4px 0px rgba(0, 0, 0, 0.05);
 }
 
+// Container for the step content
 .stepContent {
-  flex-grow: 1;
-  margin-bottom: 24px;
-}
-
-.navigation {
+  flex: 1;
   display: flex;
-  justify-content: space-between;
-  margin-top: auto;
-  padding-top: 24px;
-  border-top: 1px solid #e5e7eb;
+  overflow: auto;
 }
 
-.backButton, .nextButton {
-  padding: 10px 24px;
-  border-radius: 6px;
-  font-weight: 500;
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-}
-
-.backButton {
-  background-color: white;
-  border: 1px solid #d1d5db;
-  color: #4b5563;
-  
-  &:hover:not(:disabled) {
-    background-color: #f9fafb;
-  }
-}
-
-.nextButton {
-  background-color: #7C3AED;
-  border: none;
-  color: white;
-  
-  &:hover:not(:disabled) {
-    background-color: #6d28d9;
-  }
-}
-
-.loadingContainer {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 300px;
-  
-  p {
-    margin-top: 16px;
-    color: #6b7280;
-  }
-}
-
+// Error message styling
 .errorMessage {
   background-color: #fee2e2;
   border: 1px solid #fca5a5;
   border-radius: 6px;
   color: #b91c1c;
   padding: 12px 16px;
-  margin-bottom: 24px;
+  margin: 16px;
   position: relative;
   
   .dismissButton {
@@ -111,5 +69,234 @@
     font-size: 16px;
     padding: 4px;
     line-height: 1;
+  }
+}
+
+// Success message styling
+.successMessage {
+  background-color: #d1fae5;
+  border: 1px solid #6ee7b7;
+  border-radius: 6px;
+  color: #065f46;
+  padding: 12px 16px;
+  margin: 16px;
+  position: relative;
+  
+  .dismissButton {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: none;
+    border: none;
+    color: #065f46;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 4px;
+    line-height: 1;
+  }
+}
+
+// Loading state container
+.loadingContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+  
+  p {
+    margin-top: 16px;
+    color: #6b7280;
+  }
+}
+
+// Navigation buttons container
+.navigation {
+  display: flex;
+  justify-content: space-between;
+  margin-top: auto;
+  padding: 16px 24px;
+  border-top: 1px solid #e5e7eb;
+}
+
+// Back button styling
+.backButton {
+  padding: 10px 24px;
+  border-radius: 6px;
+  background-color: white;
+  border: 1px solid #d1d5db;
+  color: #6b7280;
+  font-weight: 500;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover:not(:disabled) {
+    background-color: #f9fafb;
+    border-color: #9ca3af;
+  }
+  
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+// Next button styling
+.nextButton {
+  padding: 10px 24px;
+  border-radius: 6px;
+  background-color: #7C3AED;
+  border: none;
+  color: white;
+  font-weight: 500;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  
+  &:hover:not(:disabled) {
+    background-color: #6d28d9;
+  }
+  
+  &:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+}
+
+// Form container
+.formContainer {
+  background-color: #FFFFFF;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  height: 100%;
+}
+
+// Tab content
+.tabContent {
+  padding: 24px;
+  height: 100%;
+  overflow-y: auto;
+}
+
+// Step progress indicator
+.stepProgress {
+  display: flex;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.stepIndicator {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: #e5e7eb;
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+  margin-right: 8px;
+  
+  &.active {
+    background-color: #7C3AED;
+    color: white;
+  }
+  
+  &.completed {
+    background-color: #7C3AED;
+    color: white;
+    
+    &:after {
+      content: '✓';
+    }
+  }
+}
+
+.stepLabel {
+  font-size: 14px;
+  font-weight: 500;
+  color: #6b7280;
+  
+  &.active {
+    color: #111827;
+  }
+  
+  &.completed {
+    color: #7C3AED;
+  }
+}
+
+// Section containers
+.sectionContainer {
+  margin-bottom: 32px;
+  
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.sectionTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 8px 0;
+}
+
+.sectionDescription {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 0 0 16px 0;
+}
+
+// Responsive adjustments
+@media (max-width: 1280px) {
+  .content {
+    padding: 12px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .createEventContainer {
+    width: calc(100% - 60px);
+    margin-left: 60px;
+  }
+}
+
+@media (max-width: 768px) {
+  .createEventContainer {
+    width: 100%;
+    margin-left: 0;
+  }
+  
+  .content {
+    flex-direction: column;
+    height: auto;
+    max-height: none;
+    overflow-y: auto;
+  }
+  
+  .mainContent {
+    min-height: 500px;
+  }
+}
+
+@media (max-width: 480px) {
+  .content {
+    padding: 8px;
+    gap: 8px;
+  }
+  
+  .navigation {
+    padding: 12px 16px;
+  }
+  
+  .backButton, .nextButton {
+    padding: 8px 16px;
+    font-size: 13px;
   }
 }

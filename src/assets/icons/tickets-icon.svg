@@ -1,0 +1,9 @@
+<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Group">
+<path id="Path" d="M4.66659 12.3335V12.0002" stroke="#52525B" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="Path_2" d="M4.66655 10.1665L4.66662 9.83317" stroke="#52525B" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="Path_3" d="M4.66659 8V7.66667" stroke="#52525B" stroke-linecap="round" stroke-linejoin="round"/>
+<rect id="Rectangle" x="12" y="14" width="10" height="8" rx="2" transform="rotate(-180 12 14)" stroke="#52525B" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="Path_4" d="M12.0001 10H13.0001C13.9206 10 14.6667 9.25381 14.6667 8.33333V3.66667C14.6667 2.74619 13.9206 2 13.0001 2H6.33341C5.41294 2 4.66675 2.74619 4.66675 3.66667V6" stroke="#52525B" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+</svg>

@@ -39,7 +39,7 @@ const MainLayout = () => {
         </main>
         
         {/* Only show footer if not in event creation flow */}
-        {!isEventCreationRoute && <Footer />}
+        {/* {!isEventCreationRoute && <Footer />} */}
       </div>
     </div>
   );
