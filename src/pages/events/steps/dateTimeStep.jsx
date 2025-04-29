@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { UpdateEventDateTimeAPI } from '../../../services/allApis';
-import styles from './steps.module.scss';
+import styles from './dateTimeStep.module.scss';
 
 /**
  * DateTimeStep component - Third step of event creation

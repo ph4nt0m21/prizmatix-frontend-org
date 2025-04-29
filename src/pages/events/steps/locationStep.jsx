@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
 import { UpdateEventLocationAPI } from '../../../services/allApis';
-import styles from './steps.module.scss';
+import styles from './locationStep.module.scss';
 
 /**
  * LocationStep component - Second step of event creation

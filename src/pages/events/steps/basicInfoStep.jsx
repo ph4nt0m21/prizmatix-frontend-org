@@ -1,7 +1,7 @@
 // src/pages/events/steps/BasicInfoStep.jsx
 import React from 'react';
 import PropTypes from 'prop-types';
-import styles from './steps.module.scss';
+import styles from './basicInfoStep.module.scss';
 
 /**
  * BasicInfoStep component - First step of event creation

@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
 import { UpdateEventDescriptionAPI } from '../../../services/allApis';
-import styles from './steps.module.scss';
+import styles from './descriptionStep.module.scss';
 
 /**
  * DescriptionStep component - Fourth step of event creation
