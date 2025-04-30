@@ -83,6 +83,102 @@
   }
 }
 
+// Select dropdown styling
+.selectWrapper {
+  position: relative;
+}
+
+.formSelect {
+  width: 100%;
+  height: 44px;
+  padding: 0 16px;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  color: #333;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  appearance: none;
+  cursor: pointer;
+  
+  &:focus {
+    outline: none;
+    border-color: #7C3AED;
+    box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.2);
+  }
+  
+  &::placeholder {
+    color: #999;
+  }
+}
+
+.selectArrow {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+// Tag input and container styling
+.tagContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px;
+  min-height: 44px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background-color: #fff;
+  align-items: center;
+  
+  &:focus-within {
+    border-color: #7C3AED;
+    box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.2);
+  }
+}
+
+.tag {
+  display: flex;
+  align-items: center;
+  background-color: #F5F3FF;
+  color: #7C3AED;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.tagRemove {
+  background: none;
+  border: none;
+  font-size: 16px;
+  color: #7C3AED;
+  margin-left: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  &:hover {
+    color: #6D28D9;
+  }
+}
+
+.tagInput {
+  flex: 1;
+  min-width: 120px;
+  border: none;
+  outline: none;
+  padding: 4px;
+  font-size: 14px;
+  color: #333;
+  
+  &::placeholder {
+    color: #999;
+  }
+}
+
 .fieldError {
   margin-top: 5px;
   font-size: 12px;
