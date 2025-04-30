@@ -5,121 +5,142 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px 30px;
+  padding: 16px 24px;
   height: 70px;
   width: 100%;
   background-color: #ffffff;
-  color: #fff;
+  border-bottom: 1px solid #eaeaea;
 }
 
-.titleContainer {
-  display: flex;
-  align-items: center;
-}
-
-.title {
-  font-size: 20px;
-  font-weight: 500;
-  margin: 0;
-  color: #000000;
-}
-
-.actionsContainer {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-}
-
-.createEventButton {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 8px 16px;
-  background-color: #7B68EE;
-  color: #fff;
-  border: none;
-  border-radius: 4px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background-color 0.2s ease-in-out;
-  
-  &:hover {
-    background-color: darken(#7B68EE, 10%);
-  }
-  
-  &:active {
-    background-color: darken(#7B68EE, 15%);
-  }
-  
-  .plusIcon {
-    margin-right: 8px;
-    font-size: 16px;
-    font-weight: bold;
-  }
-}
-
-.loginButton {
-  padding: 6px 14px;
-  background-color: transparent;
-  color: #fff;
-  border: 1px solid #7B68EE;
-  border-radius: 4px;
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  
-  &:hover {
-    background-color: rgba(123, 104, 238, 0.1);
-  }
-}
-
-.logoutButton {
-  padding: 6px 14px;
-  background-color: transparent;
-  color: #ff7070;
-  border: 1px solid #ff7070;
-  border-radius: 4px;
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  
-  &:hover {
-    background-color: rgba(255, 112, 112, 0.1);
-  }
-}
-
-.userSection {
+.orgInfo {
   display: flex;
   align-items: center;
   gap: 12px;
 }
 
-.userName {
+.orgLogo {
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  background-color: #111827;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-weight: 600;
   font-size: 14px;
-  color: #a0a0c0;
+}
+
+.orgDetails {
+  display: flex;
+  flex-direction: column;
+}
+
+.orgLabel {
+  font-size: 12px;
+  color: #6b7280;
+  margin-bottom: 2px;
+}
+
+.orgName {
+  font-size: 14px;
+  font-weight: 500;
+  color: #111827;
+  margin: 0;
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.searchContainer {
+  position: relative;
+  width: 240px;
+}
+
+.searchInput {
+  width: 100%;
+  padding: 8px 12px;
+  padding-right: 36px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  font-size: 14px;
+  background-color: #f9fafb;
+  color: #111827;
+  
+  &::placeholder {
+    color: #9ca3af;
+  }
+  
+  &:focus {
+    outline: none;
+    border-color: #a78bfa;
+    box-shadow: 0 0 0 2px rgba(167, 139, 250, 0.2);
+  }
+}
+
+.searchButton {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  padding: 0;
+  color: #9ca3af;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.createEventButton {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background-color: #8b5cf6;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  
+  &:hover {
+    background-color: #7c3aed;
+  }
+  
+  .plusIcon {
+    font-weight: 600;
+  }
 }
 
 // Responsive styles
 @media (max-width: 768px) {
   .header {
-    padding: 15px 20px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+    height: auto;
+    padding: 16px;
   }
   
-  .title {
-    font-size: 18px;
+  .headerActions {
+    width: 100%;
+    justify-content: space-between;
   }
   
-  .createEventButton, .loginButton, .logoutButton {
-    padding: 6px 12px;
-    font-size: 13px;
+  .searchContainer {
+    width: 180px;
   }
-  
-  .userSection {
-    gap: 8px;
-  }
-  
-  .userName {
-    font-size: 13px;
+}
+
+@media (max-width: 480px) {
+  .searchContainer {
+    width: 140px;
   }
 }

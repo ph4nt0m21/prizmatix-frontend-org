@@ -1,7 +1,16 @@
-// src/pages/events/components/EventCreationSidebar.jsx
 import React from 'react';
 import PropTypes from 'prop-types';
 import styles from './eventCreationSidebar.module.scss';
+
+// Import SVG components
+import { ReactComponent as BasicInfoIcon } from '../../../assets/icons/basic-info-icon.svg';
+import { ReactComponent as LocationIcon } from '../../../assets/icons/location-icon.svg';
+import { ReactComponent as DateIcon } from '../../../assets/icons/date-icon.svg';
+import { ReactComponent as DescriptionIcon } from '../../../assets/icons/description-icon.svg';
+import { ReactComponent as ArtIcon } from '../../../assets/icons/art-icon.svg';
+import { ReactComponent as TicketsIcon } from '../../../assets/icons/tickets-icon.svg';
+import { ReactComponent as DiscountIcon } from '../../../assets/icons/discount-icon.svg';
+import { ReactComponent as PublishIcon } from '../../../assets/icons/publish-icon.svg';
 
 /**
  * EventCreationSidebar component displays the steps of event creation
@@ -14,16 +23,16 @@ import styles from './eventCreationSidebar.module.scss';
  * @returns {JSX.Element} EventCreationSidebar component
  */
 const EventCreationSidebar = ({ currentStep, stepStatus, navigateToStep }) => {
-  // Steps configuration
+  // Steps configuration with imported SVG components
   const steps = [
-    { number: 1, key: 'basicInfo', label: 'Basic Info', icon: 'basic-info-icon.svg' },
-    { number: 2, key: 'location', label: 'Location', icon: 'location-icon.svg' },
-    { number: 3, key: 'dateTime', label: 'Date', icon: 'date-icon.svg' },
-    { number: 4, key: 'description', label: 'Description', icon: 'description-icon.svg' },
-    { number: 5, key: 'art', label: 'Art', icon: 'art-icon.svg' },
-    { number: 6, key: 'tickets', label: 'Tickets', icon: 'tickets-icon.svg' },
-    { number: 7, key: 'discountCodes', label: 'Discount Codes', icon: 'discount-icon.svg' },
-    { number: 8, key: 'publish', label: 'Publish', icon: 'publish-icon.svg' }
+    { number: 1, key: 'basicInfo', label: 'Basic Info', icon: BasicInfoIcon },
+    { number: 2, key: 'location', label: 'Location', icon: LocationIcon },
+    { number: 3, key: 'dateTime', label: 'Date', icon: DateIcon },
+    { number: 4, key: 'description', label: 'Description', icon: DescriptionIcon },
+    { number: 5, key: 'art', label: 'Art', icon: ArtIcon },
+    { number: 6, key: 'tickets', label: 'Tickets', icon: TicketsIcon },
+    { number: 7, key: 'discountCodes', label: 'Discount Codes', icon: DiscountIcon },
+    { number: 8, key: 'publish', label: 'Publish', icon: PublishIcon }
   ];
   
   /**
@@ -39,26 +48,6 @@ const EventCreationSidebar = ({ currentStep, stepStatus, navigateToStep }) => {
     if (status.completed) return `${styles.step} ${styles.completed}`;
     if (status.visited) return `${styles.step} ${styles.visited}`;
     return styles.step;
-  };
-  
-  /**
-   * Get status icon for a step
-   * @param {Object} step Step object
-   * @returns {JSX.Element} Status icon
-   */
-  const getStatusIcon = (step) => {
-    const status = stepStatus[step.key];
-    const isActive = currentStep === step.number;
-    
-    if (isActive) {
-      return <div className={styles.activeIndicator}></div>;
-    }
-    
-    if (status.completed) {
-      return <div className={styles.completedIcon}>✓</div>;
-    }
-    
-    return null;
   };
   
   /**
@@ -83,21 +72,24 @@ const EventCreationSidebar = ({ currentStep, stepStatus, navigateToStep }) => {
       </div>
       
       <div className={styles.stepsList}>
-        {steps.map((step) => (
-          <div
-            key={step.key}
-            className={getStepClass(step)}
-            onClick={() => handleStepClick(step)}
-          >
-            <div className={styles.stepContent}>
+        {steps.map((step) => {
+          const IconComponent = step.icon;
+          const status = stepStatus[step.key];
+          const isActive = currentStep === step.number;
+          return (
+            <div
+              key={step.key}
+              className={getStepClass(step)}
+              onClick={() => handleStepClick(step)}
+            >
               <div className={styles.stepIconContainer}>
-                <img src={`/icons/${step.icon}`} alt={`${step.label} icon`} className={styles.stepIcon} />
-                {getStatusIcon(step)}
+                <IconComponent className={styles.stepIcon} />
+                <div className={`${styles.stepStatusIndicator} ${isActive || status.completed ? styles.filled : ''}`}></div>
               </div>
               <span className={styles.stepLabel}>{step.label}</span>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
       
       <div className={styles.progressInfo}>

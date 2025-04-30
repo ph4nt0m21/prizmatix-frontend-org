@@ -1,0 +1,349 @@
+// Import variables and mixins from main style files
+@import '../../../styles/variables';
+@import '../../../styles/mixins';
+
+// Container styling
+.stepContainer {
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: white;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+// Header styling
+.stepHeader {
+  display: flex;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.stepIcon {
+  margin-right: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stepTitle {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+}
+
+// Form section styling
+.formSection {
+  padding: 0;
+}
+
+.formGroup {
+  margin-bottom: 24px;
+  width: 100%;
+}
+
+.formLabel {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 4px;
+}
+
+.formDescription {
+  font-size: 13px;
+  color: #666;
+  margin-top: 0;
+  margin-bottom: 12px;
+}
+
+.formInput {
+  width: 100%;
+  height: 44px;
+  padding: 0 16px;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  color: #333;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  
+  &:focus {
+    outline: none;
+    border-color: #7C3AED;
+    box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.2);
+  }
+  
+  &::placeholder {
+    color: #999;
+  }
+}
+
+// Select dropdown styling
+.selectWrapper {
+  position: relative;
+}
+
+.formSelect {
+  width: 100%;
+  height: 44px;
+  padding: 0 16px;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  color: #333;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  appearance: none;
+  cursor: pointer;
+  
+  &:focus {
+    outline: none;
+    border-color: #7C3AED;
+    box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.2);
+  }
+  
+  &::placeholder {
+    color: #999;
+  }
+}
+
+.selectArrow {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+// Tag input and container styling
+.tagContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px;
+  min-height: 44px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background-color: #fff;
+  align-items: center;
+  
+  &:focus-within {
+    border-color: #7C3AED;
+    box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.2);
+  }
+}
+
+.tag {
+  display: flex;
+  align-items: center;
+  background-color: #F5F3FF;
+  color: #7C3AED;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.tagRemove {
+  background: none;
+  border: none;
+  font-size: 16px;
+  color: #7C3AED;
+  margin-left: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  &:hover {
+    color: #6D28D9;
+  }
+}
+
+.tagInput {
+  flex: 1;
+  min-width: 120px;
+  border: none;
+  outline: none;
+  padding: 4px;
+  font-size: 14px;
+  color: #333;
+  
+  &::placeholder {
+    color: #999;
+  }
+}
+
+.fieldError {
+  margin-top: 5px;
+  font-size: 12px;
+  color: #e53e3e;
+}
+
+// Visibility options styling
+.visibilityOptions {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 8px;
+  
+  @media (max-width: 640px) {
+    flex-direction: column;
+  }
+}
+
+.visibilityOption {
+  flex: 1;
+  display: flex;
+  align-items: flex-start;
+  padding: 16px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    border-color: #7C3AED;
+    background-color: rgba(124, 58, 237, 0.05);
+  }
+  
+  &.selected {
+    border-color: #7C3AED;
+    background-color: rgba(124, 58, 237, 0.1);
+  }
+}
+
+.visibilityIcon {
+  margin-right: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.visibilityContent {
+  flex: 1;
+}
+
+.visibilityTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 4px 0;
+}
+
+.visibilityDescription {
+  font-size: 12px;
+  color: #666;
+  margin: 0;
+}
+
+.visibilitySelector {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #ddd;
+  border-radius: 50%;
+  margin-left: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  .selected & {
+    border-color: #7C3AED;
+  }
+}
+
+.selectedDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: #7C3AED;
+}
+
+// Host Profile styling
+.hostProfileSection {
+  margin-top: 12px;
+}
+
+.checkboxContainer {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.checkboxInput {
+  width: 18px;
+  height: 18px;
+  margin-right: 10px;
+  accent-color: #7C3AED;
+  cursor: pointer;
+}
+
+.checkboxLabel {
+  font-size: 14px;
+  color: #333;
+  cursor: pointer;
+}
+
+.hostInfoCard {
+  display: flex;
+  align-items: center;
+  padding: 12px;
+  background-color: #f8f8f8;
+  border-radius: 6px;
+  border: 1px solid #eee;
+}
+
+.hostLogo {
+  width: 40px;
+  height: 40px;
+  border-radius: 4px;
+  background-color: #333;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 12px;
+  overflow: hidden;
+  
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.hostDetails {
+  flex: 1;
+}
+
+.hostName {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 2px 0;
+}
+
+.hostStats {
+  font-size: 12px;
+  color: #666;
+  margin: 0;
+}
+
+.hostOptionsButton {
+  background: none;
+  border: none;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border-radius: 4px;
+  
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+  }
+}

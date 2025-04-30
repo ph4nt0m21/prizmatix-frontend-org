@@ -1,7 +1,7 @@
 // src/pages/events/steps/BasicInfoStep.jsx
-import React from 'react';
+import React, { useState } from 'react';
 import PropTypes from 'prop-types';
-import styles from './steps.module.scss';
+import styles from './basicInfoStep.module.scss';
 
 /**
  * BasicInfoStep component - First step of event creation
@@ -15,6 +15,10 @@ import styles from './steps.module.scss';
  * @returns {JSX.Element} BasicInfoStep component
  */
 const BasicInfoStep = ({ eventData, handleInputChange, isValid, stepStatus }) => {
+  // State for managing search tags
+  const [searchTags, setSearchTags] = useState(eventData.searchTags || []);
+  const [tagInput, setTagInput] = useState('');
+
   /**
    * Handle visibility options selection
    * @param {string} visibilityType - Type of visibility (public or private)
@@ -29,6 +33,56 @@ const BasicInfoStep = ({ eventData, handleInputChange, isValid, stepStatus }) =>
    */
   const handleCheckboxChange = (e) => {
     handleInputChange(e);
+  };
+
+  /**
+   * Handle category selection
+   * @param {Object} e Event object
+   */
+  const handleCategoryChange = (e) => {
+    handleInputChange(e.target.value, 'category');
+  };
+
+  /**
+   * Add a new search tag
+   * @param {string} tag - Tag to add
+   */
+  const addTag = (tag) => {
+    if (tag && !searchTags.includes(tag)) {
+      const newTags = [...searchTags, tag];
+      setSearchTags(newTags);
+      handleInputChange(newTags, 'searchTags');
+      setTagInput('');
+    }
+  };
+
+  /**
+   * Remove a search tag
+   * @param {string} tagToRemove - Tag to remove
+   */
+  const removeTag = (tagToRemove) => {
+    const newTags = searchTags.filter(tag => tag !== tagToRemove);
+    setSearchTags(newTags);
+    handleInputChange(newTags, 'searchTags');
+  };
+
+  /**
+   * Handle tag input change
+   * @param {Object} e Event object
+   */
+  const handleTagInputChange = (e) => {
+    setTagInput(e.target.value);
+  };
+
+  /**
+   * Handle tag input keydown events
+   * @param {Object} e Event object
+   */
+  const handleTagKeyDown = (e) => {
+    if (e.key === 'Enter' && tagInput.trim()) {
+      e.preventDefault();
+      addTag(tagInput.trim());
+    }
   };
   
   return (
@@ -118,6 +172,68 @@ const BasicInfoStep = ({ eventData, handleInputChange, isValid, stepStatus }) =>
                 )}
               </div>
             </div>
+          </div>
+        </div>
+
+        <div className={styles.formGroup}>
+          <label htmlFor="category" className={styles.formLabel}>
+            Category
+          </label>
+          <div className={styles.selectWrapper}>
+            <select
+              id="category"
+              name="category"
+              className={styles.formSelect}
+              value={eventData.category || ''}
+              onChange={handleCategoryChange}
+            >
+              <option value="" disabled>Select a category</option>
+              <option value="EDM/Electronic">EDM/Electronic</option>
+              <option value="Music">Music</option>
+              <option value="Festival">Festival</option>
+              <option value="Concert">Concert</option>
+              <option value="Live">Live</option>
+              <option value="Sports">Sports</option>
+              <option value="Arts">Arts</option>
+              <option value="Food & Drink">Food & Drink</option>
+            </select>
+            <div className={styles.selectArrow}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M7 10L12 15L17 10H7Z" fill="#666"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div className={styles.formGroup}>
+          <label htmlFor="searchTags" className={styles.formLabel}>
+            Search Tags
+          </label>
+          <p className={styles.formDescription}>
+            Promote your event with fun tags that match its theme, topic, vibe, and location!
+          </p>
+          <div className={styles.tagContainer}>
+            {searchTags.map((tag, index) => (
+              <div key={index} className={styles.tag}>
+                {tag}
+                <button
+                  type="button"
+                  className={styles.tagRemove}
+                  onClick={() => removeTag(tag)}
+                >
+                  ×
+                </button>
+              </div>
+            ))}
+            <input
+              type="text"
+              id="searchTags"
+              className={styles.tagInput}
+              value={tagInput}
+              onChange={handleTagInputChange}
+              onKeyDown={handleTagKeyDown}
+              placeholder="Add Search keyword to your events"
+            />
           </div>
         </div>
         

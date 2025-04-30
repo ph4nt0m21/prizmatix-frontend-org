@@ -1,0 +1,564 @@
+// ticketStep.module.scss
+// Import core variables and mixins from your main styles
+@import '../../../styles/variables';
+@import '../../../styles/mixins';
+
+// Core step container styles
+.stepContainer {
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: white;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.stepHeader {
+  display: flex;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.stepIcon {
+  margin-right: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stepTitle {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+}
+
+.stepDescription {
+  font-size: 14px;
+  color: #666;
+  margin-top: 0;
+}
+
+.formSection {
+  padding: 0;
+}
+
+// Error alert styles
+.errorAlert {
+  padding: 12px 16px;
+  background-color: #FEE2E2;
+  border-radius: 6px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #B91C1C;
+  font-size: 14px;
+}
+
+.dismissButton {
+  background: none;
+  border: none;
+  font-size: 18px;
+  line-height: 1;
+  color: #B91C1C;
+  cursor: pointer;
+}
+
+// Field error styles
+.fieldError {
+  margin-top: 5px;
+  font-size: 12px;
+  color: #e53e3e;
+}
+
+// Tickets container styles
+.emptyTicketsContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 240px;
+  background-color: #f9fafb;
+  border: 1px dashed #d1d5db;
+  border-radius: 8px;
+  padding: 32px;
+  text-align: center;
+}
+
+.addTicketButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  padding: 0 16px;
+  background-color: #7C3AED;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  svg {
+    margin-right: 8px;
+  }
+  
+  &:hover {
+    background-color: #6d28d9;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.ticketsContainer {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+
+.ticketTableHeader {
+  display: flex;
+  align-items: center;
+  background-color: #f3f4f6;
+  padding: 12px 16px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #4b5563;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.ticketItem {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid #e5e7eb;
+  transition: background-color 0.2s ease;
+  
+  &:hover {
+    background-color: #f9fafb;
+  }
+  
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.ticketHandle {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #9ca3af;
+  cursor: move;
+  margin-right: 8px;
+}
+
+.ticketType {
+  flex: 3;
+  font-weight: 500;
+  color: #333;
+  cursor: pointer;
+  
+  &:hover {
+    color: #7C3AED;
+  }
+}
+
+.ticketQuantity {
+  flex: 1;
+  text-align: center;
+  color: #4b5563;
+}
+
+.ticketPrice {
+  flex: 1;
+  text-align: center;
+  color: #4b5563;
+}
+
+.ticketAdvance {
+  flex: 1;
+  text-align: center;
+  color: #4b5563;
+}
+
+.ticketActions {
+  display: flex;
+  gap: 8px;
+  margin-left: 16px;
+}
+
+.ticketActionButton {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  border-radius: 4px;
+  color: #6b7280;
+  cursor: pointer;
+  
+  &:hover {
+    background-color: #f3f4f6;
+    color: #333;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.addTicketRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  border-top: 1px solid #e5e7eb;
+  background-color: #f9fafb;
+}
+
+.addTicketInlineButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 36px;
+  padding: 0 16px;
+  background-color: white;
+  color: #7C3AED;
+  border: 1px solid #7C3AED;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  svg {
+    margin-right: 8px;
+  }
+  
+  &:hover {
+    background-color: rgba(124, 58, 237, 0.05);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    border-color: #d1d5db;
+    color: #9ca3af;
+  }
+}
+
+// Information box styles
+.infoBox {
+  display: flex;
+  background-color: #F5F3FF;
+  border-radius: 8px;
+  padding: 16px;
+  margin-top: 20px;
+}
+
+.infoIcon {
+  flex-shrink: 0;
+  margin-right: 16px;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: flex-start;
+  
+  svg {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+.infoContent {
+  flex: 1;
+}
+
+.infoTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 4px 0;
+}
+
+.infoText {
+  font-size: 14px;
+  line-height: 1.5;
+  color: #4b5563;
+  margin: 0;
+}
+
+// Form input styles for modal
+.formGroup {
+  margin-bottom: 20px;
+}
+
+.formLabel {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 6px;
+}
+
+.formDescription {
+  font-size: 13px;
+  color: #666;
+  margin-top: 0;
+  margin-bottom: 8px;
+}
+
+.formInput {
+  width: 100%;
+  height: 44px;
+  padding: 0 16px;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  color: #333;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  
+  &:focus {
+    outline: none;
+    border-color: #7C3AED;
+    box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.2);
+  }
+  
+  &::placeholder {
+    color: #999;
+  }
+
+  &.inputError {
+    border-color: #e53e3e;
+    
+    &:focus {
+      box-shadow: 0 0 0 2px rgba(229, 62, 62, 0.2);
+    }
+  }
+}
+
+// Form row for the modal
+.formRow {
+  display: flex;
+  gap: 16px;
+  
+  @media (max-width: 640px) {
+    flex-direction: column;
+    gap: 20px;
+  }
+  
+  .formGroup {
+    flex: 1;
+  }
+}
+
+// Styles for input with icon
+.inputWithIcon {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.inputIcon {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+// Style for date and time inputs
+input[type="date"].formInput,
+input[type="time"].formInput {
+  padding-right: 44px; // Extra padding for the icon
+  
+  // Remove default calendar icon in Chrome
+  &::-webkit-calendar-picker-indicator {
+    opacity: 0;
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+  }
+  
+  // Remove default calendar icon in Firefox
+  &::-webkit-clear-button,
+  &::-webkit-inner-spin-button {
+    display: none;
+  }
+}
+
+// Checkbox styles for ticket options
+.checkboxContainer {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.checkboxInput {
+  width: 18px;
+  height: 18px;
+  margin-right: 10px;
+  accent-color: #7C3AED;
+  cursor: pointer;
+}
+
+.checkboxLabel {
+  font-size: 14px;
+  color: #333;
+  cursor: pointer;
+}
+
+// Modal step navigation
+.modalStepNav {
+  display: flex;
+  margin-bottom: 24px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.modalStepButton {
+  padding: 12px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #6b7280;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &.active {
+    color: #7C3AED;
+    border-bottom-color: #7C3AED;
+  }
+  
+  &:hover:not(.active) {
+    color: #4b5563;
+    border-bottom-color: #e5e7eb;
+  }
+}
+
+// Modal action buttons
+.modalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 32px;
+  padding-top: 16px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.cancelButton {
+  height: 40px;
+  padding: 0 16px;
+  background-color: white;
+  border: 1px solid #d1d5db;
+  color: #4b5563;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background-color: #f9fafb;
+    border-color: #9ca3af;
+  }
+}
+
+.saveButton {
+  height: 40px;
+  padding: 0 16px;
+  background-color: #7C3AED;
+  border: none;
+  color: white;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background-color: #6d28d9;
+  }
+  
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+// Dropdown styles
+.dropdownInput {
+  position: relative;
+}
+
+.dropdownArrow {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+// Media queries for responsive design
+@media (max-width: 768px) {
+  .stepContainer {
+    padding: 16px;
+  }
+  
+  .ticketTableHeader {
+    display: none;
+  }
+  
+  .ticketItem {
+    flex-wrap: wrap;
+    padding: 16px;
+  }
+  
+  .ticketType {
+    flex: 0 0 100%;
+    margin-bottom: 8px;
+  }
+  
+  .ticketQuantity, 
+  .ticketPrice, 
+  .ticketAdvance {
+    flex: 1;
+    text-align: left;
+    font-size: 12px;
+    
+    &::before {
+      content: attr(data-label);
+      font-weight: 600;
+      margin-right: 4px;
+    }
+  }
+  
+  .ticketActions {
+    flex: 0 0 100%;
+    margin-left: 0;
+    margin-top: 12px;
+    justify-content: flex-end;
+  }
+}

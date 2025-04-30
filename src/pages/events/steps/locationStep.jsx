@@ -1,7 +1,8 @@
 // src/pages/events/steps/locationStep.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
-import styles from './steps.module.scss';
+import { UpdateEventLocationAPI } from '../../../services/allApis';
+import styles from './locationStep.module.scss';
 
 /**
  * LocationStep component - Second step of event creation
@@ -51,6 +52,10 @@ const LocationStep = ({
   // State for map visibility and loading
   const [isLoadingMap, setIsLoadingMap] = useState(false);
   const [activeTab, setActiveTab] = useState('map'); // 'map' or 'satellite'
+
+  // API-related state
+  const [isSaving, setIsSaving] = useState(false);
+  const [apiError, setApiError] = useState(null);
   
   /**
    * Initialize Google Maps
@@ -314,9 +319,68 @@ const LocationStep = ({
       }, 1000);
     }
   };
+
+  /**
+   * Save location data to API
+   * This function can be used for auto-save functionality
+   * @param {string} eventId - Event ID
+   * @param {Object} userData - Current user data for updatedBy field
+   */
+  const saveLocationData = async (eventId, userData) => {
+    if (!validateForm() || !eventId) return;
+    
+    setIsSaving(true);
+    setApiError(null);
+    
+    try {
+      // Format location data for API
+      const locationApiData = {
+        id: eventId,
+        locationType: location.isPrivateLocation ? 'private' : 'public',
+        eventLocationId: 0, // Default value since not available in form
+        venueName: location.isToBeAnnounced ? '' : location.venue,
+        address: location.isToBeAnnounced ? 'To be announced' : 
+          `${location.street}, ${location.city}, ${location.state}`,
+        latitude: parseFloat(location.latitude || 0),
+        longitude: parseFloat(location.longitude || 0),
+        streetNo: location.streetNumber,
+        street: location.street,
+        city: location.city,
+        state: location.state,
+        country: location.country,
+        postalCode: location.postalCode,
+        googleMapLink: "", // Not available in form
+        onlineEventUrl: "", // Not available in form
+        onlineEventDescription: "", // Not available in form
+        additionalInfo: location.additionalInfo,
+        updatedBy: userData?.id || 0
+      };
+      
+      await UpdateEventLocationAPI(eventId, locationApiData);
+      
+      // Success handling could be added here
+    } catch (error) {
+      console.error('Error saving location data:', error);
+      setApiError('Failed to save location information. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
   
   return (
     <div className={styles.stepContainer}>
+      {apiError && (
+        <div className={styles.errorAlert}>
+          {apiError}
+          <button 
+            className={styles.dismissButton}
+            onClick={() => setApiError(null)}
+          >
+            ×
+          </button>
+        </div>
+      )}
+
       <div className={styles.formSection}>
         {/* Location Type Section */}
         <div className={styles.formGroup}>
@@ -330,7 +394,7 @@ const LocationStep = ({
           <div className={styles.locationOptions}>
             <div 
               className={`${styles.locationOption} ${location.locationType === 'public' && !location.isToBeAnnounced ? styles.selected : ''}`}
-              onClick={() => handleLocationTypeChange('public')}
+              onClick={() => !isSaving && handleLocationTypeChange('public')}
             >
               <div className={styles.locationIcon}>
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -340,7 +404,7 @@ const LocationStep = ({
               <div className={styles.locationContent}>
                 <h3 className={styles.locationTitle}>Public Location</h3>
                 <p className={styles.locationDescription}>
-                  Choose how your event will appear to potential attendees
+                  The location will be visible to everyone and shown on the event page
                 </p>
               </div>
               <div className={styles.locationSelector}>
@@ -352,7 +416,7 @@ const LocationStep = ({
             
             <div 
               className={`${styles.locationOption} ${location.locationType === 'private' ? styles.selected : ''}`}
-              onClick={() => handleLocationTypeChange('private')}
+              onClick={() => !isSaving && handleLocationTypeChange('private')}
             >
               <div className={styles.locationIcon}>
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -363,7 +427,7 @@ const LocationStep = ({
               <div className={styles.locationContent}>
                 <h3 className={styles.locationTitle}>Private Location</h3>
                 <p className={styles.locationDescription}>
-                  Choose how your event will appear to potential attendees
+                  Location details will only be shown to confirmed attendees
                 </p>
               </div>
               <div className={styles.locationSelector}>
@@ -375,7 +439,7 @@ const LocationStep = ({
             
             <div 
               className={`${styles.locationOption} ${location.isToBeAnnounced ? styles.selected : ''}`}
-              onClick={() => handleLocationTypeChange('tba')}
+              onClick={() => !isSaving && handleLocationTypeChange('tba')}
             >
               <div className={styles.locationIcon}>
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -386,7 +450,7 @@ const LocationStep = ({
               <div className={styles.locationContent}>
                 <h3 className={styles.locationTitle}>To be announced</h3>
                 <p className={styles.locationDescription}>
-                  Choose how your event will appear to potential attendees
+                  "Location to be announced" will be shown until you update it later
                 </p>
               </div>
               <div className={styles.locationSelector}>
@@ -414,20 +478,25 @@ const LocationStep = ({
                 type="text"
                 name="searchQuery"
                 className={`${styles.searchInput} ${errors.searchQuery ? styles.inputError : ''}`}
-                placeholder="eg. The great Music Festival 2025"
+                placeholder="Search for a location (e.g., venue name, address, city)"
                 value={location.searchQuery}
                 onChange={handleFieldChange}
                 onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                disabled={isSaving}
               />
               <button 
                 type="button" 
                 className={styles.searchButton}
                 onClick={handleSearch}
-                disabled={isLoadingMap}
+                disabled={isLoadingMap || isSaving}
               >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M15.5 14H14.71L14.43 13.73C15.41 12.59 16 11.11 16 9.5C16 5.91 13.09 3 9.5 3C5.91 3 3 5.91 3 9.5C3 13.09 5.91 16 9.5 16C11.11 16 12.59 15.41 13.73 14.43L14 14.71V15.5L19 20.49L20.49 19L15.5 14ZM9.5 14C7.01 14 5 11.99 5 9.5C5 7.01 7.01 5 9.5 5C11.99 5 14 7.01 14 9.5C14 11.99 11.99 14 9.5 14Z" fill="#7C3AED"/>
-                </svg>
+                {isLoadingMap ? (
+                  <span className={styles.loadingSpinner}></span>
+                ) : (
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M15.5 14H14.71L14.43 13.73C15.41 12.59 16 11.11 16 9.5C16 5.91 13.09 3 9.5 3C5.91 3 3 5.91 3 9.5C3 13.09 5.91 16 9.5 16C11.11 16 12.59 15.41 13.73 14.43L14 14.71V15.5L19 20.49L20.49 19L15.5 14ZM9.5 14C7.01 14 5 11.99 5 9.5C5 7.01 7.01 5 9.5 5C11.99 5 14 7.01 14 9.5C14 11.99 11.99 14 9.5 14Z" fill="#7C3AED"/>
+                  </svg>
+                )}
               </button>
             </div>
             {errors.searchQuery && (
@@ -441,6 +510,7 @@ const LocationStep = ({
                   type="button" 
                   className={`${styles.mapTabButton} ${activeTab === 'map' ? styles.activeTab : ''}`}
                   onClick={() => switchMapType('map')}
+                  disabled={isSaving}
                 >
                   Map
                 </button>
@@ -448,6 +518,7 @@ const LocationStep = ({
                   type="button" 
                   className={`${styles.mapTabButton} ${activeTab === 'satellite' ? styles.activeTab : ''}`}
                   onClick={() => switchMapType('satellite')}
+                  disabled={isSaving}
                 >
                   Satellite
                 </button>
@@ -477,9 +548,10 @@ const LocationStep = ({
                   id="venue"
                   name="venue"
                   className={`${styles.formInput} ${errors.venue ? styles.inputError : ''}`}
-                  placeholder="eg. The great Music Festival 2025"
+                  placeholder="Enter venue name (e.g., Conference Center, Stadium)"
                   value={location.venue}
                   onChange={handleFieldChange}
+                  disabled={isSaving}
                 />
                 <div className={styles.dropdownArrow}>
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -504,9 +576,10 @@ const LocationStep = ({
                     id="street"
                     name="street"
                     className={`${styles.formInput} ${errors.street ? styles.inputError : ''}`}
-                    placeholder="eg. The great Music Festival 2025"
+                    placeholder="Enter street name"
                     value={location.street}
                     onChange={handleFieldChange}
+                    disabled={isSaving}
                   />
                   <div className={styles.dropdownArrow}>
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -528,9 +601,10 @@ const LocationStep = ({
                     id="streetNumber"
                     name="streetNumber"
                     className={styles.formInput}
-                    placeholder="eg. The great Music Festival 2025"
+                    placeholder="Street number"
                     value={location.streetNumber}
                     onChange={handleFieldChange}
+                    disabled={isSaving}
                   />
                   <div className={styles.dropdownArrow}>
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -553,9 +627,10 @@ const LocationStep = ({
                     id="city"
                     name="city"
                     className={`${styles.formInput} ${errors.city ? styles.inputError : ''}`}
-                    placeholder="eg. The great Music Festival 2025"
+                    placeholder="Enter city"
                     value={location.city}
                     onChange={handleFieldChange}
+                    disabled={isSaving}
                   />
                   <div className={styles.dropdownArrow}>
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -577,9 +652,10 @@ const LocationStep = ({
                     id="postalCode"
                     name="postalCode"
                     className={styles.formInput}
-                    placeholder="eg. The great Music Festival 2025"
+                    placeholder="Enter postal/zip code"
                     value={location.postalCode}
                     onChange={handleFieldChange}
+                    disabled={isSaving}
                   />
                   <div className={styles.dropdownArrow}>
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -602,9 +678,10 @@ const LocationStep = ({
                     id="state"
                     name="state"
                     className={`${styles.formInput} ${errors.state ? styles.inputError : ''}`}
-                    placeholder="eg. The great Music Festival 2025"
+                    placeholder="Enter state or province"
                     value={location.state}
                     onChange={handleFieldChange}
+                    disabled={isSaving}
                   />
                   <div className={styles.dropdownArrow}>
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -626,9 +703,10 @@ const LocationStep = ({
                     id="country"
                     name="country"
                     className={styles.formInput}
-                    placeholder="eg. The great Music Festival 2025"
+                    placeholder="Enter country"
                     value={location.country}
                     onChange={handleFieldChange}
+                    disabled={isSaving}
                   />
                   <div className={styles.dropdownArrow}>
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -648,14 +726,71 @@ const LocationStep = ({
                 id="additionalInfo"
                 name="additionalInfo"
                 className={styles.formTextarea}
-                placeholder="eg. The great Music Festival 2025"
+                placeholder="Additional details about the location (e.g., parking instructions, entrance information)"
                 value={location.additionalInfo}
                 onChange={handleFieldChange}
                 rows={4}
+                disabled={isSaving}
               />
+            </div>
+
+            {/* Coordinates */}
+            <div className={styles.formRow}>
+              <div className={styles.formGroup}>
+                <label htmlFor="latitude" className={styles.formLabel}>
+                  Latitude
+                </label>
+                <input
+                  type="text"
+                  id="latitude"
+                  name="latitude"
+                  className={styles.formInput}
+                  value={location.latitude}
+                  onChange={handleFieldChange}
+                  disabled={true} // Readonly, set by map
+                />
+              </div>
+              <div className={styles.formGroup}>
+                <label htmlFor="longitude" className={styles.formLabel}>
+                  Longitude
+                </label>
+                <input
+                  type="text"
+                  id="longitude"
+                  name="longitude"
+                  className={styles.formInput}
+                  value={location.longitude}
+                  onChange={handleFieldChange}
+                  disabled={true} // Readonly, set by map
+                />
+              </div>
             </div>
           </div>
         )}
+
+        {/* API response message */}
+        {isSaving && (
+          <div className={styles.savingIndicator}>
+            <span className={styles.spinner}></span>
+            Saving location data...
+          </div>
+        )}
+
+        {/* Location Tips */}
+        <div className={styles.locationTips}>
+          <h3 className={styles.tipTitle}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 20C7.59 20 4 16.41 4 12C4 7.59 7.59 4 12 4C16.41 4 20 7.59 20 12C20 16.41 16.41 20 12 20ZM11 15H13V17H11V15ZM11 7H13V13H11V7Z" fill="#7C3AED"/>
+            </svg>
+            Location Tips
+          </h3>
+          <ul className={styles.tipsList}>
+            <li>Use the search bar to quickly find and populate location details</li>
+            <li>Make sure the address is accurate to help attendees find your event</li>
+            <li>Add additional information like parking details or entrance instructions</li>
+            <li>For online events, you can add the link in a later step</li>
+          </ul>
+        </div>
       </div>
     </div>
   );

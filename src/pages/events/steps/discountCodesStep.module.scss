@@ -1,0 +1,434 @@
+// discountCodesStep.module.scss
+// Import core variables and mixins from your main styles
+@import '../../../styles/variables';
+@import '../../../styles/mixins';
+
+// Core step container styles
+.stepContainer {
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: white;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.stepHeader {
+  display: flex;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.stepIcon {
+  margin-right: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stepTitle {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+}
+
+.stepDescription {
+  font-size: 14px;
+  color: #666;
+  margin-top: 0;
+}
+
+.formSection {
+  padding: 0;
+}
+
+.formGroup {
+  margin-bottom: 24px;
+  width: 100%;
+}
+
+.formLabel {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 4px;
+}
+
+.formDescription {
+  font-size: 13px;
+  color: #666;
+  margin-top: 0;
+  margin-bottom: 12px;
+}
+
+.formInput {
+  width: 100%;
+  height: 44px;
+  padding: 0 16px;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  color: #333;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  
+  &:focus {
+    outline: none;
+    border-color: #7C3AED;
+    box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.2);
+  }
+  
+  &::placeholder {
+    color: #999;
+  }
+}
+
+.fieldError {
+  margin-top: 5px;
+  font-size: 12px;
+  color: #e53e3e;
+}
+
+// Error styling for inputs
+.inputError {
+  border-color: #e53e3e;
+  
+  &:focus {
+    box-shadow: 0 0 0 2px rgba(229, 62, 62, 0.2);
+  }
+}
+
+// Discount Codes container styles
+.emptyDiscountCodesContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 240px;
+  background-color: #f9fafb;
+  border: 1px dashed #d1d5db;
+  border-radius: 8px;
+  padding: 32px;
+  text-align: center;
+}
+
+.addDiscountCodeButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  padding: 0 16px;
+  background-color: #7C3AED;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  svg {
+    margin-right: 8px;
+  }
+  
+  &:hover {
+    background-color: #6d28d9;
+  }
+}
+
+.discountCodesContainer {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.discountCodeTableHeader {
+  display: flex;
+  align-items: center;
+  background-color: #f3f4f6;
+  padding: 12px 16px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #4b5563;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.discountCodeItem {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid #e5e7eb;
+  transition: background-color 0.2s ease;
+  
+  &:hover {
+    background-color: #f9fafb;
+  }
+  
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.discountCode {
+  flex: 2;
+  font-weight: 500;
+  color: #333;
+  cursor: pointer;
+  
+  &:hover {
+    color: #7C3AED;
+  }
+}
+
+.discountPercentage {
+  flex: 1;
+  text-align: center;
+  color: #4b5563;
+}
+
+.maxDiscountAmount {
+  flex: 1;
+  text-align: center;
+  color: #4b5563;
+}
+
+.minDiscountAmount {
+  flex: 1;
+  text-align: center;
+  color: #4b5563;
+}
+
+.discountQuantity {
+  flex: 1;
+  text-align: center;
+  color: #4b5563;
+}
+
+.discountActions {
+  width: 40px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.discountActionButton {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  border-radius: 4px;
+  color: #6b7280;
+  cursor: pointer;
+  
+  &:hover {
+    background-color: #f3f4f6;
+    color: #333;
+  }
+}
+
+.addDiscountCodeRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  border-top: 1px solid #e5e7eb;
+  background-color: #f9fafb;
+}
+
+.addDiscountCodeInlineButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 36px;
+  padding: 0 16px;
+  background-color: white;
+  color: #7C3AED;
+  border: 1px solid #7C3AED;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  svg {
+    margin-right: 8px;
+  }
+  
+  &:hover {
+    background-color: rgba(124, 58, 237, 0.05);
+  }
+}
+
+// Form row
+.formRow {
+  display: flex;
+  gap: 16px;
+  
+  @media (max-width: 640px) {
+    flex-direction: column;
+    gap: 20px;
+  }
+  
+  .formGroup {
+    flex: 1;
+  }
+}
+
+// Modal styles
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+
+.modalContent {
+  width: 100%;
+  max-width: 500px;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
+  padding: 24px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.modalTitle {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+}
+
+.modalCloseButton {
+  background: none;
+  border: none;
+  font-size: 24px;
+  line-height: 1;
+  color: #6b7280;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  
+  &:hover {
+    background-color: #f3f4f6;
+    color: #333;
+  }
+}
+
+// Modal action buttons
+.modalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 32px;
+  padding-top: 16px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.cancelButton {
+  height: 40px;
+  padding: 0 16px;
+  background-color: white;
+  border: 1px solid #d1d5db;
+  color: #4b5563;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background-color: #f9fafb;
+    border-color: #9ca3af;
+  }
+}
+
+.saveButton {
+  height: 40px;
+  padding: 0 16px;
+  background-color: #7C3AED;
+  border: none;
+  color: white;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background-color: #6d28d9;
+  }
+  
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+// Media queries for responsive design
+@media (max-width: 768px) {
+  .stepContainer {
+    padding: 16px;
+  }
+  
+  .discountCodeTableHeader {
+    display: none;
+  }
+  
+  .discountCodeItem {
+    flex-wrap: wrap;
+    padding: 16px;
+  }
+  
+  .discountCode {
+    flex: 0 0 100%;
+    margin-bottom: 8px;
+  }
+  
+  .discountPercentage, 
+  .maxDiscountAmount, 
+  .minDiscountAmount, 
+  .discountQuantity {
+    flex: 1;
+    text-align: left;
+    font-size: 12px;
+    
+    &::before {
+      content: attr(data-label);
+      font-weight: 600;
+      margin-right: 4px;
+    }
+  }
+  
+  .discountActions {
+    flex: 0 0 100%;
+    margin-left: 0;
+    margin-top: 12px;
+    justify-content: flex-end;
+  }
+}

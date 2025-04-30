@@ -4,6 +4,17 @@ import Cookies from 'js-cookie';
 import { LoginAPI } from '../../services/allApis';
 import styles from './sideNavBar.module.scss';
 
+// Import SVG components
+import { ReactComponent as OverviewIcon } from '../../assets/icons/overview-icon.svg';
+import { ReactComponent as EventsIcon } from '../../assets/icons/events-icon.svg';
+import { ReactComponent as ReportsIcon } from '../../assets/icons/reports-icon.svg';
+import { ReactComponent as NotificationsIcon } from '../../assets/icons/notifications-icon.svg';
+import { ReactComponent as HelpIcon } from '../../assets/icons/help-icon.svg';
+import { ReactComponent as SettingsIcon } from '../../assets/icons/settings-icon.svg';
+
+// Import logo
+import logoImage from '../../assets/images/small-logo.svg';
+
 /**
  * SideNavBar component provides the main navigation for the application
  * 
@@ -42,16 +53,16 @@ const SideNavBar = () => {
   
   // Navigation items with their respective routes and icons
   const navItems = [
-    { id: 'overview', path: '/', icon: '/icons/overview-icon.svg', label: 'Overview' }, 
-    { id: 'events', path: '/events', icon: '/icons/events-icon.svg', label: 'Events' },
-    { id: 'reports', path: '/reports', icon: '/icons/reports-icon.svg', label: 'Reports' },
-    { id: 'notifications', path: '/notifications', icon: '/icons/notifications-icon.svg', label: 'Notifications' }
+    { id: 'overview', path: '/', icon: OverviewIcon, label: 'Overview' }, 
+    { id: 'events', path: '/events', icon: EventsIcon, label: 'Events' },
+    { id: 'reports', path: '/reports', icon: ReportsIcon, label: 'Reports' },
+    { id: 'notifications', path: '/notifications', icon: NotificationsIcon, label: 'Notifications' }
   ];
 
   // Bottom navigation items
   const bottomItems = [
-    { id: 'help', path: '/help', icon: '/icons/help-icon.svg', label: 'Help & Support' },
-    { id: 'settings', path: '/settings', icon: '/icons/settings-icon.svg', label: 'Account Settings' }
+    { id: 'help', path: '/help', icon: HelpIcon, label: 'Help & Support' },
+    { id: 'settings', path: '/settings', icon: SettingsIcon, label: 'Account Settings' }
   ];
 
   return (
@@ -59,7 +70,7 @@ const SideNavBar = () => {
       <div className={styles.logo}>
         <NavLink to="/" className={styles.logoLink}>
           <img 
-            src="/images/small-logo.svg" 
+            src={logoImage}
             alt="App Logo"
             className={styles.logoImage}
             onError={(e) => {
@@ -71,52 +82,42 @@ const SideNavBar = () => {
       </div>
       
       <ul className={styles.navList}>
-        {navItems.map((item) => (
-          <li key={item.id} className={styles.navItem}>
+        {navItems.map((item) => {
+          const IconComponent = item.icon;
+          return (
+            <li key={item.id} className={styles.navItem}>
+              <NavLink 
+                to={item.path} 
+                className={({ isActive }) => isActive ? `${styles.navLink} ${styles.active}` : styles.navLink}
+                title={item.label}
+              >
+                <div className={styles.iconWrapper}>
+                  <IconComponent className={styles.icon} />
+                </div>
+                <span className={styles.navLabel}></span>
+              </NavLink>
+            </li>
+          );
+        })}
+      </ul>
+      
+      <div className={styles.bottomNav}>
+        {bottomItems.map((item) => {
+          const IconComponent = item.icon;
+          return (
             <NavLink 
+              key={item.id}
               to={item.path} 
               className={({ isActive }) => isActive ? `${styles.navLink} ${styles.active}` : styles.navLink}
               title={item.label}
             >
               <div className={styles.iconWrapper}>
-                <img 
-                  src={item.icon} 
-                  alt={`${item.label} icon`}
-                  className={styles.icon}
-                  onError={(e) => {
-                    e.target.onerror = null;
-                    e.target.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 32 32"><rect width="32" height="32" fill="%23404040" opacity="0.2" rx="4" /></svg>';
-                  }}
-                />
+                <IconComponent className={styles.icon} />
               </div>
               <span className={styles.navLabel}></span>
             </NavLink>
-          </li>
-        ))}
-      </ul>
-      
-      <div className={styles.bottomNav}>
-        {bottomItems.map((item) => (
-          <NavLink 
-            key={item.id}
-            to={item.path} 
-            className={({ isActive }) => isActive ? `${styles.navLink} ${styles.active}` : styles.navLink}
-            title={item.label}
-          >
-            <div className={styles.iconWrapper}>
-              <img 
-                src={item.icon} 
-                alt={`${item.label} icon`}
-                className={styles.icon}
-                onError={(e) => {
-                  e.target.onerror = null;
-                  e.target.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 32 32"><rect width="32" height="32" fill="%23404040" opacity="0.2" rx="4" /></svg>';
-                }}
-              />
-            </div>
-            <span className={styles.navLabel}></span>
-          </NavLink>
-        ))}
+          );
+        })}
         
         {isAuthenticated && (
           <NavLink to="/profile" className={styles.profileLink} title="Profile">
