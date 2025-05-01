@@ -48,6 +48,8 @@ const CreateEventPage = () => {
     showHostProfile: true,
     organizationId: null, // Will be set from user context
     createdBy: null, // Will be set from user context
+    category: '', // Category field
+    searchTags: [], // Search tags array
     
     // Location (Step 2)
     location: {
@@ -285,7 +287,7 @@ const CreateEventPage = () => {
     
     // Special case handlers
     if (field === 'location' || field === 'dateTime' || field === 'art' || 
-        field === 'tickets' || field === 'discountCodes') {
+        field === 'tickets' || field === 'discountCodes' || field === 'searchTags') {
       setEventData(prevData => ({
         ...prevData,
         [field]: value
@@ -347,8 +349,8 @@ const CreateEventPage = () => {
    * @returns {boolean} Is the Basic Info step valid
    */
   const validateBasicInfo = () => {
-    // Check if name is filled
-    return eventData.name.trim() !== '';
+    // Check if name is filled and category is selected
+    return eventData.name.trim() !== '' && eventData.category.trim() !== '';
   };
   
   /**
@@ -488,7 +490,7 @@ const CreateEventPage = () => {
     // Check if all required event information is available
     
     // Basic Info validation
-    if (!eventData.name) {
+    if (!eventData.name || !eventData.category) {
       return false;
     }
     
@@ -611,7 +613,9 @@ const CreateEventPage = () => {
             organizationId: eventData.organizationId,
             createdBy: eventData.createdBy,
             private: eventData.eventType === 'private',
-            showHostProfile: eventData.showHostProfile
+            showHostProfile: eventData.showHostProfile,
+            category: eventData.category,
+            searchTags: eventData.searchTags
           };
           
           // Uncomment for actual API call
@@ -674,7 +678,9 @@ const CreateEventPage = () => {
         return {
           name: eventData.name,
           private: eventData.eventType === 'private',
-          showHostProfile: eventData.showHostProfile
+          showHostProfile: eventData.showHostProfile,
+          category: eventData.category,
+          searchTags: eventData.searchTags
         };
       case 2: // Location
         return {
@@ -860,7 +866,7 @@ const CreateEventPage = () => {
   const canPreview = Object.values(stepStatus).some(step => step.completed);
   
   return (
-    <div className={styles.pageWrapper}>
+    <>
       {/* Main Header - reused from the main layout */}
       <Header />
       
@@ -871,69 +877,72 @@ const CreateEventPage = () => {
         isDraft={true}
         canPreview={canPreview}
       />
-      
-      <div className={styles.createEventContainer}>
-        <div className={styles.content}>
-          <EventCreationSidebar 
-            currentStep={currentStep}
-            stepStatus={stepStatus}
-            navigateToStep={navigateToStep}
-          />
-          
-          <div className={styles.mainContent}>
-            {error && (
-              <div className={styles.errorMessage}>
-                {error}
-                <button 
-                  className={styles.dismissButton}
-                  onClick={() => setError(null)}
-                >
-                  ✕
-                </button>
-              </div>
-            )}
+       
+          <div className={styles.content}>
+            <EventCreationSidebar 
+              currentStep={currentStep}
+              stepStatus={stepStatus}
+              navigateToStep={navigateToStep}
+            />
             
-            {successMessage && (
-              <div className={styles.successMessage}>
-                {successMessage}
-                <button 
-                  className={styles.dismissButton}
-                  onClick={() => setSuccessMessage(null)}
-                >
-                  ✕
-                </button>
-              </div>
-            )}
-            
-            <div className={styles.stepContent}>
-              {renderCurrentStep()}
-            </div>
-            
-            <div className={styles.navigation}>
-              <button
-                type="button"
-                onClick={handlePrevStep}
-                disabled={currentStep === 1}
-                className={styles.backButton}
-              >
-                Back
-              </button>
+            <div className={styles.mainContent}>
+              {error && (
+                <div className={styles.errorMessage}>
+                  {error}
+                  <button 
+                    className={styles.dismissButton}
+                    onClick={() => setError(null)}
+                  >
+                    ✕
+                  </button>
+                </div>
+              )}
               
-              {currentStep < 8 && (
+              {successMessage && (
+                <div className={styles.successMessage}>
+                  {successMessage}
+                  <button 
+                    className={styles.dismissButton}
+                    onClick={() => setSuccessMessage(null)}
+                  >
+                    ✕
+                  </button>
+                </div>
+              )}
+              
+              <div className={styles.stepContent}>
+                {renderCurrentStep()}
+              </div>
+              
+              <div className={styles.navigation}>
                 <button
                   type="button"
-                  onClick={handleNextStep}
-                  disabled={isNextDisabled}
-                  className={styles.nextButton}
+                  onClick={handlePrevStep}
+                  disabled={currentStep === 1}
+                  className={styles.backButton}
                 >
-                  {isLoading.saveEvent ? 'Saving...' : 'Next'}
+                  Back
                 </button>
-              )}
+                
+                {currentStep < 8 && (
+                  <button
+                    type="button"
+                    onClick={handleNextStep}
+                    disabled={isNextDisabled}
+                    className={styles.nextButton}
+                  >
+                    {isLoading.saveEvent ? 'Saving...' : 'Next'}
+                  </button>
+                )}
+              </div>
             </div>
           </div>
+        
+        {/* Footer div with specific styling */}
+        <div className={styles.footer}>
+          © 2025 Event Tickets Platform
         </div>
-      </div>
-    </div>
+    </>
   );
 };
 
