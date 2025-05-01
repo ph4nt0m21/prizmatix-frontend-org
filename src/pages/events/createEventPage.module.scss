@@ -24,9 +24,9 @@
   gap: 16px;
   padding: 16px;
   flex: 1;
-  height: calc(100vh - 140px); // Adjusted for both headers
+  height: calc(100vh - 140px - 57px); // Adjusted for both headers and footer
   min-height: 600px;
-  max-height: calc(100vh - 140px);
+  max-height: calc(100vh - 140px - 57px);
   overflow: hidden;
 }
 
@@ -114,6 +114,7 @@
 // Navigation buttons container
 .navigation {
   display: flex;
+  height: 64px;
   justify-content: space-between;
   margin-top: auto;
   padding: 16px 24px;
@@ -251,6 +252,23 @@
   font-size: 14px;
   color: #6b7280;
   margin: 0 0 16px 0;
+}
+
+// Footer styling
+.footer {
+  display: flex;
+  height: 25px;
+  padding: 16px;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  align-self: stretch;
+  background: #FFF;
+  color: #6b7280;
+  font-size: 14px;
+  box-shadow: 0px -1px 3px rgba(0, 0, 0, 0.05);
+  margin-top: auto;
 }
 
 // Responsive adjustments
