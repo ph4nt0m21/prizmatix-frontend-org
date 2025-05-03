@@ -26,20 +26,22 @@ const MainLayout = () => {
   }
   
   return (
-    <div className={styles.layoutContainer}>
-      <SideNavBar />
-      <div className={styles.mainContent}>
-        {/* Only show header if not in event creation flow */}
-        {!isEventCreationRoute && <Header />}
-        
-        <main className={`${styles.contentArea} ${isEventCreationRoute ? styles.fullHeight : ''}`}>
-          <ErrorBoundary>
-            <Outlet />
-          </ErrorBoundary>
-        </main>
-        
-        {/* Only show footer if not in event creation flow */}
-        {/* {!isEventCreationRoute && <Footer />} */}
+    <div className={styles.outerContainer}>
+      <div className={styles.layoutContainer}>
+        <SideNavBar />
+        <div className={styles.mainContent}>
+          {/* Only show header if not in event creation flow */}
+          {!isEventCreationRoute && <Header />}
+          
+          <main className={`${styles.contentArea} ${isEventCreationRoute ? styles.fullHeight : ''}`}>
+            <ErrorBoundary>
+              <Outlet />
+            </ErrorBoundary>
+          </main>
+          
+          {/* Only show footer if not in event creation flow */}
+          {/* {!isEventCreationRoute && <Footer />} */}
+        </div>
       </div>
     </div>
   );
