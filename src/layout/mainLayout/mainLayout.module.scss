@@ -1,19 +1,30 @@
 @import '../../styles/variables';
 @import '../../styles/mixins';
 
+// Outer container that wraps the entire application
+.outerContainer {
+  display: flex;
+  width: 100%;
+  height: 100vh;
+  padding: 8px 8px 8px 0px;
+  align-items: flex-start;
+  background: var(--gradient, linear-gradient(180deg, #31204B 0%, #1E202C 100%));
+}
+
+// Inner layout container
 .layoutContainer {
   display: flex;
-  min-height: 100vh;
-  background-color: #0F0F1A;
+  min-height: 100%;
+  width: 100%;
 }
 
 .mainContent {
   flex: 1;
   display: flex;
   flex-direction: column;
-  margin-left: 70px; // Updated to match your sidebar width (70px)
+  margin-left: 70px; // Match sidebar width
   width: calc(100% - 70px);
-  min-height: 100vh;
+  min-height: 100%;
 }
 
 .contentArea {
@@ -48,6 +59,13 @@
 }
 
 // Responsive styles
+@media (max-width: 1440px) {
+  .outerContainer {
+    width: 100%;
+    height: auto;
+  }
+}
+
 @media (max-width: 768px) {
   .mainContent {
     width: calc(100% - 70px);
