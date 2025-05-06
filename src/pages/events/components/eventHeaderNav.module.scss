@@ -5,9 +5,12 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 8px 24px;
-  background-color: #ffffff;
-  border-bottom: 1px solid #e5e7eb;
+  height: 56px;
+  padding: 8px 64px;
+  border-bottom: 1px solid #E9EAEC;
+  background: #FFF;
+  box-shadow: 0px 2px 4px 0px rgba(0, 0, 0, 0.00);
+  align-self: stretch;
 }
 
 .breadcrumbContainer {

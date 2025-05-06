@@ -8,7 +8,7 @@ import ErrorBoundary from '../../components/common/errorBoundary/errorBoundary';
 
 /**
  * MainLayout component serves as the main layout wrapper for the application
- * It includes SideNavBar, Header, main content area (via Outlet), and Footer
+ * Refactored to remove the gap between content area and footer
  * Uses ErrorBoundary to catch and handle errors in child components
  */
 const MainLayout = () => {
@@ -27,21 +27,19 @@ const MainLayout = () => {
   
   return (
     <div className={styles.outerContainer}>
-      <div className={styles.layoutContainer}>
-        <SideNavBar />
-        <div className={styles.mainContent}>
-          {/* Only show header if not in event creation flow */}
-          {!isEventCreationRoute && <Header />}
-          
-          <main className={`${styles.contentArea} ${isEventCreationRoute ? styles.fullHeight : ''}`}>
-            <ErrorBoundary>
-              <Outlet />
-            </ErrorBoundary>
-          </main>
-          
-          {/* Only show footer if not in event creation flow */}
-          {/* {!isEventCreationRoute && <Footer />} */}
-        </div>
+      <SideNavBar />
+      <div className={styles.mainContentWrapper}>
+        {/* Only show header if not in event creation flow */}
+        {!isEventCreationRoute && <Header />}
+        
+        <main className={`${styles.contentArea} ${isEventCreationRoute ? styles.fullHeight : ''}`}>
+          <ErrorBoundary>
+            <Outlet />
+          </ErrorBoundary>
+        </main>
+        
+        {/* Only show footer if not in event creation flow */}
+        {/* {!isEventCreationRoute && <Footer />} */}
       </div>
     </div>
   );
