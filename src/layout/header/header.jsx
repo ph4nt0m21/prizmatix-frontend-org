@@ -5,6 +5,7 @@ import styles from './header.module.scss';
 
 /**
  * Header component displays the organization info, search bar, and create event button
+ * Refactored to match the new design specifications
  */
 const Header = () => {
   const location = useLocation();

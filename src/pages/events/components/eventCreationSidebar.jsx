@@ -92,7 +92,8 @@ const EventCreationSidebar = ({ currentStep, stepStatus, navigateToStep }) => {
         })}
       </div>
       
-      <div className={styles.progressInfo}>
+      {/* Separate progress info div with new styling */}
+      <div className={styles.progressInfoContainer}>
         <div className={styles.progressText}>Step {currentStep} of {steps.length}</div>
         <div className={styles.progressBar}>
           <div
