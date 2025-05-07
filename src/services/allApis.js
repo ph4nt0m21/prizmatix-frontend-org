@@ -1,16 +1,25 @@
-// import apiClient from "./apiClient";
-// import axios from "axios";
 import apiClient from "./apiClient";
 
 // =============== AUTH APIs ===============
-// const apiClient = axios.create({
-//   baseURL: "http://localhost:8080",
-// });
 
+// Step 1: Initiate registration with email
+export const OrganizationRegisterInitiateAPI = async (data) => {
+  return await apiClient.post("/api/organizations/register/initiate", data);
+};
 
-// API for register
-export const RegisterAPI = async (data) => {
-  return await apiClient.post("/api/organizations/register", data);
+// Step 2: Resend OTP if needed
+export const OrganizationResendOtpAPI = async (data) => {
+  return await apiClient.post("/api/organizations/register/resend-otp", data);
+};
+
+// Step 3: Verify OTP
+export const OrganizationVerifyOtpAPI = async (data) => {
+  return await apiClient.post("/api/organizations/register/verify-otp", data);
+};
+
+// Final Step: Complete organization registration
+export const OrganizationRegisterAPIComplete = async (data) => {
+  return await apiClient.post("/api/organizations/register/complete", data);
 };
 
 // API for login

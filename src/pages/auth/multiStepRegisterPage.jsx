@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import Cookies from 'js-cookie';
-import { RegisterAPI, ProfileAPI } from '../../services/allApis';
+import { OrganizationRegisterAPIComplete, OrganizationRegisterInitiateAPI, ProfileAPI } from '../../services/allApis';
 import EmailVerification from './registerSteps/emailVerification';
 import BasicDetails from './registerSteps/basicDetails';
 import CreatePassword from './registerSteps/createPassword';
@@ -160,27 +160,47 @@ const MultiStepRegisterPage = () => {
   };
   
   /**
-   * Verify email address
-   */
-  const verifyEmail = () => {
-    // Validate email
-    if (!validateEmail()) {
-      return;
+ * Verify email address by calling the initiate API
+ */
+const verifyEmail = async () => {
+  // Validate email
+  if (!validateEmail()) {
+    return;
+  }
+  
+  // Set loading state
+  setLoadingState('email-verification', true);
+  
+  try {
+    // Call the initiate API
+    const response = await OrganizationRegisterInitiateAPI({ 
+      email: formData.email 
+    });
+    
+    console.log('OTP sent successfully:', response);
+    
+    // Move to verification code step
+    setVerificationStep('code-verification');
+    
+    // Show a success message
+    showError('Verification code sent to your email!', 'info');
+  } catch (error) {
+    console.error('Error sending OTP:', error);
+    
+    // Set error message
+    let errorMessage = 'Failed to send verification code. Please try again.';
+    
+    if (error.response?.data?.message) {
+      errorMessage = error.response.data.message;
+    } else if (error.message) {
+      errorMessage = error.message;
     }
     
-    // Set loading state
-    setLoadingState('email-verification', true);
-    
-    // Simulate API call with timeout
-    setTimeout(() => {
-      // Move to verification code step
-      setVerificationStep('code-verification');
-      setLoadingState('email-verification', false);
-      
-      // Show a success message
-      showError('Verification code sent to your email!', 'info');
-    }, 1000);
-  };
+    showError(errorMessage);
+  } finally {
+    setLoadingState('email-verification', false);
+  }
+};
   
   /**
    * Extract token from various response formats
@@ -321,8 +341,8 @@ const MultiStepRegisterPage = () => {
       
       console.log('Sending registration data:', registrationData);
       
-      // Call RegisterAPI from allApis.js
-      const response = await RegisterAPI(registrationData);
+      // Call OrganizationRegisterAPIComplete from allApis.js
+      const response = await OrganizationRegisterAPIComplete(registrationData);
       console.log('Registration successful:', response);
       
       // Process the response

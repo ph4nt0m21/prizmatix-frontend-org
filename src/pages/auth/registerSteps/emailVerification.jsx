@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { Link, useNavigate } from 'react-router-dom';
+import { OrganizationRegisterInitiateAPI, OrganizationResendOtpAPI, OrganizationVerifyOtpAPI } from '../../../services/allApis';
 import styles from './emailVerification.module.scss';
 
 // Import SVG components
@@ -51,6 +52,10 @@ const EmailVerification = ({
   const [timeLeft, setTimeLeft] = useState(59);
   const [timerActive, setTimerActive] = useState(false);
   
+  // Error and loading states
+  const [localError, setLocalError] = useState(null);
+  const [localLoading, setLocalLoading] = useState(false);
+  
   // Focus first input on mount when showing verification step
   useEffect(() => {
     if (verificationStep === 'code-verification' && inputRefs.current[0]) {
@@ -76,12 +81,55 @@ const EmailVerification = ({
   }, [timerActive, timeLeft]);
   
   /**
-   * Handle form submission for email entry
+   * Handle form submission for email entry - API Integration
    * @param {Event} e - Form submission event
    */
-  const handleEmailSubmit = (e) => {
+  const handleEmailSubmit = async (e) => {
     e.preventDefault();
-    verifyEmail();
+    
+    // Clear previous errors
+    setLocalError(null);
+    setLocalLoading(true);
+    
+    try {
+      // Call the initiate API
+      const response = await OrganizationRegisterInitiateAPI({ 
+        email: formData.email 
+      });
+      
+      console.log('OTP sent successfully:', response);
+      
+      // Move to verification code step
+      setVerificationStep('code-verification');
+      
+      // Start the timer
+      setTimeLeft(59);
+      setTimerActive(true);
+      
+      // Show a success message
+      setLocalError({
+        message: 'Verification code sent to your email!',
+        type: 'info'
+      });
+    } catch (error) {
+      console.error('Error sending OTP:', error);
+      
+      // Set error message
+      let errorMessage = 'Failed to send verification code. Please try again.';
+      
+      if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      setLocalError({
+        message: errorMessage,
+        type: 'error'
+      });
+    } finally {
+      setLocalLoading(false);
+    }
   };
   
   /**
@@ -107,14 +155,64 @@ const EmailVerification = ({
       inputRefs.current[index + 1].focus();
     }
     
-    // Check if all fields are filled to auto-submit
+    // Check if all fields are filled to auto-verify
     if (newVerificationCode.every(digit => digit) && !newVerificationCode.includes('')) {
-      // Call verification logic here
-      setTimeout(() => {
-        nextStep();
-      }, 500);
+      verifyOtp(newVerificationCode.join(''));
     }
   };
+  
+ /**
+ * Verify OTP with API
+ * @param {string} otp - OTP code to verify
+ */
+const verifyOtp = async (otp) => {
+  // Clear previous errors
+  setLocalError(null);
+  setLocalLoading(true);
+  
+  console.log('About to verify OTP:', {email: formData.email, otp: otp});
+  
+  try {
+    // Call the verify OTP API - Use the otp parameter, not verificationCode.join('')
+    const response = await OrganizationVerifyOtpAPI({
+      email: formData.email,
+      otp: otp
+    });
+    
+    console.log('OTP verified successfully:', response);
+    
+    // Proceed to next step
+    setTimeout(() => {
+      nextStep();
+    }, 500);
+  } catch (error) {
+    console.error('Error verifying OTP:', error);
+    
+    // Set error message
+    let errorMessage = 'Invalid verification code. Please try again.';
+    
+    if (error.response?.data?.message) {
+      errorMessage = error.response.data.message;
+    } else if (error.message) {
+      errorMessage = error.message;
+    }
+    
+    setLocalError({
+      message: errorMessage,
+      type: 'error'
+    });
+    
+    // Clear the verification code fields
+    setVerificationCode(['', '', '', '', '', '']);
+    
+    // Focus the first input
+    if (inputRefs.current[0]) {
+      inputRefs.current[0].focus();
+    }
+  } finally {
+    setLocalLoading(false);
+  }
+};
   
   /**
    * Handle key down events for code input
@@ -146,6 +244,25 @@ const EmailVerification = ({
           } else if (inputRefs.current[5]) {
             inputRefs.current[5].focus();
           }
+
+          // For the handleKeyDown function, update the auto-verify section:
+          if (!newCode.includes('')) {
+            const completeOtp = newCode.join('');
+            console.log('Auto-verifying complete OTP from keyboard:', completeOtp);
+            verifyOtp(completeOtp);
+          }
+
+          // For the handlePaste function, update the auto-verify section:
+          if (!newCode.includes('')) {
+            const completeOtp = newCode.join('');
+            console.log('Auto-verifying complete OTP from paste:', completeOtp);
+            verifyOtp(completeOtp);
+          }
+          
+          // Auto-verify if complete
+          if (!newCode.includes('')) {
+            verifyOtp(newCode.join(''));
+          }
         }
       });
     }
@@ -170,29 +287,68 @@ const EmailVerification = ({
       } else if (inputRefs.current[5]) {
         inputRefs.current[5].focus();
       }
+      
+      // Auto-verify if complete
+      if (!newCode.includes('')) {
+        verifyOtp(newCode.join(''));
+      }
     }
   };
   
   /**
-   * Resend verification code
+   * Resend verification code with API
    */
-  const resendCode = () => {
+  const resendCode = async () => {
     // Only allow resend when timer is not active
-    if (timerActive) return;
+    if (timerActive || localLoading) return;
     
-    // Clear the current code
-    setVerificationCode(['', '', '', '', '', '']);
+    // Clear previous errors
+    setLocalError(null);
+    setLocalLoading(true);
     
-    // Reset and start the timer
-    setTimeLeft(59);
-    setTimerActive(true);
-    
-    // Simulated API call to resend code
-    verifyEmail();
-    
-    // Focus the first input
-    if (inputRefs.current[0]) {
-      inputRefs.current[0].focus();
+    try {
+      // Call the resend OTP API
+      const response = await OrganizationResendOtpAPI({
+        email: formData.email
+      });
+      
+      console.log('OTP resent successfully:', response);
+      
+      // Clear the current code
+      setVerificationCode(['', '', '', '', '', '']);
+      
+      // Reset and start the timer
+      setTimeLeft(59);
+      setTimerActive(true);
+      
+      // Show a success message
+      setLocalError({
+        message: 'New verification code sent to your email!',
+        type: 'info'
+      });
+      
+      // Focus the first input
+      if (inputRefs.current[0]) {
+        inputRefs.current[0].focus();
+      }
+    } catch (error) {
+      console.error('Error resending OTP:', error);
+      
+      // Set error message
+      let errorMessage = 'Failed to resend verification code. Please try again.';
+      
+      if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      setLocalError({
+        message: errorMessage,
+        type: 'error'
+      });
+    } finally {
+      setLocalLoading(false);
     }
   };
   
@@ -203,9 +359,15 @@ const EmailVerification = ({
   
   // Render error message if exists
   const renderErrorMessage = () => {
-    if (!errors || !errors.email) return null;
+    // Display component errors or local errors
+    const componentError = errors?.email;
+    const error = localError?.message || componentError;
     
-    return <div className={styles.errorMessage}>{errors.email}</div>;
+    if (!error) return null;
+    
+    const className = `${styles.errorMessage} ${localError?.type === 'info' ? styles.infoMessage : ''}`;
+    
+    return <div className={className}>{error}</div>;
   };
   
   // Handle going back
@@ -240,7 +402,7 @@ const EmailVerification = ({
               className={styles.input}
               value={formData.email}
               onChange={handleChange}
-              disabled={isLoading}
+              disabled={localLoading || isLoading}
               aria-label="Email Address"
             />
           </div>
@@ -249,9 +411,9 @@ const EmailVerification = ({
         <button
           type="submit"
           className={styles.signInButton}
-          disabled={isLoading}
+          disabled={localLoading || isLoading}
         >
-          {isLoading ? (
+          {(localLoading || isLoading) ? (
             <div className={styles.spinner}></div>
           ) : (
             "Next"
@@ -293,7 +455,7 @@ const EmailVerification = ({
               onChange={(e) => handleCodeChange(index, e)}
               onKeyDown={(e) => handleKeyDown(index, e)}
               onPaste={index === 0 ? handlePaste : undefined}
-              disabled={isLoading}
+              disabled={localLoading || isLoading}
               aria-label={`Verification code digit ${index + 1}`}
             />
           ))}
@@ -304,7 +466,7 @@ const EmailVerification = ({
             type="button" 
             className={styles.resendCodeButton}
             onClick={resendCode}
-            disabled={isLoading || timerActive}
+            disabled={localLoading || isLoading || timerActive}
           >
             Resend Code {timerActive && (
               <span className={styles.timer}>{formatTime(timeLeft)}</span>
@@ -313,17 +475,21 @@ const EmailVerification = ({
         </div>
         
         <button
-          type="button"
-          className={styles.signInButton}
-          onClick={nextStep}
-          disabled={isLoading || verificationCode.includes('')}
-        >
-          {isLoading ? (
-            <div className={styles.spinner}></div>
-          ) : (
-            "Continue"
-          )}
-        </button>
+        type="button"
+        className={styles.signInButton}
+        onClick={() => {
+          const completeOtp = verificationCode.join('');
+          console.log('Verifying OTP from button click:', completeOtp);
+          verifyOtp(completeOtp);
+        }}
+        disabled={localLoading || isLoading || verificationCode.includes('')}
+      >
+        {(localLoading || isLoading) ? (
+          <div className={styles.spinner}></div>
+        ) : (
+          "Continue"
+        )}
+      </button>
       </div>
     </>
   );
