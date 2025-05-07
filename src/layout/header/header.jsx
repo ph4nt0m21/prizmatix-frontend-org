@@ -1,3 +1,4 @@
+// src/layout/header/header.jsx
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
@@ -5,7 +6,7 @@ import styles from './header.module.scss';
 
 /**
  * Header component displays the organization info, search bar, and create event button
- * Refactored to match the new design specifications
+ * Refactored to match the new design specifications and hide Create Event button on specific pages
  */
 const Header = () => {
   const location = useLocation();
@@ -19,6 +20,9 @@ const Header = () => {
   
   // Check if we're in the event creation flow
   const isEventCreationRoute = location.pathname.includes('/events/create');
+  
+  // Check if we're on the events page
+  const isEventsPage = location.pathname === '/events' || location.pathname === '/events/';
   
   // Handler for the Create Event button
   const handleCreateEvent = () => {
@@ -51,8 +55,8 @@ const Header = () => {
           </button>
         </div>
         
-        {/* Only show Create Event button when not in event creation flow */}
-        {!isEventCreationRoute && (
+        {/* Only show Create Event button when not in event creation flow or events page */}
+        {!isEventCreationRoute && !isEventsPage && (
           <button 
             type="button" 
             className={styles.createEventButton}

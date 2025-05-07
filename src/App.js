@@ -13,6 +13,7 @@ import ResetPasswordPage from "./pages/auth/resetPasswordPage";
 import ProtectedRoute from "./security/protectedRoute";
 import NotFoundPage from "./pages/notFound/notFoundPage";
 import LoadingSpinner from "./components/common/loadingSpinner/loadingSpinner";
+import EventsPage from "./pages/events/eventsPage";
 import CreateEventPage from "./pages/events/createEventPage";
 
 /**
@@ -91,6 +92,7 @@ function App() {
         <Route element={<ProtectedRoute />}>
           <Route path="/" element={<MainLayout />}>
             <Route index element={<HomePage />} />
+            <Route path="events" element={<EventsPage />} />
             
             {/* Event Creation Routes */}
             <Route path="events/create" element={<CreateEventPage />} />

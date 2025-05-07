@@ -58,9 +58,9 @@ const MultiStepRegisterPage = () => {
     
     // Organization Profile (Step 3)
     name: '',
-    description: '',
-    region: '',
-    state: '',
+    bio: '',
+    
+    
 
     // Create Event (Step 4)
     eventName: '',
@@ -183,87 +183,193 @@ const MultiStepRegisterPage = () => {
   };
   
   /**
+   * Extract token from various response formats
+   * @param {Object} response - API response
+   * @returns {string|null} Extracted token or null
+   */
+  const extractTokenFromResponse = (response) => {
+    if (!response || !response.data) return null;
+    
+    // Check for token in various formats
+    if (response.data.token) return response.data.token;
+    if (response.data.accessToken) return response.data.accessToken;
+    if (response.data.jwt) return response.data.jwt;
+    if (response.data.auth_token) return response.data.auth_token;
+    
+    // Check if response.data is the token string directly
+    if (typeof response.data === 'string') return response.data;
+    
+    return null;
+  };
+  
+  /**
+   * Format error message from API error
+   * @param {Error} error - Error object
+   * @returns {string} Formatted error message
+   */
+  const formatErrorMessage = (error) => {
+    if (!error) return 'Registration failed. Please try again.';
+    
+    // Default error message
+    let errorMessage = 'Registration failed. Please try again.';
+    
+    if (error.response) {
+      if (error.response.data) {
+        // Handle structured error message
+        if (error.response.data.message) {
+          if (Array.isArray(error.response.data.message)) {
+            // Join array of error messages into a single string
+            errorMessage = error.response.data.message
+              .filter(msg => typeof msg === 'string')
+              .join('. ');
+          } else {
+            errorMessage = error.response.data.message;
+          }
+        } else if (error.response.data.error) {
+          errorMessage = error.response.data.error;
+        } else if (typeof error.response.data === 'string') {
+          errorMessage = error.response.data;
+        }
+      } else if (error.response.status) {
+        // Handle HTTP status-based errors
+        switch (error.response.status) {
+          case 400:
+            errorMessage = 'Invalid registration data. Please check your inputs.';
+            break;
+          case 401:
+            errorMessage = 'Authentication failed. Please try again.';
+            break;
+          case 409:
+            errorMessage = 'This email is already registered. Please use another email or try logging in.';
+            break;
+          case 500:
+            errorMessage = 'Server error. Please try again later.';
+            break;
+          default:
+            errorMessage = `Registration failed (${error.response.status}). Please try again.`;
+        }
+      }
+    } else if (error.message) {
+      errorMessage = error.message;
+    }
+    
+    return errorMessage;
+  };
+  
+  /**
+   * Reset all form data after successful registration
+   */
+  const resetFormData = () => {
+    setFormData({
+
+      email: '',
+      
+      password: '',
+      confirmPassword: '',
+
+      // Basic fields
+      firstName: '',
+      lastName: '',
+      mobileNumber: '',
+     
+      // Organization fields
+      name: '',
+      description: '',
+      bio: '',  // This field is missing in your current reset
+      
+      // Event field
+      eventName: ''
+    });
+    
+    // Reset uploaded logo state
+    setUploadedLogo(null);
+    
+    // Reset social media links
+    setSocialLinks([]);
+  };
+  
+  /**
    * Register a new organization
-   * @param {Object} userData - Registration data
    * @returns {Promise} Promise resolving to registration result
    */
-  const register = async (userData) => {
-    setAuthLoading(true);
-    setAuthError(null);
+  const handleSubmit = async () => {
+    // Clear previous errors
+    clearError();
+    setError(null);
     
     try {
-      // Add username from email if not provided
+      // Set loading state
+      setLoadingState('register', true);
+      
+      // Map form data to the database schema
       const registrationData = {
-        ...userData,
-        username: userData.username || userData.email // Use email as username if not provided
+        // Required fields from API schema
+        email: formData.email,
+        name: formData.name || `${formData.firstName}'s Organization`, // Fallback if name not provided
+        description: "This is organization description",
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        mobileNumber: formData.mobileNumber,
+        password: formData.password,
+        profilePhoto: "profile",
+        bio: formData.description || "", // Bio and description are the same in this implementation
+        socialMediaLinks: socialLinks.map(link => ({
+          platform: link.platform,
+          url: link.url
+        }))
       };
       
       console.log('Sending registration data:', registrationData);
-      const response = await RegisterAPI(registrationData);
-      console.log('Registration response:', response);
       
-      // Standard token handling logic
-      if (response.status === 200) {
-        // Store token in cookie if provided
-        if (response.data && response.data.token) {
-          Cookies.set('token', response.data.token, { 
-            expires: 1, // 1 day
+      // Call RegisterAPI from allApis.js
+      const response = await RegisterAPI(registrationData);
+      console.log('Registration successful:', response);
+      
+      // Process the response
+      if (response && response.data) {
+        // Handle token from response, checking different possible formats
+        const token = extractTokenFromResponse(response);
+        
+        if (token) {
+          // Store token in cookie
+          Cookies.set('token', token, { 
+            expires: parseInt(process.env.PUBLIC_AUTH_COOKIE_EXPIRY || 1) // Default to 1 day
           });
-        } else if (typeof response.data === 'string') {
-          Cookies.set('token', response.data, { 
-            expires: 1,
-          });
-        } else if (response.data) {
-          // Check for nested token
-          const token = response.data.accessToken || response.data.jwt || response.data.auth_token;
-          if (token) {
-            Cookies.set('token', token, {
-              expires: 1,
-            });
-          }
         }
         
-        // Ensure the user object contains necessary fields
-        const user = response.data.user || {};
-        if (!user.name) {
-          user.name = `${userData.firstName} ${userData.lastName}`;
-        }
+        // Set user data from response or form data
+        const userData = response.data.user || {
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
+          name: `${formData.firstName} ${formData.lastName}`
+        };
         
-        // Set user and authentication state
-        setCurrentUser(user);
+        // Update authentication state
+        setCurrentUser(userData);
         setIsAuthenticated(true);
-        return response.data;
+        
+        // Clear form data and files on success
+        resetFormData();
+        
+        // Show success message
+        showError('Registration successful! Redirecting...', 'info');
       } else {
-        throw new Error(response?.data?.message || 'Registration failed');
+        throw new Error('Invalid response received from server');
       }
     } catch (error) {
-      console.error('Registration error:', error);
+      console.error('Registration failed:', error);
       
-      // Extract error message from response
-      if (error.response?.data?.message) {
-        const { message } = error.response.data;
-        
-        if (Array.isArray(message)) {
-          // Filter only string messages and join them
-          const filteredMessages = message
-            .filter((msg) => typeof msg === "string")
-            .join("\n");
-          
-          setAuthError(filteredMessages || 'Registration failed. Please check your details.');
-          throw filteredMessages || 'Registration failed. Please check your details.';
-        } else {
-          setAuthError(message);
-          throw message;
-        }
-      } else {
-        const errorMessage = error.response?.data?.error || 
-                            error.message || 
-                            'Registration failed. Please try again.';
-        setAuthError(errorMessage);
-        throw errorMessage;
-      }
+      // Extract and format error message
+      const errorMessage = formatErrorMessage(error);
+      
+      // Show error message
+      showError(errorMessage);
+      
+      // Set auth error state as well
+      setAuthError(errorMessage);
     } finally {
-      setAuthLoading(false);
+      setLoadingState('register', false);
     }
   };
   
@@ -463,62 +569,6 @@ const MultiStepRegisterPage = () => {
       if (currentStep === 1) {
         setVerificationStep('code-verification');
       }
-    }
-  };
-  
-  /**
-   * Submit the registration form
-   */
-  const handleSubmit = async () => {
-    // Clear previous errors
-    clearError();
-    setError(null);
-    
-    // Prepare registration data
-    const registrationData = {
-      name: formData.name,
-      description: formData.description,
-      email: formData.email,
-      username: formData.email, // Use email as username
-      firstName: formData.firstName,
-      lastName: formData.lastName,
-      mobileNumber: formData.mobileNumber,
-      password: formData.password,
-      logo: uploadedLogo?.url,
-      socialLinks: socialLinks,
-      eventName: formData.eventName // Include event name if provided
-    };
-    
-    // Set loading state
-    setLoadingState('register', true);
-    
-    try {
-      await register(registrationData);
-      console.log('Registration successful');
-      
-      // Clear form data on success
-      setFormData({
-        email: '',
-        name: '',
-        description: '',
-        region: '',
-        state: '',
-        firstName: '',
-        lastName: '',
-        mobileNumber: '',
-        password: '',
-        confirmPassword: '',
-        eventName: ''
-      });
-      setUploadedLogo(null);
-      setSocialLinks([]);
-      
-      // Navigation will be handled by the useEffect that watches isAuthenticated
-    } catch (err) {
-      console.error('Registration failed:', err);
-      showError(typeof err === 'string' ? err : 'Registration failed');
-    } finally {
-      setLoadingState('register', false);
     }
   };
   

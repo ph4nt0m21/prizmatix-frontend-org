@@ -7,7 +7,7 @@
   align-items: center;
   width: 70px;
   height: 100vh;
-  background-color: #1E1B34;
+  background: var(--gradient, linear-gradient(180deg, #31204B 0%, #1E202C 100%));
   color: #fff;
   position: fixed;
   left: 0;
