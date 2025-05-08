@@ -51,46 +51,51 @@ export const CreateEventAPI = async (data) => {
 
 // Get event by ID
 export const GetEventAPI = async (eventId) => {
-  return await apiClient.get(`/events/${eventId}`);
+  return await apiClient.get(`/api/events/${eventId}`);
+};
+
+// Update event by ID
+export const UpdateEventAPI = async (eventId, data) => {
+  return await apiClient.put(`/api/events/${eventId}`, data);
 };
 
 // Get all events with pagination
 export const GetAllEventsAPI = async (params) => {
-  return await apiClient.get("/events", { params });
+  return await apiClient.get("/api/events", { params });
 };
 
 // Delete an event
 export const DeleteEventAPI = async (eventId, userId) => {
-  return await apiClient.delete(`/events/${eventId}`, {
+  return await apiClient.delete(`/api/events/${eventId}`, {
     params: { userId }
   });
 };
 
 // Update event status
 export const UpdateEventStatusAPI = async (eventId, statusData) => {
-  return await apiClient.patch(`/events/${eventId}/status`, statusData);
+  return await apiClient.patch(`/api/events/${eventId}/status`, statusData);
 };
 
 // =============== EVENT CREATION STEPS APIs ===============
 
 // Step 2: Update event location
 export const UpdateEventLocationAPI = async (eventId, locationData) => {
-  return await apiClient.post(`/events/${eventId}/location`, locationData);
+  return await apiClient.put(`/api/events/${eventId}/location`, locationData);
 };
 
 // Step 3: Update event date and time
 export const UpdateEventDateTimeAPI = async (eventId, dateTimeData) => {
-  return await apiClient.post(`/events/${eventId}/date-time`, dateTimeData);
+  return await apiClient.put(`/api/events/${eventId}/date-time`, dateTimeData);
 };
 
 // Step 4: Update event description
 export const UpdateEventDescriptionAPI = async (eventId, descriptionData) => {
-  return await apiClient.post(`/events/${eventId}/description`, descriptionData);
+  return await apiClient.post(`/api/events/${eventId}/description`, descriptionData);
 };
 
 // Step 5: Upload event banner image
 export const UploadEventBannerAPI = async (eventId, formData) => {
-  return await apiClient.post(`/events/${eventId}/banner-image`, formData, {
+  return await apiClient.post(`/api/events/${eventId}/banner-image`, formData, {
     headers: {
       'Content-Type': 'multipart/form-data',
     },
@@ -99,17 +104,17 @@ export const UploadEventBannerAPI = async (eventId, formData) => {
 
 // Step 6: Update event tickets
 export const UpdateEventTicketsAPI = async (eventId, ticketsData) => {
-  return await apiClient.post(`/events/${eventId}/tickets`, ticketsData);
+  return await apiClient.post(`/api/events/${eventId}/tickets`, ticketsData);
 };
 
 // Step 7: Update event discount codes
 export const UpdateEventDiscountCodesAPI = async (eventId, discountCodesData) => {
-  return await apiClient.post(`/events/${eventId}/discount-codes`, discountCodesData);
+  return await apiClient.post(`/api/events/${eventId}/discount-codes`, discountCodesData);
 };
 
 // Step 8: Publish event
 export const PublishEventAPI = async (eventId, publishData) => {
-  return await apiClient.post(`/events/${eventId}/publish`, publishData);
+  return await apiClient.post(`/api/events/${eventId}/publish`, publishData);
 };
 
 // =============== EVENT DATA FETCHING APIs ===============
