@@ -1,6 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import PropTypes from 'prop-types';
-import { UpdateEventLocationAPI } from '../../../services/allApis';
 import styles from './locationStep.module.scss';
 
 /**
@@ -45,16 +44,9 @@ const LocationStep = ({
     longitude: locationData.longitude || ''
   });
   
-  // State for validation errors
-  const [errors, setErrors] = useState({});
-  
-  // State for map visibility and loading
+  // State for map UI
   const [isLoadingMap, setIsLoadingMap] = useState(false);
   const [activeTab, setActiveTab] = useState('map'); // 'map' or 'satellite'
-
-  // API-related state
-  const [isSaving, setIsSaving] = useState(false);
-  const [apiError, setApiError] = useState(null);
   
   /**
    * Initialize Google Maps
@@ -89,23 +81,23 @@ const LocationStep = ({
       ? { lat: parseFloat(location.latitude), lng: parseFloat(location.longitude) }
       : defaultPosition;
       
-      const mapOptions = {
-        center: position,
-        zoom: 6, // Zoom out a bit more for New Zealand
-        mapTypeId: activeTab === 'map' ? 'roadmap' : 'satellite',
-        mapTypeControl: false,
-        streetViewControl: true, // Enable street view
-        fullscreenControl: true,
-        zoomControl: true,
-        gestureHandling: 'cooperative', // Improved gesture handling
-        styles: [ // Optional custom styling for a more professional look
-          {
-            featureType: 'poi',
-            elementType: 'labels',
-            stylers: [{ visibility: 'off' }] // Hide points of interest labels for cleaner look
-          }
-        ]
-      };
+    const mapOptions = {
+      center: position,
+      zoom: 6, // Zoom out a bit more for New Zealand
+      mapTypeId: activeTab === 'map' ? 'roadmap' : 'satellite',
+      mapTypeControl: false,
+      streetViewControl: true, // Enable street view
+      fullscreenControl: true,
+      zoomControl: true,
+      gestureHandling: 'cooperative', // Improved gesture handling
+      styles: [ // Optional custom styling for a more professional look
+        {
+          featureType: 'poi',
+          elementType: 'labels',
+          stylers: [{ visibility: 'off' }] // Hide points of interest labels for cleaner look
+        }
+      ]
+    };
     
     // Create the map
     const map = new window.google.maps.Map(mapRef.current, mapOptions);
@@ -127,86 +119,84 @@ const LocationStep = ({
   };
 
   /**
- * Parse a Google Maps URL to extract coordinates
- * @param {string} url - Google Maps URL
- * @returns {Object|null} - Latitude and longitude if found, null otherwise
- */
-const parseGoogleMapsUrl = (url) => {
-  try {
-    // Handle different Google Maps URL formats
-    
-    // Format: https://www.google.com/maps?q=-41.2865,174.7762
-    let match = url.match(/maps\?q=(-?\d+\.\d+),(-?\d+\.\d+)/);
-    if (match) {
-      return {
-        lat: parseFloat(match[1]),
-        lng: parseFloat(match[2])
-      };
-    }
-    
-    // Format: https://www.google.com/maps/place/.../@-41.2865,174.7762,15z
-    match = url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
-    if (match) {
-      return {
-        lat: parseFloat(match[1]),
-        lng: parseFloat(match[2])
-      };
-    }
-    
-    // Format: https://goo.gl/maps/... (short URL)
-    // For short URLs, we would need to expand them first, which requires a server-side solution
-    // For now, inform the user that short links aren't supported
-    if (url.includes('goo.gl/maps')) {
-      alert('Short Google Maps links (goo.gl) are not supported. Please use the full URL from Google Maps.');
+   * Parse a Google Maps URL to extract coordinates
+   * @param {string} url - Google Maps URL
+   * @returns {Object|null} - Latitude and longitude if found, null otherwise
+   */
+  const parseGoogleMapsUrl = (url) => {
+    try {
+      // Handle different Google Maps URL formats
+      
+      // Format: https://www.google.com/maps?q=-41.2865,174.7762
+      let match = url.match(/maps\?q=(-?\d+\.\d+),(-?\d+\.\d+)/);
+      if (match) {
+        return {
+          lat: parseFloat(match[1]),
+          lng: parseFloat(match[2])
+        };
+      }
+      
+      // Format: https://www.google.com/maps/place/.../@-41.2865,174.7762,15z
+      match = url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+      if (match) {
+        return {
+          lat: parseFloat(match[1]),
+          lng: parseFloat(match[2])
+        };
+      }
+      
+      // Format: https://goo.gl/maps/... (short URL)
+      // For short URLs, we would need to expand them first, which requires a server-side solution
+      // For now, inform the user that short links aren't supported
+      if (url.includes('goo.gl/maps')) {
+        alert('Short Google Maps links (goo.gl) are not supported. Please use the full URL from Google Maps.');
+        return null;
+      }
+      
+      // If no matches, inform the user
+      alert('Could not extract coordinates from the provided URL. Please make sure it\'s a valid Google Maps link.');
+      return null;
+    } catch (error) {
+      console.error('Error parsing Google Maps URL:', error);
       return null;
     }
-    
-    // If no matches, inform the user
-    alert('Could not extract coordinates from the provided URL. Please make sure it\'s a valid Google Maps link.');
-    return null;
-  } catch (error) {
-    console.error('Error parsing Google Maps URL:', error);
-    return null;
-  }
-};
+  };
 
-/**
- * Handle pasting a Google Maps link
- * @param {Event} e - Paste event
- */
-const handlePasteMapLink = (e) => {
-  // Get pasted text
-  const pastedText = e.clipboardData.getData('text');
-  
-  // Check if it looks like a Google Maps link
-  if (pastedText.includes('google.com/maps') || pastedText.includes('goo.gl/maps')) {
-    e.preventDefault(); // Prevent default paste behavior
+  /**
+   * Handle pasting a Google Maps link
+   * @param {Event} e - Paste event
+   */
+  const handlePasteMapLink = (e) => {
+    // Get pasted text
+    const pastedText = e.clipboardData.getData('text');
     
-    // Parse the URL to get coordinates
-    const coordinates = parseGoogleMapsUrl(pastedText);
-    if (coordinates) {
-      // Set the search query to the pasted link
-      setLocation(prev => ({
-        ...prev,
-        searchQuery: pastedText
-      }));
+    // Check if it looks like a Google Maps link
+    if (pastedText.includes('google.com/maps') || pastedText.includes('goo.gl/maps')) {
+      e.preventDefault(); // Prevent default paste behavior
       
-      // Create a Google Maps LatLng object
-      const latLng = new window.google.maps.LatLng(coordinates.lat, coordinates.lng);
-      
-      // Use our existing function to handle the map click with these coordinates
-      handleMapClick(latLng);
+      // Parse the URL to get coordinates
+      const coordinates = parseGoogleMapsUrl(pastedText);
+      if (coordinates) {
+        // Set the search query to the pasted link
+        setLocation(prev => ({
+          ...prev,
+          searchQuery: pastedText
+        }));
+        
+        // Create a Google Maps LatLng object
+        const latLng = new window.google.maps.LatLng(coordinates.lat, coordinates.lng);
+        
+        // Use our existing function to handle the map click with these coordinates
+        handleMapClick(latLng);
+      }
     }
-  }
-};
+  };
 
-    /**
+  /**
    * Handle clicks on the map
    * @param {Object} latLng - Google Maps LatLng object
    */
   const handleMapClick = (latLng) => {
-    if (isSaving) return; // Don't handle clicks if saving is in progress
-    
     // Get latitude and longitude
     const lat = latLng.lat();
     const lng = latLng.lng();
@@ -302,45 +292,11 @@ const handlePasteMapLink = (e) => {
     }
   };
   
-  /**
-   * Validate the location form
-   * @returns {boolean} Is the form valid
-   */
-  const validateForm = () => {
-    // If "To be announced" is checked, form is valid
-    if (location.isToBeAnnounced) {
-      return true;
-    }
-    
-    const newErrors = {};
-    
-    // Required fields validation
-    if (!location.venue) newErrors.venue = 'Venue is required';
-    if (!location.street) newErrors.street = 'Street is required';
-    if (!location.city) newErrors.city = 'City is required';
-    if (!location.state) newErrors.state = 'State/Province is required';
-    
-    // Update errors state
-    setErrors(newErrors);
-    
-    // Form is valid if there are no errors
-    return Object.keys(newErrors).length === 0;
-  };
-  
   // Effect to propagate location changes to parent component
   useEffect(() => {
     // Send the updated location data to parent component
-    handleInputChange({ location }, 'location');
+    handleInputChange(location, 'location');
   }, [location, handleInputChange]);
-  
-  // Update parent component about form validity
-  useEffect(() => {
-    // Tell parent component if form is valid when step is visited
-    if (stepStatus.visited && handleInputChange) {
-      const isFormValid = validateForm();
-      handleInputChange(isFormValid, 'locationValid');
-    }
-  }, [location, stepStatus, handleInputChange]);
   
   /**
    * Handle location type selection (public, private, to be announced)
@@ -358,11 +314,6 @@ const handlePasteMapLink = (e) => {
     }
     
     setLocation(updatedLocation);
-    
-    // Clear validation errors if switching to TBA
-    if (type === 'tba') {
-      setErrors({});
-    }
   };
   
   /**
@@ -376,14 +327,6 @@ const handlePasteMapLink = (e) => {
       ...prev,
       [name]: value
     }));
-    
-    // Clear validation error for the field when user types
-    if (errors[name]) {
-      setErrors(prev => ({
-        ...prev,
-        [name]: ''
-      }));
-    }
   };
   
   /**
@@ -391,18 +334,8 @@ const handlePasteMapLink = (e) => {
    */
   const handleSearch = () => {
     if (!location.searchQuery) {
-      setErrors(prev => ({
-        ...prev,
-        searchQuery: 'Please enter a location to search'
-      }));
       return;
     }
-    
-    // Clear the error
-    setErrors(prev => ({
-      ...prev,
-      searchQuery: ''
-    }));
     
     // Show loading state
     setIsLoadingMap(true);
@@ -474,11 +407,6 @@ const handlePasteMapLink = (e) => {
               animation: window.google.maps.Animation.DROP // Add animation for better UX
             });
           }
-        } else {
-          setErrors(prev => ({
-            ...prev,
-            searchQuery: 'Location not found. Please try a different search.'
-          }));
         }
         
         setIsLoadingMap(false);
@@ -486,90 +414,21 @@ const handlePasteMapLink = (e) => {
     } else {
       // Fallback if Google Maps API is not available
       setTimeout(() => {
-        // Mock response - would be replaced with actual API response
-        const mockResponse = {
-          venue: 'Sydney Convention Centre',
-          street: 'Example Street',
-          streetNumber: '123',
-          city: 'Sydney',
-          postalCode: '2000',
-          state: 'New South Wales',
-          country: 'Australia',
-          latitude: '-33.865143',
-          longitude: '151.209900'
-        };
-        
-        // Update location with search results
-        setLocation(prev => ({
-          ...prev,
-          ...mockResponse
-        }));
-        
         setIsLoadingMap(false);
       }, 1000);
-    }
-  };
-
-  /**
-   * Save location data to API
-   * This function can be used for auto-save functionality
-   * @param {string} eventId - Event ID
-   * @param {Object} userData - Current user data for updatedBy field
-   */
-  const saveLocationData = async (eventId, userData) => {
-    if (!validateForm() || !eventId) return;
-    
-    setIsSaving(true);
-    setApiError(null);
-    
-    try {
-      // Format location data for API
-      const locationApiData = {
-        id: eventId,
-        locationType: location.isPrivateLocation ? 'private' : 'public',
-        eventLocationId: 0, // Default value since not available in form
-        venueName: location.isToBeAnnounced ? '' : location.venue,
-        address: location.isToBeAnnounced ? 'To be announced' : 
-          `${location.street}, ${location.city}, ${location.state}`,
-        latitude: parseFloat(location.latitude || 0),
-        longitude: parseFloat(location.longitude || 0),
-        streetNo: location.streetNumber,
-        street: location.street,
-        city: location.city,
-        state: location.state,
-        country: location.country,
-        postalCode: location.postalCode,
-        googleMapLink: "", // Not available in form
-        onlineEventUrl: "", // Not available in form
-        onlineEventDescription: "", // Not available in form
-        additionalInfo: location.additionalInfo,
-        updatedBy: userData?.id || 0
-      };
-      
-      await UpdateEventLocationAPI(eventId, locationApiData);
-      
-      // Success handling could be added here
-    } catch (error) {
-      console.error('Error saving location data:', error);
-      setApiError('Failed to save location information. Please try again.');
-    } finally {
-      setIsSaving(false);
     }
   };
   
   return (
     <div className={styles.stepContainer}>
-      {apiError && (
-        <div className={styles.errorAlert}>
-          {apiError}
-          <button 
-            className={styles.dismissButton}
-            onClick={() => setApiError(null)}
-          >
-            ×
-          </button>
+      <div className={styles.stepHeader}>
+        <div className={styles.stepIcon}>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9C9.5 7.62 10.62 6.5 12 6.5C13.38 6.5 14.5 7.62 14.5 9C14.5 10.38 13.38 11.5 12 11.5Z" fill="#7C3AED"/>
+          </svg>
         </div>
-      )}
+        <h2 className={styles.stepTitle}>Event Location</h2>
+      </div>
 
       <div className={styles.formSection}>
         {/* Location Type Section */}
@@ -578,13 +437,13 @@ const handlePasteMapLink = (e) => {
             Location Type
           </label>
           <p className={styles.formDescription}>
-            Choose how your event will appear to potential attendees
+            Choose how your event location will appear to potential attendees
           </p>
           
           <div className={styles.locationOptions}>
             <div 
               className={`${styles.locationOption} ${location.locationType === 'public' && !location.isToBeAnnounced ? styles.selected : ''}`}
-              onClick={() => !isSaving && handleLocationTypeChange('public')}
+              onClick={() => handleLocationTypeChange('public')}
             >
               <div className={styles.locationIcon}>
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -606,7 +465,7 @@ const handlePasteMapLink = (e) => {
             
             <div 
               className={`${styles.locationOption} ${location.locationType === 'private' ? styles.selected : ''}`}
-              onClick={() => !isSaving && handleLocationTypeChange('private')}
+              onClick={() => handleLocationTypeChange('private')}
             >
               <div className={styles.locationIcon}>
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -629,7 +488,7 @@ const handlePasteMapLink = (e) => {
             
             <div 
               className={`${styles.locationOption} ${location.isToBeAnnounced ? styles.selected : ''}`}
-              onClick={() => !isSaving && handleLocationTypeChange('tba')}
+              onClick={() => handleLocationTypeChange('tba')}
             >
               <div className={styles.locationIcon}>
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -664,22 +523,21 @@ const handlePasteMapLink = (e) => {
             
             {/* Search Field */}
             <div className={styles.searchContainer}>
-            <input
+              <input
                 type="text"
                 name="searchQuery"
-                className={`${styles.searchInput} ${errors.searchQuery ? styles.inputError : ''}`}
+                className={styles.searchInput}
                 placeholder="Search for a location or paste Google Maps link"
                 value={location.searchQuery}
                 onChange={handleFieldChange}
                 onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                 onPaste={handlePasteMapLink}
-                disabled={isSaving}
               />
               <button 
                 type="button" 
                 className={styles.searchButton}
                 onClick={handleSearch}
-                disabled={isLoadingMap || isSaving}
+                disabled={isLoadingMap}
               >
                 {isLoadingMap ? (
                   <span className={styles.loadingSpinner}></span>
@@ -690,9 +548,6 @@ const handlePasteMapLink = (e) => {
                 )}
               </button>
             </div>
-            {errors.searchQuery && (
-              <div className={styles.fieldError}>{errors.searchQuery}</div>
-            )}
             
             {/* Map Container */}
             <div className={styles.mapContainerWithControls}>
@@ -701,7 +556,6 @@ const handlePasteMapLink = (e) => {
                   type="button" 
                   className={`${styles.mapTabButton} ${activeTab === 'map' ? styles.activeTab : ''}`}
                   onClick={() => switchMapType('map')}
-                  disabled={isSaving}
                 >
                   Map
                 </button>
@@ -709,7 +563,6 @@ const handlePasteMapLink = (e) => {
                   type="button" 
                   className={`${styles.mapTabButton} ${activeTab === 'satellite' ? styles.activeTab : ''}`}
                   onClick={() => switchMapType('satellite')}
-                  disabled={isSaving}
                 >
                   Satellite
                 </button>
@@ -738,11 +591,10 @@ const handlePasteMapLink = (e) => {
                   type="text"
                   id="venue"
                   name="venue"
-                  className={`${styles.formInput} ${errors.venue ? styles.inputError : ''}`}
+                  className={styles.formInput}
                   placeholder="Enter venue name (e.g., Conference Center, Stadium)"
                   value={location.venue}
                   onChange={handleFieldChange}
-                  disabled={isSaving}
                 />
                 <div className={styles.dropdownArrow}>
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -750,8 +602,8 @@ const handlePasteMapLink = (e) => {
                   </svg>
                 </div>
               </div>
-              {errors.venue && (
-                <div className={styles.fieldError}>{errors.venue}</div>
+              {stepStatus.visited && !location.venue && (
+                <div className={styles.fieldError}>Venue is required</div>
               )}
             </div>
             
@@ -766,11 +618,10 @@ const handlePasteMapLink = (e) => {
                     type="text"
                     id="street"
                     name="street"
-                    className={`${styles.formInput} ${errors.street ? styles.inputError : ''}`}
+                    className={styles.formInput}
                     placeholder="Enter street name"
                     value={location.street}
                     onChange={handleFieldChange}
-                    disabled={isSaving}
                   />
                   <div className={styles.dropdownArrow}>
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -778,8 +629,8 @@ const handlePasteMapLink = (e) => {
                     </svg>
                   </div>
                 </div>
-                {errors.street && (
-                  <div className={styles.fieldError}>{errors.street}</div>
+                {stepStatus.visited && !location.street && (
+                  <div className={styles.fieldError}>Street is required</div>
                 )}
               </div>
               <div className={styles.formGroup}>
@@ -795,7 +646,6 @@ const handlePasteMapLink = (e) => {
                     placeholder="Street number"
                     value={location.streetNumber}
                     onChange={handleFieldChange}
-                    disabled={isSaving}
                   />
                   <div className={styles.dropdownArrow}>
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -817,11 +667,10 @@ const handlePasteMapLink = (e) => {
                     type="text"
                     id="city"
                     name="city"
-                    className={`${styles.formInput} ${errors.city ? styles.inputError : ''}`}
+                    className={styles.formInput}
                     placeholder="Enter city"
                     value={location.city}
                     onChange={handleFieldChange}
-                    disabled={isSaving}
                   />
                   <div className={styles.dropdownArrow}>
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -829,8 +678,8 @@ const handlePasteMapLink = (e) => {
                     </svg>
                   </div>
                 </div>
-                {errors.city && (
-                  <div className={styles.fieldError}>{errors.city}</div>
+                {stepStatus.visited && !location.city && (
+                  <div className={styles.fieldError}>City is required</div>
                 )}
               </div>
               <div className={styles.formGroup}>
@@ -846,7 +695,6 @@ const handlePasteMapLink = (e) => {
                     placeholder="Enter postal/zip code"
                     value={location.postalCode}
                     onChange={handleFieldChange}
-                    disabled={isSaving}
                   />
                   <div className={styles.dropdownArrow}>
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -868,20 +716,19 @@ const handlePasteMapLink = (e) => {
                     type="text"
                     id="state"
                     name="state"
-                    className={`${styles.formInput} ${errors.state ? styles.inputError : ''}`}
+                    className={styles.formInput}
                     placeholder="Enter state or province"
                     value={location.state}
                     onChange={handleFieldChange}
-                    disabled={isSaving}
                   />
                   <div className={styles.dropdownArrow}>
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M7 10L12 15L17 10H7Z" fill="#666666"/>
+                    <path d="M7 10L12 15L17 10H7Z" fill="#666666"/>
                     </svg>
                   </div>
                 </div>
-                {errors.state && (
-                  <div className={styles.fieldError}>{errors.state}</div>
+                {stepStatus.visited && !location.state && (
+                  <div className={styles.fieldError}>State/Province is required</div>
                 )}
               </div>
               <div className={styles.formGroup}>
@@ -897,7 +744,6 @@ const handlePasteMapLink = (e) => {
                     placeholder="Enter country"
                     value={location.country}
                     onChange={handleFieldChange}
-                    disabled={isSaving}
                   />
                   <div className={styles.dropdownArrow}>
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -921,17 +767,8 @@ const handlePasteMapLink = (e) => {
                 value={location.additionalInfo}
                 onChange={handleFieldChange}
                 rows={4}
-                disabled={isSaving}
               />
             </div>
-          </div>
-        )}
-
-        {/* API response message */}
-        {isSaving && (
-          <div className={styles.savingIndicator}>
-            <span className={styles.spinner}></span>
-            Saving location data...
           </div>
         )}
       </div>

@@ -14,9 +14,10 @@ import TicketsStep from './steps/ticketsStep';
 import DiscountCodesStep from './steps/discountCodesStep';
 import PublishStep from './steps/publishStep';
 import LoadingSpinner from '../../components/common/loadingSpinner/loadingSpinner';
-import { CreateEventAPI, GetEventAPI, UpdateEventAPI } from '../../services/allApis';
+import { CreateEventAPI, UpdateEventLocationAPI, UpdateEventAPI } from '../../services/allApis';
 import styles from './createEventPage.module.scss';
 import { getUserData, setUserData } from '../../utils/authUtil';
+import { saveEventData,getEventData, prepareLocationDataForAPI } from '../../utils/eventUtil';
 
 /**
  * CreateEventPage component for the multi-step event creation process
@@ -201,6 +202,26 @@ useEffect(() => {
     }
   }
 }, [currentUser]);
+
+// Add this function to handle fetching event data
+useEffect(() => {
+  // Check for event data in localStorage on initial load
+  const storedEventData = getEventData();
+  if (storedEventData && !eventId) {
+    setEventData(prevData => ({
+      ...prevData,
+      ...storedEventData
+    }));
+    
+    // Update step status based on stored data
+    updateStepStatusFromData(storedEventData);
+    
+    // Navigate to the event if ID is available
+    if (storedEventData.id) {
+      navigate(`/events/create/${storedEventData.id}/${currentStep}`);
+    }
+  }
+}, []);
   
   // Parse step parameter and update current step
   useEffect(() => {
@@ -232,7 +253,7 @@ useEffect(() => {
       if (eventId) {
         try {
           setIsLoading(prev => ({ ...prev, fetchEvent: true }));
-          const response = await GetEventAPI(eventId);
+          const response = await UpdateEventAPI(eventId);
           
           // Update event data
           setEventData(prevData => ({
@@ -669,6 +690,10 @@ useEffect(() => {
           // Make the actual API call
           const response = await CreateEventAPI(basicInfoData);
           console.log('Event creation successful:', response);
+
+          // Save the event data to localStorage
+          saveEventData(response.data);
+          console.log('Event data saved to localStorage:', response.data);
           
           // Get the new event ID from the response
           updatedEventId = response.data.id;
@@ -695,6 +720,30 @@ useEffect(() => {
           return; // Return early to prevent navigation
         }
       }
+
+      // Handle location step submission
+    else if (currentStep === 2 && eventId) {
+      try {
+        // Prepare location data for API submission
+        const locationData = prepareLocationDataForAPI(eventData.location);
+        
+        // Make API call to update location
+        const response = await UpdateEventLocationAPI(eventId, locationData);
+        console.log('Location update successful:', response);
+        
+        // Update the saved event data with the new location info
+        const currentEventData = getEventData();
+        saveEventData({
+          ...currentEventData,
+          location: response.data
+        });
+        
+      } catch (error) {
+        console.error('Error updating location:', error);
+        setIsLoading(prev => ({ ...prev, saveEvent: false }));
+        return; // Return early to prevent navigation
+      }
+    }
       
       // Mark current step as completed
       const stepKey = getStepKeyByNumber(currentStep);
