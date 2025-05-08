@@ -105,6 +105,22 @@ const LoginPage = () => {
           expires: expiryDays,
         });
         
+        // Store user data in localStorage for use across the app
+        // Log it for debugging
+        console.log('Storing user data:', response.data);
+        
+        // Extract relevant user data
+        const userData = {
+          id: response.data.id || response.data.userId,
+          organizationId: response.data.organizationId,
+          name: response.data.name || response.data.firstName + ' ' + response.data.lastName,
+          email: response.data.email || username,
+          role: response.data.role
+        };
+  
+        // Store in localStorage
+        localStorage.setItem('userData', JSON.stringify(userData));
+        
         // Clear form data
         setFormData({
           username: "",

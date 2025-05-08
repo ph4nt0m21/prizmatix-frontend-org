@@ -46,7 +46,7 @@ export const ProfileAPI = async () => {
 
 // Create a new event with basic info (Step 1)
 export const CreateEventAPI = async (data) => {
-  return await apiClient.post("events", data);
+  return await apiClient.post("/api/events", data);
 };
 
 // Get event by ID

@@ -1,4 +1,3 @@
-// src/pages/events/createEventPage.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Cookies from 'js-cookie';
@@ -17,6 +16,7 @@ import PublishStep from './steps/publishStep';
 import LoadingSpinner from '../../components/common/loadingSpinner/loadingSpinner';
 import { CreateEventAPI, GetEventAPI, UpdateEventAPI } from '../../services/allApis';
 import styles from './createEventPage.module.scss';
+import { getUserData, setUserData } from '../../utils/authUtil';
 
 /**
  * CreateEventPage component for the multi-step event creation process
@@ -134,10 +134,32 @@ const CreateEventPage = () => {
     const fetchUserData = async () => {
       setUserLoading(true);
       try {
-        const token = Cookies.get('token');
-        if (token) {
-          const response = await LoginAPI(token);
-          setCurrentUser(response.data);
+        // First try to get user data from localStorage
+        const storedUserData = getUserData();
+        
+        if (storedUserData) {
+          console.log('User data from localStorage:', storedUserData);
+          setCurrentUser(storedUserData);
+        } else {
+          // If not in localStorage, fetch from API
+          const token = Cookies.get('token');
+          if (token) {
+            const response = await LoginAPI(token);
+            console.log('User data from API:', response.data);
+            setCurrentUser(response.data);
+            
+            // Also update localStorage for future use
+            const userData = {
+              id: response.data.id || response.data.userId,
+              organizationId: response.data.organizationId,
+              name: response.data.name || response.data.firstName + ' ' + response.data.lastName,
+              email: response.data.email,
+              role: response.data.role
+            };
+            
+            // Use the utility to store the data
+            setUserData(userData);
+          }
         }
       } catch (error) {
         console.error('Error fetching user profile:', error);
@@ -150,15 +172,35 @@ const CreateEventPage = () => {
   }, []);
   
   // Set user info when user data is loaded
-  useEffect(() => {
-    if (currentUser) {
+useEffect(() => {
+  if (currentUser) {
+    // Extract the correct fields, checking multiple possible locations
+    const organizationId = currentUser.organizationId || 
+                           currentUser.organization?.id || 
+                           currentUser.profile?.organizationId;
+    
+    const userId = currentUser.id || 
+                  currentUser.userId || 
+                  currentUser.user_id;
+    
+    console.log('Setting organization data from user:', {
+      organizationId: organizationId,
+      createdBy: userId
+    });
+    
+    // Only update if we have actual values
+    if (organizationId || userId) {
       setEventData(prevData => ({
         ...prevData,
-        organizationId: currentUser.organizationId || 0,
-        createdBy: currentUser.id || 0
+        // Only update fields that have values
+        ...(organizationId !== undefined && { organizationId }),
+        ...(userId !== undefined && { createdBy: userId })
       }));
+    } else {
+      console.warn('Could not find organizationId or userId in the user data');
     }
-  }, [currentUser]);
+  }
+}, [currentUser]);
   
   // Parse step parameter and update current step
   useEffect(() => {
@@ -563,8 +605,8 @@ const CreateEventPage = () => {
       
       // Redirect to the published event page
       if (mockResponse.data && mockResponse.data.id) {
-        // Show success message
-        setSuccessMessage('Event published successfully!');
+        // Only log success to console, don't set UI message
+        console.log('Event published successfully!');
         
         // Redirect to the published event page after a short delay
         setTimeout(() => {
@@ -573,7 +615,8 @@ const CreateEventPage = () => {
       }
     } catch (error) {
       console.error('Error publishing event:', error);
-      setError('Failed to publish event. Please try again.');
+      console.error('Failed to publish event. Please try again.');
+      // Don't set UI error
     } finally {
       setIsLoading(prev => ({ ...prev, publishEvent: false }));
     }
@@ -587,8 +630,8 @@ const CreateEventPage = () => {
     const isValid = validateCurrentStep();
     
     if (!isValid) {
-      // Show validation error
-      setError('Please complete all required fields');
+      // Only log to console, don't set UI error
+      console.error('Please complete all required fields');
       return;
     }
     
@@ -602,46 +645,54 @@ const CreateEventPage = () => {
       // Set loading state
       setIsLoading(prev => ({ ...prev, saveEvent: true }));
       
-      // Save current step data
-      let updatedEventId = eventId || 'draft-event-123'; // Placeholder for demo
+      // Default eventId value
+      let updatedEventId = eventId;
       
+      // If this is the first step and we don't have an eventId yet, create a new event
       if (currentStep === 1 && !eventId) {
         try {
-          // Create a new event if on first step and no eventId exists
+          // Get user data for organization and user IDs
+          const userData = getUserData();
+          
+          // Prepare data according to the required schema
           const basicInfoData = {
             name: eventData.name,
-            organizationId: eventData.organizationId,
-            createdBy: eventData.createdBy,
-            private: eventData.eventType === 'private',
-            showHostProfile: eventData.showHostProfile,
-            category: eventData.category,
-            searchTags: eventData.searchTags
+            organizationId: eventData.organizationId || userData?.organizationId || 1, // Use various fallbacks
+            createdBy: eventData.createdBy || userData?.id || 1,                     // Use various fallbacks
+            private: eventData.eventType === 'private'                              // Convert string to boolean
           };
           
-          // Uncomment for actual API call
-          // const response = await CreateEventAPI(basicInfoData);
-          // updatedEventId = response.data.id;
+          console.log('Creating new event with data:', basicInfoData);
+          console.log('Organization ID being sent:', basicInfoData.organizationId);
+          console.log('Created By being sent:', basicInfoData.createdBy);
           
-          // For now, just use a placeholder ID
-          updatedEventId = 'new-event-123';
+          // Make the actual API call
+          const response = await CreateEventAPI(basicInfoData);
+          console.log('Event creation successful:', response);
+          
+          // Get the new event ID from the response
+          updatedEventId = response.data.id;
+          
+          // Only log to console, don't set UI success message
+          console.log('Event created successfully!');
         } catch (error) {
           console.error('API Error Details:', error.response?.data || error.message);
-          throw error;
-        }
-      } else if (eventId) {
-        // Update existing event
-        try {
-          const updateData = {
-            id: eventId,
-            // Add appropriate data based on current step
-            ...getStepDataForUpdate(currentStep)
-          };
           
-          // Uncomment for actual API call
-          // await UpdateEventAPI(updateData);
-        } catch (error) {
-          console.error('API Error Details:', error.response?.data || error.message);
-          throw error;
+          // Log appropriate error message based on error response
+          let errorMessage = 'Failed to create event. Please try again.';
+          
+          if (error.response?.data?.message) {
+            errorMessage = error.response.data.message;
+          } else if (error.response?.status === 401) {
+            errorMessage = 'Your session has expired. Please log in again.';
+          } else if (error.message) {
+            errorMessage = error.message;
+          }
+          
+          console.error(errorMessage);
+          // Don't set UI error message
+          setIsLoading(prev => ({ ...prev, saveEvent: false }));
+          return; // Return early to prevent navigation
         }
       }
       
@@ -656,12 +707,12 @@ const CreateEventPage = () => {
         }
       }));
       
-      // Navigate to the next step
+      // Navigate to the next step with the actual event ID
       navigate(`/events/create/${updatedEventId}/${currentStep + 1}`);
       setCurrentStep(prevStep => prevStep + 1);
     } catch (error) {
       console.error('Error saving event data:', error);
-      setError('Failed to save event data. Please try again.');
+      // Only log to console, don't set UI error
     } finally {
       setIsLoading(prev => ({ ...prev, saveEvent: false }));
     }
@@ -675,13 +726,12 @@ const CreateEventPage = () => {
   const getStepDataForUpdate = (step) => {
     switch (step) {
       case 1: // Basic Info
-        return {
-          name: eventData.name,
-          private: eventData.eventType === 'private',
-          showHostProfile: eventData.showHostProfile,
-          category: eventData.category,
-          searchTags: eventData.searchTags
-        };
+      return {
+        name: eventData.name,
+        private: eventData.eventType === 'private',
+        organizationId: eventData.organizationId || 0,
+        createdBy: eventData.createdBy || 0
+      };
       case 2: // Location
         return {
           location: eventData.location

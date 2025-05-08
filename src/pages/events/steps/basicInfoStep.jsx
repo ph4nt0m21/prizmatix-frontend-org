@@ -1,4 +1,3 @@
-// src/pages/events/steps/BasicInfoStep.jsx
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import styles from './basicInfoStep.module.scss';
