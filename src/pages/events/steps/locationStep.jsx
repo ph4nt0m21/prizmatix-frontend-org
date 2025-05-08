@@ -1,4 +1,3 @@
-// src/pages/events/steps/locationStep.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
 import { UpdateEventLocationAPI } from '../../../services/allApis';
@@ -84,21 +83,29 @@ const LocationStep = ({
   const initializeMap = () => {
     if (!mapRef.current) return;
     
-    // Default to Australia if no coordinates are provided
-    const defaultPosition = { lat: -25.2744, lng: 133.7751 };
+    // Default to New Zealand if no coordinates are provided
+    const defaultPosition = { lat: -41.2865, lng: 174.7762 }; // Wellington, New Zealand
     const position = location.latitude && location.longitude
       ? { lat: parseFloat(location.latitude), lng: parseFloat(location.longitude) }
       : defaultPosition;
       
-    const mapOptions = {
-      center: position,
-      zoom: 4,
-      mapTypeId: activeTab === 'map' ? 'roadmap' : 'satellite',
-      mapTypeControl: false,
-      streetViewControl: false,
-      fullscreenControl: true,
-      zoomControl: true
-    };
+      const mapOptions = {
+        center: position,
+        zoom: 6, // Zoom out a bit more for New Zealand
+        mapTypeId: activeTab === 'map' ? 'roadmap' : 'satellite',
+        mapTypeControl: false,
+        streetViewControl: true, // Enable street view
+        fullscreenControl: true,
+        zoomControl: true,
+        gestureHandling: 'cooperative', // Improved gesture handling
+        styles: [ // Optional custom styling for a more professional look
+          {
+            featureType: 'poi',
+            elementType: 'labels',
+            stylers: [{ visibility: 'off' }] // Hide points of interest labels for cleaner look
+          }
+        ]
+      };
     
     // Create the map
     const map = new window.google.maps.Map(mapRef.current, mapOptions);
@@ -110,6 +117,176 @@ const LocationStep = ({
         position,
         map,
         title: location.venue || 'Selected Location'
+      });
+    }
+    
+    // Add click listener to the map
+    map.addListener('click', (e) => {
+      handleMapClick(e.latLng);
+    });
+  };
+
+  /**
+ * Parse a Google Maps URL to extract coordinates
+ * @param {string} url - Google Maps URL
+ * @returns {Object|null} - Latitude and longitude if found, null otherwise
+ */
+const parseGoogleMapsUrl = (url) => {
+  try {
+    // Handle different Google Maps URL formats
+    
+    // Format: https://www.google.com/maps?q=-41.2865,174.7762
+    let match = url.match(/maps\?q=(-?\d+\.\d+),(-?\d+\.\d+)/);
+    if (match) {
+      return {
+        lat: parseFloat(match[1]),
+        lng: parseFloat(match[2])
+      };
+    }
+    
+    // Format: https://www.google.com/maps/place/.../@-41.2865,174.7762,15z
+    match = url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+    if (match) {
+      return {
+        lat: parseFloat(match[1]),
+        lng: parseFloat(match[2])
+      };
+    }
+    
+    // Format: https://goo.gl/maps/... (short URL)
+    // For short URLs, we would need to expand them first, which requires a server-side solution
+    // For now, inform the user that short links aren't supported
+    if (url.includes('goo.gl/maps')) {
+      alert('Short Google Maps links (goo.gl) are not supported. Please use the full URL from Google Maps.');
+      return null;
+    }
+    
+    // If no matches, inform the user
+    alert('Could not extract coordinates from the provided URL. Please make sure it\'s a valid Google Maps link.');
+    return null;
+  } catch (error) {
+    console.error('Error parsing Google Maps URL:', error);
+    return null;
+  }
+};
+
+/**
+ * Handle pasting a Google Maps link
+ * @param {Event} e - Paste event
+ */
+const handlePasteMapLink = (e) => {
+  // Get pasted text
+  const pastedText = e.clipboardData.getData('text');
+  
+  // Check if it looks like a Google Maps link
+  if (pastedText.includes('google.com/maps') || pastedText.includes('goo.gl/maps')) {
+    e.preventDefault(); // Prevent default paste behavior
+    
+    // Parse the URL to get coordinates
+    const coordinates = parseGoogleMapsUrl(pastedText);
+    if (coordinates) {
+      // Set the search query to the pasted link
+      setLocation(prev => ({
+        ...prev,
+        searchQuery: pastedText
+      }));
+      
+      // Create a Google Maps LatLng object
+      const latLng = new window.google.maps.LatLng(coordinates.lat, coordinates.lng);
+      
+      // Use our existing function to handle the map click with these coordinates
+      handleMapClick(latLng);
+    }
+  }
+};
+
+    /**
+   * Handle clicks on the map
+   * @param {Object} latLng - Google Maps LatLng object
+   */
+  const handleMapClick = (latLng) => {
+    if (isSaving) return; // Don't handle clicks if saving is in progress
+    
+    // Get latitude and longitude
+    const lat = latLng.lat();
+    const lng = latLng.lng();
+    
+    // Update location with coordinates
+    setLocation(prev => ({
+      ...prev,
+      latitude: lat.toString(),
+      longitude: lng.toString()
+    }));
+    
+    // Clear existing markers
+    if (googleMapRef.current) {
+      const map = googleMapRef.current;
+      
+      // Create a new marker at the clicked position
+      new window.google.maps.Marker({
+        position: latLng,
+        map: map,
+        title: 'Selected Location'
+      });
+      
+      // Zoom in to the clicked location
+      map.setZoom(15);
+      map.setCenter(latLng);
+    }
+    
+    // Use Google Maps Geocoding API to get address details from the coordinates
+    if (window.google && window.google.maps) {
+      const geocoder = new window.google.maps.Geocoder();
+      geocoder.geocode({ location: { lat, lng } }, (results, status) => {
+        if (status === 'OK' && results[0]) {
+          const result = results[0];
+          
+          // Extract address components
+          let updatedLocation = {
+            ...location,
+            latitude: lat.toString(),
+            longitude: lng.toString(),
+            searchQuery: result.formatted_address
+          };
+          
+          // Process address components
+          for (const component of result.address_components) {
+            const types = component.types;
+            
+            if (types.includes('street_number')) {
+              updatedLocation.streetNumber = component.long_name;
+            } else if (types.includes('route')) {
+              updatedLocation.street = component.long_name;
+            } else if (types.includes('locality')) {
+              updatedLocation.city = component.long_name;
+            } else if (types.includes('administrative_area_level_1')) {
+              updatedLocation.state = component.long_name;
+            } else if (types.includes('country')) {
+              updatedLocation.country = component.long_name;
+            } else if (types.includes('postal_code')) {
+              updatedLocation.postalCode = component.long_name;
+            }
+          }
+          
+          // Update venue if not set
+          if (!updatedLocation.venue) {
+            // Try to get a meaningful name from the address components
+            const pointOfInterest = result.address_components.find(comp => 
+              comp.types.includes('point_of_interest') || 
+              comp.types.includes('establishment')
+            );
+            
+            if (pointOfInterest) {
+              updatedLocation.venue = pointOfInterest.long_name;
+            } else {
+              // Default to first line of formatted address
+              updatedLocation.venue = result.formatted_address.split(',')[0];
+            }
+          }
+          
+          // Update location state
+          setLocation(updatedLocation);
+        }
       });
     }
   };
@@ -266,7 +443,18 @@ const LocationStep = ({
           
           // Update venue if not set
           if (!updatedLocation.venue) {
-            updatedLocation.venue = result.formatted_address.split(',')[0];
+            // Try to get a meaningful name from the address components
+            const pointOfInterest = result.address_components.find(comp => 
+              comp.types.includes('point_of_interest') || 
+              comp.types.includes('establishment')
+            );
+            
+            if (pointOfInterest) {
+              updatedLocation.venue = pointOfInterest.long_name;
+            } else {
+              // Default to first line of formatted address
+              updatedLocation.venue = result.formatted_address.split(',')[0];
+            }
           }
           
           // Update location state
@@ -274,6 +462,7 @@ const LocationStep = ({
           
           // Update map
           if (googleMapRef.current) {
+            // Clear any existing markers
             googleMapRef.current.setCenter(position);
             googleMapRef.current.setZoom(15);
             
@@ -281,7 +470,8 @@ const LocationStep = ({
             new window.google.maps.Marker({
               position,
               map: googleMapRef.current,
-              title: updatedLocation.venue || 'Selected Location'
+              title: updatedLocation.venue || 'Selected Location',
+              animation: window.google.maps.Animation.DROP // Add animation for better UX
             });
           }
         } else {
@@ -474,14 +664,15 @@ const LocationStep = ({
             
             {/* Search Field */}
             <div className={styles.searchContainer}>
-              <input
+            <input
                 type="text"
                 name="searchQuery"
                 className={`${styles.searchInput} ${errors.searchQuery ? styles.inputError : ''}`}
-                placeholder="Search for a location (e.g., venue name, address, city)"
+                placeholder="Search for a location or paste Google Maps link"
                 value={location.searchQuery}
                 onChange={handleFieldChange}
                 onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                onPaste={handlePasteMapLink}
                 disabled={isSaving}
               />
               <button 
@@ -733,38 +924,6 @@ const LocationStep = ({
                 disabled={isSaving}
               />
             </div>
-
-            {/* Coordinates */}
-            <div className={styles.formRow}>
-              <div className={styles.formGroup}>
-                <label htmlFor="latitude" className={styles.formLabel}>
-                  Latitude
-                </label>
-                <input
-                  type="text"
-                  id="latitude"
-                  name="latitude"
-                  className={styles.formInput}
-                  value={location.latitude}
-                  onChange={handleFieldChange}
-                  disabled={true} // Readonly, set by map
-                />
-              </div>
-              <div className={styles.formGroup}>
-                <label htmlFor="longitude" className={styles.formLabel}>
-                  Longitude
-                </label>
-                <input
-                  type="text"
-                  id="longitude"
-                  name="longitude"
-                  className={styles.formInput}
-                  value={location.longitude}
-                  onChange={handleFieldChange}
-                  disabled={true} // Readonly, set by map
-                />
-              </div>
-            </div>
           </div>
         )}
 
@@ -775,22 +934,6 @@ const LocationStep = ({
             Saving location data...
           </div>
         )}
-
-        {/* Location Tips */}
-        <div className={styles.locationTips}>
-          <h3 className={styles.tipTitle}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 20C7.59 20 4 16.41 4 12C4 7.59 7.59 4 12 4C16.41 4 20 7.59 20 12C20 16.41 16.41 20 12 20ZM11 15H13V17H11V15ZM11 7H13V13H11V7Z" fill="#7C3AED"/>
-            </svg>
-            Location Tips
-          </h3>
-          <ul className={styles.tipsList}>
-            <li>Use the search bar to quickly find and populate location details</li>
-            <li>Make sure the address is accurate to help attendees find your event</li>
-            <li>Add additional information like parking details or entrance instructions</li>
-            <li>For online events, you can add the link in a later step</li>
-          </ul>
-        </div>
       </div>
     </div>
   );
