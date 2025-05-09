@@ -46,7 +46,7 @@ export const prepareLocationDataForAPI = (locationData) => {
   const eventData = getEventData();
   
   return {
-    id: eventData?.id || 0,
+    id: eventData?.eventId || 0,
     locationType: locationData.locationType || 'public',
     eventLocationId: 0, // This would be filled in on update
     venueName: locationData.venue || '',
@@ -83,4 +83,36 @@ const formatAddress = (locationData) => {
   if (locationData.postalCode) components.push(locationData.postalCode);
   
   return components.join(', ');
+};
+
+export const prepareDateTimeDataForAPI = (dateTimeData, eventId = null, isPrivate = false) => {
+  const userData = getUserData();
+  const eventData = getEventData();
+  
+  // Use provided eventId first, or fall back to stored eventId
+  const eventDataId = eventId || eventData?.eventId || 0;
+  
+  // Parse time values
+  const parseTime = (timeStr) => {
+    if (!timeStr) return null;
+    
+    const [hours, minutes] = timeStr.split(':').map(Number);
+    return {
+      hour: hours,
+      minute: minutes,
+      second: 0,
+      nano: 0
+    };
+  };
+  
+  return {
+    id: eventDataId,
+    startDate: dateTimeData.startDate || '',
+    startTime: parseTime(dateTimeData.startTime),
+    endDate: dateTimeData.endDate || '',
+    endTime: parseTime(dateTimeData.endTime),
+    timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone, // Use browser's timezone
+    isPrivate: isPrivate,
+    updatedBy: userData?.id || eventData?.createdBy || 0
+  };
 };

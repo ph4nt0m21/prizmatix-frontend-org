@@ -28,7 +28,7 @@ const LocationStep = ({
   
   // Local state for form management
   const [location, setLocation] = useState({
-    locationType: locationData.locationType || 'public',
+    locationType: locationData.locationType || 'physical',
     isToBeAnnounced: locationData.isToBeAnnounced || false,
     isPrivateLocation: locationData.isPrivateLocation || false,
     searchQuery: locationData.searchQuery || '',

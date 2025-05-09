@@ -1,7 +1,5 @@
-// src/pages/events/steps/dateTimeStep.jsx
 import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
-import { UpdateEventDateTimeAPI } from '../../../services/allApis';
 import styles from './dateTimeStep.module.scss';
 
 /**
@@ -32,58 +30,6 @@ const DateTimeStep = ({
     endTime: dateTimeData.endTime || '',
   });
   
-  // State for validation errors
-  const [errors, setErrors] = useState({});
-
-  // API-related state
-  const [isSaving, setIsSaving] = useState(false);
-  const [apiError, setApiError] = useState(null);
-  
-  /**
-   * Validate the dateTime form
-   * @returns {boolean} Is the form valid
-   */
-  const validateForm = () => {
-    const newErrors = {};
-    
-    // Required fields validation
-    if (!dateTime.startDate) newErrors.startDate = 'Start date is required';
-    if (!dateTime.startTime) newErrors.startTime = 'Start time is required';
-    if (!dateTime.endDate) newErrors.endDate = 'End date is required';
-    if (!dateTime.endTime) newErrors.endTime = 'End time is required';
-    
-    // Validate dates are in correct order
-    if (dateTime.startDate && dateTime.endDate && dateTime.startTime && dateTime.endTime) {
-      const startDateTime = new Date(`${dateTime.startDate}T${dateTime.startTime}`);
-      const endDateTime = new Date(`${dateTime.endDate}T${dateTime.endTime}`);
-      
-      if (endDateTime <= startDateTime) {
-        newErrors.endDate = 'End date/time must be after start date/time';
-      }
-    }
-    
-    // Update errors state
-    setErrors(newErrors);
-    
-    // Form is valid if there are no errors
-    return Object.keys(newErrors).length === 0;
-  };
-  
-  // Effect to propagate dateTime changes to parent component
-  useEffect(() => {
-    // Send the updated dateTime data to parent component
-    handleInputChange({ dateTime }, 'dateTime');
-  }, [dateTime, handleInputChange]);
-  
-  // Update parent component about form validity
-  useEffect(() => {
-    // Tell parent component if form is valid when step is visited
-    if (stepStatus.visited && handleInputChange) {
-      const isFormValid = validateForm();
-      handleInputChange(isFormValid, 'dateTimeValid');
-    }
-  }, [dateTime, stepStatus, handleInputChange]);
-  
   /**
    * Handle input changes
    * @param {Object} e Event object
@@ -95,77 +41,16 @@ const DateTimeStep = ({
       ...prev,
       [name]: value
     }));
-    
-    // Clear validation error for the field when user types
-    if (errors[name]) {
-      setErrors(prev => ({
-        ...prev,
-        [name]: ''
-      }));
-    }
   };
 
-  /**
-   * Save date and time data to API
-   * This function can be used for auto-save functionality
-   * @param {string} eventId - Event ID
-   * @param {Object} userData - Current user data for updatedBy field
-   */
-  const saveDateTimeData = async (eventId, userData) => {
-    if (!validateForm() || !eventId) return;
-    
-    setIsSaving(true);
-    setApiError(null);
-    
-    try {
-      // Parse time values
-      const parseTime = (timeStr) => {
-        const [hours, minutes] = timeStr.split(':').map(Number);
-        return {
-          hour: hours,
-          minute: minutes,
-          second: 0,
-          nano: 0
-        };
-      };
-      
-      // Format date/time data for API
-      const dateTimeApiData = {
-        id: eventId,
-        startDate: dateTime.startDate,
-        startTime: parseTime(dateTime.startTime),
-        endDate: dateTime.endDate,
-        endTime: parseTime(dateTime.endTime),
-        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone, // Use browser's timezone
-        isPrivate: eventData.eventType === 'private',
-        updatedBy: userData?.id || 0
-      };
-      
-      await UpdateEventDateTimeAPI(eventId, dateTimeApiData);
-      
-      // Success handling could be added here
-    } catch (error) {
-      console.error('Error saving date/time data:', error);
-      setApiError('Failed to save date and time information. Please try again.');
-    } finally {
-      setIsSaving(false);
-    }
-  };
+  // Effect to propagate dateTime changes to parent component
+  useEffect(() => {
+    // Send the updated dateTime data to parent component
+    handleInputChange(dateTime, 'dateTime');
+  }, [dateTime, handleInputChange]);
   
   return (
     <div className={styles.stepContainer}>
-      {apiError && (
-        <div className={styles.errorAlert}>
-          {apiError}
-          <button 
-            className={styles.dismissButton}
-            onClick={() => setApiError(null)}
-          >
-            ×
-          </button>
-        </div>
-      )}
-
       <div className={styles.stepHeader}>
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={styles.stepIcon}>
           <path d="M9 11H7V13H9V11ZM13 11H11V13H13V11ZM17 11H15V13H17V11ZM19 4H18V2H16V4H8V2H6V4H5C3.89 4 3.01 4.9 3.01 6L3 20C3 21.1 3.89 22 5 22H19C20.1 22 21 21.1 21 20V6C21 4.9 20.1 4 19 4ZM19 20H5V9H19V20Z" fill="#7C3AED"/>
@@ -193,10 +78,9 @@ const DateTimeStep = ({
                   type="date"
                   id="startDate"
                   name="startDate"
-                  className={`${styles.formInput} ${errors.startDate ? styles.inputError : ''}`}
+                  className={styles.formInput}
                   value={dateTime.startDate}
                   onChange={handleFieldChange}
-                  disabled={isSaving}
                   min={new Date().toISOString().split('T')[0]} // Min date is today
                 />
                 <div className={styles.inputIcon}>
@@ -205,8 +89,8 @@ const DateTimeStep = ({
                   </svg>
                 </div>
               </div>
-              {errors.startDate && (
-                <div className={styles.fieldError}>{errors.startDate}</div>
+              {stepStatus.visited && !dateTime.startDate && (
+                <div className={styles.fieldError}>Start date is required</div>
               )}
             </div>
             
@@ -219,10 +103,9 @@ const DateTimeStep = ({
                   type="time"
                   id="startTime"
                   name="startTime"
-                  className={`${styles.formInput} ${errors.startTime ? styles.inputError : ''}`}
+                  className={styles.formInput}
                   value={dateTime.startTime}
                   onChange={handleFieldChange}
-                  disabled={isSaving}
                 />
                 <div className={styles.inputIcon}>
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -230,8 +113,8 @@ const DateTimeStep = ({
                   </svg>
                 </div>
               </div>
-              {errors.startTime && (
-                <div className={styles.fieldError}>{errors.startTime}</div>
+              {stepStatus.visited && !dateTime.startTime && (
+                <div className={styles.fieldError}>Start time is required</div>
               )}
             </div>
           </div>
@@ -256,10 +139,9 @@ const DateTimeStep = ({
                   type="date"
                   id="endDate"
                   name="endDate"
-                  className={`${styles.formInput} ${errors.endDate ? styles.inputError : ''}`}
+                  className={styles.formInput}
                   value={dateTime.endDate}
                   onChange={handleFieldChange}
-                  disabled={isSaving}
                   min={dateTime.startDate || new Date().toISOString().split('T')[0]} // Min date is start date or today
                 />
                 <div className={styles.inputIcon}>
@@ -268,8 +150,8 @@ const DateTimeStep = ({
                   </svg>
                 </div>
               </div>
-              {errors.endDate && (
-                <div className={styles.fieldError}>{errors.endDate}</div>
+              {stepStatus.visited && !dateTime.endDate && (
+                <div className={styles.fieldError}>End date is required</div>
               )}
             </div>
             
@@ -282,10 +164,9 @@ const DateTimeStep = ({
                   type="time"
                   id="endTime"
                   name="endTime"
-                  className={`${styles.formInput} ${errors.endTime ? styles.inputError : ''}`}
+                  className={styles.formInput}
                   value={dateTime.endTime}
                   onChange={handleFieldChange}
-                  disabled={isSaving}
                 />
                 <div className={styles.inputIcon}>
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -293,8 +174,8 @@ const DateTimeStep = ({
                   </svg>
                 </div>
               </div>
-              {errors.endTime && (
-                <div className={styles.fieldError}>{errors.endTime}</div>
+              {stepStatus.visited && !dateTime.endTime && (
+                <div className={styles.fieldError}>End time is required</div>
               )}
             </div>
           </div>
