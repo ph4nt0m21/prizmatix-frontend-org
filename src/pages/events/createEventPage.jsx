@@ -14,10 +14,10 @@ import TicketsStep from './steps/ticketsStep';
 import DiscountCodesStep from './steps/discountCodesStep';
 import PublishStep from './steps/publishStep';
 import LoadingSpinner from '../../components/common/loadingSpinner/loadingSpinner';
-import { CreateEventAPI, UpdateEventLocationAPI, UpdateEventAPI } from '../../services/allApis';
+import { CreateEventAPI, UpdateEventLocationAPI, UpdateEventDateTimeAPI , UpdateEventAPI } from '../../services/allApis';
 import styles from './createEventPage.module.scss';
 import { getUserData, setUserData } from '../../utils/authUtil';
-import { saveEventData,getEventData, prepareLocationDataForAPI } from '../../utils/eventUtil';
+import { saveEventData, getEventData, prepareLocationDataForAPI, prepareDateTimeDataForAPI } from '../../utils/eventUtil';
 
 /**
  * CreateEventPage component for the multi-step event creation process
@@ -217,8 +217,8 @@ useEffect(() => {
     updateStepStatusFromData(storedEventData);
     
     // Navigate to the event if ID is available
-    if (storedEventData.id) {
-      navigate(`/events/create/${storedEventData.id}/${currentStep}`);
+    if (storedEventData.eventId) {
+      navigate(`/events/create/${storedEventData.eventId}/${currentStep}`);
     }
   }
 }, []);
@@ -679,7 +679,7 @@ useEffect(() => {
           const basicInfoData = {
             name: eventData.name,
             organizationId: eventData.organizationId || userData?.organizationId || 1, // Use various fallbacks
-            createdBy: eventData.createdBy || userData?.id || 1,                     // Use various fallbacks
+            createdBy: eventData.createdBy || userData?.userId || 1,                     // Use various fallbacks
             private: eventData.eventType === 'private'                              // Convert string to boolean
           };
           
@@ -696,7 +696,7 @@ useEffect(() => {
           console.log('Event data saved to localStorage:', response.data);
           
           // Get the new event ID from the response
-          updatedEventId = response.data.id;
+          updatedEventId = response.data.eventId;
           
           // Only log to console, don't set UI success message
           console.log('Event created successfully!');
@@ -740,6 +740,37 @@ useEffect(() => {
         
       } catch (error) {
         console.error('Error updating location:', error);
+        setIsLoading(prev => ({ ...prev, saveEvent: false }));
+        return; // Return early to prevent navigation
+      }
+    }
+
+    // Handle date/time step submission
+    else if (currentStep === 3 && eventId) {
+      try {
+
+        // Determine if the event is private based on event type
+        const isPrivate = eventData.eventType === 'private';
+    
+        // Prepare date/time data for API submission
+        const dateTimeData = prepareDateTimeDataForAPI(eventData.dateTime, eventId, isPrivate);
+        
+        console.log('Submitting date/time data:', dateTimeData);
+        
+        // Make API call to update date/time
+        const response = await UpdateEventDateTimeAPI(eventId, dateTimeData);
+        console.log('Date/time update successful:', response);
+        
+        // Update the saved event data with the new date/time info
+        const currentEventData = getEventData();
+        saveEventData({
+          ...currentEventData,
+          dateTime: response.data
+        });
+        
+      } catch (error) {
+        console.error('Error updating date/time:', error);
+        setError(error.response?.data?.message || 'Failed to update date/time information. Please try again.');
         setIsLoading(prev => ({ ...prev, saveEvent: false }));
         return; // Return early to prevent navigation
       }
