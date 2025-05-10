@@ -11,35 +11,41 @@ import styles from './ticketDetailsModal.module.scss';
  * @param {boolean} props.isOpen Whether the modal is open
  * @param {Function} props.onClose Function to close the modal
  * @param {Function} props.onSave Function to save the ticket
- * @param {string} props.activeStep Current active step in modal
- * @param {Function} props.setActiveStep Function to change active step
  * @returns {JSX.Element} TicketDetailsModal component
  */
 const TicketDetailsModal = ({ 
   ticket = {}, 
   isOpen = false, 
   onClose = () => {}, 
-  onSave = () => {},
-  activeStep = 'basic',
-  setActiveStep = () => {}
+  onSave = () => {}
 }) => {
+  // State for active panel (Basic or Advance)
+  const [activePanel, setActivePanel] = useState('basic');
+  
+  // State for sale date type
+  const [saleDateType, setSaleDateType] = useState('custom');
+  
+  // State for quantity type
+  const [quantityType, setQuantityType] = useState('limited');
+  
   // Local state for ticket data
   const [localTicket, setLocalTicket] = useState({
     name: '',
     price: '',
     quantity: '',
     maxPurchaseAmount: 'No Limit',
+    enableMaxPurchase: false,
+    purchaseLimit: '',
     salesStartDate: '',
     salesStartTime: '',
     salesEndDate: '',
     salesEndTime: '',
     isAdvance: false,
     advanceAmount: '',
+    description: '',
+    saleAfterTicket: '',
     ...ticket
   });
-  
-  // State for validation errors
-  const [errors, setErrors] = useState({});
   
   // Update local ticket when prop changes
   useEffect(() => {
@@ -48,14 +54,25 @@ const TicketDetailsModal = ({
       price: '',
       quantity: '',
       maxPurchaseAmount: 'No Limit',
+      enableMaxPurchase: false,
+      purchaseLimit: '',
       salesStartDate: '',
       salesStartTime: '',
       salesEndDate: '',
       salesEndTime: '',
       isAdvance: false,
       advanceAmount: '',
+      description: '',
+      saleAfterTicket: '',
       ...ticket
     });
+    
+    // Set quantity type based on ticket data
+    if (ticket.quantity === 'No Limit') {
+      setQuantityType('unlimited');
+    } else {
+      setQuantityType('limited');
+    }
   }, [ticket]);
   
   /**
@@ -68,360 +85,32 @@ const TicketDetailsModal = ({
       ...prev,
       [name]: type === 'checkbox' ? checked : value
     }));
-    
-    // Clear error for this field
-    if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: '' }));
-    }
   };
   
   /**
-   * Validate ticket data
-   * @returns {boolean} Whether the ticket data is valid
+   * Handle quantity type change
+   * @param {string} type - Quantity type ('limited' or 'unlimited')
    */
-  const validateTicket = () => {
-    const newErrors = {};
-    
-    // Basic validation
-    if (activeStep === 'basic') {
-      if (!localTicket.name || localTicket.name.trim() === '') {
-        newErrors.name = 'Ticket name is required';
-      }
-      
-      if (!localTicket.price) {
-        newErrors.price = 'Price is required';
-      } else if (isNaN(localTicket.price) || parseFloat(localTicket.price) < 0) {
-        newErrors.price = 'Price must be a valid number';
-      }
-      
-      if (!localTicket.quantity) {
-        newErrors.quantity = 'Quantity is required';
-      } else if (isNaN(localTicket.quantity) || parseInt(localTicket.quantity) <= 0) {
-        newErrors.quantity = 'Quantity must be a positive number';
-      }
-      
-      if (Object.keys(newErrors).length > 0) {
-        setErrors(newErrors);
-        return false;
-      }
+  const handleQuantityTypeChange = (type) => {
+    setQuantityType(type);
+    if (type === 'unlimited') {
+      setLocalTicket(prev => ({
+        ...prev,
+        quantity: 'No Limit'
+      }));
+    } else if (localTicket.quantity === 'No Limit') {
+      setLocalTicket(prev => ({
+        ...prev,
+        quantity: ''
+      }));
     }
-    
-    // Additional validation for other steps can be added here
-    
-    return true;
   };
   
   /**
    * Handle form submission
    */
   const handleSubmit = () => {
-    // If we're on the first step (basic), validate and go to next step
-    if (activeStep === 'basic') {
-      if (validateTicket()) {
-        setActiveStep('pricing');
-      }
-      return;
-    }
-    
-    // If we're on the pricing step, validate and go to next step
-    if (activeStep === 'pricing') {
-      if (validateTicket()) {
-        setActiveStep('sale');
-      }
-      return;
-    }
-    
-    // If we're on the sales step, validate and save
-    if (activeStep === 'sale') {
-      if (validateTicket()) {
-        onSave(localTicket);
-      }
-    }
-  };
-  
-  /**
-   * Handle back button
-   */
-  const handleBack = () => {
-    if (activeStep === 'pricing') {
-      setActiveStep('basic');
-    } else if (activeStep === 'sale') {
-      setActiveStep('pricing');
-    }
-  };
-  
-  /**
-   * Render step content based on active step
-   * @returns {JSX.Element} Step content
-   */
-  const renderStepContent = () => {
-    switch (activeStep) {
-      case 'basic':
-        return (
-          <div className={styles.modalContent}>
-            <h3 className={styles.sectionTitle}>Basic Details</h3>
-            
-            <div className={styles.formGroup}>
-              <label htmlFor="name" className={styles.formLabel}>
-                Ticket Name
-              </label>
-              <input
-                type="text"
-                id="name"
-                name="name"
-                className={`${styles.formInput} ${errors.name ? styles.inputError : ''}`}
-                placeholder="eg. The great Music Festival 2025"
-                value={localTicket.name || ''}
-                onChange={handleInputChange}
-              />
-              {errors.name && <div className={styles.fieldError}>{errors.name}</div>}
-            </div>
-            
-            <div className={styles.formGroup}>
-              <label htmlFor="price" className={styles.formLabel}>
-                Price
-              </label>
-              <div className={styles.inputWithPrefix}>
-                <span className={styles.prefix}>$</span>
-                <input
-                  type="number"
-                  id="price"
-                  name="price"
-                  min="0"
-                  step="0.01"
-                  className={`${styles.formInput} ${styles.withPrefix} ${errors.price ? styles.inputError : ''}`}
-                  placeholder="0.00"
-                  value={localTicket.price || ''}
-                  onChange={handleInputChange}
-                />
-              </div>
-              {errors.price && <div className={styles.fieldError}>{errors.price}</div>}
-            </div>
-            
-            <div className={styles.formGroup}>
-              <label htmlFor="quantity" className={styles.formLabel}>
-                Quantity
-              </label>
-              <input
-                type="number"
-                id="quantity"
-                name="quantity"
-                min="1"
-                className={`${styles.formInput} ${errors.quantity ? styles.inputError : ''}`}
-                placeholder="e.g. 100"
-                value={localTicket.quantity || ''}
-                onChange={handleInputChange}
-              />
-              {errors.quantity && <div className={styles.fieldError}>{errors.quantity}</div>}
-            </div>
-            
-            <div className={styles.formGroup}>
-              <label htmlFor="maxPurchaseAmount" className={styles.formLabel}>
-                Max Purchase Amount
-              </label>
-              <select
-                id="maxPurchaseAmount"
-                name="maxPurchaseAmount"
-                className={styles.formSelect}
-                value={localTicket.maxPurchaseAmount || 'No Limit'}
-                onChange={handleInputChange}
-              >
-                <option value="No Limit">No Limit</option>
-                {[...Array(10)].map((_, i) => (
-                  <option key={i + 1} value={(i + 1).toString()}>
-                    {i + 1}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-        );
-      
-      case 'pricing':
-        return (
-          <div className={styles.modalContent}>
-            <h3 className={styles.sectionTitle}>Pricing & Quantity</h3>
-            
-            <div className={styles.formGroup}>
-              <div className={styles.checkboxContainer}>
-                <input
-                  type="checkbox"
-                  id="isAdvance"
-                  name="isAdvance"
-                  className={styles.checkboxInput}
-                  checked={localTicket.isAdvance || false}
-                  onChange={handleInputChange}
-                />
-                <label htmlFor="isAdvance" className={styles.checkboxLabel}>
-                  Enable advance payment
-                </label>
-              </div>
-              {localTicket.isAdvance && (
-                <div className={`${styles.formGroup} ${styles.indented}`}>
-                  <label htmlFor="advanceAmount" className={styles.formLabel}>
-                    Advance Amount
-                  </label>
-                  <div className={styles.inputWithPrefix}>
-                    <span className={styles.prefix}>$</span>
-                    <input
-                      type="number"
-                      id="advanceAmount"
-                      name="advanceAmount"
-                      min="0"
-                      step="0.01"
-                      className={`${styles.formInput} ${styles.withPrefix} ${errors.advanceAmount ? styles.inputError : ''}`}
-                      placeholder="0.00"
-                      value={localTicket.advanceAmount || ''}
-                      onChange={handleInputChange}
-                    />
-                  </div>
-                  {errors.advanceAmount && (
-                    <div className={styles.fieldError}>{errors.advanceAmount}</div>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
-        );
-      
-      case 'sale':
-        return (
-          <div className={styles.modalContent}>
-            <h3 className={styles.sectionTitle}>
-              Sale start/end
-              <div className={styles.saleTypeSelector}>
-                <button
-                  type="button"
-                  className={`${styles.saleTypeBtn} ${!localTicket.customSaleDates ? styles.active : ''}`}
-                  onClick={() => 
-                    setLocalTicket(prev => ({ ...prev, customSaleDates: false }))
-                  }
-                >
-                  Before/After
-                </button>
-                <button
-                  type="button"
-                  className={`${styles.saleTypeBtn} ${localTicket.customSaleDates ? styles.active : ''}`}
-                  onClick={() => 
-                    setLocalTicket(prev => ({ ...prev, customSaleDates: true }))
-                  }
-                >
-                  Custom
-                </button>
-              </div>
-            </h3>
-            
-            <div className={styles.formGroup}>
-              <label className={styles.formLabel}>
-                Sales Start
-              </label>
-              <p className={styles.formDescription}>
-                Enter the official name of your event that will be displayed to attendees
-              </p>
-              
-              <div className={styles.formRow}>
-                <div className={styles.formGroup}>
-                  <label htmlFor="salesStartDate" className={styles.formLabel}>
-                    Date
-                  </label>
-                  <div className={styles.inputWithIcon}>
-                    <input
-                      type="date"
-                      id="salesStartDate"
-                      name="salesStartDate"
-                      className={styles.formInput}
-                      value={localTicket.salesStartDate || ''}
-                      onChange={handleInputChange}
-                    />
-                    <div className={styles.inputIcon}>
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M19 4H18V2H16V4H8V2H6V4H5C3.89 4 3.01 4.9 3.01 6L3 20C3 21.1 3.89 22 5 22H19C20.1 22 21 21.1 21 20V6C21 4.9 20.1 4 19 4ZM19 20H5V9H19V20ZM7 11H9V13H7V11ZM11 11H13V13H11V11ZM15 11H17V13H15V11Z" fill="#7C3AED"/>
-                      </svg>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className={styles.formGroup}>
-                  <label htmlFor="salesStartTime" className={styles.formLabel}>
-                    Time
-                  </label>
-                  <div className={styles.inputWithIcon}>
-                    <input
-                      type="time"
-                      id="salesStartTime"
-                      name="salesStartTime"
-                      className={styles.formInput}
-                      value={localTicket.salesStartTime || ''}
-                      onChange={handleInputChange}
-                    />
-                    <div className={styles.inputIcon}>
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M11.99 2C6.47 2 2 6.48 2 12C2 17.52 6.47 22 11.99 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 11.99 2ZM12 20C7.58 20 4 16.42 4 12C4 7.58 7.58 4 12 4C16.42 4 20 7.58 20 12C20 16.42 16.42 20 12 20ZM12.5 7V12.25L17 14.92L16.25 16.15L11 13V7H12.5Z" fill="#7C3AED"/>
-                      </svg>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            <div className={styles.formGroup}>
-              <label className={styles.formLabel}>
-                Sales End
-              </label>
-              <p className={styles.formDescription}>
-                Enter the official name of your event that will be displayed to attendees
-              </p>
-              
-              <div className={styles.formRow}>
-                <div className={styles.formGroup}>
-                  <label htmlFor="salesEndDate" className={styles.formLabel}>
-                    Date
-                  </label>
-                  <div className={styles.inputWithIcon}>
-                    <input
-                      type="date"
-                      id="salesEndDate"
-                      name="salesEndDate"
-                      className={styles.formInput}
-                      value={localTicket.salesEndDate || ''}
-                      onChange={handleInputChange}
-                    />
-                    <div className={styles.inputIcon}>
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M19 4H18V2H16V4H8V2H6V4H5C3.89 4 3.01 4.9 3.01 6L3 20C3 21.1 3.89 22 5 22H19C20.1 22 21 21.1 21 20V6C21 4.9 20.1 4 19 4ZM19 20H5V9H19V20ZM7 11H9V13H7V11ZM11 11H13V13H11V11ZM15 11H17V13H15V11Z" fill="#7C3AED"/>
-                      </svg>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className={styles.formGroup}>
-                  <label htmlFor="salesEndTime" className={styles.formLabel}>
-                    Time
-                  </label>
-                  <div className={styles.inputWithIcon}>
-                    <input
-                      type="time"
-                      id="salesEndTime"
-                      name="salesEndTime"
-                      className={styles.formInput}
-                      value={localTicket.salesEndTime || ''}
-                      onChange={handleInputChange}
-                    />
-                    <div className={styles.inputIcon}>
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M11.99 2C6.47 2 2 6.48 2 12C2 17.52 6.47 22 11.99 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 11.99 2ZM12 20C7.58 20 4 16.42 4 12C4 7.58 7.58 4 12 4C16.42 4 20 7.58 20 12C20 16.42 16.42 20 12 20ZM12.5 7V12.25L17 14.92L16.25 16.15L11 13V7H12.5Z" fill="#7C3AED"/>
-                      </svg>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-      
-      default:
-        return null;
-    }
+    onSave(localTicket);
   };
   
   if (!isOpen) return null;
@@ -430,74 +119,336 @@ const TicketDetailsModal = ({
   return (
     <div className={styles.modalOverlay}>
       <div className={styles.modalContainer}>
-        <div className={styles.modalHeader}>
-          <div className={styles.modalTitle}>
-            <h2>Ticket Details</h2>
-            <div className={styles.modalTabs}>
-              <button 
-                type="button"
-                className={`${styles.tabButton} ${activeStep === 'basic' ? styles.active : ''}`}
-                onClick={() => setActiveStep('basic')}
-              >
-                Basic Details
-              </button>
-              <button 
-                type="button"
-                className={`${styles.tabButton} ${activeStep === 'pricing' ? styles.active : ''}`}
-                onClick={() => {
-                  if (validateTicket()) {
-                    setActiveStep('pricing');
-                  }
-                }}
-              >
-                Pricing & Quantity
-              </button>
-              <button 
-                type="button"
-                className={`${styles.tabButton} ${activeStep === 'sale' ? styles.active : ''}`}
-                onClick={() => {
-                  if (validateTicket() && activeStep === 'pricing') {
-                    setActiveStep('sale');
-                  } else if (validateTicket()) {
-                    setActiveStep('pricing');
-                  }
-                }}
-              >
-                Sale start/end
-              </button>
-            </div>
-          </div>
-          <button 
-            className={styles.closeButton} 
-            onClick={onClose}
-            aria-label="Close modal"
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M19 6.41L17.59 5L12 10.59L6.41 5L5 6.41L10.59 12L5 17.59L6.41 19L12 13.41L17.59 19L19 17.59L13.41 12L19 6.41Z" fill="#333333"/>
+        <div className={styles.sidePanel}>
+          <div className={styles.ticketIcon}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M20 12C20 10.9 19.1 10 18 10H17.74C17.9 9.55 18 9.03 18 8.5C18 6.57 16.43 5 14.5 5C13.45 5 12.46 5.45 11.83 6.39C11.35 5.32 10.24 4.5 8.89 4.5C7.16 4.5 5.75 5.91 5.75 7.64C5.75 8.47 6.09 9.24 6.64 9.81C5.09 10.24 4 11.7 4 13.34C4 15.3 5.54 16.91 7.5 16.98V17H18C19.1 17 20 16.1 20 15V12Z" fill="#7C3AED"/>
             </svg>
-          </button>
-        </div>
-        
-        {renderStepContent()}
-        
-        <div className={styles.modalFooter}>
-          {activeStep !== 'basic' && (
+          </div>
+          <h3 className={styles.sidePanelTitle}>New Ticket</h3>
+          <p className={styles.sidePanelSubtitle}>Ticket Advance Options</p>
+          
+          <div className={styles.navigationMenu}>
             <button 
               type="button" 
-              className={styles.backButton}
-              onClick={handleBack}
+              className={`${styles.navItem} ${activePanel === 'basic' ? styles.active : ''}`}
+              onClick={() => setActivePanel('basic')}
             >
-              Back
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M14 2H6C4.9 2 4.01 2.9 4.01 4L4 20C4 21.1 4.89 22 5.99 22H18C19.1 22 20 21.1 20 20V8L14 2ZM16 18H8V16H16V18ZM16 14H8V12H16V14ZM13 9V3.5L18.5 9H13Z" fill="currentColor"/>
+              </svg>
+              Basic Details
             </button>
-          )}
+            
+            <button 
+              type="button" 
+              className={`${styles.navItem} ${activePanel === 'advance' ? styles.active : ''}`}
+              onClick={() => setActivePanel('advance')}
+            >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M19.14 12.94C19.59 12.64 19.89 12.12 19.89 11.5C19.89 10.88 19.59 10.36 19.14 10.06L12.36 5.93C12.08 5.75 11.75 5.65 11.39 5.65C10.32 5.65 9.39 6.55 9.39 7.65V16.35C9.39 17.45 10.32 18.35 11.39 18.35C11.75 18.35 12.08 18.25 12.36 18.07L19.14 13.94C19.59 13.64 19.89 13.12 19.89 12.5C19.89 11.88 19.59 11.36 19.14 11.06Z" fill="currentColor"/>
+                <path d="M4 20H6V4H4V20Z" fill="currentColor"/>
+              </svg>
+              Advance details
+            </button>
+          </div>
+        </div>
+        
+        <div className={styles.contentPanel}>
+          <div className={styles.modalHeader}>
+            <h2 className={styles.modalTitle}>
+              {activePanel === 'basic' ? 'Basic Details' : 'Advance Details'}
+            </h2>
+            <button 
+              className={styles.closeButton} 
+              onClick={onClose}
+              aria-label="Close modal"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M19 6.41L17.59 5L12 10.59L6.41 5L5 6.41L10.59 12L5 17.59L6.41 19L12 13.41L17.59 19L19 17.59L13.41 12L19 6.41Z" fill="#333333"/>
+              </svg>
+            </button>
+          </div>
           
-          <button 
-            type="button" 
-            className={styles.saveButton}
-            onClick={handleSubmit}
-          >
-            {activeStep === 'sale' ? 'Save' : 'Next'}
-          </button>
+          <div className={styles.modalContent}>
+            {activePanel === 'basic' ? (
+              // Basic Details Panel
+              <>
+                <div className={styles.formGroup}>
+                  <label htmlFor="name" className={styles.formLabel}>
+                    Ticket Name
+                  </label>
+                  <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    className={styles.formInput}
+                    placeholder="Early Bird"
+                    value={localTicket.name || ''}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                
+                <div className={styles.formGroup}>
+                  <label htmlFor="price" className={styles.formLabel}>
+                    Ticket Price
+                  </label>
+                  <div className={styles.inputWithPrefix}>
+                    <span className={styles.prefix}>$</span>
+                    <input
+                      type="text"
+                      id="price"
+                      name="price"
+                      className={styles.formInput}
+                      placeholder="0.00"
+                      value={localTicket.price || ''}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                </div>
+                
+                <div className={styles.formGroup}>
+                  <label htmlFor="quantity" className={styles.formLabel}>
+                    Ticket Quantity
+                  </label>
+                  <div className={styles.quantityToggle}>
+                    <div className={styles.saleTypeToggle}>
+                      <button
+                        type="button"
+                        className={`${styles.saleTypeBtn} ${quantityType === 'limited' ? styles.active : ''}`}
+                        onClick={() => handleQuantityTypeChange('limited')}
+                      >
+                        Limited
+                      </button>
+                      <button
+                        type="button"
+                        className={`${styles.saleTypeBtn} ${quantityType === 'unlimited' ? styles.active : ''}`}
+                        onClick={() => handleQuantityTypeChange('unlimited')}
+                      >
+                        Unlimited
+                      </button>
+                    </div>
+                    
+                    {quantityType === 'limited' ? (
+                      <input
+                        type="text"
+                        id="quantity"
+                        name="quantity"
+                        className={styles.formInput}
+                        placeholder="Enter quantity"
+                        value={localTicket.quantity === 'No Limit' ? '' : (localTicket.quantity || '')}
+                        onChange={handleInputChange}
+                      />
+                    ) : (
+                      <div className={styles.noLimitText}>
+                        No limit on the number of tickets
+                      </div>
+                    )}
+                  </div>
+                </div>
+                
+                <div className={styles.formGroup}>
+                  <div className={styles.checkboxContainer}>
+                    <input
+                      type="checkbox"
+                      id="enableMaxPurchase"
+                      name="enableMaxPurchase"
+                      className={styles.checkboxInput}
+                      checked={localTicket.enableMaxPurchase || false}
+                      onChange={handleInputChange}
+                    />
+                    <label htmlFor="enableMaxPurchase" className={styles.checkboxLabel}>
+                      Maximum Purchase Limit
+                    </label>
+                  </div>
+                  
+                  {localTicket.enableMaxPurchase && (
+                    <div className={styles.formGroup}>
+                      <label htmlFor="purchaseLimit" className={styles.formLabel}>
+                        Purchase Limit
+                      </label>
+                      <input
+                        type="text"
+                        id="purchaseLimit"
+                        name="purchaseLimit"
+                        className={styles.formInput}
+                        placeholder="Maximum tickets per order"
+                        value={localTicket.purchaseLimit || ''}
+                        onChange={handleInputChange}
+                      />
+                    </div>
+                  )}
+                </div>
+              </>
+            ) : (
+              // Advance Details Panel
+              <>
+                <div className={styles.formGroup}>
+                  <label htmlFor="description" className={styles.formLabel}>
+                    Description
+                  </label>
+                  <div className={styles.richTextEditor}>
+                    <div className={styles.editorToolbar}>
+                      <button type="button" className={styles.editorButton}>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                          <path d="M3.9 12C3.9 10.29 5.29 8.9 7 8.9H11V7H7C4.24 7 2 9.24 2 12C2 14.76 4.24 17 7 17H11V15.1H7C5.29 15.1 3.9 13.71 3.9 12ZM8 13H16V11H8V13ZM17 7H13V8.9H17C18.71 8.9 20.1 10.29 20.1 12C20.1 13.71 18.71 15.1 17 15.1H13V17H17C19.76 17 22 14.76 22 12C22 9.24 19.76 7 17 7Z" fill="currentColor"/>
+                        </svg>
+                      </button>
+                    </div>
+                    <textarea
+                      id="description"
+                      name="description"
+                      className={styles.editorContent}
+                      placeholder="Enter ticket description"
+                      value={localTicket.description || ''}
+                      onChange={handleInputChange}
+                    ></textarea>
+                  </div>
+                </div>
+                
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>
+                    Sale start/end
+                  </label>
+                  <p className={styles.formHelper}>Discount Codes</p>
+                  
+                  <div className={styles.saleTypeToggle}>
+                    <button
+                      type="button"
+                      className={`${styles.saleTypeBtn} ${saleDateType === 'custom' ? styles.active : ''}`}
+                      onClick={() => setSaleDateType('custom')}
+                    >
+                      Custom
+                    </button>
+                    <button
+                      type="button"
+                      className={`${styles.saleTypeBtn} ${saleDateType === 'beforeAfter' ? styles.active : ''}`}
+                      onClick={() => setSaleDateType('beforeAfter')}
+                    >
+                      Before/After
+                    </button>
+                  </div>
+                  
+                  {saleDateType === 'custom' ? (
+                    // Custom sales dates
+                    <>
+                      <div className={styles.formGroup}>
+                        <label className={styles.formLabel}>
+                          Sales Start
+                        </label>
+                        <p className={styles.formHelper}>
+                          Enter the official name of your event that will be displayed to attendees
+                        </p>
+                        
+                        <div className={styles.formRow}>
+                          <div className={styles.formGroup}>
+                            <label htmlFor="salesStartDate" className={styles.formLabel}>
+                              Date
+                            </label>
+                            <input
+                              type="text"
+                              id="salesStartDate"
+                              name="salesStartDate"
+                              className={styles.formInput}
+                              placeholder="MM/DD/YYYY"
+                              value={localTicket.salesStartDate || ''}
+                              onChange={handleInputChange}
+                            />
+                          </div>
+                          
+                          <div className={styles.formGroup}>
+                            <label htmlFor="salesStartTime" className={styles.formLabel}>
+                              Time
+                            </label>
+                            <input
+                              type="text"
+                              id="salesStartTime"
+                              name="salesStartTime"
+                              className={styles.formInput}
+                              placeholder="HH:MM AM/PM"
+                              value={localTicket.salesStartTime || ''}
+                              onChange={handleInputChange}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className={styles.formGroup}>
+                        <label className={styles.formLabel}>
+                          Sales End
+                        </label>
+                        <p className={styles.formHelper}>
+                          Enter the official name of your event that will be displayed to attendees
+                        </p>
+                        
+                        <div className={styles.formRow}>
+                          <div className={styles.formGroup}>
+                            <label htmlFor="salesEndDate" className={styles.formLabel}>
+                              Date
+                            </label>
+                            <input
+                              type="text"
+                              id="salesEndDate"
+                              name="salesEndDate"
+                              className={styles.formInput}
+                              placeholder="MM/DD/YYYY"
+                              value={localTicket.salesEndDate || ''}
+                              onChange={handleInputChange}
+                            />
+                          </div>
+                          
+                          <div className={styles.formGroup}>
+                            <label htmlFor="salesEndTime" className={styles.formLabel}>
+                              Time
+                            </label>
+                            <input
+                              type="text"
+                              id="salesEndTime"
+                              name="salesEndTime"
+                              className={styles.formInput}
+                              placeholder="HH:MM AM/PM"
+                              value={localTicket.salesEndTime || ''}
+                              onChange={handleInputChange}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    // Before/After sales
+                    <div className={styles.formGroup}>
+                      <label className={styles.formLabel}>
+                        Sales After
+                      </label>
+                      <p className={`${styles.formHelper} ${styles.salesAfter}`}>
+                        Start sales after the selected ticket is sold out
+                      </p>
+                      
+                      <input
+                        type="text"
+                        id="saleAfterTicket"
+                        name="saleAfterTicket"
+                        className={styles.formInput}
+                        placeholder="Select ticket type"
+                        value={localTicket.saleAfterTicket || ''}
+                        onChange={handleInputChange}
+                      />
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
+          
+          <div className={styles.modalFooter}>
+            <button 
+              type="button" 
+              className={styles.createButton}
+              onClick={handleSubmit}
+            >
+              Create Ticket
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -508,9 +459,7 @@ TicketDetailsModal.propTypes = {
   ticket: PropTypes.object,
   isOpen: PropTypes.bool,
   onClose: PropTypes.func,
-  onSave: PropTypes.func,
-  activeStep: PropTypes.string,
-  setActiveStep: PropTypes.func
+  onSave: PropTypes.func
 };
 
 export default TicketDetailsModal;
