@@ -105,12 +105,12 @@ export const UpdateEventTicketsAPI = async (eventId, ticketsData) => {
 
 // Step 7: Update event discount codes
 export const UpdateEventDiscountCodesAPI = async (eventId, discountCodesData) => {
-  return await apiClient.post(`/api/events/${eventId}/discount-codes`, discountCodesData);
+  return await apiClient.put(`/api/events/${eventId}/discount-codes`, discountCodesData);
 };
 
 // Step 8: Publish event
 export const PublishEventAPI = async (eventId, publishData) => {
-  return await apiClient.post(`/api/events/${eventId}/publish`, publishData);
+  return await apiClient.put(`/api/events/${eventId}/publish`, publishData);
 };
 
 // =============== EVENT DATA FETCHING APIs ===============

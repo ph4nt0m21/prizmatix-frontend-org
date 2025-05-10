@@ -29,9 +29,6 @@ const DiscountCodeModal = ({
     ...discountCode
   });
   
-  // State for validation errors
-  const [errors, setErrors] = useState({});
-  
   // Update local discount code when prop changes
   useEffect(() => {
     setLocalDiscountCode({
@@ -54,65 +51,13 @@ const DiscountCodeModal = ({
       ...prev,
       [name]: value
     }));
-    
-    // Clear error for this field
-    if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: '' }));
-    }
-  };
-  
-  /**
-   * Validate discount code data
-   * @returns {boolean} Whether the discount code data is valid
-   */
-  const validateDiscountCode = () => {
-    const newErrors = {};
-    
-    // Validate required fields
-    if (!localDiscountCode.code || localDiscountCode.code.trim() === '') {
-      newErrors.code = 'Discount code is required';
-    }
-    
-    if (!localDiscountCode.discountPercentage) {
-      newErrors.discountPercentage = 'Discount percentage is required';
-    } else if (isNaN(localDiscountCode.discountPercentage) || 
-               parseFloat(localDiscountCode.discountPercentage) < 0 || 
-               parseFloat(localDiscountCode.discountPercentage) > 100) {
-      newErrors.discountPercentage = 'Discount percentage must be between 0 and 100';
-    }
-    
-    if (!localDiscountCode.maxDiscountAmount) {
-      newErrors.maxDiscountAmount = 'Max discount amount is required';
-    } else if (isNaN(localDiscountCode.maxDiscountAmount) || 
-               parseFloat(localDiscountCode.maxDiscountAmount) < 0) {
-      newErrors.maxDiscountAmount = 'Max discount amount must be a valid number';
-    }
-    
-    if (!localDiscountCode.minDiscountAmount) {
-      newErrors.minDiscountAmount = 'Min discount amount is required';
-    } else if (isNaN(localDiscountCode.minDiscountAmount) || 
-               parseFloat(localDiscountCode.minDiscountAmount) < 0) {
-      newErrors.minDiscountAmount = 'Min discount amount must be a valid number';
-    }
-    
-    if (!localDiscountCode.quantity) {
-      newErrors.quantity = 'Quantity is required';
-    } else if (isNaN(localDiscountCode.quantity) || 
-               parseInt(localDiscountCode.quantity) <= 0) {
-      newErrors.quantity = 'Quantity must be a positive number';
-    }
-    
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
   };
   
   /**
    * Handle form submission
    */
   const handleSubmit = () => {
-    if (validateDiscountCode()) {
-      onSave(localDiscountCode);
-    }
+    onSave(localDiscountCode);
   };
   
   if (!isOpen) return null;
@@ -145,12 +90,11 @@ const DiscountCodeModal = ({
               type="text"
               id="code"
               name="code"
-              className={`${styles.formInput} ${errors.code ? styles.inputError : ''}`}
+              className={styles.formInput}
               placeholder="e.g. EARLY10"
               value={localDiscountCode.code || ''}
               onChange={handleInputChange}
             />
-            {errors.code && <div className={styles.fieldError}>{errors.code}</div>}
           </div>
           
           <div className={styles.formGroup}>
@@ -163,12 +107,11 @@ const DiscountCodeModal = ({
               name="discountPercentage"
               min="0"
               max="100"
-              className={`${styles.formInput} ${errors.discountPercentage ? styles.inputError : ''}`}
+              className={styles.formInput}
               placeholder="e.g. 10"
               value={localDiscountCode.discountPercentage || ''}
               onChange={handleInputChange}
             />
-            {errors.discountPercentage && <div className={styles.fieldError}>{errors.discountPercentage}</div>}
           </div>
           
           <div className={styles.formRow}>
@@ -184,13 +127,12 @@ const DiscountCodeModal = ({
                   name="maxDiscountAmount"
                   min="0"
                   step="0.01"
-                  className={`${styles.formInput} ${styles.withPrefix} ${errors.maxDiscountAmount ? styles.inputError : ''}`}
+                  className={`${styles.formInput} ${styles.withPrefix}`}
                   placeholder="0.00"
                   value={localDiscountCode.maxDiscountAmount || ''}
                   onChange={handleInputChange}
                 />
               </div>
-              {errors.maxDiscountAmount && <div className={styles.fieldError}>{errors.maxDiscountAmount}</div>}
             </div>
             
             <div className={styles.formGroup}>
@@ -205,13 +147,12 @@ const DiscountCodeModal = ({
                   name="minDiscountAmount"
                   min="0"
                   step="0.01"
-                  className={`${styles.formInput} ${styles.withPrefix} ${errors.minDiscountAmount ? styles.inputError : ''}`}
+                  className={`${styles.formInput} ${styles.withPrefix}`}
                   placeholder="0.00"
                   value={localDiscountCode.minDiscountAmount || ''}
                   onChange={handleInputChange}
                 />
               </div>
-              {errors.minDiscountAmount && <div className={styles.fieldError}>{errors.minDiscountAmount}</div>}
             </div>
           </div>
           
@@ -224,12 +165,11 @@ const DiscountCodeModal = ({
               id="quantity"
               name="quantity"
               min="1"
-              className={`${styles.formInput} ${errors.quantity ? styles.inputError : ''}`}
+              className={styles.formInput}
               placeholder="e.g. 100"
               value={localDiscountCode.quantity || ''}
               onChange={handleInputChange}
             />
-            {errors.quantity && <div className={styles.fieldError}>{errors.quantity}</div>}
           </div>
         </div>
         

@@ -1,7 +1,6 @@
 // src/pages/events/steps/publishStep.jsx
 import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
-import { PublishEventAPI } from '../../../services/allApis';
 import styles from './steps.module.scss';
 
 /**
@@ -13,7 +12,6 @@ import styles from './steps.module.scss';
  * @param {Function} props.handleInputChange Function to handle input changes
  * @param {boolean} props.isValid Whether the form is valid
  * @param {Object} props.stepStatus Status of this step
- * @param {Function} props.handlePublish Function to handle event publish
  * @param {boolean} props.isPublishing Whether the event is being published
  * @returns {JSX.Element} PublishStep component
  */
@@ -22,11 +20,9 @@ const PublishStep = ({
   handleInputChange = () => {}, 
   isValid = false, 
   stepStatus = { visited: false },
-  handlePublish = () => {},
   isPublishing = false
 }) => {
   // API-related state
-  const [apiError, setApiError] = useState(null);
   const [publishSuccess, setPublishSuccess] = useState(false);
   
   // Format date for display
@@ -52,44 +48,6 @@ const PublishStep = ({
     const ampm = hour >= 12 ? 'pm' : 'am';
     const hour12 = hour % 12 || 12;
     return `${hour12}${ampm}`;
-  };
-  
-  /**
-   * Handle publish button click with API call
-   * @param {string} eventId - Event ID
-   * @param {Object} userData - Current user data for updatedBy field
-   */
-  const publishEvent = async (eventId, userData) => {
-    if (!isValid || !eventId) {
-      setApiError('Please complete all required steps before publishing.');
-      return;
-    }
-    
-    setApiError(null);
-    
-    try {
-      // Prepare the publish data for API
-      const publishData = {
-        id: eventId,
-        publishEvent: true,
-        updatedBy: userData?.id || 0
-      };
-      
-      // Call the publish API
-      await PublishEventAPI(eventId, publishData);
-      
-      // Show success message
-      setPublishSuccess(true);
-      
-      // Call parent's handlePublish if provided
-      if (handlePublish) {
-        handlePublish();
-      }
-      
-    } catch (error) {
-      console.error('Error publishing event:', error);
-      setApiError('Failed to publish event. Please try again.');
-    }
   };
   
   // Handle preview button click
@@ -169,18 +127,6 @@ const PublishStep = ({
   
   return (
     <div className={styles.stepContainer}>
-      {apiError && (
-        <div className={styles.errorAlert}>
-          {apiError}
-          <button 
-            className={styles.dismissButton}
-            onClick={() => setApiError(null)}
-          >
-            ×
-          </button>
-        </div>
-      )}
-      
       {publishSuccess && (
         <div className={styles.successAlert}>
           Your event has been published successfully! Redirecting to event page...
@@ -198,14 +144,6 @@ const PublishStep = ({
               disabled={isPublishing}
             >
               Open in new tab
-            </button>
-            <button 
-              type="button" 
-              onClick={() => publishEvent(eventData.id, eventData)}
-              className={styles.publishButton}
-              disabled={isPublishing || !isReadyToPublish}
-            >
-              {isPublishing ? 'Publishing...' : 'Publish Event'}
             </button>
           </div>
         </div>
@@ -362,7 +300,6 @@ PublishStep.propTypes = {
   handleInputChange: PropTypes.func,
   isValid: PropTypes.bool,
   stepStatus: PropTypes.object,
-  handlePublish: PropTypes.func,
   isPublishing: PropTypes.bool
 };
 
