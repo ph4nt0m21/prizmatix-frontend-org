@@ -100,7 +100,7 @@ export const UploadEventBannerAPI = async (eventId, bannerData) => {
 
 // Step 6: Update event tickets
 export const UpdateEventTicketsAPI = async (eventId, ticketsData) => {
-  return await apiClient.post(`/api/events/${eventId}/tickets`, ticketsData);
+  return await apiClient.put(`/api/events/${eventId}/tickets`, ticketsData);
 };
 
 // Step 7: Update event discount codes

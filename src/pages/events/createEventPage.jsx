@@ -14,10 +14,10 @@ import TicketsStep from './steps/ticketsStep';
 import DiscountCodesStep from './steps/discountCodesStep';
 import PublishStep from './steps/publishStep';
 import LoadingSpinner from '../../components/common/loadingSpinner/loadingSpinner';
-import { CreateEventAPI, UpdateEventLocationAPI, UpdateEventDateTimeAPI ,UpdateEventDescriptionAPI, UpdateEventAPI, UploadEventBannerAPI } from '../../services/allApis';
+import { CreateEventAPI, UpdateEventLocationAPI, UpdateEventDateTimeAPI ,UpdateEventDescriptionAPI, UpdateEventAPI, UploadEventBannerAPI, UpdateEventTicketsAPI } from '../../services/allApis';
 import styles from './createEventPage.module.scss';
 import { getUserData, setUserData } from '../../utils/authUtil';
-import { saveEventData, getEventData, prepareLocationDataForAPI, prepareDateTimeDataForAPI, prepareDescriptionDataForAPI, prepareArtDataForAPI } from '../../utils/eventUtil';
+import { saveEventData, getEventData, prepareLocationDataForAPI, prepareDateTimeDataForAPI, prepareDescriptionDataForAPI, prepareArtDataForAPI, prepareTicketsDataForAPI } from '../../utils/eventUtil';
 
 /**
  * CreateEventPage component for the multi-step event creation process
@@ -479,7 +479,14 @@ useEffect(() => {
     
     // Helper function to validate a file
     const isFileValid = (file, supportedTypes, maxSizeMB) => {
+      // Return true if file is empty (no validation needed)
       if (!file) return true;
+      
+      // Make sure the file has a name property before trying to use split()
+      if (!file.name) {
+        console.warn('File object does not have a name property:', file);
+        return false;
+      }
       
       // Check file type
       const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
@@ -507,22 +514,49 @@ useEffect(() => {
   };
 
   /**
-   * Validate the Tickets step
-   * @returns {boolean} Is the Tickets step valid
-   */
-  const validateTickets = () => {
-    // Check if there is at least one ticket
-    if (!eventData.tickets || eventData.tickets.length === 0) {
-      return false;
+ * Validate the Tickets step
+ * @returns {boolean} Is the Tickets step valid
+ */
+const validateTickets = () => {
+  // Check if there is at least one ticket
+  if (!eventData.tickets || eventData.tickets.length === 0) {
+    return false;
+  }
+  
+  // Check if all tickets have required fields
+  const invalidTickets = eventData.tickets.filter(ticket => {
+    // Basic required fields validation
+    if (!ticket.name || ticket.name.trim() === '') {
+      return true; // Invalid
     }
     
-    // Check if all tickets have required fields
-    const invalidTickets = eventData.tickets.filter(ticket => {
-      return !ticket.name || !ticket.price || !ticket.quantity;
-    });
+    // Price validation
+    if (!ticket.price) {
+      return true; // Invalid
+    } 
     
-    return invalidTickets.length === 0;
-  };  
+    // Price must be a valid positive number
+    if (isNaN(ticket.price) || parseFloat(ticket.price) < 0) {
+      return true; // Invalid
+    }
+    
+    // Quantity validation - if not "No Limit", must be a positive number
+    if (ticket.quantity !== 'No Limit') {
+      if (!ticket.quantity || isNaN(ticket.quantity) || parseInt(ticket.quantity) <= 0) {
+        return true; // Invalid
+      }
+    }
+    
+    // If purchase limit is enabled, it must have a value
+    if (ticket.enableMaxPurchase && (!ticket.purchaseLimit || parseInt(ticket.purchaseLimit) <= 0)) {
+      return true; // Invalid
+    }
+    
+    return false; // Valid ticket
+  });
+  
+  return invalidTickets.length === 0;
+};
 
   /**
    * Validate the Discount Codes step
@@ -808,74 +842,94 @@ useEffect(() => {
     }
 
     // Handle art step submission
-else if (currentStep === 5 && eventId) {
-  try {
-    // We'll handle uploads for both thumbnail and banner if they exist
-    // First, let's check if there are any files to upload
-    const hasThumbnail = eventData.art?.thumbnailFile !== null;
-    const hasBanner = eventData.art?.bannerFile !== null;
-    
-    console.log('Art data to be uploaded:', {
-      hasThumbnail,
-      hasBanner,
-      thumbnailName: eventData.art?.thumbnailName,
-      bannerName: eventData.art?.bannerName
-    });
-    
-    // Upload thumbnail if exists
-    if (hasThumbnail) {
-      const thumbnailFormData = prepareArtDataForAPI(eventData.art, eventId, 'thumbnail');
-      
-      // Configure upload with progress tracking if needed
-      const config = {
-        headers: {
-          'Content-Type': 'multipart/form-data',
+    else if (currentStep === 5 && eventId) {
+      try {
+        // Check if there are any files selected
+        const hasThumbnail = eventData.art?.thumbnailFile !== null;
+        const hasBanner = eventData.art?.bannerFile !== null;
+        
+        console.log('Art data to be uploaded:', {
+          hasThumbnail,
+          hasBanner,
+          thumbnailName: eventData.art?.thumbnailName,
+          bannerName: eventData.art?.bannerName
+        });
+        
+        // First, we need to upload the actual files to your server (this is a separate process)
+        // For now, we'll assume the files are uploaded elsewhere and we're just sending the file names
+        
+        // Prepare the JSON payload for the API
+        if (hasBanner) {
+          const bannerData = prepareArtDataForAPI(eventData.art, eventId, 'banner');
+          
+          console.log('Sending banner data:', bannerData);
+          
+          // Make API call to update banner info
+          const bannerResponse = await UploadEventBannerAPI(eventId, bannerData);
+          console.log('Banner update successful:', bannerResponse);
+          
+          // Update the saved event data with the new art info
+          const currentEventData = getEventData();
+          saveEventData({
+            ...currentEventData,
+            art: {
+              ...currentEventData.art,
+              ...eventData.art
+            }
+          });
         }
-      };
-      
-      console.log('Uploading thumbnail...');
-      const thumbnailResponse = await UploadEventBannerAPI(eventId, thumbnailFormData, config);
-      console.log('Thumbnail upload successful:', thumbnailResponse);
-    }
-    
-    // Upload banner if exists
-    if (hasBanner) {
-      const bannerFormData = prepareArtDataForAPI(eventData.art, eventId, 'banner');
-      
-      // Configure upload with progress tracking if needed
-      const config = {
-        headers: {
-          'Content-Type': 'multipart/form-data',
+        
+        // Handle thumbnail similarly if needed
+        if (hasThumbnail) {
+          const thumbnailData = prepareArtDataForAPI(eventData.art, eventId, 'thumbnail');
+          
+          console.log('Sending thumbnail data:', thumbnailData);
+          
+          // Make API call to update thumbnail info (might need a separate endpoint)
+          // For now, using the same endpoint
+          const thumbnailResponse = await UploadEventBannerAPI(eventId, thumbnailData);
+          console.log('Thumbnail update successful:', thumbnailResponse);
         }
-      };
-      
-      console.log('Uploading banner...');
-      const bannerResponse = await UploadEventBannerAPI(eventId, bannerFormData, config);
-      console.log('Banner upload successful:', bannerResponse);
-      
-      // Update the saved event data with the new art info
-      const currentEventData = getEventData();
-      saveEventData({
-        ...currentEventData,
-        art: {
-          ...currentEventData.art,
-          ...eventData.art // Update with the current art data
+        
+        // If no files to upload, still proceed
+        if (!hasThumbnail && !hasBanner) {
+          console.log('No art files to upload, skipping API call');
         }
-      });
+        
+      } catch (error) {
+        console.error('Error updating art information:', error);
+        setError(error.response?.data?.message || 'Failed to update image information. Please try again.');
+        setIsLoading(prev => ({ ...prev, saveEvent: false }));
+        return; // Return early to prevent navigation
+      }
     }
-    
-    // If no files to upload, still proceed
-    if (!hasThumbnail && !hasBanner) {
-      console.log('No art files to upload, skipping API call');
+
+    // Handle tickets step submission
+    else if (currentStep === 6 && eventId) {
+      try {
+        // Prepare tickets data for API submission
+        const ticketsData = prepareTicketsDataForAPI(eventData.tickets, eventId);
+        
+        console.log('Submitting tickets data:', ticketsData);
+        
+        // Make API call to update tickets
+        const response = await UpdateEventTicketsAPI(eventId, ticketsData);
+        console.log('Tickets update successful:', response);
+        
+        // Update the saved event data with the new tickets info
+        const currentEventData = getEventData();
+        saveEventData({
+          ...currentEventData,
+          tickets: eventData.tickets
+        });
+        
+      } catch (error) {
+        console.error('Error updating tickets:', error);
+        setError(error.response?.data?.message || 'Failed to update ticket information. Please try again.');
+        setIsLoading(prev => ({ ...prev, saveEvent: false }));
+        return; // Return early to prevent navigation
+      }
     }
-    
-  } catch (error) {
-    console.error('Error uploading art files:', error);
-    setError(error.response?.data?.message || 'Failed to upload images. Please try again.');
-    setIsLoading(prev => ({ ...prev, saveEvent: false }));
-    return; // Return early to prevent navigation
-  }
-}
       
       // Mark current step as completed
       const stepKey = getStepKeyByNumber(currentStep);
@@ -1117,17 +1171,6 @@ else if (currentStep === 5 && eventId) {
             />
             
             <div className={styles.mainContent}>
-              {error && (
-                <div className={styles.errorMessage}>
-                  {error}
-                  <button 
-                    className={styles.dismissButton}
-                    onClick={() => setError(null)}
-                  >
-                    ✕
-                  </button>
-                </div>
-              )}
               
               {successMessage && (
                 <div className={styles.successMessage}>
