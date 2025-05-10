@@ -90,6 +90,12 @@ const ArtStep = ({
    * @returns {boolean} Whether file type is supported
    */
   const isFileTypeSupported = (file) => {
+    // Make sure the file has a name property before trying to use split()
+    if (!file || !file.name) {
+      console.warn('File object does not have a name property:', file);
+      return false;
+    }
+    
     const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
     return supportedTypes.includes(fileExtension);
   };
@@ -101,20 +107,36 @@ const ArtStep = ({
    * @returns {boolean} Whether file size is within limit
    */
   const isFileSizeValid = (file, maxSizeMB) => {
+    // Make sure the file has a size property
+    if (!file || !file.size) {
+      console.warn('File object does not have a size property:', file);
+      return false;
+    }
+    
     const fileSizeMB = file.size / (1024 * 1024);
     return fileSizeMB <= maxSizeMB;
   };
-  
+
   /**
    * Handle file selection change
    * @param {string} type - 'thumbnail' or 'banner'
    * @param {File} file - Selected file
    */
   const handleFileChange = (type, file) => {
-    if (!file) return;
+    if (!file) {
+      console.warn('No file provided to handleFileChange');
+      return;
+    }
     
-    // Simple validation (can be moved to parent component if needed)
+    // Make sure the file is valid before proceeding
+    if (!file.name || !file.size) {
+      console.warn('Invalid file object:', file);
+      return;
+    }
+    
+    // Simple validation
     if (!isFileTypeSupported(file) || !isFileSizeValid(file, maxSizes[type])) {
+      console.warn('File validation failed:', file);
       return;
     }
     

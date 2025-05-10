@@ -14,10 +14,10 @@ import TicketsStep from './steps/ticketsStep';
 import DiscountCodesStep from './steps/discountCodesStep';
 import PublishStep from './steps/publishStep';
 import LoadingSpinner from '../../components/common/loadingSpinner/loadingSpinner';
-import { CreateEventAPI, UpdateEventLocationAPI, UpdateEventDateTimeAPI ,UpdateEventDescriptionAPI, UpdateEventAPI, UploadEventBannerAPI, UpdateEventTicketsAPI } from '../../services/allApis';
+import { CreateEventAPI, UpdateEventLocationAPI, UpdateEventDateTimeAPI ,UpdateEventDescriptionAPI, UpdateEventAPI, UploadEventBannerAPI, UpdateEventTicketsAPI, UpdateEventDiscountCodesAPI, PublishEventAPI } from '../../services/allApis';
 import styles from './createEventPage.module.scss';
 import { getUserData, setUserData } from '../../utils/authUtil';
-import { saveEventData, getEventData, prepareLocationDataForAPI, prepareDateTimeDataForAPI, prepareDescriptionDataForAPI, prepareArtDataForAPI, prepareTicketsDataForAPI } from '../../utils/eventUtil';
+import { saveEventData, getEventData, prepareLocationDataForAPI, prepareDateTimeDataForAPI, prepareDescriptionDataForAPI, prepareArtDataForAPI, prepareTicketsDataForAPI, prepareDiscountCodesDataForAPI,preparePublishEventDataForAPI } from '../../utils/eventUtil';
 
 /**
  * CreateEventPage component for the multi-step event creation process
@@ -559,25 +559,56 @@ const validateTickets = () => {
 };
 
   /**
-   * Validate the Discount Codes step
-   * @returns {boolean} Is the Discount Codes step valid
-   */
+ * Validate the Discount Codes step
+ * @returns {boolean} Is the Discount Codes step valid
+ */
   const validateDiscountCodes = () => {
-    // Discount codes are optional, so it's always valid
-    // But if there are discount codes, they must be valid
-    if (!eventData.discountCodes || eventData.discountCodes.length === 0) {
-      return true;
+  // Discount codes are optional, so it's always valid if empty
+  if (!eventData.discountCodes || eventData.discountCodes.length === 0) {
+    return true;
+  }
+  
+  // Check if all discount codes have required fields
+  const invalidDiscountCodes = eventData.discountCodes.filter(code => {
+    // Basic required fields validation
+    if (!code.code || code.code.trim() === '') {
+      return true; // Invalid
     }
     
-    // Check if all discount codes have required fields
-    const invalidDiscountCodes = eventData.discountCodes.filter(code => {
-      return !code.code || !code.discountPercentage || 
-             !code.maxDiscountAmount || !code.minDiscountAmount || 
-             !code.quantity;
-    });
+    // Discount percentage validation
+    if (!code.discountPercentage || 
+        isNaN(code.discountPercentage) || 
+        parseFloat(code.discountPercentage) < 0 || 
+        parseFloat(code.discountPercentage) > 100) {
+      return true; // Invalid
+    }
     
-    return invalidDiscountCodes.length === 0;
-  };
+    // Max discount amount validation
+    if (!code.maxDiscountAmount ||
+        isNaN(code.maxDiscountAmount) ||
+        parseFloat(code.maxDiscountAmount) < 0) {
+      return true; // Invalid
+    }
+    
+    // Min discount amount validation
+    if (!code.minDiscountAmount ||
+        isNaN(code.minDiscountAmount) ||
+        parseFloat(code.minDiscountAmount) < 0) {
+      return true; // Invalid
+    }
+    
+    // Quantity validation
+    if (!code.quantity ||
+        isNaN(code.quantity) ||
+        parseInt(code.quantity) <= 0) {
+      return true; // Invalid
+    }
+    
+    return false; // Valid discount code
+  });
+  
+  return invalidDiscountCodes.length === 0;
+};
   
   /**
    * Validate the Publish step
@@ -591,27 +622,27 @@ const validateTickets = () => {
       return false;
     }
     
-    // Location validation - either TBA or has location details
-    if (!eventData.location.isToBeAnnounced && 
-        (!eventData.location.venue || !eventData.location.city || !eventData.location.country)) {
-      return false;
-    }
+    // // Location validation - either TBA or has location details
+    // if (!eventData.location.isToBeAnnounced && 
+    //     (!eventData.location.venue || !eventData.location.city || !eventData.location.country)) {
+    //   return false;
+    // }
     
-    // Date/Time validation
-    if (!eventData.dateTime.startDate || !eventData.dateTime.startTime || 
-        !eventData.dateTime.endDate || !eventData.dateTime.endTime) {
-      return false;
-    }
+    // // Date/Time validation
+    // if (!eventData.dateTime.startDate || !eventData.dateTime.startTime || 
+    //     !eventData.dateTime.endDate || !eventData.dateTime.endTime) {
+    //   return false;
+    // }
     
-    // Description validation
-    if (!eventData.description) {
-      return false;
-    }
+    // // Description validation
+    // if (!eventData.description) {
+    //   return false;
+    // }
     
-    // Tickets validation - at least one ticket is required
-    if (!eventData.tickets || eventData.tickets.length === 0) {
-      return false;
-    }
+    // // Tickets validation - at least one ticket is required
+    // if (!eventData.tickets || eventData.tickets.length === 0) {
+    //   return false;
+    // }
     
     // All required steps are valid
     return true;
@@ -636,7 +667,7 @@ const validateTickets = () => {
     }
   };
 
-  /**
+   /**
    * Handle publishing the event
    */
   const handlePublishEvent = async () => {
@@ -644,34 +675,30 @@ const validateTickets = () => {
       // Set loading state
       setIsLoading(prev => ({ ...prev, publishEvent: true }));
       
-      // Prepare the event data for publishing
-      const publishEventData = {
-        ...eventData,
-        publishStatus: 'published',
-        publishedAt: new Date().toISOString()
-      };
+      // Prepare the publish data for API using the utility function
+      const publishData = preparePublishEventDataForAPI(eventId);
+      
+      console.log('Publishing event with data:', publishData);
       
       // Make API call to publish the event
-      // Uncomment for actual implementation
-      // const response = await PublishEventAPI(eventId, publishEventData);
+      const response = await PublishEventAPI(eventId, publishData);
+      console.log('Event published successfully:', response);
       
-      // Simulate API call for now
-      const mockResponse = { data: { id: eventId || 'new-event-123' } };
+      // Update saved event data
+      const currentEventData = getEventData();
+      saveEventData({
+        ...currentEventData,
+        publishStatus: 'published',
+        publishedAt: new Date().toISOString()
+      });
       
-      // Redirect to the published event page
-      if (mockResponse.data && mockResponse.data.id) {
-        // Only log success to console, don't set UI message
-        console.log('Event published successfully!');
-        
-        // Redirect to the published event page after a short delay
-        setTimeout(() => {
-          navigate(`/events/${mockResponse.data.id}`);
-        }, 1500);
-      }
+      // Redirect to the published event page after a short delay
+      setTimeout(() => {
+        navigate(`/events/${eventId}`);
+      }, 1500);
     } catch (error) {
       console.error('Error publishing event:', error);
-      console.error('Failed to publish event. Please try again.');
-      // Don't set UI error
+      setError(error.response?.data?.message || 'Failed to publish event. Please try again.');
     } finally {
       setIsLoading(prev => ({ ...prev, publishEvent: false }));
     }
@@ -930,6 +957,33 @@ const validateTickets = () => {
         return; // Return early to prevent navigation
       }
     }
+
+    // Handle discount codes step submission
+    else if (currentStep === 7 && eventId) {
+      try {
+        // Prepare discount codes data for API submission
+        const discountCodesData = prepareDiscountCodesDataForAPI(eventData.discountCodes, eventId);
+        
+        console.log('Submitting discount codes data:', discountCodesData);
+        
+        // Make API call to update discount codes
+        const response = await UpdateEventDiscountCodesAPI(eventId, discountCodesData);
+        console.log('Discount codes update successful:', response);
+        
+        // Update the saved event data with the new discount codes info
+        const currentEventData = getEventData();
+        saveEventData({
+          ...currentEventData,
+          discountCodes: eventData.discountCodes
+        });
+        
+      } catch (error) {
+        console.error('Error updating discount codes:', error);
+        setError(error.response?.data?.message || 'Failed to update discount codes information. Please try again.');
+        setIsLoading(prev => ({ ...prev, saveEvent: false }));
+        return; // Return early to prevent navigation
+      }
+    }
       
       // Mark current step as completed
       const stepKey = getStepKeyByNumber(currentStep);
@@ -1034,7 +1088,7 @@ const validateTickets = () => {
     }
   };
   
-  /**
+    /**
    * Render the current step
    * @returns {JSX.Element} Current step component
    */
@@ -1118,7 +1172,6 @@ const validateTickets = () => {
           <PublishStep
             eventData={eventData}
             handleInputChange={handleInputChange}
-            handlePublish={handlePublishEvent}
             isValid={validatePublish()}
             stepStatus={stepStatus.publish}
             isPublishing={isLoading.publishEvent}
@@ -1198,7 +1251,7 @@ const validateTickets = () => {
                   Back
                 </button>
                 
-                {currentStep < 8 && (
+                {currentStep < 8 ? (
                   <button
                     type="button"
                     onClick={handleNextStep}
@@ -1206,6 +1259,15 @@ const validateTickets = () => {
                     className={styles.nextButton}
                   >
                     {isLoading.saveEvent ? 'Saving...' : 'Next'}
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleNextStep}
+                    disabled={isNextDisabled || isLoading.publishEvent}
+                    className={`${styles.nextButton} ${styles.publishButton}`}
+                  >
+                    {isLoading.publishEvent ? 'Publishing...' : 'Publish Event'}
                   </button>
                 )}
               </div>

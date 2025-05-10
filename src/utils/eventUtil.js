@@ -203,3 +203,42 @@ export const prepareTicketsDataForAPI = (tickets, eventId = null) => {
     updatedBy: userData?.id || eventData?.createdBy || 0
   };
 };
+
+/**
+ * Prepare discount codes data for API submission
+ * @param {Array} discountCodes - Array of discount code objects
+ * @param {string|number} eventId - Optional event ID to override stored value
+ * @returns {Object} Formatted discount codes data for API
+ */
+export const prepareDiscountCodesDataForAPI = (discountCodes, eventId = null) => {
+  const userData = getUserData();
+  const eventData = getEventData();
+  
+  // Use provided eventId first, or fall back to stored eventId
+  const eventDataId = eventId || eventData?.eventId || 0;
+  
+  return {
+    id: parseInt(eventDataId, 10),
+    usesDiscountCodes: Array.isArray(discountCodes) && discountCodes.length > 0,
+    updatedBy: userData?.id || eventData?.createdBy || 0
+  };
+};
+
+/**
+ * Prepare publish event data for API submission
+ * @param {string|number} eventId - Optional event ID to override stored value
+ * @returns {Object} Formatted publish data for API
+ */
+export const preparePublishEventDataForAPI = (eventId = null) => {
+  const userData = getUserData();
+  const eventData = getEventData();
+  
+  // Use provided eventId first, or fall back to stored eventId
+  const eventDataId = eventId || eventData?.eventId || 0;
+  
+  return {
+    id: parseInt(eventDataId, 10), // Convert to integer if it's a string
+    publishEvent: true,
+    updatedBy: userData?.id || eventData?.createdBy || 0
+  };
+};

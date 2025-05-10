@@ -1,7 +1,6 @@
 // src/pages/events/steps/discountCodesStep.jsx
 import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
-import { UpdateEventDiscountCodesAPI } from '../../../services/allApis';
 import DiscountCodeModal from './discountCodeModal';
 import styles from './discountCodesStep.module.scss';
 
@@ -30,57 +29,11 @@ const DiscountCodesStep = ({
   const [currentDiscountCode, setCurrentDiscountCode] = useState(null);
   const [currentDiscountCodeIndex, setCurrentDiscountCodeIndex] = useState(null);
   
-  // State for validation errors
-  const [errors, setErrors] = useState({});
-
-  // API-related state
-  const [isSaving, setIsSaving] = useState(false);
-  const [apiError, setApiError] = useState(null);
-  
   // Effect to propagate discount codes changes to parent component
   useEffect(() => {
     // Send the updated discount codes data to parent component
     handleInputChange(discountCodes, 'discountCodes');
-    
-    // Validate on data change
-    validateDiscountCodes();
-  }, [discountCodes]);
-  
-  // Update parent component about form validity
-  useEffect(() => {
-    if (stepStatus.visited) {
-      const isDiscountCodesValid = validateDiscountCodes();
-      handleInputChange(isDiscountCodesValid, 'discountCodesValid');
-    }
-  }, [discountCodes, stepStatus.visited]);
-  
-  /**
-   * Validate discount codes data
-   * @returns {boolean} Whether discount codes data is valid
-   */
-  const validateDiscountCodes = () => {
-    // Discount codes are optional, so even empty array is valid
-    if (!discountCodes || discountCodes.length === 0) {
-      setErrors({});
-      return true;
-    }
-    
-    // Check if all discount codes have required fields
-    const invalidDiscountCodes = discountCodes.filter(code => {
-      return !code.code || !code.discountPercentage || 
-             !code.maxDiscountAmount || !code.minDiscountAmount || 
-             !code.quantity;
-    });
-    
-    if (invalidDiscountCodes.length > 0) {
-      setErrors({ general: 'All discount codes must have all required fields' });
-      return false;
-    }
-    
-    // Clear errors if everything is valid
-    setErrors({});
-    return true;
-  };
+  }, [discountCodes, handleInputChange]);
   
   /**
    * Open discount code modal for creating a new discount code
@@ -137,56 +90,9 @@ const DiscountCodesStep = ({
     updatedDiscountCodes.splice(index, 1);
     setDiscountCodes(updatedDiscountCodes);
   };
-
-  /**
-   * Save discount codes data to API
-   * This function can be used for auto-save functionality
-   * @param {string} eventId - Event ID
-   * @param {Object} userData - Current user data for updatedBy field
-   */
-  const saveDiscountCodesData = async (eventId, userData) => {
-    if (!validateDiscountCodes() || !eventId) return;
-    
-    setIsSaving(true);
-    setApiError(null);
-    
-    try {
-      // Format discount codes data for API
-      // Note: The API schema only supports a flag indicating if discount codes are used
-      // The actual discount codes would need to be handled by a different endpoint
-      const discountCodesApiData = {
-        id: eventId,
-        usesDiscountCodes: discountCodes && discountCodes.length > 0,
-        updatedBy: userData?.id || 0
-      };
-      
-      await UpdateEventDiscountCodesAPI(eventId, discountCodesApiData);
-      
-      // Success handling could be added here
-      console.log("Discount codes flag saved successfully. Actual codes would need another API endpoint.");
-      
-    } catch (error) {
-      console.error('Error saving discount codes data:', error);
-      setApiError('Failed to save discount codes information. Please try again.');
-    } finally {
-      setIsSaving(false);
-    }
-  };
   
   return (
     <div className={styles.stepContainer}>
-      {apiError && (
-        <div className={styles.errorAlert}>
-          {apiError}
-          <button 
-            className={styles.dismissButton}
-            onClick={() => setApiError(null)}
-          >
-            ×
-          </button>
-        </div>
-      )}
-
       <div className={styles.stepHeader}>
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={styles.stepIcon}>
           <path d="M21.41 11.58L12.41 2.58C12.05 2.22 11.55 2 11 2H4C2.9 2 2 2.9 2 4V11C2 11.55 2.22 12.05 2.59 12.42L11.59 21.42C11.95 21.78 12.45 22 13 22C13.55 22 14.05 21.78 14.41 21.41L21.41 14.41C21.78 14.05 22 13.55 22 13C22 12.45 21.77 11.94 21.41 11.58ZM5.5 7C4.67 7 4 6.33 4 5.5C4 4.67 4.67 4 5.5 4C6.33 4 7 4.67 7 5.5C7 6.33 6.33 7 5.5 7Z" fill="#7C3AED"/>
@@ -203,7 +109,6 @@ const DiscountCodesStep = ({
               type="button" 
               className={styles.addDiscountCodeButton}
               onClick={handleCreateDiscountCode}
-              disabled={isSaving}
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M19 13H13V19H11V13H5V11H11V5H13V11H19V13Z" fill="currentColor"/>
@@ -227,7 +132,7 @@ const DiscountCodesStep = ({
             {/* Discount codes list */}
             {discountCodes.map((code, index) => (
               <div key={index} className={styles.discountCodeItem}>
-                <div className={styles.discountCode} onClick={() => !isSaving && handleEditDiscountCode(index)}>
+                <div className={styles.discountCode} onClick={() => handleEditDiscountCode(index)}>
                   {code.code}
                 </div>
                 <div className={styles.discountPercentage}>
@@ -246,9 +151,8 @@ const DiscountCodesStep = ({
                   <button 
                     type="button" 
                     className={styles.discountActionButton}
-                    onClick={() => !isSaving && handleDeleteDiscountCode(index)}
+                    onClick={() => handleDeleteDiscountCode(index)}
                     aria-label="Delete discount code"
-                    disabled={isSaving}
                   >
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <path d="M6 19C6 20.1 6.9 21 8 21H16C17.1 21 18 20.1 18 19V7H6V19ZM19 4H15.5L14.5 3H9.5L8.5 4H5V6H19V4Z" fill="#666666"/>
@@ -264,7 +168,6 @@ const DiscountCodesStep = ({
                 type="button" 
                 className={styles.addDiscountCodeInlineButton}
                 onClick={handleCreateDiscountCode}
-                disabled={isSaving}
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M19 13H13V19H11V13H5V11H11V5H13V11H19V13Z" fill="currentColor"/>
@@ -275,8 +178,11 @@ const DiscountCodesStep = ({
           </div>
         )}
         
-        {errors.general && (
-          <div className={styles.fieldError}>{errors.general}</div>
+        {/* Show validation error if the step has been visited and is not valid */}
+        {!isValid && stepStatus.visited && (
+          <div className={styles.fieldError}>
+            Please ensure all discount codes have required fields filled correctly
+          </div>
         )}
 
         {/* Discount codes information box */}
@@ -290,9 +196,6 @@ const DiscountCodesStep = ({
             <h3 className={styles.infoTitle}>About Discount Codes</h3>
             <p className={styles.infoText}>
               Discount codes allow you to offer special pricing to specific attendees. You can create different codes for different discount amounts, set minimum purchase requirements, and limit the number of uses per code.
-            </p>
-            <p className={styles.apiNote}>
-              Note: The current API only stores whether discount codes are enabled. Actual discount code details will be stored when you publish the event.
             </p>
           </div>
         </div>
