@@ -14,10 +14,10 @@ import TicketsStep from './steps/ticketsStep';
 import DiscountCodesStep from './steps/discountCodesStep';
 import PublishStep from './steps/publishStep';
 import LoadingSpinner from '../../components/common/loadingSpinner/loadingSpinner';
-import { CreateEventAPI, UpdateEventLocationAPI, UpdateEventDateTimeAPI , UpdateEventAPI } from '../../services/allApis';
+import { CreateEventAPI, UpdateEventLocationAPI, UpdateEventDateTimeAPI ,UpdateEventDescriptionAPI, UpdateEventAPI, UploadEventBannerAPI } from '../../services/allApis';
 import styles from './createEventPage.module.scss';
 import { getUserData, setUserData } from '../../utils/authUtil';
-import { saveEventData, getEventData, prepareLocationDataForAPI, prepareDateTimeDataForAPI } from '../../utils/eventUtil';
+import { saveEventData, getEventData, prepareLocationDataForAPI, prepareDateTimeDataForAPI, prepareDescriptionDataForAPI, prepareArtDataForAPI } from '../../utils/eventUtil';
 
 /**
  * CreateEventPage component for the multi-step event creation process
@@ -775,6 +775,107 @@ useEffect(() => {
         return; // Return early to prevent navigation
       }
     }
+
+    // Handle description step submission
+    else if (currentStep === 4 && eventId) {
+      try {
+        // Determine if the event is private based on event type
+        const isPrivate = eventData.eventType === 'private';
+        
+        // Prepare description data for API submission
+        const descriptionData = prepareDescriptionDataForAPI(eventData.description, eventId, isPrivate);
+        
+        console.log('Submitting description data:', descriptionData);
+        
+        // Make API call to update description
+        const response = await UpdateEventDescriptionAPI(eventId, descriptionData);
+        console.log('Description update successful:', response);
+        
+        // Update the saved event data with the new description info
+        const currentEventData = getEventData();
+        saveEventData({
+          ...currentEventData,
+          description: response.data.description,
+          shortDescription: response.data.shortDescription
+        });
+        
+      } catch (error) {
+        console.error('Error updating description:', error);
+        setError(error.response?.data?.message || 'Failed to update description. Please try again.');
+        setIsLoading(prev => ({ ...prev, saveEvent: false }));
+        return; // Return early to prevent navigation
+      }
+    }
+
+    // Handle art step submission
+else if (currentStep === 5 && eventId) {
+  try {
+    // We'll handle uploads for both thumbnail and banner if they exist
+    // First, let's check if there are any files to upload
+    const hasThumbnail = eventData.art?.thumbnailFile !== null;
+    const hasBanner = eventData.art?.bannerFile !== null;
+    
+    console.log('Art data to be uploaded:', {
+      hasThumbnail,
+      hasBanner,
+      thumbnailName: eventData.art?.thumbnailName,
+      bannerName: eventData.art?.bannerName
+    });
+    
+    // Upload thumbnail if exists
+    if (hasThumbnail) {
+      const thumbnailFormData = prepareArtDataForAPI(eventData.art, eventId, 'thumbnail');
+      
+      // Configure upload with progress tracking if needed
+      const config = {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        }
+      };
+      
+      console.log('Uploading thumbnail...');
+      const thumbnailResponse = await UploadEventBannerAPI(eventId, thumbnailFormData, config);
+      console.log('Thumbnail upload successful:', thumbnailResponse);
+    }
+    
+    // Upload banner if exists
+    if (hasBanner) {
+      const bannerFormData = prepareArtDataForAPI(eventData.art, eventId, 'banner');
+      
+      // Configure upload with progress tracking if needed
+      const config = {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        }
+      };
+      
+      console.log('Uploading banner...');
+      const bannerResponse = await UploadEventBannerAPI(eventId, bannerFormData, config);
+      console.log('Banner upload successful:', bannerResponse);
+      
+      // Update the saved event data with the new art info
+      const currentEventData = getEventData();
+      saveEventData({
+        ...currentEventData,
+        art: {
+          ...currentEventData.art,
+          ...eventData.art // Update with the current art data
+        }
+      });
+    }
+    
+    // If no files to upload, still proceed
+    if (!hasThumbnail && !hasBanner) {
+      console.log('No art files to upload, skipping API call');
+    }
+    
+  } catch (error) {
+    console.error('Error uploading art files:', error);
+    setError(error.response?.data?.message || 'Failed to upload images. Please try again.');
+    setIsLoading(prev => ({ ...prev, saveEvent: false }));
+    return; // Return early to prevent navigation
+  }
+}
       
       // Mark current step as completed
       const stepKey = getStepKeyByNumber(currentStep);
