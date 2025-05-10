@@ -90,16 +90,12 @@ export const UpdateEventDateTimeAPI = async (eventId, dateTimeData) => {
 
 // Step 4: Update event description
 export const UpdateEventDescriptionAPI = async (eventId, descriptionData) => {
-  return await apiClient.post(`/api/events/${eventId}/description`, descriptionData);
+  return await apiClient.put(`/api/events/${eventId}/description`, descriptionData);
 };
 
 // Step 5: Upload event banner image
-export const UploadEventBannerAPI = async (eventId, formData) => {
-  return await apiClient.post(`/api/events/${eventId}/banner-image`, formData, {
-    headers: {
-      'Content-Type': 'multipart/form-data',
-    },
-  });
+export const UploadEventBannerAPI = async (eventId, bannerData) => {
+  return await apiClient.put(`/api/events/${eventId}/banner-image`, bannerData);
 };
 
 // Step 6: Update event tickets

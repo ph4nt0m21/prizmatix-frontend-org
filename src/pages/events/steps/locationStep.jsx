@@ -299,7 +299,7 @@ const LocationStep = ({
   }, [location, handleInputChange]);
   
   /**
-   * Handle location type selection (public, private, to be announced)
+   * Handle location type selection (physical, private, to be announced)
    * @param {string} type - Location type
    */
   const handleLocationTypeChange = (type) => {
@@ -442,12 +442,12 @@ const LocationStep = ({
           
           <div className={styles.locationOptions}>
             <div 
-              className={`${styles.locationOption} ${location.locationType === 'public' && !location.isToBeAnnounced ? styles.selected : ''}`}
-              onClick={() => handleLocationTypeChange('public')}
+              className={`${styles.locationOption} ${location.locationType === 'physical' && !location.isToBeAnnounced ? styles.selected : ''}`}
+              onClick={() => handleLocationTypeChange('physical')}
             >
               <div className={styles.locationIcon}>
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9C9.5 7.62 10.62 6.5 12 6.5C13.38 6.5 14.5 7.62 14.5 9C14.5 10.38 13.38 11.5 12 11.5Z" fill={location.locationType === 'public' && !location.isToBeAnnounced ? "#7C3AED" : "#666666"}/>
+                  <path d="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9C9.5 7.62 10.62 6.5 12 6.5C13.38 6.5 14.5 7.62 14.5 9C14.5 10.38 13.38 11.5 12 11.5Z" fill={location.locationType === 'physical' && !location.isToBeAnnounced ? "#7C3AED" : "#666666"}/>
                 </svg>
               </div>
               <div className={styles.locationContent}>
@@ -457,7 +457,7 @@ const LocationStep = ({
                 </p>
               </div>
               <div className={styles.locationSelector}>
-                {location.locationType === 'public' && !location.isToBeAnnounced && (
+                {location.locationType === 'physical' && !location.isToBeAnnounced && (
                   <div className={styles.selectedDot}></div>
                 )}
               </div>

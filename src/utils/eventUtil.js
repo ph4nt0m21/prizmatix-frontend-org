@@ -47,8 +47,8 @@ export const prepareLocationDataForAPI = (locationData) => {
   
   return {
     id: eventData?.eventId || 0,
-    locationType: locationData.locationType || 'public',
-    eventLocationId: 0, // This would be filled in on update
+    locationType: locationData.locationType || 'physical',
+    eventLocationId: null, // This would be filled in on update
     venueName: locationData.venue || '',
     address: formatAddress(locationData),
     latitude: parseFloat(locationData.latitude) || 0,
@@ -85,34 +85,85 @@ const formatAddress = (locationData) => {
   return components.join(', ');
 };
 
-export const prepareDateTimeDataForAPI = (dateTimeData, eventId = null, isPrivate = false) => {
+export const prepareDateTimeDataForAPI = (dateTimeData, eventId = null) => {
   const userData = getUserData();
   const eventData = getEventData();
   
   // Use provided eventId first, or fall back to stored eventId
   const eventDataId = eventId || eventData?.eventId || 0;
   
-  // Parse time values
-  const parseTime = (timeStr) => {
-    if (!timeStr) return null;
+  // Format time string to ensure HH:MM:SS format
+  const formatTimeString = (timeStr) => {
+    if (!timeStr) return '';
     
-    const [hours, minutes] = timeStr.split(':').map(Number);
-    return {
-      hour: hours,
-      minute: minutes,
-      second: 0,
-      nano: 0
-    };
+    // If the time string already has seconds, return it
+    if (timeStr.split(':').length === 3) return timeStr;
+    
+    // Otherwise, add :00 for seconds
+    return `${timeStr}:00`;
   };
   
   return {
-    id: eventDataId,
+    id: parseInt(eventDataId, 10), // Convert to integer if it's a string
     startDate: dateTimeData.startDate || '',
-    startTime: parseTime(dateTimeData.startTime),
+    startTime: formatTimeString(dateTimeData.startTime),
     endDate: dateTimeData.endDate || '',
-    endTime: parseTime(dateTimeData.endTime),
-    timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone, // Use browser's timezone
+    endTime: formatTimeString(dateTimeData.endTime),
+    timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    updatedBy: userData?.id || eventData?.createdBy || 0
+  };
+};
+
+/**
+ * Prepare description data for API submission
+ * @param {string} description - Event description content
+ * @param {string|number} eventId - Optional event ID to override stored value
+ * @param {boolean} isPrivate - Whether the event is private
+ * @returns {Object} Formatted description data for API
+ */
+export const prepareDescriptionDataForAPI = (description, eventId = null, isPrivate = false) => {
+  const userData = getUserData();
+  const eventData = getEventData();
+  
+  // Use provided eventId first, or fall back to stored eventId
+  const eventDataId = eventId || eventData?.eventId || 0;
+  
+  // Create a short description by removing HTML tags and limiting to 150 chars
+  const createShortDescription = (htmlText) => {
+    // Remove HTML tags
+    const plainText = htmlText.replace(/<[^>]*>/g, '');
+    // Limit to 150 characters
+    return plainText.substring(0, 150);
+  };
+  
+  return {
+    id: parseInt(eventDataId, 10), // Convert to integer if it's a string
+    description: description || '',
+    shortDescription: createShortDescription(description || ''),
+    keywords: '', // Not used in current implementation, but required by API
     isPrivate: isPrivate,
+    updatedBy: userData?.id || eventData?.createdBy || 0
+  };
+};
+
+/**
+ * Prepare art/image data for API submission
+ * @param {Object} artData - Art data containing file information
+ * @param {string|number} eventId - Optional event ID to override stored value
+ * @param {string} imageType - Type of image ('thumbnail' or 'banner')
+ * @returns {Object} Formatted JSON data for API
+ */
+export const prepareArtDataForAPI = (artData, eventId = null, imageType = 'banner') => {
+  const userData = getUserData();
+  const eventData = getEventData();
+  
+  // Use provided eventId first, or fall back to stored eventId
+  const eventDataId = eventId || eventData?.eventId || 0;
+  
+  // The API expects a JSON object, not FormData
+  return {
+    id: parseInt(eventDataId, 10),
+    bannerImage: artData && artData[`${imageType}Name`] ? artData[`${imageType}Name`] : '',
     updatedBy: userData?.id || eventData?.createdBy || 0
   };
 };

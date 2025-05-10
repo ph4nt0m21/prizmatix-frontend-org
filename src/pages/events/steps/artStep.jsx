@@ -1,7 +1,5 @@
-// src/pages/events/steps/ArtStep.jsx
 import React, { useState, useRef, useEffect } from 'react';
 import PropTypes from 'prop-types';
-import { UploadEventBannerAPI } from '../../../services/allApis';
 import styles from './artStep.module.scss';
 
 /**
@@ -40,20 +38,6 @@ const ArtStep = ({
   const [dragActive, setDragActive] = useState({
     thumbnail: false,
     banner: false
-  });
-  
-  // State for validation errors
-  const [errors, setErrors] = useState({});
-
-  // API-related state
-  const [isUploading, setIsUploading] = useState({
-    thumbnail: false,
-    banner: false
-  });
-  const [apiError, setApiError] = useState(null);
-  const [uploadProgress, setUploadProgress] = useState({
-    thumbnail: 0,
-    banner: 0
   });
   
   // Refs for file input elements
@@ -129,29 +113,10 @@ const ArtStep = ({
   const handleFileChange = (type, file) => {
     if (!file) return;
     
-    // Validate file type
-    if (!isFileTypeSupported(file)) {
-      setErrors(prev => ({
-        ...prev,
-        [type]: `Unsupported file type. Please use ${supportedTypes.join(', ')}`
-      }));
+    // Simple validation (can be moved to parent component if needed)
+    if (!isFileTypeSupported(file) || !isFileSizeValid(file, maxSizes[type])) {
       return;
     }
-    
-    // Validate file size
-    if (!isFileSizeValid(file, maxSizes[type])) {
-      setErrors(prev => ({
-        ...prev,
-        [type]: `File size exceeds ${maxSizes[type]} MB limit`
-      }));
-      return;
-    }
-    
-    // Clear any previous errors
-    setErrors(prev => ({
-      ...prev,
-      [type]: ''
-    }));
     
     // Release previous preview URL if exists
     if (previews[type]) {
@@ -272,89 +237,8 @@ const ArtStep = ({
     handleInputChange(newArtData, 'art');
   };
   
-  /**
-   * Check if form is valid
-   * @returns {boolean} Is form valid
-   */
-  const validateForm = () => {
-    // For now, we're just checking if there are no errors
-    // You might want to add required field validation as well
-    return Object.keys(errors).length === 0;
-  };
-  
-  // Update parent about form validity
-  useEffect(() => {
-    if (stepStatus.visited) {
-      const isFormValid = validateForm();
-      handleInputChange(isFormValid, 'artValid');
-    }
-  }, [files, errors, stepStatus.visited]);
-
-  /**
-   * Upload file to API
-   * @param {string} type - 'thumbnail' or 'banner'
-   * @param {string} eventId - Event ID
-   * @param {Object} userData - Current user data for updatedBy field
-   */
-  const uploadFile = async (type, eventId, userData) => {
-    if (!files[type] || !eventId) return;
-    
-    setIsUploading(prev => ({
-      ...prev,
-      [type]: true
-    }));
-    setApiError(null);
-    setUploadProgress(prev => ({
-      ...prev,
-      [type]: 0
-    }));
-    
-    try {
-      // Create FormData for file upload
-      const formData = new FormData();
-      formData.append('file', files[type]);
-      formData.append('id', eventId);
-      formData.append('updatedBy', userData?.id || 0);
-      
-      // Configure upload with progress tracking
-      const config = {
-        onUploadProgress: (progressEvent) => {
-          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-          setUploadProgress(prev => ({
-            ...prev,
-            [type]: percentCompleted
-          }));
-        }
-      };
-      
-      await UploadEventBannerAPI(eventId, formData, config);
-      
-      // Success handling could be added here
-    } catch (error) {
-      console.error(`Error uploading ${type}:`, error);
-      setApiError(`Failed to upload ${type}. Please try again.`);
-    } finally {
-      setIsUploading(prev => ({
-        ...prev,
-        [type]: false
-      }));
-    }
-  };
-  
   return (
     <div className={styles.stepContainer}>
-      {apiError && (
-        <div className={styles.errorAlert}>
-          {apiError}
-          <button 
-            className={styles.dismissButton}
-            onClick={() => setApiError(null)}
-          >
-            ×
-          </button>
-        </div>
-      )}
-
       <div className={styles.stepHeader}>
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={styles.stepIcon}>
           <path d="M19 5V19H5V5H19ZM19 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V5C21 3.9 20.1 3 19 3ZM14.14 11.86L11.14 15.73L9 13.14L6 17H18L14.14 11.86Z" fill="#7C3AED"/>
@@ -373,11 +257,11 @@ const ArtStep = ({
           </p>
           
           <div 
-            className={`${styles.uploadDropzone} ${dragActive.thumbnail ? styles.dragActive : ''} ${files.thumbnail ? styles.hasFile : ''} ${isUploading.thumbnail ? styles.uploading : ''}`}
-            onDragEnter={(e) => !isUploading.thumbnail && handleDrag(e, 'thumbnail', 'enter')}
-            onDragOver={(e) => !isUploading.thumbnail && handleDrag(e, 'thumbnail', 'enter')}
-            onDragLeave={(e) => !isUploading.thumbnail && handleDrag(e, 'thumbnail', 'leave')}
-            onDrop={(e) => !isUploading.thumbnail && handleDrag(e, 'thumbnail', 'drop')}
+            className={`${styles.uploadDropzone} ${dragActive.thumbnail ? styles.dragActive : ''} ${files.thumbnail ? styles.hasFile : ''}`}
+            onDragEnter={(e) => handleDrag(e, 'thumbnail', 'enter')}
+            onDragOver={(e) => handleDrag(e, 'thumbnail', 'enter')}
+            onDragLeave={(e) => handleDrag(e, 'thumbnail', 'leave')}
+            onDrop={(e) => handleDrag(e, 'thumbnail', 'drop')}
           >
             {files.thumbnail ? (
               // Preview the uploaded image
@@ -393,26 +277,16 @@ const ArtStep = ({
                     {formatFileSize(files.thumbnail.size)}
                   </span>
                 </div>
-                {isUploading.thumbnail ? (
-                  <div className={styles.uploadProgress}>
-                    <div 
-                      className={styles.progressBar}
-                      style={{ width: `${uploadProgress.thumbnail}%` }}
-                    ></div>
-                    <span className={styles.progressText}>{uploadProgress.thumbnail}%</span>
-                  </div>
-                ) : (
-                  <button 
-                    type="button" 
-                    className={styles.removeButton}
-                    onClick={() => removeFile('thumbnail')}
-                    aria-label="Remove thumbnail"
-                  >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M19 6.41L17.59 5L12 10.59L6.41 5L5 6.41L10.59 12L5 17.59L6.41 19L12 13.41L17.59 19L19 17.59L13.41 12L19 6.41Z" fill="currentColor"/>
-                    </svg>
-                  </button>
-                )}
+                <button 
+                  type="button" 
+                  className={styles.removeButton}
+                  onClick={() => removeFile('thumbnail')}
+                  aria-label="Remove thumbnail"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M19 6.41L17.59 5L12 10.59L6.41 5L5 6.41L10.59 12L5 17.59L6.41 19L12 13.41L17.59 19L19 17.59L13.41 12L19 6.41Z" fill="currentColor"/>
+                  </svg>
+                </button>
               </div>
             ) : (
               // Upload interface
@@ -445,8 +319,12 @@ const ArtStep = ({
             )}
           </div>
           
-          {errors.thumbnail && (
-            <div className={styles.fieldError}>{errors.thumbnail}</div>
+          {stepStatus.visited && files.thumbnail && !isFileTypeSupported(files.thumbnail) && (
+            <div className={styles.fieldError}>Unsupported file type. Please use {supportedTypes.join(', ')}</div>
+          )}
+          
+          {stepStatus.visited && files.thumbnail && !isFileSizeValid(files.thumbnail, maxSizes.thumbnail) && (
+            <div className={styles.fieldError}>File size exceeds {maxSizes.thumbnail} MB limit</div>
           )}
           
           <div className={styles.fileInfoText}>
@@ -472,11 +350,11 @@ const ArtStep = ({
           </p>
           
           <div 
-            className={`${styles.uploadDropzone} ${dragActive.banner ? styles.dragActive : ''} ${files.banner ? styles.hasFile : ''} ${isUploading.banner ? styles.uploading : ''}`}
-            onDragEnter={(e) => !isUploading.banner && handleDrag(e, 'banner', 'enter')}
-            onDragOver={(e) => !isUploading.banner && handleDrag(e, 'banner', 'enter')}
-            onDragLeave={(e) => !isUploading.banner && handleDrag(e, 'banner', 'leave')}
-            onDrop={(e) => !isUploading.banner && handleDrag(e, 'banner', 'drop')}
+            className={`${styles.uploadDropzone} ${dragActive.banner ? styles.dragActive : ''} ${files.banner ? styles.hasFile : ''}`}
+            onDragEnter={(e) => handleDrag(e, 'banner', 'enter')}
+            onDragOver={(e) => handleDrag(e, 'banner', 'enter')}
+            onDragLeave={(e) => handleDrag(e, 'banner', 'leave')}
+            onDrop={(e) => handleDrag(e, 'banner', 'drop')}
           >
             {files.banner ? (
               // Preview the uploaded image
@@ -492,26 +370,16 @@ const ArtStep = ({
                     {formatFileSize(files.banner.size)}
                   </span>
                 </div>
-                {isUploading.banner ? (
-                  <div className={styles.uploadProgress}>
-                    <div 
-                      className={styles.progressBar}
-                      style={{ width: `${uploadProgress.banner}%` }}
-                    ></div>
-                    <span className={styles.progressText}>{uploadProgress.banner}%</span>
-                  </div>
-                ) : (
-                  <button 
-                    type="button" 
-                    className={styles.removeButton}
-                    onClick={() => removeFile('banner')}
-                    aria-label="Remove banner"
-                  >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M19 6.41L17.59 5L12 10.59L6.41 5L5 6.41L10.59 12L5 17.59L6.41 19L12 13.41L17.59 19L19 17.59L13.41 12L19 6.41Z" fill="currentColor"/>
-                    </svg>
-                  </button>
-                )}
+                <button 
+                  type="button" 
+                  className={styles.removeButton}
+                  onClick={() => removeFile('banner')}
+                  aria-label="Remove banner"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M19 6.41L17.59 5L12 10.59L6.41 5L5 6.41L10.59 12L5 17.59L6.41 19L12 13.41L17.59 19L19 17.59L13.41 12L19 6.41Z" fill="currentColor"/>
+                  </svg>
+                </button>
               </div>
             ) : (
               // Upload interface
@@ -542,8 +410,12 @@ const ArtStep = ({
             )}
           </div>
           
-          {errors.banner && (
-            <div className={styles.fieldError}>{errors.banner}</div>
+          {stepStatus.visited && files.banner && !isFileTypeSupported(files.banner) && (
+            <div className={styles.fieldError}>Unsupported file type. Please use {supportedTypes.join(', ')}</div>
+          )}
+          
+          {stepStatus.visited && files.banner && !isFileSizeValid(files.banner, maxSizes.banner) && (
+            <div className={styles.fieldError}>File size exceeds {maxSizes.banner} MB limit</div>
           )}
           
           <div className={styles.fileInfoText}>
