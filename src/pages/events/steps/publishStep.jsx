@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import styles from './steps.module.scss';
+import { getEventData } from '../../../utils/eventUtil';
 
 /**
  * PublishStep component - Final step of event creation
@@ -24,21 +25,34 @@ const PublishStep = ({
 }) => {
   // API-related state
   const [publishSuccess, setPublishSuccess] = useState(false);
+  const [localEventData, setLocalEventData] = useState(eventData);
+  
+  // Fetch event data from localStorage on component mount
+  useEffect(() => {
+    const storedEventData = getEventData();
+    if (storedEventData) {
+      // Merge stored event data with props data, preferring stored data
+      setLocalEventData({
+        ...eventData,
+        ...storedEventData
+      });
+    }
+  }, [eventData]);
   
   // Format date for display
   const formatEventDate = () => {
-    if (!eventData.dateTime?.startDate) return '';
+    if (!localEventData.dateTime?.startDate) return '';
     
-    const date = new Date(eventData.dateTime.startDate);
+    const date = new Date(localEventData.dateTime.startDate);
     const options = { weekday: 'short', day: 'numeric', month: 'short' };
     return date.toLocaleDateString('en-US', options);
   };
   
   // Format time for display
   const formatEventTime = () => {
-    if (!eventData.dateTime?.startTime || !eventData.dateTime?.endTime) return '';
+    if (!localEventData.dateTime?.startTime || !localEventData.dateTime?.endTime) return '';
     
-    return `${formatTime(eventData.dateTime.startTime)}-${formatTime(eventData.dateTime.endTime)}`;
+    return `${formatTime(localEventData.dateTime.startTime)}-${formatTime(localEventData.dateTime.endTime)}`;
   };
   
   // Helper to format time from 24h to 12h format
@@ -53,13 +67,13 @@ const PublishStep = ({
   // Handle preview button click
   const handlePreview = () => {
     // Open preview in new tab
-    window.open(`/events/preview/${eventData.id || 'draft'}`, '_blank');
+    window.open(`/events/preview/${localEventData.eventId || 'draft'}`, '_blank');
   };
   
   // Get banner image URL or use placeholder
   const getBannerImageUrl = () => {
-    if (eventData.art?.bannerUrl) {
-      return eventData.art.bannerUrl;
+    if (localEventData.art?.bannerUrl) {
+      return localEventData.art.bannerUrl;
     }
     
     // Use a gradient placeholder if no banner
@@ -68,8 +82,8 @@ const PublishStep = ({
   
   // Get thumbnail image URL or use placeholder
   const getThumbnailImageUrl = () => {
-    if (eventData.art?.thumbnailUrl) {
-      return eventData.art.thumbnailUrl;
+    if (localEventData.art?.thumbnailUrl) {
+      return localEventData.art.thumbnailUrl;
     }
     
     // Use a placeholder if no thumbnail
@@ -78,12 +92,12 @@ const PublishStep = ({
   
   // Get location string
   const getLocationString = () => {
-    if (eventData.location?.isToBeAnnounced) {
+    if (localEventData.location?.isToBeAnnounced) {
       return 'To be announced';
     }
     
-    if (eventData.location?.city && eventData.location?.country) {
-      return `${eventData.location.city}, ${eventData.location.country}`;
+    if (localEventData.location?.city && localEventData.location?.country) {
+      return `${localEventData.location.city}, ${localEventData.location.country}`;
     }
     
     return 'Location not specified';
@@ -96,25 +110,25 @@ const PublishStep = ({
   const getIncompleteSteps = () => {
     const incompleteSteps = [];
     
-    if (!eventData.name) {
+    if (!localEventData.name) {
       incompleteSteps.push('Basic Info');
     }
     
-    if (!eventData.location.isToBeAnnounced && 
-        (!eventData.location.venue || !eventData.location.city || !eventData.location.country)) {
+    if (!localEventData.location?.isToBeAnnounced && 
+        (!localEventData.location?.venue || !localEventData.location?.city || !localEventData.location?.country)) {
       incompleteSteps.push('Location');
     }
     
-    if (!eventData.dateTime.startDate || !eventData.dateTime.startTime || 
-        !eventData.dateTime.endDate || !eventData.dateTime.endTime) {
+    if (!localEventData.dateTime?.startDate || !localEventData.dateTime?.startTime || 
+        !localEventData.dateTime?.endDate || !localEventData.dateTime?.endTime) {
       incompleteSteps.push('Date & Time');
     }
     
-    if (!eventData.description) {
+    if (!localEventData.description) {
       incompleteSteps.push('Description');
     }
     
-    if (!eventData.tickets || eventData.tickets.length === 0) {
+    if (!localEventData.tickets || localEventData.tickets.length === 0) {
       incompleteSteps.push('Tickets');
     }
     
@@ -176,7 +190,7 @@ const PublishStep = ({
           }}
         >
           <h1 className={styles.eventBannerTitle}>
-            {eventData.name || 'NORR Festival 2022'}
+            {localEventData.name || 'NORR Festival 2022'}
           </h1>
         </div>
         
@@ -186,7 +200,7 @@ const PublishStep = ({
           <div className={styles.eventThumbnail}>
             <img 
               src={getThumbnailImageUrl()} 
-              alt={eventData.name || 'Event thumbnail'} 
+              alt={localEventData.name || 'Event thumbnail'} 
               onError={(e) => {
                 e.target.onerror = null;
                 e.target.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200"><rect width="200" height="200" fill="%23CCCCCC"/><text x="50%" y="50%" font-family="Arial" font-size="36" fill="%23666666" text-anchor="middle" dominant-baseline="middle">Image</text></svg>';
@@ -197,7 +211,7 @@ const PublishStep = ({
           {/* Right side - Event info */}
           <div className={styles.eventInfo}>
             <h2 className={styles.eventTitle}>
-              {eventData.name || 'NORR FESTIVAL 2022'}
+              {localEventData.name || 'NORR FESTIVAL 2022'}
             </h2>
             
             <div className={styles.eventMetadata}>
@@ -235,10 +249,10 @@ const PublishStep = ({
               </div>
               <div className={styles.organizerInfo}>
                 <h3 className={styles.organizerName}>
-                  {eventData.organizerName || 'City Music Festival Ltd.'}
+                  {localEventData.organizationName || localEventData.organizerName || 'City Music Festival Ltd.'}
                 </h3>
                 <p className={styles.organizerMeta}>
-                  {eventData.organizerMeta || '23 Events Conducted'}
+                  {localEventData.organizerMeta || '23 Events Conducted'}
                 </p>
               </div>
               <button type="button" className={styles.contactHostButton}>
@@ -252,8 +266,8 @@ const PublishStep = ({
         <div className={styles.eventAboutSection}>
           <h3 className={styles.sectionTitle}>About</h3>
           <div className={styles.eventDescription}>
-            {eventData.description ? (
-              <div dangerouslySetInnerHTML={{ __html: eventData.description }} />
+            {localEventData.description ? (
+              <div dangerouslySetInnerHTML={{ __html: localEventData.description }} />
             ) : (
               <p>No description provided for this event.</p>
             )}
@@ -263,16 +277,16 @@ const PublishStep = ({
         {/* Tickets Section */}
         <div className={styles.eventTicketsSection}>
           <h3 className={styles.sectionTitle}>Tickets</h3>
-          {eventData.tickets && eventData.tickets.length > 0 ? (
+          {localEventData.tickets && localEventData.tickets.length > 0 ? (
             <div className={styles.ticketsList}>
-              {eventData.tickets.map((ticket, index) => (
+              {localEventData.tickets.map((ticket, index) => (
                 <div key={index} className={styles.ticketItem}>
                   <div className={styles.ticketDetails}>
                     <h4 className={styles.ticketName}>{ticket.name}</h4>
                     <p className={styles.ticketPrice}>${parseFloat(ticket.price).toFixed(2)}</p>
                   </div>
                   <p className={styles.ticketQuantity}>
-                    {ticket.quantity} available
+                    {ticket.quantity === 'No Limit' ? 'Unlimited' : `${ticket.quantity}`} available
                   </p>
                 </div>
               ))}

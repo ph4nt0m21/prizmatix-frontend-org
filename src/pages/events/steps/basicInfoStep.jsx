@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
+import { getUserData } from '../../../utils/authUtil';
 import styles from './basicInfoStep.module.scss';
 
 /**
@@ -17,6 +18,25 @@ const BasicInfoStep = ({ eventData, handleInputChange, isValid, stepStatus }) =>
   // State for managing search tags
   const [searchTags, setSearchTags] = useState(eventData.searchTags || []);
   const [tagInput, setTagInput] = useState('');
+  
+  // State for user data and modal
+  const [userData, setUserData] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+
+  // Fetch user data on component mount
+  useEffect(() => {
+    const userInfo = getUserData();
+    if (userInfo) {
+      setUserData(userInfo);
+    }
+  }, []);
+
+  /**
+   * Toggle the user info modal
+   */
+  const toggleModal = () => {
+    setShowModal(!showModal);
+  };
 
   /**
    * Handle visibility options selection
@@ -259,20 +279,74 @@ const BasicInfoStep = ({ eventData, handleInputChange, isValid, stepStatus }) =>
               </label>
             </div>
             
-            <div className={styles.hostInfoCard}>
-              <div className={styles.hostLogo}>
-                <img src="/icons/organizer-logo.svg" alt="Organizer Logo" />
+            {/* Only show the host info card when showHostProfile is true */}
+            {eventData.showHostProfile && (
+              <div 
+                className={styles.hostInfoCard}
+                onClick={toggleModal}
+                role="button"
+                tabIndex={0}
+                aria-label="View host details"
+              >
+                <div className={styles.hostLogo}>
+                  <img src="/icons/organizer-logo.svg" alt="Organizer Logo" />
+                </div>
+                <div className={styles.hostDetails}>
+                  <h4 className={styles.hostName}>{userData?.organizationName || 'City Music Festival Ltd.'}</h4>
+                  <p className={styles.hostStats}>Events Conducted</p>
+                </div>
+                <button 
+                  className={styles.hostOptionsButton}
+                  onClick={(e) => {
+                    e.stopPropagation(); // Prevent card click event
+                    toggleModal();
+                  }}
+                >
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 8C13.1 8 14 7.1 14 6C14 4.9 13.1 4 12 4C10.9 4 10 4.9 10 6C10 7.1 10.9 8 12 8ZM12 10C10.9 10 10 10.9 10 12C10 13.1 10.9 14 12 14C13.1 14 14 13.1 14 12C14 10.9 13.1 10 12 10ZM12 16C10.9 16 10 16.9 10 18C10 19.1 10.9 20 12 20C13.1 20 14 19.1 14 18C14 16.9 13.1 16 12 16Z" fill="#666666"/>
+                  </svg>
+                </button>
               </div>
-              <div className={styles.hostDetails}>
-                <h4 className={styles.hostName}>City Music Festival Ltd.</h4>
-                <p className={styles.hostStats}>23 Events Conducted</p>
+            )}
+
+            {/* User Info Modal */}
+            {showModal && (
+              <div className={styles.modalOverlay}>
+                <div className={styles.modal}>
+                  <div className={styles.modalHeader}>
+                    <h3>Organizer Information</h3>
+                    <button 
+                      className={styles.closeButton}
+                      onClick={toggleModal}
+                    >
+                      ×
+                    </button>
+                  </div>
+                  <div className={styles.modalContent}>
+                    <div className={styles.infoRow}>
+                      <span className={styles.infoLabel}>Name:</span>
+                      <span className={styles.infoValue}>{userData?.name || 'Not available'}</span>
+                    </div>
+                    <div className={styles.infoRow}>
+                      <span className={styles.infoLabel}>Organization:</span>
+                      <span className={styles.infoValue}>{userData?.organizationName || 'Not available'}</span>
+                    </div>
+                    <div className={styles.infoRow}>
+                      <span className={styles.infoLabel}>Email:</span>
+                      <span className={styles.infoValue}>{userData?.email || 'Not available'}</span>
+                    </div>
+                  </div>
+                  <div className={styles.modalFooter}>
+                    <button 
+                      className={styles.modalButton}
+                      onClick={toggleModal}
+                    >
+                      Close
+                    </button>
+                  </div>
+                </div>
               </div>
-              <button className={styles.hostOptionsButton}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M12 8C13.1 8 14 7.1 14 6C14 4.9 13.1 4 12 4C10.9 4 10 4.9 10 6C10 7.1 10.9 8 12 8ZM12 10C10.9 10 10 10.9 10 12C10 13.1 10.9 14 12 14C13.1 14 14 13.1 14 12C14 10.9 13.1 10 12 10ZM12 16C10.9 16 10 16.9 10 18C10 19.1 10.9 20 12 20C13.1 20 14 19.1 14 18C14 16.9 13.1 16 12 16Z" fill="#666666"/>
-                </svg>
-              </button>
-            </div>
+            )}
           </div>
         </div>
       </div>

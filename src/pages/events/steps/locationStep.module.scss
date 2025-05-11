@@ -444,3 +444,15 @@
     }
   }
 }
+
+/* Add these styles to locationStep.module.scss */
+.stepTitleContainer {
+  display: flex;
+  flex-direction: column;
+}
+
+.stepSubtitle {
+  font-size: 14px;
+  color: #666;
+  margin: 4px 0 0 0;
+}

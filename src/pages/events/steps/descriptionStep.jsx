@@ -22,6 +22,8 @@ const DescriptionStep = ({
 }) => {
   // Reference to the description editor
   const editorRef = useRef(null);
+
+  const MAX_CHARS = 250;
   
   // Extract description data from eventData or use defaults
   const [description, setDescription] = useState(eventData.description || '');
@@ -186,7 +188,10 @@ const DescriptionStep = ({
         {/* Character count and help text */}
         <div className={styles.editorHelp}>
           <div className={styles.characterCount}>
-            {description.length} characters
+            {description.length} / {MAX_CHARS} characters
+            <span className={styles.remainingChars}>
+              ({MAX_CHARS - description.length} characters remaining)
+            </span>
           </div>
           <div className={styles.editorTip}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
