@@ -1,10 +1,12 @@
-// src/pages/events/eventsPage.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
-import { GetAllEventsAPI, DeleteEventAPI } from '../../services/allApis';
+import { GetAllOrganizationEventsAPI, DeleteEventAPI } from '../../services/allApis';
 import LoadingSpinner from '../../components/common/loadingSpinner/loadingSpinner';
 import styles from './eventsPage.module.scss';
+import { getUserData } from '../../utils/authUtil';
+import { GetEventAPI } from '../../services/allApis';
+import { saveEventData } from '../../utils/eventUtil';
 
 /**
  * EventsPage component - Displays all user events with filtering and status options
@@ -45,30 +47,40 @@ const EventsPage = () => {
     applyFilters();
   }, [events, currentFilter, searchQuery]);
   
-  /**
-   * Fetch all events from the API
-   */
-  const fetchEvents = async () => {
-    try {
-      setIsLoading(true);
-      
-      // Set some default parameters for pagination
-      const params = {
-        page: 0,
-        size: 100,
-        sort: 'startDate,desc'
-      };
-      
-      const response = await GetAllEventsAPI(params);
-      setEvents(response.data.content || []);
-      setError(null);
-    } catch (error) {
-      console.error('Error fetching events:', error);
-      setError('Failed to load events. Please try again.');
-    } finally {
+  // Modified fetchEvents function in eventsPage.jsx
+const fetchEvents = async () => {
+  try {
+    setIsLoading(true);
+    
+    // Get organizationId from userData using the authUtil function
+    const userData = getUserData();
+    const organizationId = userData?.organizationId;
+    
+    if (!organizationId) {
+      setError('Organization ID not found. Please login again.');
       setIsLoading(false);
+      return;
     }
-  };
+    
+    // Set some default parameters for pagination
+    const params = {
+      page: 0,
+      size: 100,
+      sort: 'startDate,desc'
+    };
+    
+    // Pass organizationId to the API call
+    const response = await GetAllOrganizationEventsAPI(organizationId, params);
+    setEvents(response.data || []);
+    console.log("events are ....",events)
+    setError(null);
+  } catch (error) {
+    console.error('Error fetching events:', error);
+    setError('Failed to load events. Please try again.');
+  } finally {
+    setIsLoading(false);
+  }
+};
   
   /**
    * Apply filters and search to the events
@@ -125,13 +137,42 @@ const EventsPage = () => {
     navigate('/events/create');
   };
   
-  /**
-   * Navigate to event details page
-   * @param {string} eventId - Event ID
-   */
-  const handleViewEvent = (eventId) => {
-    navigate(`/events/${eventId}`);
-  };
+/**
+ * Navigate to event details page
+ * @param {string} eventId - Event ID
+ */
+const handleViewEvent = async (eventId) => {
+  try {
+    // Show loading state
+    setIsLoading(true);
+    
+    // Fetch event details using the GetEventAPI
+    const response = await GetEventAPI(eventId);
+    
+    // Check if the response is successful
+    if (response && response.data) {
+      // Save the event data to localStorage using the eventUtil function
+      saveEventData({
+        ...response.data,
+        eventId: eventId,
+        // Add a flag to indicate this event is being edited
+        isEditMode: true
+      });
+      
+      console.log('Event data saved to localStorage for editing:', response.data);
+      
+      // Navigate to the createEventPage with the eventId
+      navigate(`/events/create/${eventId}/1`);
+    } else {
+      setError('Failed to load event details. Please try again.');
+    }
+  } catch (error) {
+    console.error('Error fetching event data:', error);
+    setError('Failed to load event details. Please try again.');
+  } finally {
+    setIsLoading(false);
+  }
+};
   
   /**
    * Navigate to edit event page

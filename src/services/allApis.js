@@ -61,7 +61,12 @@ export const UpdateEventAPI = async (eventId, data) => {
 
 // Get all events with pagination
 export const GetAllEventsAPI = async (params) => {
-  return await apiClient.get("/api/events", { params });
+  return await apiClient.get(`/api/events/`, { params });
+};
+
+// Get all events with pagination
+export const GetAllOrganizationEventsAPI = async (organizationId) => {
+  return await apiClient.get(`/api/events/organization/${organizationId}`);
 };
 
 // Delete an event

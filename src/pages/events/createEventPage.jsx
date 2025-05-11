@@ -14,7 +14,7 @@ import TicketsStep from './steps/ticketsStep';
 import DiscountCodesStep from './steps/discountCodesStep';
 import PublishStep from './steps/publishStep';
 import LoadingSpinner from '../../components/common/loadingSpinner/loadingSpinner';
-import { CreateEventAPI, UpdateEventLocationAPI, UpdateEventDateTimeAPI ,UpdateEventDescriptionAPI, UpdateEventAPI, UploadEventBannerAPI, UpdateEventTicketsAPI, UpdateEventDiscountCodesAPI, PublishEventAPI } from '../../services/allApis';
+import { CreateEventAPI, UpdateEventLocationAPI, UpdateEventDateTimeAPI ,UpdateEventDescriptionAPI, GetEventAPI, UploadEventBannerAPI, UpdateEventTicketsAPI, UpdateEventDiscountCodesAPI, PublishEventAPI } from '../../services/allApis';
 import styles from './createEventPage.module.scss';
 import { getUserData, setUserData } from '../../utils/authUtil';
 import { saveEventData, getEventData, prepareLocationDataForAPI, prepareDateTimeDataForAPI, prepareDescriptionDataForAPI, prepareArtDataForAPI, prepareTicketsDataForAPI, prepareDiscountCodesDataForAPI,preparePublishEventDataForAPI } from '../../utils/eventUtil';
@@ -247,36 +247,36 @@ useEffect(() => {
     }
   }, [step]);
   
-  // Fetch event data if eventId is provided
-  useEffect(() => {
-    const fetchEventData = async () => {
-      if (eventId) {
-        try {
-          setIsLoading(prev => ({ ...prev, fetchEvent: true }));
-          const response = await UpdateEventAPI(eventId);
+  // // Fetch event data if eventId is provided
+  // useEffect(() => {
+  //   const fetchEventData = async () => {
+  //     if (eventId) {
+  //       try {
+  //         setIsLoading(prev => ({ ...prev, fetchEvent: true }));
+  //         const response = await GetEventAPI(eventId);
           
-          // Update event data
-          setEventData(prevData => ({
-            ...prevData,
-            ...response.data,
-            // Convert private boolean back to eventType string
-            eventType: response.data.private ? 'private' : 'public'
-          }));
+  //         // Update event data
+  //         setEventData(prevData => ({
+  //           ...prevData,
+  //           ...response.data,
+  //           // Convert private boolean back to eventType string
+  //           eventType: response.data.private ? 'private' : 'public'
+  //         }));
           
-          // Update step status based on fetched data
-          updateStepStatusFromData(response.data);
+  //         // Update step status based on fetched data
+  //         updateStepStatusFromData(response.data);
           
-        } catch (error) {
-          console.error('Error fetching event data:', error);
-          setError('Failed to load event data. Please try again.');
-        } finally {
-          setIsLoading(prev => ({ ...prev, fetchEvent: false }));
-        }
-      }
-    };
+  //       } catch (error) {
+  //         console.error('Error fetching event data:', error);
+  //         setError('Failed to load event data. Please try again.');
+  //       } finally {
+  //         setIsLoading(prev => ({ ...prev, fetchEvent: false }));
+  //       }
+  //     }
+  //   };
     
-    fetchEventData();
-  }, [eventId]);
+  //   fetchEventData();
+  // }, [eventId]);
   
   /**
    * Update step status based on event data
@@ -668,41 +668,44 @@ const validateTickets = () => {
   };
 
    /**
-   * Handle publishing the event
-   */
-  const handlePublishEvent = async () => {
-    try {
-      // Set loading state
-      setIsLoading(prev => ({ ...prev, publishEvent: true }));
-      
-      // Prepare the publish data for API using the utility function
-      const publishData = preparePublishEventDataForAPI(eventId);
-      
-      console.log('Publishing event with data:', publishData);
-      
-      // Make API call to publish the event
-      const response = await PublishEventAPI(eventId, publishData);
-      console.log('Event published successfully:', response);
-      
-      // Update saved event data
-      const currentEventData = getEventData();
-      saveEventData({
-        ...currentEventData,
-        publishStatus: 'published',
-        publishedAt: new Date().toISOString()
-      });
-      
-      // Redirect to the published event page after a short delay
-      setTimeout(() => {
-        navigate(`/events/${eventId}`);
-      }, 1500);
-    } catch (error) {
-      console.error('Error publishing event:', error);
-      setError(error.response?.data?.message || 'Failed to publish event. Please try again.');
-    } finally {
-      setIsLoading(prev => ({ ...prev, publishEvent: false }));
-    }
-  };
+ * Handle publishing the event
+ */
+const handlePublishEvent = async () => {
+  try {
+    // Set loading state
+    setIsLoading(prev => ({ ...prev, publishEvent: true }));
+    
+    // Prepare the publish data for API using the utility function
+    const publishData = preparePublishEventDataForAPI(eventId);
+    
+    console.log('Publishing event with data:', publishData);
+    
+    // Make API call to publish the event
+    const response = await PublishEventAPI(eventId, publishData);
+    console.log('Event published successfully:', response);
+    
+    // Update saved event data
+    const currentEventData = getEventData();
+    saveEventData({
+      ...currentEventData,
+      publishStatus: 'published',
+      publishedAt: new Date().toISOString()
+    });
+    
+    // Set success message (optional)
+    setSuccessMessage("Event published successfully!");
+    
+    // Redirect to the events page after a short delay
+    setTimeout(() => {
+      navigate('/events'); // Changed from /events/${eventId} to /events
+    }, 1500);
+  } catch (error) {
+    console.error('Error publishing event:', error);
+    setError(error.response?.data?.message || 'Failed to publish event. Please try again.');
+  } finally {
+    setIsLoading(prev => ({ ...prev, publishEvent: false }));
+  }
+};
 
   /**
    * Handle next step navigation

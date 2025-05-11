@@ -50,6 +50,22 @@ const CreatePassword = ({
   // State to track if confirm password field has been touched
   const [confirmPasswordTouched, setConfirmPasswordTouched] = useState(false);
 
+  // Add this new state to track if the password field has been focused
+const [passwordFieldFocused, setPasswordFieldFocused] = useState(false);
+
+// Add these handlers for the password field
+const handlePasswordFocus = () => {
+  setPasswordFieldFocused(true);
+};
+
+const handlePasswordBlur = () => {
+  // Optional: You could set it back to false when empty
+  // Only uncomment this if you want the requirements to disappear when the field is empty and loses focus
+  if (!formData.password) {
+    setPasswordFieldFocused(false);
+  }
+};
+
   /**
    * Check password validation whenever password changes
    */
@@ -175,6 +191,8 @@ const CreatePassword = ({
                   placeholder="Enter your password"
                   value={formData.password}
                   onChange={handleChange}
+                  onFocus={handlePasswordFocus}
+                  onBlur={handlePasswordBlur}
                   disabled={isLoading}
                 />
                 <button 
@@ -196,54 +214,56 @@ const CreatePassword = ({
                 </button>
               </div>
               
-              {/* Password validation requirements */}
-              <div className={styles.passwordRequirements}>
-                <div className={styles.requirementItem}>
-                  <svg className={`${styles.checkIcon} ${passwordValidation.length ? styles.validIcon : ''}`} width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <circle cx="8" cy="8" r="7.5" stroke="currentColor"/>
-                    <path d="M5 8L7 10L11 6" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                  <span className={passwordValidation.length ? styles.validText : ''}>
-                    Must be at least 8 characters
-                  </span>
+              {/* Password validation requirements - only show when field is focused */}
+              {passwordFieldFocused && (
+                <div className={styles.passwordRequirements}>
+                  <div className={styles.requirementItem}>
+                    <svg className={`${styles.checkIcon} ${passwordValidation.length ? styles.validIcon : ''}`} width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <circle cx="8" cy="8" r="7.5" stroke="currentColor"/>
+                      <path d="M5 8L7 10L11 6" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                    <span className={passwordValidation.length ? styles.validText : ''}>
+                      Must be at least 8 characters
+                    </span>
+                  </div>
+                  <div className={styles.requirementItem}>
+                    <svg className={`${styles.checkIcon} ${passwordValidation.lowercase ? styles.validIcon : ''}`} width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <circle cx="8" cy="8" r="7.5" stroke="currentColor"/>
+                      <path d="M5 8L7 10L11 6" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                    <span className={passwordValidation.lowercase ? styles.validText : ''}>
+                      One lowercase character
+                    </span>
+                  </div>
+                  <div className={styles.requirementItem}>
+                    <svg className={`${styles.checkIcon} ${passwordValidation.uppercase ? styles.validIcon : ''}`} width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <circle cx="8" cy="8" r="7.5" stroke="currentColor"/>
+                      <path d="M5 8L7 10L11 6" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                    <span className={passwordValidation.uppercase ? styles.validText : ''}>
+                      One uppercase character
+                    </span>
+                  </div>
+                  <div className={styles.requirementItem}>
+                    <svg className={`${styles.checkIcon} ${passwordValidation.special ? styles.validIcon : ''}`} width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <circle cx="8" cy="8" r="7.5" stroke="currentColor"/>
+                      <path d="M5 8L7 10L11 6" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                    <span className={passwordValidation.special ? styles.validText : ''}>
+                      One special character
+                    </span>
+                  </div>
+                  <div className={styles.requirementItem}>
+                    <svg className={`${styles.checkIcon} ${passwordValidation.number ? styles.validIcon : ''}`} width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <circle cx="8" cy="8" r="7.5" stroke="currentColor"/>
+                      <path d="M5 8L7 10L11 6" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                    <span className={passwordValidation.number ? styles.validText : ''}>
+                      One number
+                    </span>
+                  </div>
                 </div>
-                <div className={styles.requirementItem}>
-                  <svg className={`${styles.checkIcon} ${passwordValidation.lowercase ? styles.validIcon : ''}`} width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <circle cx="8" cy="8" r="7.5" stroke="currentColor"/>
-                    <path d="M5 8L7 10L11 6" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                  <span className={passwordValidation.lowercase ? styles.validText : ''}>
-                    One lowercase character
-                  </span>
-                </div>
-                <div className={styles.requirementItem}>
-                  <svg className={`${styles.checkIcon} ${passwordValidation.uppercase ? styles.validIcon : ''}`} width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <circle cx="8" cy="8" r="7.5" stroke="currentColor"/>
-                    <path d="M5 8L7 10L11 6" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                  <span className={passwordValidation.uppercase ? styles.validText : ''}>
-                    One uppercase character
-                  </span>
-                </div>
-                <div className={styles.requirementItem}>
-                  <svg className={`${styles.checkIcon} ${passwordValidation.special ? styles.validIcon : ''}`} width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <circle cx="8" cy="8" r="7.5" stroke="currentColor"/>
-                    <path d="M5 8L7 10L11 6" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                  <span className={passwordValidation.special ? styles.validText : ''}>
-                    One special character
-                  </span>
-                </div>
-                <div className={styles.requirementItem}>
-                  <svg className={`${styles.checkIcon} ${passwordValidation.number ? styles.validIcon : ''}`} width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <circle cx="8" cy="8" r="7.5" stroke="currentColor"/>
-                    <path d="M5 8L7 10L11 6" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                  <span className={passwordValidation.number ? styles.validText : ''}>
-                    One number
-                  </span>
-                </div>
-              </div>
+              )}
             </div>
             
             {/* Re-Enter Password field - NO EYE ICON */}

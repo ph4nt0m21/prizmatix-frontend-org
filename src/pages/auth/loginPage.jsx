@@ -113,6 +113,7 @@ const LoginPage = () => {
         const userData = {
           id: response.data.id || response.data.userId,
           organizationId: response.data.organizationId,
+          organizationName: response.data.organizationName,
           name: response.data.name || response.data.firstName + ' ' + response.data.lastName,
           email: response.data.email || username,
           role: response.data.role

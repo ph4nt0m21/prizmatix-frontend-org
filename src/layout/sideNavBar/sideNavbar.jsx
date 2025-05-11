@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
 import { LoginAPI } from '../../services/allApis';
 import styles from './sideNavBar.module.scss';
+import { getUserData, clearUserData } from '../../utils/authUtil';
 
 // Import SVG components
 import { ReactComponent as OverviewIcon } from '../../assets/icons/overview-icon.svg';
@@ -11,6 +12,7 @@ import { ReactComponent as ReportsIcon } from '../../assets/icons/reports-icon.s
 import { ReactComponent as NotificationsIcon } from '../../assets/icons/notifications-icon.svg';
 import { ReactComponent as HelpIcon } from '../../assets/icons/help-icon.svg';
 import { ReactComponent as SettingsIcon } from '../../assets/icons/settings-icon.svg';
+import { ReactComponent as LogoutIcon } from '../../assets/icons/logout-icon.svg';
 
 // Import logo
 import logoImage from '../../assets/images/small-logo.svg';
@@ -23,6 +25,8 @@ import logoImage from '../../assets/images/small-logo.svg';
 const SideNavBar = () => {
   const navigate = useNavigate();
   const [currentUser, setCurrentUser] = useState(null);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const profileDropdownRef = useRef(null);
   
   // Check authentication directly using cookie
   const isAuthenticated = !!Cookies.get('token');
@@ -32,9 +36,17 @@ const SideNavBar = () => {
     const fetchUserData = async () => {
       if (isAuthenticated) {
         try {
-          const token = Cookies.get('token');
-          const response = await LoginAPI(token);
-          setCurrentUser(response.data);
+          // First try to get user data from localStorage
+          const storedUserData = getUserData();
+          
+          if (storedUserData) {
+            setCurrentUser(storedUserData);
+          } else {
+            // If not in localStorage, fetch from API
+            const token = Cookies.get('token');
+            const response = await LoginAPI(token);
+            setCurrentUser(response.data);
+          }
         } catch (error) {
           console.error('Error fetching user profile:', error);
         }
@@ -43,12 +55,33 @@ const SideNavBar = () => {
     
     fetchUserData();
   }, [isAuthenticated]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (profileDropdownRef.current && !profileDropdownRef.current.contains(event.target)) {
+        setIsProfileOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
   
   // Handle logout
   const handleLogout = () => {
     Cookies.remove('token');
+    clearUserData();
     setCurrentUser(null);
+    setIsProfileOpen(false);
     navigate('/login');
+  };
+
+  // Toggle profile dropdown
+  const toggleProfileDropdown = () => {
+    setIsProfileOpen(!isProfileOpen);
   };
   
   // Navigation items with their respective routes and icons
@@ -62,8 +95,19 @@ const SideNavBar = () => {
   // Bottom navigation items
   const bottomItems = [
     { id: 'help', path: '/help', icon: HelpIcon, label: 'Help & Support' },
-    { id: 'settings', path: '/settings', icon: SettingsIcon, label: 'Account Settings' }
   ];
+
+  // Get user initials for profile icon
+  const getUserInitials = () => {
+    if (currentUser?.name) {
+      const nameParts = currentUser.name.split(' ');
+      if (nameParts.length >= 2) {
+        return (nameParts[0][0] + nameParts[1][0]).toUpperCase();
+      }
+      return currentUser.name.substring(0, 2).toUpperCase();
+    }
+    return 'Sa';
+  };
 
   return (
     <nav className={styles.sideNav}>
@@ -120,11 +164,43 @@ const SideNavBar = () => {
         })}
         
         {isAuthenticated && (
-          <NavLink to="/profile" className={styles.profileLink} title="Profile">
-            <div className={styles.profileIcon}>
-              {currentUser?.name ? currentUser.name.substring(0, 2) : 'Sa'}
-            </div>
-          </NavLink>
+          <div className={styles.profileContainer} ref={profileDropdownRef}>
+            <button 
+              className={styles.profileLink} 
+              onClick={toggleProfileDropdown}
+              aria-label="Toggle Profile Menu"
+            >
+              <div className={styles.profileIcon}>
+                {getUserInitials()}
+              </div>
+            </button>
+            
+            {isProfileOpen && (
+              <div className={styles.profileDropdown}>
+                <div className={styles.profileInfo}>
+                  <div className={styles.profileAvatar}>
+                    {getUserInitials()}
+                  </div>
+                  <div className={styles.profileDetails}>
+                    <div className={styles.profileName}>{currentUser?.name || 'Sarath Babu John'}</div>
+                    <div className={styles.profileEmail}>{currentUser?.email || 'sarathbabujohn333@gmail.com'}</div>
+                  </div>
+                </div>
+                
+                <div className={styles.dropdownDivider}></div>
+                
+                <NavLink to="/settings" className={styles.dropdownItem} onClick={() => setIsProfileOpen(false)}>
+                  <SettingsIcon className={styles.dropdownIcon} />
+                  <span>Settings</span>
+                </NavLink>
+                
+                <button className={styles.dropdownItem} onClick={handleLogout}>
+                  <LogoutIcon className={styles.dropdownIcon} />
+                  <span>Log Out</span>
+                </button>
+              </div>
+            )}
+          </div>
         )}
       </div>
     </nav>

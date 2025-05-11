@@ -75,13 +75,20 @@ const DateTimeStep = ({
               </label>
               <div className={styles.inputWithIcon}>
                 <input
-                  type="date"
+                  type="text"
                   id="startDate"
                   name="startDate"
                   className={styles.formInput}
                   value={dateTime.startDate}
                   onChange={handleFieldChange}
-                  min={new Date().toISOString().split('T')[0]} // Min date is today
+                  placeholder="mm/dd/yyyy"
+                  onFocus={(e) => e.target.type = 'date'}
+                  onBlur={(e) => {
+                    e.target.type = 'text';
+                    if (!e.target.value) {
+                      e.target.placeholder = "mm/dd/yyyy";
+                    }
+                  }}
                 />
                 <div className={styles.inputIcon}>
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -100,12 +107,20 @@ const DateTimeStep = ({
               </label>
               <div className={styles.inputWithIcon}>
                 <input
-                  type="time"
+                  type="text"
                   id="startTime"
                   name="startTime"
                   className={styles.formInput}
                   value={dateTime.startTime}
                   onChange={handleFieldChange}
+                  placeholder="HH:MM"
+                  onFocus={(e) => e.target.type = 'time'}
+                  onBlur={(e) => {
+                    e.target.type = 'text';
+                    if (!e.target.value) {
+                      e.target.placeholder = "HH:MM";
+                    }
+                  }}
                 />
                 <div className={styles.inputIcon}>
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -142,7 +157,14 @@ const DateTimeStep = ({
                   className={styles.formInput}
                   value={dateTime.endDate}
                   onChange={handleFieldChange}
-                  min={dateTime.startDate || new Date().toISOString().split('T')[0]} // Min date is start date or today
+                  placeholder="mm/dd/yyyy"
+                  onFocus={(e) => e.target.type = 'date'}
+                  onBlur={(e) => {
+                    e.target.type = 'text';
+                    if (!e.target.value) {
+                      e.target.placeholder = "mm/dd/yyyy";
+                      }
+                  }}
                 />
                 <div className={styles.inputIcon}>
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -167,6 +189,14 @@ const DateTimeStep = ({
                   className={styles.formInput}
                   value={dateTime.endTime}
                   onChange={handleFieldChange}
+                  placeholder="HH:MM"
+                  onFocus={(e) => e.target.type = 'time'}
+                  onBlur={(e) => {
+                    e.target.type = 'text';
+                    if (!e.target.value) {
+                      e.target.placeholder = "HH:MM";
+                    }
+                  }}
                 />
                 <div className={styles.inputIcon}>
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">

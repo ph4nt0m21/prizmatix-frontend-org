@@ -128,12 +128,21 @@
   }
 }
 
+/* Profile Container and Dropdown */
+.profileContainer {
+  position: relative;
+  margin-top: 16px;
+}
+
 .profileLink {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-top: 16px;
   text-decoration: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
 }
 
 .profileIcon {
@@ -147,4 +156,109 @@
   color: white;
   font-size: 14px;
   font-weight: 500;
+}
+
+.profileDropdown {
+  position: absolute;
+  left: 60px;
+  bottom: 0;
+  width: 250px;
+  background-color: #2D2D3A;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  padding: 16px;
+  z-index: 1100;
+}
+
+.profileInfo {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.profileAvatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background-color: #7C3AED;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 18px;
+  font-weight: 500;
+  margin-right: 12px;
+}
+
+.profileDetails {
+  display: flex;
+  flex-direction: column;
+}
+
+.profileName {
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 4px;
+}
+
+.profileEmail {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.dropdownDivider {
+  height: 1px;
+  background-color: rgba(255, 255, 255, 0.1);
+  margin: 12px 0;
+}
+
+.dropdownItem {
+  display: flex;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: 6px;
+  text-decoration: none;
+  color: #fff;
+  font-size: 14px;
+  margin-bottom: 4px;
+  transition: background-color 0.2s ease;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  cursor: pointer;
+  
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+  
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.dropdownIcon {
+  width: 18px;
+  height: 18px;
+  margin-right: 12px;
+  opacity: 0.8;
+}
+
+/* Settings item */
+.dropdownItem:nth-child(3) {
+  color: #fff;
+  
+  .dropdownIcon {
+    color: #fff;
+  }
+}
+
+/* Logout item */
+.dropdownItem:nth-child(4) {
+  color: #F87171;
+  
+  .dropdownIcon {
+    color: #F87171;
+  }
 }

@@ -80,17 +80,17 @@
   }
 }
 
-// Thumbnail is square
-.uploadDropzone:first-of-type {
-  width: 200px;
-  height: 200px;
+/* Banner is rectangular and wider */
+.uploadDropzone:last-of-type {
+  width: 100%;
+  height: 200px; /* Increased height */
   margin-bottom: 8px;
 }
 
-// Banner is rectangular
-.uploadDropzone:last-of-type {
-  width: 100%;
-  height: 160px;
+/* You might also want to update the thumbnail to keep it square but larger */
+.uploadDropzone:first-of-type {
+  width: 250px;
+  height: 250px;
   margin-bottom: 8px;
 }
 
