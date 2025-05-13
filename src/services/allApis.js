@@ -77,8 +77,8 @@ export const DeleteEventAPI = async (eventId, userId) => {
 };
 
 // Update event status
-export const UpdateEventStatusAPI = async (eventId, statusData) => {
-  return await apiClient.patch(`/api/events/${eventId}/status`, statusData);
+export const GetEventStatusAPI = async (eventId, statusData) => {
+  return await apiClient.get(`/api/events/${eventId}/status`, statusData);
 };
 
 // =============== EVENT CREATION STEPS APIs ===============
