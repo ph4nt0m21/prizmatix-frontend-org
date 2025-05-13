@@ -13,6 +13,7 @@ import { ReactComponent as NotificationsIcon } from '../../assets/icons/notifica
 import { ReactComponent as HelpIcon } from '../../assets/icons/help-icon.svg';
 import { ReactComponent as SettingsIcon } from '../../assets/icons/settings-icon.svg';
 import { ReactComponent as LogoutIcon } from '../../assets/icons/logout-icon.svg';
+import { clearEventDataOnLogout } from '../../utils/eventUtil';
 
 // Import logo
 import logoImage from '../../assets/images/small-logo.svg';
@@ -76,6 +77,8 @@ const SideNavBar = () => {
     clearUserData();
     setCurrentUser(null);
     setIsProfileOpen(false);
+    // Clear event data
+    clearEventDataOnLogout();
     navigate('/login');
   };
 

@@ -1,6 +1,9 @@
-import React from 'react';
+// eventCreationSidebar.jsx
+import React, { useState, useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
 import styles from './eventCreationSidebar.module.scss';
+import { GetEventStatusAPI } from '../../../services/allApis';
+import { getEventData } from '../../../utils/eventUtil';
 
 // Import SVG components
 import { ReactComponent as BasicInfoIcon } from '../../../assets/icons/basic-info-icon.svg';
@@ -15,14 +18,18 @@ import { ReactComponent as PublishIcon } from '../../../assets/icons/publish-ico
 /**
  * EventCreationSidebar component displays the steps of event creation
  * and tracks the progress of completion
- * 
- * @param {Object} props Component props
- * @param {number} props.currentStep Current step number
- * @param {Object} props.stepStatus Status of each step (completed, valid, visited)
- * @param {Function} props.navigateToStep Function to navigate to a step
- * @returns {JSX.Element} EventCreationSidebar component
  */
-const EventCreationSidebar = ({ currentStep, stepStatus, navigateToStep }) => {
+const EventCreationSidebar = ({ 
+  currentStep, 
+  stepStatus, 
+  navigateToStep, 
+  eventId, 
+  onStatusUpdate 
+}) => {
+  // Use a ref to prevent unnecessary API calls
+  const prevEventIdRef = useRef(null);
+  const prevStepRef = useRef(null);
+  
   // Steps configuration with imported SVG components
   const steps = [
     { number: 1, key: 'basicInfo', label: 'Basic Info', icon: BasicInfoIcon },
@@ -34,6 +41,60 @@ const EventCreationSidebar = ({ currentStep, stepStatus, navigateToStep }) => {
     { number: 7, key: 'discountCodes', label: 'Discount Codes', icon: DiscountIcon },
     { number: 8, key: 'publish', label: 'Publish', icon: PublishIcon }
   ];
+
+  // Only fetch event status when eventId or currentStep actually changes
+  useEffect(() => {
+    const fetchEventStatus = async () => {
+      // Get event ID from props or from localStorage if not provided
+      const eventIdToUse = eventId || getEventData()?.eventId;
+      
+      // Only fetch if we have a valid eventId 
+      // and if either eventId or currentStep has changed
+      if (eventIdToUse && 
+         (eventIdToUse !== prevEventIdRef.current || 
+          currentStep !== prevStepRef.current)) {
+        
+        try {
+          // Update refs to prevent further unnecessary API calls
+          prevEventIdRef.current = eventIdToUse;
+          prevStepRef.current = currentStep;
+          
+          console.log('Fetching event status for eventId:', eventIdToUse);
+          
+          // Make the API call to get event status
+          const response = await GetEventStatusAPI(eventIdToUse);
+          console.log('Event status data:', response.data);
+          
+          // Update step status based on API response if we have a callback
+          if (typeof onStatusUpdate === 'function' && response.data) {
+            // Map API response to our step status structure
+            const updatedStepStatus = { ...stepStatus };
+            
+            // Update each step's completed status based on API response
+            updatedStepStatus.basicInfo.completed = response.data.step1Completed || false;
+            updatedStepStatus.location.completed = response.data.step2Completed || false;
+            updatedStepStatus.dateTime.completed = response.data.step3Completed || false;
+            updatedStepStatus.description.completed = response.data.step4Completed || false;
+            updatedStepStatus.art.completed = response.data.step5Completed || false;
+            updatedStepStatus.tickets.completed = response.data.step6Completed || false;
+            updatedStepStatus.discountCodes.completed = response.data.step7Completed || false;
+            updatedStepStatus.publish.completed = response.data.step8Completed || false;
+            
+            onStatusUpdate(updatedStepStatus);
+          }
+        } catch (error) {
+          console.error('Error fetching event status:', error);
+        }
+      }
+    };
+    
+    fetchEventStatus();
+    
+    // Clean up function to handle component unmounting
+    return () => {
+      // Nothing to clean up in this case
+    };
+  }, [eventId, currentStep]); // Only re-run when eventId or currentStep changes
   
   /**
    * Get CSS class for a step based on its status
@@ -55,13 +116,8 @@ const EventCreationSidebar = ({ currentStep, stepStatus, navigateToStep }) => {
    * @param {Object} step Step object
    */
   const handleStepClick = (step) => {
-    // Can only navigate to completed steps or the next incomplete step
-    const canNavigate = stepStatus[step.key].completed || step.number === 1 || 
-                        stepStatus[steps[step.number - 2].key].completed;
-    
-    if (canNavigate) {
-      navigateToStep(step.number);
-    }
+    // Remove the restriction on navigation - allow clicking any step
+    navigateToStep(step.number);
   };
   
   return (
@@ -76,6 +132,8 @@ const EventCreationSidebar = ({ currentStep, stepStatus, navigateToStep }) => {
           const IconComponent = step.icon;
           const status = stepStatus[step.key];
           const isActive = currentStep === step.number;
+          const isCompleted = status.completed;
+          
           return (
             <div
               key={step.key}
@@ -84,9 +142,20 @@ const EventCreationSidebar = ({ currentStep, stepStatus, navigateToStep }) => {
             >
               <div className={styles.stepIconContainer}>
                 <IconComponent className={styles.stepIcon} />
-                <div className={`${styles.stepStatusIndicator} ${isActive || status.completed ? styles.filled : ''}`}></div>
               </div>
               <span className={styles.stepLabel}>{step.label}</span>
+              <div 
+                className={`${styles.stepStatusIndicator} ${
+                  isActive ? styles.activeIndicator : 
+                  isCompleted ? styles.completedIndicator : ''
+                }`}
+              >
+                {isCompleted && (
+                  <svg width="8" height="8" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" fill="#FFFFFF"/>
+                  </svg>
+                )}
+              </div>
             </div>
           );
         })}
@@ -109,7 +178,9 @@ const EventCreationSidebar = ({ currentStep, stepStatus, navigateToStep }) => {
 EventCreationSidebar.propTypes = {
   currentStep: PropTypes.number.isRequired,
   stepStatus: PropTypes.object.isRequired,
-  navigateToStep: PropTypes.func.isRequired
+  navigateToStep: PropTypes.func.isRequired,
+  eventId: PropTypes.string,
+  onStatusUpdate: PropTypes.func
 };
 
 export default EventCreationSidebar;

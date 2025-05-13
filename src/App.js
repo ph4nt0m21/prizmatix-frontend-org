@@ -15,6 +15,7 @@ import NotFoundPage from "./pages/notFound/notFoundPage";
 import LoadingSpinner from "./components/common/loadingSpinner/loadingSpinner";
 import EventsPage from "./pages/events/eventsPage";
 import CreateEventPage from "./pages/events/createEventPage";
+import { setupEventDataCleanup, checkAndCleanupEventData } from './utils/eventUtil';
 
 /**
  * App component defines the main routing structure and handles authentication
@@ -53,6 +54,14 @@ function App() {
     
     checkAuthStatus();
   }, []);
+
+  useEffect(() => {
+  // Check for stale event data on app startup
+  checkAndCleanupEventData(120); // Clear stale event data after 2 hours
+  
+  // Setup cleanup for when user closes tab or window
+  setupEventDataCleanup();
+}, []);
   
   // Show loading spinner while checking authentication
   if (isLoading) {

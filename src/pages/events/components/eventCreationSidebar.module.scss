@@ -91,22 +91,36 @@
 }
 
 .stepStatusIndicator {
-  position: absolute;
-  top: -4px;
-  right: -4px;
-  width: 8px;
-  height: 8px;
+  width: 16px;
+  height: 16px;
   border-radius: 50%;
-  border: 1px solid #7C3AED;
+  border: 1px solid #E9EAEC;
+  background-color: #FFF;
+  margin-left: auto; /* This pushes it to the right */
+  display: flex;
+  align-items: center;
+  justify-content: center;
   
-  &.filled {
+  &.activeIndicator {
     background-color: #7C3AED;
+    border-color: #7C3AED;
+  }
+  
+  &.completedIndicator {
+    background-color: #22C55E;
+    border-color: #22C55E;
+  }
+
+  svg {
+    width: 10px;
+    height: 10px;
   }
 }
 
 .stepLabel {
   font-size: 14px;
   color: #6b7280;
+  flex: 1; /* This ensures the label takes up available space */
   
   .active & {
     color: #7C3AED;
@@ -114,6 +128,7 @@
   }
   
   .completed & {
+    color: #7C3AED;
     font-weight: 500;
   }
 }

@@ -30,10 +30,84 @@ export const getEventData = () => {
 };
 
 /**
+ * Setup event data cleanup for page unload, tab close, and refresh
+ * This function should be called once when your app initializes
+ */
+export const setupEventDataCleanup = () => {
+  // Detect browser session using sessionStorage
+  const sessionKey = 'eventCreationSession';
+  
+  // Check if this is a new browser session (which includes page refresh)
+  const isNewSession = !sessionStorage.getItem(sessionKey);
+  
+  if (isNewSession) {
+    // This is either a page refresh or a new browser session
+    const eventData = getEventData();
+    
+    // Only clear if we have a draft event (not a published one)
+    if (eventData && eventData.publishStatus === 'draft') {
+      // Remove the draft event data
+      clearEventData();
+      console.log('Event data cleared on page refresh/new session');
+    }
+    
+    // Mark this as a valid session
+    sessionStorage.setItem(sessionKey, 'true');
+  }
+  
+  // Register an event listener for beforeunload event
+  window.addEventListener('beforeunload', () => {
+    // If there's an event in progress, mark it with timestamp
+    const eventData = getEventData();
+    if (eventData) {
+      // Store the event data with a timestamp
+      localStorage.setItem('eventDataLastAccessed', new Date().toISOString());
+    }
+    
+    // Clear the session marker
+    sessionStorage.removeItem(sessionKey);
+  });
+};
+
+/**
  * Clear event data from localStorage
  */
 export const clearEventData = () => {
   localStorage.removeItem('currentEventData');
+};
+
+/**
+ * Check and clean up stale event data
+ * Call this function when your app starts up
+ * @param {number} expiryTimeMinutes - Time in minutes after which draft event data is considered stale
+ */
+export const checkAndCleanupEventData = (expiryTimeMinutes = 60) => {
+  const lastAccessed = localStorage.getItem('eventDataLastAccessed');
+  if (lastAccessed) {
+    const lastAccessedDate = new Date(lastAccessed);
+    const currentDate = new Date();
+    
+    // Calculate difference in milliseconds
+    const timeDifference = currentDate - lastAccessedDate;
+    
+    // Convert to minutes
+    const minutesDifference = timeDifference / (1000 * 60);
+    
+    // If more than specified minutes have passed, clear the event data
+    if (minutesDifference > expiryTimeMinutes) {
+      clearEventData();
+      localStorage.removeItem('eventDataLastAccessed');
+    }
+  }
+};
+
+/**
+ * Clear event data on logout
+ * Call this function as part of your logout process
+ */
+export const clearEventDataOnLogout = () => {
+  clearEventData();
+  localStorage.removeItem('eventDataLastAccessed');
 };
 
 /**

@@ -14,10 +14,10 @@ import TicketsStep from './steps/ticketsStep';
 import DiscountCodesStep from './steps/discountCodesStep';
 import PublishStep from './steps/publishStep';
 import LoadingSpinner from '../../components/common/loadingSpinner/loadingSpinner';
-import { CreateEventAPI, UpdateEventLocationAPI, UpdateEventDateTimeAPI ,UpdateEventDescriptionAPI, GetEventAPI, UploadEventBannerAPI, UpdateEventTicketsAPI, UpdateEventDiscountCodesAPI, PublishEventAPI } from '../../services/allApis';
+import { CreateEventAPI, UpdateEventLocationAPI, UpdateEventDateTimeAPI ,UpdateEventDescriptionAPI, GetEventAPI, UploadEventBannerAPI, UpdateEventTicketsAPI, UpdateEventDiscountCodesAPI, PublishEventAPI, GetEventStatusAPI } from '../../services/allApis';
 import styles from './createEventPage.module.scss';
 import { getUserData, setUserData } from '../../utils/authUtil';
-import { saveEventData, getEventData, prepareLocationDataForAPI, prepareDateTimeDataForAPI, prepareDescriptionDataForAPI, prepareArtDataForAPI, prepareTicketsDataForAPI, prepareDiscountCodesDataForAPI,preparePublishEventDataForAPI } from '../../utils/eventUtil';
+import { saveEventData, getEventData,clearEventData, prepareLocationDataForAPI, prepareDateTimeDataForAPI, prepareDescriptionDataForAPI, prepareArtDataForAPI, prepareTicketsDataForAPI, prepareDiscountCodesDataForAPI,preparePublishEventDataForAPI } from '../../utils/eventUtil';
 
 /**
  * CreateEventPage component for the multi-step event creation process
@@ -116,6 +116,19 @@ const CreateEventPage = () => {
     discountCodes: { completed: false, valid: false, visited: false },
     publish: { completed: false, valid: false, visited: false }
   });
+
+  const areAllPreviousStepsCompleted = () => {
+  // Check if all previous steps (1-7) are completed
+  return (
+    stepStatus.basicInfo.completed &&
+    stepStatus.location.completed &&
+    stepStatus.dateTime.completed &&
+    stepStatus.description.completed &&
+    stepStatus.art.completed &&
+    stepStatus.tickets.completed &&
+    stepStatus.discountCodes.completed
+  );
+  };
   
   // Current step state (default to 1 if not specified)
   const [currentStep, setCurrentStep] = useState(1);
@@ -173,61 +186,114 @@ const CreateEventPage = () => {
   }, []);
   
   // Set user info when user data is loaded
-useEffect(() => {
-  if (currentUser) {
-    // Extract the correct fields, checking multiple possible locations
-    const organizationId = currentUser.organizationId || 
-                           currentUser.organization?.id || 
-                           currentUser.profile?.organizationId;
-    
-    const userId = currentUser.id || 
-                  currentUser.userId || 
-                  currentUser.user_id;
-    
-    console.log('Setting organization data from user:', {
-      organizationId: organizationId,
-      createdBy: userId
-    });
-    
-    // Only update if we have actual values
-    if (organizationId || userId) {
+  useEffect(() => {
+    if (currentUser) {
+      // Extract the correct fields, checking multiple possible locations
+      const organizationId = currentUser.organizationId || 
+                            currentUser.organization?.id || 
+                            currentUser.profile?.organizationId;
+      
+      const userId = currentUser.id || 
+                    currentUser.userId || 
+                    currentUser.user_id;
+      
+      console.log('Setting organization data from user:', {
+        organizationId: organizationId,
+        createdBy: userId
+      });
+      
+      // Only update if we have actual values
+      if (organizationId || userId) {
+        setEventData(prevData => ({
+          ...prevData,
+          // Only update fields that have values
+          ...(organizationId !== undefined && { organizationId }),
+          ...(userId !== undefined && { createdBy: userId })
+        }));
+      } else {
+        console.warn('Could not find organizationId or userId in the user data');
+      }
+    }
+  }, [currentUser]);
+
+  // Add this function to handle fetching event data
+  useEffect(() => {
+    // Check for event data in localStorage on initial load
+    const storedEventData = getEventData();
+    if (storedEventData && !eventId) {
       setEventData(prevData => ({
         ...prevData,
-        // Only update fields that have values
-        ...(organizationId !== undefined && { organizationId }),
-        ...(userId !== undefined && { createdBy: userId })
+        ...storedEventData
       }));
-    } else {
-      console.warn('Could not find organizationId or userId in the user data');
+      
+      // Update step status based on stored data
+      updateStepStatusFromData(storedEventData);
+      
+      // Navigate to the event if ID is available
+      if (storedEventData.eventId) {
+        navigate(`/events/create/${storedEventData.eventId}/${currentStep}`);
+      }
     }
-  }
-}, [currentUser]);
+  }, []);
 
-// Add this function to handle fetching event data
 useEffect(() => {
-  // Check for event data in localStorage on initial load
-  const storedEventData = getEventData();
-  if (storedEventData && !eventId) {
-    setEventData(prevData => ({
-      ...prevData,
-      ...storedEventData
-    }));
-    
-    // Update step status based on stored data
-    updateStepStatusFromData(storedEventData);
-    
-    // Navigate to the event if ID is available
-    if (storedEventData.eventId) {
-      navigate(`/events/create/${storedEventData.eventId}/${currentStep}`);
+  // Fetch event status after successful API calls
+  const fetchEventStatus = async () => {
+    if (eventId) {
+      try {
+        const response = await GetEventStatusAPI(eventId);
+        
+        if (response.data) {
+          // Create a new step status object based on API response
+          const apiStepStatus = {
+            basicInfo: { ...stepStatus.basicInfo, completed: response.data.step1Completed || false },
+            location: { ...stepStatus.location, completed: response.data.step2Completed || false },
+            dateTime: { ...stepStatus.dateTime, completed: response.data.step3Completed || false },
+            description: { ...stepStatus.description, completed: response.data.step4Completed || false },
+            art: { ...stepStatus.art, completed: response.data.step5Completed || false },
+            tickets: { ...stepStatus.tickets, completed: response.data.step6Completed || false },
+            discountCodes: { ...stepStatus.discountCodes, completed: response.data.step7Completed || false },
+            publish: { ...stepStatus.publish, completed: response.data.step8Completed || false }
+          };
+          
+          // Update step status based on API response
+          setStepStatus(apiStepStatus);
+        }
+      } catch (error) {
+        console.error('Error fetching event status:', error);
+      }
     }
-  }
-}, []);
+  };
+  
+  fetchEventStatus();
+}, [eventId, currentStep]); // Fetch status when eventId or currentStep changes
   
   // Parse step parameter and update current step
   useEffect(() => {
     if (step) {
       const stepNumber = parseInt(step);
       if (!isNaN(stepNumber) && stepNumber >= 1 && stepNumber <= 8) {
+        // Special case for step 8 (publish)
+        if (stepNumber === 8 && !areAllPreviousStepsCompleted()) {
+          // Redirect to the first incomplete step
+          let firstIncompleteStep = 1;
+          if (!stepStatus.basicInfo.completed) firstIncompleteStep = 1;
+          else if (!stepStatus.location.completed) firstIncompleteStep = 2;
+          else if (!stepStatus.dateTime.completed) firstIncompleteStep = 3;
+          else if (!stepStatus.description.completed) firstIncompleteStep = 4;
+          else if (!stepStatus.art.completed) firstIncompleteStep = 5;
+          else if (!stepStatus.tickets.completed) firstIncompleteStep = 6;
+          else if (!stepStatus.discountCodes.completed) firstIncompleteStep = 7;
+          
+          // Alert the user
+          alert("Please complete all previous steps before publishing.");
+          
+          // Redirect to the first incomplete step
+          navigate(`/events/create/${eventId}/${firstIncompleteStep}`);
+          setCurrentStep(firstIncompleteStep);
+          return;
+        }
+        
         setCurrentStep(stepNumber);
         
         // Mark the current step as visited
@@ -245,38 +311,72 @@ useEffect(() => {
     } else {
       setCurrentStep(1); // Default to step 1 if no step parameter
     }
-  }, [step]);
+  }, [step, stepStatus]);
   
-  // // Fetch event data if eventId is provided
-  // useEffect(() => {
-  //   const fetchEventData = async () => {
-  //     if (eventId) {
-  //       try {
-  //         setIsLoading(prev => ({ ...prev, fetchEvent: true }));
-  //         const response = await GetEventAPI(eventId);
+  // Fetch event data if eventId is provided
+  useEffect(() => {
+    const fetchEventData = async () => {
+      if (eventId) {
+        try {
+          setIsLoading(prev => ({ ...prev, fetchEvent: true }));
+          const response = await GetEventAPI(eventId);
           
-  //         // Update event data
-  //         setEventData(prevData => ({
-  //           ...prevData,
-  //           ...response.data,
-  //           // Convert private boolean back to eventType string
-  //           eventType: response.data.private ? 'private' : 'public'
-  //         }));
+          // Update event data
+          setEventData(prevData => ({
+            ...prevData,
+            ...response.data,
+            // Convert private boolean back to eventType string
+            eventType: response.data.private ? 'private' : 'public'
+          }));
           
-  //         // Update step status based on fetched data
-  //         updateStepStatusFromData(response.data);
+          // Update step status based on fetched data
+          updateStepStatusFromData(response.data);
           
-  //       } catch (error) {
-  //         console.error('Error fetching event data:', error);
-  //         setError('Failed to load event data. Please try again.');
-  //       } finally {
-  //         setIsLoading(prev => ({ ...prev, fetchEvent: false }));
-  //       }
-  //     }
-  //   };
+        } catch (error) {
+          console.error('Error fetching event data:', error);
+          setError('Failed to load event data. Please try again.');
+        } finally {
+          setIsLoading(prev => ({ ...prev, fetchEvent: false }));
+        }
+      }
+    };
     
-  //   fetchEventData();
-  // }, [eventId]);
+    fetchEventData();
+  }, [eventId]);
+
+  
+  useEffect(() => {
+    // Run this only once when the component mounts
+    const handlePageRefresh = () => {
+      // Check if this is a fresh page load rather than a navigation within the app
+      const isPageRefresh = !sessionStorage.getItem('eventCreationInProgress');
+      
+      if (isPageRefresh) {
+        // This is a page refresh, not an in-app navigation
+        
+        // For a brand new event creation (no eventId in URL)
+        if (!eventId) {
+          // Clear any existing draft data to start fresh
+          clearEventData();
+          console.log('Starting fresh event creation - cleared old data');
+        }
+        
+        // Mark that we're now in an event creation process
+        sessionStorage.setItem('eventCreationInProgress', 'true');
+      }
+    };
+    
+    handlePageRefresh();
+    
+    // Clean up on component unmount
+    return () => {
+      // If we're navigating away from the event creation process entirely,
+      // clear the session marker
+      if (window.location.pathname.indexOf('/events/create') === -1) {
+        sessionStorage.removeItem('eventCreationInProgress');
+      }
+    };
+  }, [eventId]); // Only run on initial mount and when eventId changes
   
   /**
    * Update step status based on event data
@@ -379,6 +479,10 @@ useEffect(() => {
       [field]: value
     }));
   };
+
+  const handleStepStatusUpdate = (updatedStepStatus) => {
+  setStepStatus(updatedStepStatus);
+};
   
   /**
    * Validate the current step
@@ -694,6 +798,8 @@ const handlePublishEvent = async () => {
     
     // Set success message (optional)
     setSuccessMessage("Event published successfully!");
+
+    clearEventData();
     
     // Redirect to the events page after a short delay
     setTimeout(() => {
@@ -714,19 +820,16 @@ const handlePublishEvent = async () => {
     // Validate current step
     const isValid = validateCurrentStep();
     
-    if (!isValid) {
-      // Only log to console, don't set UI error
-      console.error('Please complete all required fields');
-      return;
-    }
-    
-    try {
       // Special case for the last step (publish)
       if (currentStep === 8) {
         await handlePublishEvent();
         return;
       }
-      
+    
+    try {
+
+      // If the step is valid, make API calls
+      if (isValid) {
       // Set loading state
       setIsLoading(prev => ({ ...prev, saveEvent: true }));
       
@@ -766,27 +869,17 @@ const handlePublishEvent = async () => {
           console.log('Event created successfully!');
         } catch (error) {
           console.error('API Error Details:', error.response?.data || error.message);
-          
-          // Log appropriate error message based on error response
-          let errorMessage = 'Failed to create event. Please try again.';
-          
-          if (error.response?.data?.message) {
-            errorMessage = error.response.data.message;
-          } else if (error.response?.status === 401) {
-            errorMessage = 'Your session has expired. Please log in again.';
-          } else if (error.message) {
-            errorMessage = error.message;
-          }
-          
-          console.error(errorMessage);
-          // Don't set UI error message
           setIsLoading(prev => ({ ...prev, saveEvent: false }));
-          return; // Return early to prevent navigation
+          
+          // Still navigate to next step even if API call fails
+          navigate(`/events/create/${eventId || 'draft-event-123'}/${currentStep + 1}`);
+          setCurrentStep(prevStep => prevStep + 1);
+          return;
         }
       }
 
       // Handle location step submission
-    else if (currentStep === 2 && eventId) {
+   else if (currentStep === 2 && eventId) {
       try {
         // Prepare location data for API submission
         const locationData = prepareLocationDataForAPI(eventData.location);
@@ -963,6 +1056,14 @@ const handlePublishEvent = async () => {
 
     // Handle discount codes step submission
     else if (currentStep === 7 && eventId) {
+
+      // Check if all previous steps are completed
+      if (currentStep === 7 && !areAllPreviousStepsCompleted()) {
+        // This is the step before publish (step 7 is discount codes)
+        alert("Please complete all previous steps before proceeding to publish.");
+        return;
+      }
+
       try {
         // Prepare discount codes data for API submission
         const discountCodesData = prepareDiscountCodesDataForAPI(eventData.discountCodes, eventId);
@@ -998,16 +1099,43 @@ const handlePublishEvent = async () => {
           visited: true
         }
       }));
+
+      // Fetch updated event status after successful API call
+      if (eventId || updatedEventId) {
+        try {
+          const response = await GetEventStatusAPI(eventId || updatedEventId);
+          if (response.data) {
+            console.log('Updated event status:', response.data);
+          }
+        } catch (statusError) {
+          console.error('Error fetching updated event status:', statusError);
+        }
+      }
       
       // Navigate to the next step with the actual event ID
-      navigate(`/events/create/${updatedEventId}/${currentStep + 1}`);
+      navigate(`/events/create/${updatedEventId || eventId || 'draft-event-123'}/${currentStep + 1}`);
       setCurrentStep(prevStep => prevStep + 1);
-    } catch (error) {
-      console.error('Error saving event data:', error);
-      // Only log to console, don't set UI error
-    } finally {
-      setIsLoading(prev => ({ ...prev, saveEvent: false }));
+    } else {
+      // If the step is not valid, just navigate to the next step without making API calls
+      // Mark the step as visited but not completed
+      const stepKey = getStepKeyByNumber(currentStep);
+      setStepStatus(prevStatus => ({
+        ...prevStatus,
+        [stepKey]: {
+          ...prevStatus[stepKey],
+          visited: true
+        }
+      }));
+      
+      // Navigate to the next step without making API calls
+      navigate(`/events/create/${eventId || 'draft-event-123'}/${currentStep + 1}`);
+      setCurrentStep(prevStep => prevStep + 1);
     }
+  } catch (error) {
+    console.error('Error saving event data:', error);
+  } finally {
+    setIsLoading(prev => ({ ...prev, saveEvent: false }));
+  }
   };
   
   /**
@@ -1077,18 +1205,19 @@ const handlePublishEvent = async () => {
    * @param {number} stepNumber - Step to navigate to
    */
   const navigateToStep = (stepNumber) => {
-    // Check if we can navigate to this step
-    const stepKey = getStepKeyByNumber(stepNumber);
-    const targetStep = stepStatus[stepKey];
-    
-    // Can navigate to any completed step or the next incomplete step
-    const canNavigate = targetStep.completed || stepNumber === 1 || 
-                        stepStatus[getStepKeyByNumber(stepNumber - 1)].completed;
-    
-    if (canNavigate) {
-      navigate(`/events/create/${eventId || 'draft-event-123'}/${stepNumber}`);
-      setCurrentStep(stepNumber);
+    // Special case for the publish step (step 8)
+    if (stepNumber === 8) {
+      // Check if all previous steps are completed
+      if (!areAllPreviousStepsCompleted()) {
+        // Show alert to user
+        alert("Please complete all previous steps before publishing.");
+        return;
+      }
     }
+    
+    // Navigate to the selected step
+    navigate(`/events/create/${eventId || 'draft-event-123'}/${stepNumber}`);
+    setCurrentStep(stepNumber);
   };
   
     /**
@@ -1224,8 +1353,19 @@ const handlePublishEvent = async () => {
               currentStep={currentStep}
               stepStatus={stepStatus}
               navigateToStep={navigateToStep}
+              eventId={eventId}
+              onStatusUpdate={(updatedStatus) => {
+                // Only update if there are actual changes to prevent unnecessary re-renders
+                const hasChanges = Object.keys(updatedStatus).some(key => 
+                  updatedStatus[key].completed !== stepStatus[key].completed
+                );
+                
+                if (hasChanges) {
+                  setStepStatus(updatedStatus);
+                }
+              }}
             />
-            
+          
             <div className={styles.mainContent}>
               
               {successMessage && (
@@ -1258,7 +1398,8 @@ const handlePublishEvent = async () => {
                   <button
                     type="button"
                     onClick={handleNextStep}
-                    disabled={isNextDisabled}
+                    // Remove the disabled attribute to make it always clickable
+                    // disabled={isNextDisabled}
                     className={styles.nextButton}
                   >
                     {isLoading.saveEvent ? 'Saving...' : 'Next'}
