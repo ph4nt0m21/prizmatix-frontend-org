@@ -254,6 +254,27 @@
   margin: 0 0 16px 0;
 }
 
+.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Tooltip for disabled steps */
+.disabled:hover::after {
+  content: "Please complete Basic Info step first";
+  position: absolute;
+  left: 100%;
+  top: 0;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+  z-index: 100;
+}
+
 // Footer styling
 .footer {
   display: flex;
