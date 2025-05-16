@@ -125,8 +125,7 @@ const CreateEventPage = () => {
     stepStatus.dateTime.completed &&
     stepStatus.description.completed &&
     stepStatus.art.completed &&
-    stepStatus.tickets.completed &&
-    stepStatus.discountCodes.completed
+    stepStatus.tickets.completed
   );
   };
   
@@ -892,7 +891,7 @@ const handlePublishEvent = async () => {
         const currentEventData = getEventData();
         saveEventData({
           ...currentEventData,
-          location: response.data
+          location: eventData.location
         });
         
       } catch (error) {
@@ -922,7 +921,7 @@ const handlePublishEvent = async () => {
         const currentEventData = getEventData();
         saveEventData({
           ...currentEventData,
-          dateTime: response.data
+          dateTime: eventData.dateTime
         });
         
       } catch (error) {

@@ -80,10 +80,9 @@ const MultiStepRegisterPage = () => {
   // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
-      console.log('User is authenticated, redirecting to previous page or home');
-      // Redirect to previous location or home
-      const from = location.state?.from?.pathname || "/";
-      navigate(from, { replace: true });
+      console.log('User is authenticated, redirecting to home page');
+      // Redirect to home page directly
+      navigate('/', { replace: true });
     }
     
     // Clear errors when component unmounts
@@ -91,7 +90,7 @@ const MultiStepRegisterPage = () => {
       clearError();
       setError(null);
     };
-  }, [isAuthenticated, navigate, location]);
+  }, [isAuthenticated, navigate]);
   
   // Update progress indicator based on current step
   useEffect(() => {
@@ -308,90 +307,106 @@ const verifyEmail = async () => {
     setSocialLinks([]);
   };
   
-  /**
-   * Register a new organization
-   * @returns {Promise} Promise resolving to registration result
-   */
   const handleSubmit = async () => {
-    // Clear previous errors
-    clearError();
-    setError(null);
+  // Clear previous errors
+  clearError();
+  setError(null);
+  
+  try {
+    // Set loading state
+    setLoadingState('register', true);
     
-    try {
-      // Set loading state
-      setLoadingState('register', true);
+    // Map form data to the database schema
+    const registrationData = {
+      // Required fields from API schema
+      email: formData.email,
+      firstName: formData.firstName,
+      lastName: formData.lastName,
+      mobileNumber: formData.mobileNumber,
+      password: formData.password,
       
-      // Map form data to the database schema
-      const registrationData = {
-        // Required fields from API schema
+      // Organization profile fields - handle skipped step with defaults
+      name: formData.name || `${formData.firstName}'s Organization`, // Use default name if skipped
+      description: formData.description || "Organization description", // Default description
+      bio: formData.bio || "", // Default bio
+      profilePhoto: "profile", // Default profile photo
+      
+      // If socialLinks is empty, provide an empty array
+      socialMediaLinks: socialLinks && socialLinks.length > 0 
+        ? socialLinks.map(link => ({
+            platform: link.platform,
+            url: link.url
+          })) 
+        : []
+    };
+    
+    console.log('Sending registration data:', registrationData);
+    
+    // Call OrganizationRegisterAPIComplete from allApis.js
+    const response = await OrganizationRegisterAPIComplete(registrationData);
+    console.log('Registration successful:', response);
+    
+    // Process the response
+    if (response && response.data) {
+      // Handle token from response, checking different possible formats
+      const token = extractTokenFromResponse(response);
+      
+      if (token) {
+        // Store token in cookie - use same expiry as login page (1 day)
+        Cookies.set('token', token, { 
+          expires: 1 // Use fixed 1 day expiry to match login page
+        });
+        
+        console.log('Token stored in cookie successfully');
+      }
+      
+      // Format user data to match login page format
+      const userData = {
+        id: response.data.userId || response.data.id || response.data.user?.id,
+        organizationId: response.data.organizationId || response.data.organization?.id,
+        organizationName: response.data.name || `${formData.firstName}'s Organization`,
+        name: `${formData.firstName} ${formData.lastName}`,
         email: formData.email,
-        name: formData.name || `${formData.firstName}'s Organization`, // Fallback if name not provided
-        description: "This is organization description",
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        mobileNumber: formData.mobileNumber,
-        password: formData.password,
-        profilePhoto: "profile",
-        bio: formData.description || "", // Bio and description are the same in this implementation
-        socialMediaLinks: socialLinks.map(link => ({
-          platform: link.platform,
-          url: link.url
-        }))
+        role: response.data.role || 'organization_admin'
       };
       
-      console.log('Sending registration data:', registrationData);
+      console.log('Storing user data to localStorage:', userData);
       
-      // Call OrganizationRegisterAPIComplete from allApis.js
-      const response = await OrganizationRegisterAPIComplete(registrationData);
-      console.log('Registration successful:', response);
+      // Store in localStorage - same format as login page
+      localStorage.setItem('userData', JSON.stringify(userData));
       
-      // Process the response
-      if (response && response.data) {
-        // Handle token from response, checking different possible formats
-        const token = extractTokenFromResponse(response);
-        
-        if (token) {
-          // Store token in cookie
-          Cookies.set('token', token, { 
-            expires: parseInt(process.env.PUBLIC_AUTH_COOKIE_EXPIRY || 1) // Default to 1 day
-          });
-        }
-        
-        // Set user data from response or form data
-        const userData = response.data.user || {
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          email: formData.email,
-          name: `${formData.firstName} ${formData.lastName}`
-        };
-        
-        // Update authentication state
-        setCurrentUser(userData);
-        setIsAuthenticated(true);
-        
-        // Clear form data and files on success
-        resetFormData();
-        
-        // Show success message
-        showError('Registration successful! Redirecting...', 'info');
-      } else {
-        throw new Error('Invalid response received from server');
-      }
-    } catch (error) {
-      console.error('Registration failed:', error);
+      // Update authentication state
+      setCurrentUser(userData);
+      setIsAuthenticated(true);
       
-      // Extract and format error message
-      const errorMessage = formatErrorMessage(error);
+      // Clear form data and files on success
+      resetFormData();
       
-      // Show error message
-      showError(errorMessage);
+      // Show success message
+      showError('Registration successful! Redirecting...', 'info');
       
-      // Set auth error state as well
-      setAuthError(errorMessage);
-    } finally {
-      setLoadingState('register', false);
+      // Redirect to home page after successful registration
+      setTimeout(() => {
+        navigate('/');
+      }, 1500);
+    } else {
+      throw new Error('Invalid response received from server');
     }
-  };
+  } catch (error) {
+    console.error('Registration failed:', error);
+    
+    // Extract and format error message
+    const errorMessage = formatErrorMessage(error);
+    
+    // Show error message
+    showError(errorMessage);
+    
+    // Set auth error state as well
+    setAuthError(errorMessage);
+  } finally {
+    setLoadingState('register', false);
+  }
+};
   
   /**
    * Clear auth errors
@@ -527,17 +542,25 @@ const verifyEmail = async () => {
   
   /**
    * Validate organization profile form data
+   * This is an updated version that allows skipping validation
+   * @param {boolean} allowEmpty - Whether to allow empty fields (for skip button)
    * @returns {boolean} True if form is valid, false otherwise
    */
-  const validateOrganizationProfile = () => {
+  const validateOrganizationProfile = (allowEmpty = false) => {
+    // If we're allowing empty fields (for skip functionality), return true
+    if (allowEmpty) {
+      console.log("Skipping organization profile validation");
+      return true;
+    }
+    
     const errors = {};
     let isValid = true;
     
     // Organization name validation
-    if (!formData.name.trim()) {
-      errors.name = 'Organization name is required';
-      isValid = false;
-    }
+    // if (!formData.name || !formData.name.trim()) {
+    //   errors.name = 'Organization name is required';
+    //   isValid = false;
+    // }
     
     setValidationErrors(errors);
     return isValid;
@@ -660,17 +683,18 @@ const verifyEmail = async () => {
       case 3:
         return (
           <OrganizationProfile 
-            formData={formData}
-            handleChange={handleChange}
-            nextStep={nextStep}
-            errors={validationErrors}
-            isLoading={isRegisterDisabled}
-            handleFileUpload={handleFileUpload}
-            uploadedLogo={uploadedLogo}
-            setUploadedLogo={setUploadedLogo}
-            socialLinks={socialLinks}
-            setSocialLinks={setSocialLinks}
-            onGoBack={prevStep}
+          formData={formData}
+          handleChange={handleChange}
+          nextStep={nextStep}
+          errors={validationErrors}
+          isLoading={isRegisterDisabled}
+          handleFileUpload={handleFileUpload}
+          uploadedLogo={uploadedLogo}
+          setUploadedLogo={setUploadedLogo}
+          socialLinks={socialLinks}
+          setSocialLinks={setSocialLinks}
+          onGoBack={prevStep}
+          handleSubmit={handleSubmit}
           />
         );
       case 4:

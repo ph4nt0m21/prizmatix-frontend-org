@@ -1,6 +1,3 @@
-/**
- * eventUtil.js - Utilities for managing event data during creation
- */
 import { getUserData } from './authUtil';
 
 /**
@@ -63,6 +60,7 @@ export const setupEventDataCleanup = () => {
       // Store the event data with a timestamp
       localStorage.setItem('eventDataLastAccessed', new Date().toISOString());
     }
+    
     
     // Clear the session marker
     sessionStorage.removeItem(sessionKey);

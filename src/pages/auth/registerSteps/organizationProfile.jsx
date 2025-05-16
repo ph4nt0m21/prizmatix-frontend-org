@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import { Link } from 'react-router-dom';
 import styles from './organizationProfile.module.scss';
@@ -71,12 +72,13 @@ const OrganizationProfile = ({
     { id: 'other', name: 'Other', icon: <OtherIcon /> }
   ];
 
+  const navigate = useNavigate();
+
   /**
    * Handle form submission
    * @param {Event} e - Form submission event
    */
   const handleSubmit = (e) => {
-    e.preventDefault();
     nextStep();
   };
 
@@ -180,6 +182,28 @@ const OrganizationProfile = ({
     const updatedLinks = [...socialLinks];
     updatedLinks.splice(index, 1);
     setSocialLinks(updatedLinks);
+  };
+
+  /**
+   * Handle skipping the organization profile step
+   */
+  const handleSkip = () => {
+    // Log that the step is being skipped
+    console.log('Organization profile step skipped, using default values and submitting registration');
+    
+    // Create a complete form data object with default values for organization profile
+    const completeFormData = {
+      ...formData,
+      name: `${formData.firstName}'s Organization`,
+      description: "Organization description",
+      bio: ""
+    };
+    
+    console.log('Skipping with default values:', completeFormData);
+    
+    // Call handleSubmit directly with the complete form data
+    // This will make the API call and complete registration
+    handleSubmit(completeFormData);
   };
 
   // Render error message if exists
@@ -373,7 +397,8 @@ const OrganizationProfile = ({
               <button
                 type="button"
                 className={styles.skipButton}
-                onClick={nextStep}
+                onClick={handleSkip}
+                disabled={isLoading}
               >
                 Skip this step
               </button>
@@ -534,7 +559,8 @@ OrganizationProfile.propTypes = {
   setUploadedLogo: PropTypes.func,
   socialLinks: PropTypes.array,
   setSocialLinks: PropTypes.func,
-  onGoBack: PropTypes.func.isRequired
+  onGoBack: PropTypes.func.isRequired,
+  handleSubmit: PropTypes.func.isRequired
 };
 
 export default OrganizationProfile;

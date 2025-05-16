@@ -1,17 +1,10 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
 import styles from './locationStep.module.scss';
 
 /**
  * LocationStep component - Second step of event creation
- * Collects event location information with options for different location types
- * 
- * @param {Object} props Component props
- * @param {Object} props.eventData Event data from parent component
- * @param {Function} props.handleInputChange Function to handle input changes
- * @param {boolean} props.isValid Whether the form is valid
- * @param {Object} props.stepStatus Status of this step
- * @returns {JSX.Element} LocationStep component
+ * Focused on Google Maps link pasting functionality
  */
 const LocationStep = ({ 
   eventData = {}, 
@@ -41,7 +34,8 @@ const LocationStep = ({
     country: locationData.country || '',
     additionalInfo: locationData.additionalInfo || '',
     latitude: locationData.latitude || '',
-    longitude: locationData.longitude || ''
+    longitude: locationData.longitude || '',
+    formattedAddress: locationData.formattedAddress || ''
   });
   
   // State for map UI
@@ -59,10 +53,17 @@ const LocationStep = ({
       script.async = true;
       script.defer = true;
       script.onload = initializeMap;
+      script.onerror = () => {
+        console.error('Google Maps API failed to load');
+        alert('Could not load Google Maps. Please check your internet connection and try again.');
+      };
       document.head.appendChild(script);
       
       return () => {
-        document.head.removeChild(script);
+        // Clean up if component unmounts before script loads
+        if (document.head.contains(script)) {
+          document.head.removeChild(script);
+        }
       };
     } else {
       initializeMap();
@@ -75,28 +76,21 @@ const LocationStep = ({
   const initializeMap = () => {
     if (!mapRef.current) return;
     
-    // Default to New Zealand if no coordinates are provided
-    const defaultPosition = { lat: -41.2865, lng: 174.7762 }; // Wellington, New Zealand
+    // Default to Australia as shown in your design image
+    const defaultPosition = { lat: -25.2744, lng: 133.7751 }; // Center of Australia
     const position = location.latitude && location.longitude
       ? { lat: parseFloat(location.latitude), lng: parseFloat(location.longitude) }
       : defaultPosition;
       
     const mapOptions = {
       center: position,
-      zoom: 6, // Zoom out a bit more for New Zealand
+      zoom: 4, // Zoom out for Australia view
       mapTypeId: activeTab === 'map' ? 'roadmap' : 'satellite',
       mapTypeControl: false,
-      streetViewControl: true, // Enable street view
+      streetViewControl: true,
       fullscreenControl: true,
       zoomControl: true,
-      gestureHandling: 'cooperative', // Improved gesture handling
-      styles: [ // Optional custom styling for a more professional look
-        {
-          featureType: 'poi',
-          elementType: 'labels',
-          stylers: [{ visibility: 'off' }] // Hide points of interest labels for cleaner look
-        }
-      ]
+      gestureHandling: 'cooperative'
     };
     
     // Create the map
@@ -111,11 +105,25 @@ const LocationStep = ({
         title: location.venue || 'Selected Location'
       });
     }
+  };
+
+  /**
+   * Format address from location components
+   * @param {Object} locationData - Location data
+   * @returns {string} Formatted address
+   */
+  const formatAddress = (locationData) => {
+    const components = [];
     
-    // Add click listener to the map
-    map.addListener('click', (e) => {
-      handleMapClick(e.latLng);
-    });
+    if (locationData.venue) components.push(locationData.venue);
+    if (locationData.streetNumber) components.push(locationData.streetNumber);
+    if (locationData.street) components.push(locationData.street);
+    if (locationData.city) components.push(locationData.city);
+    if (locationData.state) components.push(locationData.state);
+    if (locationData.country) components.push(locationData.country);
+    if (locationData.postalCode) components.push(locationData.postalCode);
+    
+    return components.join(', ');
   };
 
   /**
@@ -125,36 +133,31 @@ const LocationStep = ({
    */
   const parseGoogleMapsUrl = (url) => {
     try {
-      // Handle different Google Maps URL formats
+      console.log('Attempting to parse Google Maps URL:', url);
       
       // Format: https://www.google.com/maps?q=-41.2865,174.7762
       let match = url.match(/maps\?q=(-?\d+\.\d+),(-?\d+\.\d+)/);
       if (match) {
-        return {
+        const coords = {
           lat: parseFloat(match[1]),
           lng: parseFloat(match[2])
         };
+        console.log('Coordinates extracted from ?q= parameter:', coords);
+        return coords;
       }
       
       // Format: https://www.google.com/maps/place/.../@-41.2865,174.7762,15z
       match = url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
       if (match) {
-        return {
+        const coords = {
           lat: parseFloat(match[1]),
           lng: parseFloat(match[2])
         };
+        console.log('Coordinates extracted from @ parameter:', coords);
+        return coords;
       }
       
-      // Format: https://goo.gl/maps/... (short URL)
-      // For short URLs, we would need to expand them first, which requires a server-side solution
-      // For now, inform the user that short links aren't supported
-      if (url.includes('goo.gl/maps')) {
-        alert('Short Google Maps links (goo.gl) are not supported. Please use the full URL from Google Maps.');
-        return null;
-      }
-      
-      // If no matches, inform the user
-      alert('Could not extract coordinates from the provided URL. Please make sure it\'s a valid Google Maps link.');
+      console.log('No coordinates found in URL, will use geocoding instead');
       return null;
     } catch (error) {
       console.error('Error parsing Google Maps URL:', error);
@@ -163,127 +166,200 @@ const LocationStep = ({
   };
 
   /**
-   * Handle pasting a Google Maps link
+   * Process geocoding result and extract address components
+   */
+  const processGeocodingResult = (result, position) => {
+    // Extract address components
+    let updatedLocation = {
+      ...location,
+      latitude: position.lat(),
+      longitude: position.lng(),
+      searchQuery: result.formatted_address
+    };
+    
+    console.log('Processing geocoding result:');
+    console.log('Latitude:', position.lat());
+    console.log('Longitude:', position.lng());
+    console.log('Formatted address:', result.formatted_address);
+    
+    // Process address components
+    for (const component of result.address_components) {
+      const types = component.types;
+      
+      if (types.includes('street_number')) {
+        updatedLocation.streetNumber = component.long_name;
+        console.log('Street Number:', component.long_name);
+      } else if (types.includes('route')) {
+        updatedLocation.street = component.long_name;
+        console.log('Street:', component.long_name);
+      } else if (types.includes('locality')) {
+        updatedLocation.city = component.long_name;
+        console.log('City:', component.long_name);
+      } else if (types.includes('administrative_area_level_1')) {
+        updatedLocation.state = component.long_name;
+        console.log('State/Province:', component.long_name);
+      } else if (types.includes('country')) {
+        updatedLocation.country = component.long_name;
+        console.log('Country:', component.long_name);
+      } else if (types.includes('postal_code')) {
+        updatedLocation.postalCode = component.long_name;
+        console.log('Postal Code:', component.long_name);
+      }
+    }
+    
+    // Try to determine the venue name
+    const pointOfInterest = result.address_components.find(comp => 
+      comp.types.includes('point_of_interest') || 
+      comp.types.includes('establishment')
+    );
+    
+    if (pointOfInterest) {
+      updatedLocation.venue = pointOfInterest.long_name;
+      console.log('Venue (from POI):', pointOfInterest.long_name);
+    } else {
+      // Default to first line of formatted address
+      updatedLocation.venue = result.formatted_address.split(',')[0];
+      console.log('Venue (from first part of address):', updatedLocation.venue);
+    }
+    
+    // Create formatted address string
+    updatedLocation.formattedAddress = formatAddress(updatedLocation);
+    console.log('Final formatted address string:', updatedLocation.formattedAddress);
+    
+    // Log the complete location object
+    console.log('Final location object:', updatedLocation);
+    
+    // Update location state
+    setLocation(updatedLocation);
+    setIsLoadingMap(false);
+  };
+
+  /**
+   * Handle Google Maps link pasting
    * @param {Event} e - Paste event
    */
   const handlePasteMapLink = (e) => {
     // Get pasted text
     const pastedText = e.clipboardData.getData('text');
     
+    console.log('Pasted text:', pastedText);
+    
     // Check if it looks like a Google Maps link
     if (pastedText.includes('google.com/maps') || pastedText.includes('goo.gl/maps')) {
       e.preventDefault(); // Prevent default paste behavior
       
+      console.log('Google Maps link detected');
+      
+      // Set the search query to the pasted link
+      setLocation(prev => ({
+        ...prev,
+        searchQuery: pastedText
+      }));
+      
+      // Show loading state
+      setIsLoadingMap(true);
+      
       // Parse the URL to get coordinates
       const coordinates = parseGoogleMapsUrl(pastedText);
+      console.log('Extracted coordinates from URL:', coordinates);
+      
+      // If we have coordinates from the URL
       if (coordinates) {
-        // Set the search query to the pasted link
-        setLocation(prev => ({
-          ...prev,
-          searchQuery: pastedText
-        }));
+        console.log('Using coordinates directly from URL:', coordinates);
         
-        // Create a Google Maps LatLng object
-        const latLng = new window.google.maps.LatLng(coordinates.lat, coordinates.lng);
-        
-        // Use our existing function to handle the map click with these coordinates
-        handleMapClick(latLng);
-      }
-    }
-  };
-
-  /**
-   * Handle clicks on the map
-   * @param {Object} latLng - Google Maps LatLng object
-   */
-  const handleMapClick = (latLng) => {
-    // Get latitude and longitude
-    const lat = latLng.lat();
-    const lng = latLng.lng();
-    
-    // Update location with coordinates
-    setLocation(prev => ({
-      ...prev,
-      latitude: lat.toString(),
-      longitude: lng.toString()
-    }));
-    
-    // Clear existing markers
-    if (googleMapRef.current) {
-      const map = googleMapRef.current;
-      
-      // Create a new marker at the clicked position
-      new window.google.maps.Marker({
-        position: latLng,
-        map: map,
-        title: 'Selected Location'
-      });
-      
-      // Zoom in to the clicked location
-      map.setZoom(15);
-      map.setCenter(latLng);
-    }
-    
-    // Use Google Maps Geocoding API to get address details from the coordinates
-    if (window.google && window.google.maps) {
-      const geocoder = new window.google.maps.Geocoder();
-      geocoder.geocode({ location: { lat, lng } }, (results, status) => {
-        if (status === 'OK' && results[0]) {
-          const result = results[0];
+        // Update map with the coordinates
+        if (googleMapRef.current) {
+          // Clear any existing markers
+          googleMapRef.current.setCenter(coordinates);
+          googleMapRef.current.setZoom(15);
           
-          // Extract address components
-          let updatedLocation = {
-            ...location,
-            latitude: lat.toString(),
-            longitude: lng.toString(),
-            searchQuery: result.formatted_address
-          };
-          
-          // Process address components
-          for (const component of result.address_components) {
-            const types = component.types;
-            
-            if (types.includes('street_number')) {
-              updatedLocation.streetNumber = component.long_name;
-            } else if (types.includes('route')) {
-              updatedLocation.street = component.long_name;
-            } else if (types.includes('locality')) {
-              updatedLocation.city = component.long_name;
-            } else if (types.includes('administrative_area_level_1')) {
-              updatedLocation.state = component.long_name;
-            } else if (types.includes('country')) {
-              updatedLocation.country = component.long_name;
-            } else if (types.includes('postal_code')) {
-              updatedLocation.postalCode = component.long_name;
-            }
-          }
-          
-          // Update venue if not set
-          if (!updatedLocation.venue) {
-            // Try to get a meaningful name from the address components
-            const pointOfInterest = result.address_components.find(comp => 
-              comp.types.includes('point_of_interest') || 
-              comp.types.includes('establishment')
-            );
-            
-            if (pointOfInterest) {
-              updatedLocation.venue = pointOfInterest.long_name;
-            } else {
-              // Default to first line of formatted address
-              updatedLocation.venue = result.formatted_address.split(',')[0];
-            }
-          }
-          
-          // Update location state
-          setLocation(updatedLocation);
+          // Add marker
+          new window.google.maps.Marker({
+            position: coordinates,
+            map: googleMapRef.current,
+            title: 'Selected Location',
+          });
         }
-      });
+        
+        // Get address details using reverse geocoding
+        if (window.google && window.google.maps) {
+          console.log('Starting reverse geocoding with coordinates:', coordinates);
+          const geocoder = new window.google.maps.Geocoder();
+          geocoder.geocode({ location: coordinates }, (results, status) => {
+            if (status === 'OK' && results[0]) {
+              console.log('Reverse geocoding successful, result:', results[0]);
+              
+              // Log formatted address 
+              console.log('Formatted address:', results[0].formatted_address);
+              
+              // Log address components in detail
+              console.log('Address components:');
+              results[0].address_components.forEach(component => {
+                console.log(`${component.types.join(', ')}: ${component.long_name}`);
+              });
+              
+              processGeocodingResult(results[0], new window.google.maps.LatLng(coordinates.lat, coordinates.lng));
+            } else {
+              console.error('Reverse geocoding failed:', status);
+              setIsLoadingMap(false);
+            }
+          });
+        }
+      } else {
+        // If no coordinates in URL, try geocoding the entire URL
+        console.log('No coordinates in URL, attempting to geocode the entire URL');
+        
+        if (window.google && window.google.maps) {
+          const geocoder = new window.google.maps.Geocoder();
+          geocoder.geocode({ address: pastedText }, (results, status) => {
+            if (status === 'OK' && results[0]) {
+              const result = results[0];
+              const position = result.geometry.location;
+              
+              console.log('Geocoding successful, result:', result);
+              console.log('Location:', { 
+                lat: position.lat(), 
+                lng: position.lng(), 
+                address: result.formatted_address 
+              });
+              
+              // Log address components in detail
+              console.log('Address components:');
+              result.address_components.forEach(component => {
+                console.log(`${component.types.join(', ')}: ${component.long_name}`);
+              });
+              
+              // Update map
+              if (googleMapRef.current) {
+                googleMapRef.current.setCenter(position);
+                googleMapRef.current.setZoom(15);
+                
+                // Add marker
+                new window.google.maps.Marker({
+                  position,
+                  map: googleMapRef.current,
+                  title: 'Selected Location',
+                });
+              }
+              
+              // Process the result
+              processGeocodingResult(result, position);
+            } else {
+              console.error('Geocoding failed:', status);
+              alert('Could not process the Google Maps link. Please try a different link format.');
+              setIsLoadingMap(false);
+            }
+          });
+        } else {
+          console.error('Google Maps API not available');
+          setIsLoadingMap(false);
+        }
+      }
     }
   };
   
   /**
    * Switch map type (map or satellite)
-   * @param {string} type - 'map' or 'satellite'
    */
   const switchMapType = (type) => {
     setActiveTab(type);
@@ -299,8 +375,7 @@ const LocationStep = ({
   }, [location, handleInputChange]);
   
   /**
-   * Handle location type selection (physical, private, to be announced)
-   * @param {string} type - Location type
+   * Handle location type selection
    */
   const handleLocationTypeChange = (type) => {
     let updatedLocation = { ...location, locationType: type };
@@ -318,7 +393,6 @@ const LocationStep = ({
   
   /**
    * Handle input changes
-   * @param {Object} e Event object
    */
   const handleFieldChange = (e) => {
     const { name, value } = e.target;
@@ -327,96 +401,6 @@ const LocationStep = ({
       ...prev,
       [name]: value
     }));
-  };
-  
-  /**
-   * Handle search query submission
-   */
-  const handleSearch = () => {
-    if (!location.searchQuery) {
-      return;
-    }
-    
-    // Show loading state
-    setIsLoadingMap(true);
-    
-    // Use Google Maps Geocoding API to search for location
-    if (window.google && window.google.maps) {
-      const geocoder = new window.google.maps.Geocoder();
-      geocoder.geocode({ address: location.searchQuery }, (results, status) => {
-        if (status === 'OK' && results[0]) {
-          const result = results[0];
-          const position = result.geometry.location;
-          
-          // Extract address components
-          let updatedLocation = {
-            ...location,
-            latitude: position.lat(),
-            longitude: position.lng()
-          };
-          
-          // Process address components
-          for (const component of result.address_components) {
-            const types = component.types;
-            
-            if (types.includes('street_number')) {
-              updatedLocation.streetNumber = component.long_name;
-            } else if (types.includes('route')) {
-              updatedLocation.street = component.long_name;
-            } else if (types.includes('locality')) {
-              updatedLocation.city = component.long_name;
-            } else if (types.includes('administrative_area_level_1')) {
-              updatedLocation.state = component.long_name;
-            } else if (types.includes('country')) {
-              updatedLocation.country = component.long_name;
-            } else if (types.includes('postal_code')) {
-              updatedLocation.postalCode = component.long_name;
-            }
-          }
-          
-          // Update venue if not set
-          if (!updatedLocation.venue) {
-            // Try to get a meaningful name from the address components
-            const pointOfInterest = result.address_components.find(comp => 
-              comp.types.includes('point_of_interest') || 
-              comp.types.includes('establishment')
-            );
-            
-            if (pointOfInterest) {
-              updatedLocation.venue = pointOfInterest.long_name;
-            } else {
-              // Default to first line of formatted address
-              updatedLocation.venue = result.formatted_address.split(',')[0];
-            }
-          }
-          
-          // Update location state
-          setLocation(updatedLocation);
-          
-          // Update map
-          if (googleMapRef.current) {
-            // Clear any existing markers
-            googleMapRef.current.setCenter(position);
-            googleMapRef.current.setZoom(15);
-            
-            // Add marker
-            new window.google.maps.Marker({
-              position,
-              map: googleMapRef.current,
-              title: updatedLocation.venue || 'Selected Location',
-              animation: window.google.maps.Animation.DROP // Add animation for better UX
-            });
-          }
-        }
-        
-        setIsLoadingMap(false);
-      });
-    } else {
-      // Fallback if Google Maps API is not available
-      setTimeout(() => {
-        setIsLoadingMap(false);
-      }, 1000);
-    }
   };
   
   return (
@@ -521,24 +505,18 @@ const LocationStep = ({
               The exact location to showcase on your event page and calendar events
             </p>
             
-            {/* Search Field */}
+            {/* Google Maps Link Field */}
             <div className={styles.searchContainer}>
               <input
                 type="text"
                 name="searchQuery"
                 className={styles.searchInput}
-                placeholder="Search for a location or paste Google Maps link"
+                placeholder="Paste Google Maps link here"
                 value={location.searchQuery}
                 onChange={handleFieldChange}
-                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                 onPaste={handlePasteMapLink}
               />
-              <button 
-                type="button" 
-                className={styles.searchButton}
-                onClick={handleSearch}
-                disabled={isLoadingMap}
-              >
+              <div className={styles.searchButton}>
                 {isLoadingMap ? (
                   <span className={styles.loadingSpinner}></span>
                 ) : (
@@ -546,7 +524,7 @@ const LocationStep = ({
                     <path d="M15.5 14H14.71L14.43 13.73C15.41 12.59 16 11.11 16 9.5C16 5.91 13.09 3 9.5 3C5.91 3 3 5.91 3 9.5C3 13.09 5.91 16 9.5 16C11.11 16 12.59 15.41 13.73 14.43L14 14.71V15.5L19 20.49L20.49 19L15.5 14ZM9.5 14C7.01 14 5 11.99 5 9.5C5 7.01 7.01 5 9.5 5C11.99 5 14 7.01 14 9.5C14 11.99 11.99 14 9.5 14Z" fill="#7C3AED"/>
                   </svg>
                 )}
-              </button>
+              </div>
             </div>
             
             {/* Map Container */}
