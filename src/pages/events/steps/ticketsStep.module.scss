@@ -92,19 +92,24 @@
 .addTicketButton {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
-  background-color: #8b5cf6;
-  color: #ffffff;
+  justify-content: center;
+  height: 40px;
+  padding: 0 16px;
+  background-color: #7C3AED;
+  color: white;
   border: none;
   border-radius: 6px;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.2s ease;
+  
+  svg {
+    margin-right: 8px;
+  }
   
   &:hover {
-    background-color: #7c3aed;
+    background-color: #6d28d9;
   }
 }
 

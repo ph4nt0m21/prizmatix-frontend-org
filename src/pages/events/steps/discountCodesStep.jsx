@@ -98,7 +98,7 @@ const DiscountCodesStep = ({
           <path d="M21.41 11.58L12.41 2.58C12.05 2.22 11.55 2 11 2H4C2.9 2 2 2.9 2 4V11C2 11.55 2.22 12.05 2.59 12.42L11.59 21.42C11.95 21.78 12.45 22 13 22C13.55 22 14.05 21.78 14.41 21.41L21.41 14.41C21.78 14.05 22 13.55 22 13C22 12.45 21.77 11.94 21.41 11.58ZM5.5 7C4.67 7 4 6.33 4 5.5C4 4.67 4.67 4 5.5 4C6.33 4 7 4.67 7 5.5C7 6.33 6.33 7 5.5 7Z" fill="#7C3AED"/>
         </svg>
         <h2 className={styles.stepTitle}>Add Coupon Code</h2>
-        <p className={styles.stepDescription}>Add discount codes that attendees can use during checkout</p>
+        {/* <p className={styles.stepDescription}>Add discount codes that attendees can use during checkout</p> */}
       </div>
       
       <div className={styles.formSection}>
@@ -186,7 +186,7 @@ const DiscountCodesStep = ({
         )}
 
         {/* Discount codes information box */}
-        <div className={styles.infoBox}>
+        {/* <div className={styles.infoBox}>
           <div className={styles.infoIcon}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 20C7.59 20 4 16.41 4 12C4 7.59 7.59 4 12 4C16.41 4 20 7.59 20 12C20 16.41 16.41 20 12 20ZM11 15H13V17H11V15ZM11 7H13V13H11V7Z" fill="#7C3AED"/>
@@ -198,7 +198,7 @@ const DiscountCodesStep = ({
               Discount codes allow you to offer special pricing to specific attendees. You can create different codes for different discount amounts, set minimum purchase requirements, and limit the number of uses per code.
             </p>
           </div>
-        </div>
+        </div> */}
       </div>
       
       {/* Discount code modal */}

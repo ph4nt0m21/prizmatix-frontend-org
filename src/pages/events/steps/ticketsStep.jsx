@@ -1,4 +1,3 @@
-// src/pages/events/steps/ticketsStep.jsx
 import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import TicketDetailsModal from './ticketDetailsModal';
@@ -106,97 +105,105 @@ const TicketsStep = ({
           <path d="M20 12C20 10.9 19.1 10 18 10H17.74C17.9 9.55 18 9.03 18 8.5C18 6.57 16.43 5 14.5 5C13.45 5 12.46 5.45 11.83 6.39C11.35 5.32 10.24 4.5 8.89 4.5C7.16 4.5 5.75 5.91 5.75 7.64C5.75 8.47 6.09 9.24 6.64 9.81C5.09 10.24 4 11.7 4 13.34C4 15.3 5.54 16.91 7.5 16.98V17H18C19.1 17 20 16.1 20 15V12ZM10.75 13.13L8.92 11.29L8.21 12L10.75 14.54L15.79 9.5L15.08 8.79L10.75 13.13Z" fill="#7C3AED"/>
         </svg>
         <h2 className={styles.stepTitle}>Create Your First Ticket</h2>
-        <p className={styles.stepDescription}>Add your first ticket category</p>
+        {/* <p className={styles.stepDescription}>Add your first ticket category</p> */}
       </div>
       
       <div className={styles.formSection}>
-// Replace the tickets list in ticketsStep.jsx with this new structure
-{tickets.length > 0 && (
-  <div className={styles.ticketsTableContainer}>
-    {/* Table header */}
-    <div className={styles.ticketsTable}>
-      <div className={styles.ticketTableHeader}>
-        <div className={styles.ticketDrag}></div>
-        <div className={styles.ticketName}>Ticket Name</div>
-        <div className={styles.ticketCount}>Ticket Count</div>
-        <div className={styles.ticketPrice}>Ticket Price</div>
-        <div className={styles.ticketActions}>Action</div>
-      </div>
-      
-      {/* Tickets list */}
-      {tickets.map((ticket, index) => (
-        <div key={index} className={styles.ticketRow}>
-          <div className={styles.ticketDrag}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M3 18H21V16H3V18ZM3 13H21V11H3V13ZM3 6V8H21V6H3Z" fill="#999"/>
-            </svg>
-          </div>
-          <div className={styles.ticketName}>
-            <input
-              type="text"
-              value={ticket.name}
-              className={styles.ticketInput}
-              readOnly
-              onClick={() => handleEditTicket(index)}
-            />
-          </div>
-          <div className={styles.ticketCount}>
-            <input
-              type="text"
-              value={ticket.quantity === 'No Limit' ? 'Unlimited' : ticket.quantity}
-              className={styles.ticketInput}
-              readOnly
-              onClick={() => handleEditTicket(index)}
-            />
-          </div>
-          <div className={styles.ticketPrice}>
-            <input
-              type="text"
-              value={`${parseFloat(ticket.price).toFixed(2)}`}
-              className={styles.ticketInput}
-              readOnly
-              onClick={() => handleEditTicket(index)}
-            />
-          </div>
-          <div className={styles.ticketActions}>
+        {tickets.length === 0 ? (
+          // Empty state for no tickets
+          <div className={styles.emptyTicketsContainer}>
             <button 
               type="button" 
-              className={styles.ticketActionButton}
-              onClick={() => handleEditTicket(index)}
-              aria-label="Edit ticket"
+              className={styles.addTicketButton}
+              onClick={handleCreateTicket}
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 8C13.1 8 14 7.1 14 6C14 4.9 13.1 4 12 4C10.9 4 10 4.9 10 6C10 7.1 10.9 8 12 8ZM12 10C10.9 10 10 10.9 10 12C10 13.1 10.9 14 12 14C13.1 14 14 13.1 14 12C14 10.9 13.1 10 12 10ZM12 16C10.9 16 10 16.9 10 18C10 19.1 10.9 20 12 20C13.1 20 14 19.1 14 18C14 16.9 13.1 16 12 16Z" fill="#6B7280"/>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M19 13H13V19H11V13H5V11H11V5H13V11H19V13Z" fill="currentColor"/>
               </svg>
+              Add Ticket
             </button>
           </div>
-        </div>
-      ))}
-    </div>
-    
-    {/* Add ticket button */}
-    <div className={styles.addTicketContainer}>
-      <button 
-        type="button" 
-        className={styles.addTicketButton}
-        onClick={handleCreateTicket}
-      >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M19 13H13V19H11V13H5V11H11V5H13V11H19V13Z" fill="currentColor"/>
-        </svg>
-        Add Ticket
-      </button>
-    </div>
-  </div>
-)}
-        
-        {/* Display validation message if there are no tickets and the step has been visited */}
-        {!isValid && stepStatus.visited && tickets.length === 0 && (
-          <div className={styles.fieldError}>At least one ticket type is required</div>
+        ) : (
+          // List of tickets in a table layout similar to discount codes
+          <div className={styles.ticketsContainer}>
+            {/* Tickets table header */}
+            <div className={styles.ticketTableHeader}>
+              <div className={styles.ticketName}>Ticket Name</div>
+              <div className={styles.ticketPrice}>Price</div>
+              <div className={styles.ticketQuantity}>Quantity</div>
+              {/* <div className={styles.ticketStartDate}>Sales Start</div>
+              <div className={styles.ticketEndDate}>Sales End</div> */}
+              <div className={styles.ticketActions}></div>
+            </div>
+            
+            {/* Tickets list */}
+            {tickets.map((ticket, index) => (
+              <div key={index} className={styles.ticketItem}>
+                <div className={styles.ticketName} onClick={() => handleEditTicket(index)}>
+                  {ticket.name}
+                </div>
+                <div className={styles.ticketPrice}>
+                  ${parseFloat(ticket.price).toFixed(2)}
+                </div>
+                <div className={styles.ticketQuantity}>
+                  {ticket.quantity === 'No Limit' ? 'Unlimited' : ticket.quantity}
+                </div>
+                {/* <div className={styles.ticketStartDate}>
+                  {ticket.salesStartDate ? `${ticket.salesStartDate} ${ticket.salesStartTime}` : 'Immediately'}
+                </div>
+                <div className={styles.ticketEndDate}>
+                  {ticket.salesEndDate ? `${ticket.salesEndDate} ${ticket.salesEndTime}` : 'When event starts'}
+                </div> */}
+                <div className={styles.ticketActions}>
+                  <button 
+                    type="button" 
+                    className={styles.ticketActionButton}
+                    onClick={() => handleEditTicket(index)}
+                    aria-label="Edit ticket"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M3 17.25V21H6.75L17.81 9.94L14.06 6.19L3 17.25ZM20.71 7.04C21.1 6.65 21.1 6.02 20.71 5.63L18.37 3.29C17.98 2.9 17.35 2.9 16.96 3.29L15.13 5.12L18.88 8.87L20.71 7.04Z" fill="#6B7280"/>
+                    </svg>
+                  </button>
+                  <button 
+                    type="button" 
+                    className={styles.ticketActionButton}
+                    onClick={() => handleDeleteTicket(index)}
+                    aria-label="Delete ticket"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M6 19C6 20.1 6.9 21 8 21H16C17.1 21 18 20.1 18 19V7H6V19ZM19 4H15.5L14.5 3H9.5L8.5 4H5V6H19V4Z" fill="#666666"/>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            ))}
+            
+            {/* Add ticket button */}
+            <div className={styles.addTicketRow}>
+              <button 
+                type="button" 
+                className={styles.addTicketInlineButton}
+                onClick={handleCreateTicket}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M19 13H13V19H11V13H5V11H11V5H13V11H19V13Z" fill="currentColor"/>
+                </svg>
+                Add Ticket
+              </button>
+            </div>
+          </div>
         )}
+        
+        {/* Show validation error if the step has been visited and is not valid */}
+        {/* {!isValid && stepStatus.visited && tickets.length === 0 && (
+          <div className={styles.fieldError}>
+            Please add at least one ticket type for your event
+          </div>
+        )} */}
 
         {/* Ticket types information box */}
-        <div className={styles.infoBox}>
+        {/* <div className={styles.infoBox}>
           <div className={styles.infoIcon}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 20C7.59 20 4 16.41 4 12C4 7.59 7.59 4 12 4C16.41 4 20 7.59 20 12C20 16.41 16.41 20 12 20ZM11 15H13V17H11V15ZM11 7H13V13H11V7Z" fill="#7C3AED"/>
@@ -209,7 +216,7 @@ const TicketsStep = ({
               You can set different prices, quantities, and sale periods for each ticket type.
             </p>
           </div>
-        </div>
+        </div> */}
       </div>
       
       {/* Ticket details modal */}

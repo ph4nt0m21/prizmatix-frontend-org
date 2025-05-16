@@ -20,7 +20,7 @@ const ArtStep = ({
   stepStatus = { visited: false }
 }) => {
   // Extract art data from eventData or use defaults
-  const artData = eventData.art || {};
+  const artData = eventData.artData || {};
   
   // State for uploaded files and previews
   const [files, setFiles] = useState({
