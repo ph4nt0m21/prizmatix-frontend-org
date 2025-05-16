@@ -812,31 +812,37 @@ const handlePublishEvent = async () => {
   }
 };
 
-  /**
-   * Handle next step navigation
-   */
-  const handleNextStep = async () => {
-    // Validate current step
-    const isValid = validateCurrentStep();
-    
-      // Special case for the last step (publish)
-      if (currentStep === 8) {
-        await handlePublishEvent();
-        return;
-      }
-    
-    try {
+/**
+ * Handle next step navigation
+ */
+const handleNextStep = async () => {
+  // Validate current step
+  const isValid = validateCurrentStep();
 
-      // If the step is valid, make API calls
+  // Special case for the first step (BasicInfo) - Must be completed to proceed
+  if (currentStep === 1 && !isValid) {
+    alert("Please complete the Basic Info step first to create your event.");
+    return;
+  }
+
+  // Special case for the last step (publish)
+  if (currentStep === 8) {
+    await handlePublishEvent();
+    return;
+  }
+
+  // Set loading state if the step is valid
+  if (isValid) {
+    setIsLoading(prev => ({ ...prev, saveEvent: true }));
+  }
+
+  try {
+    // Default eventId value
+    let updatedEventId = eventId;
+    
+    // Special case for BasicInfo step - create new event
+    if (currentStep === 1 && !eventId) {
       if (isValid) {
-      // Set loading state
-      setIsLoading(prev => ({ ...prev, saveEvent: true }));
-      
-      // Default eventId value
-      let updatedEventId = eventId;
-      
-      // If this is the first step and we don't have an eventId yet, create a new event
-      if (currentStep === 1 && !eventId) {
         try {
           // Get user data for organization and user IDs
           const userData = getUserData();
@@ -844,14 +850,12 @@ const handlePublishEvent = async () => {
           // Prepare data according to the required schema
           const basicInfoData = {
             name: eventData.name,
-            organizationId: eventData.organizationId || userData?.organizationId || 1, // Use various fallbacks
-            createdBy: eventData.createdBy || userData?.userId || 1,                     // Use various fallbacks
-            private: eventData.eventType === 'private'                              // Convert string to boolean
+            organizationId: eventData.organizationId || userData?.organizationId || 1,
+            createdBy: eventData.createdBy || userData?.userId || 1,
+            private: eventData.eventType === 'private'
           };
           
           console.log('Creating new event with data:', basicInfoData);
-          console.log('Organization ID being sent:', basicInfoData.organizationId);
-          console.log('Created By being sent:', basicInfoData.createdBy);
           
           // Make the actual API call
           const response = await CreateEventAPI(basicInfoData);
@@ -864,245 +868,276 @@ const handlePublishEvent = async () => {
           // Get the new event ID from the response
           updatedEventId = response.data.eventId;
           
-          // Only log to console, don't set UI success message
-          console.log('Event created successfully!');
+          // Mark this step as completed
+          const stepKey = getStepKeyByNumber(currentStep);
+          setStepStatus(prevStatus => ({
+            ...prevStatus,
+            [stepKey]: {
+              completed: true,
+              valid: true,
+              visited: true
+            }
+          }));
+          
+          // Navigate to the next step with the actual event ID
+          navigate(`/events/create/${updatedEventId}/${currentStep + 1}`);
+          setCurrentStep(prevStep => prevStep + 1);
+          
+          // Return early since we've already navigated
+          return;
         } catch (error) {
           console.error('API Error Details:', error.response?.data || error.message);
-          setIsLoading(prev => ({ ...prev, saveEvent: false }));
+          alert('Failed to create event. Please try again.');
           
-          // Still navigate to next step even if API call fails
-          navigate(`/events/create/${eventId || 'draft-event-123'}/${currentStep + 1}`);
-          setCurrentStep(prevStep => prevStep + 1);
+          // Reset loading state in case of error
+          setIsLoading(prev => ({ ...prev, saveEvent: false }));
           return;
         }
-      }
-
-      // Handle location step submission
-   else if (currentStep === 2 && eventId) {
-      try {
-        // Prepare location data for API submission
-        const locationData = prepareLocationDataForAPI(eventData.location);
-        
-        // Make API call to update location
-        const response = await UpdateEventLocationAPI(eventId, locationData);
-        console.log('Location update successful:', response);
-        
-        // Update the saved event data with the new location info
-        const currentEventData = getEventData();
-        saveEventData({
-          ...currentEventData,
-          location: eventData.location
-        });
-        
-      } catch (error) {
-        console.error('Error updating location:', error);
-        setIsLoading(prev => ({ ...prev, saveEvent: false }));
-        return; // Return early to prevent navigation
-      }
-    }
-
-    // Handle date/time step submission
-    else if (currentStep === 3 && eventId) {
-      try {
-
-        // Determine if the event is private based on event type
-        const isPrivate = eventData.eventType === 'private';
-    
-        // Prepare date/time data for API submission
-        const dateTimeData = prepareDateTimeDataForAPI(eventData.dateTime, eventId, isPrivate);
-        
-        console.log('Submitting date/time data:', dateTimeData);
-        
-        // Make API call to update date/time
-        const response = await UpdateEventDateTimeAPI(eventId, dateTimeData);
-        console.log('Date/time update successful:', response);
-        
-        // Update the saved event data with the new date/time info
-        const currentEventData = getEventData();
-        saveEventData({
-          ...currentEventData,
-          dateTime: eventData.dateTime
-        });
-        
-      } catch (error) {
-        console.error('Error updating date/time:', error);
-        setError(error.response?.data?.message || 'Failed to update date/time information. Please try again.');
-        setIsLoading(prev => ({ ...prev, saveEvent: false }));
-        return; // Return early to prevent navigation
-      }
-    }
-
-    // Handle description step submission
-    else if (currentStep === 4 && eventId) {
-      try {
-        // Determine if the event is private based on event type
-        const isPrivate = eventData.eventType === 'private';
-        
-        // Prepare description data for API submission
-        const descriptionData = prepareDescriptionDataForAPI(eventData.description, eventId, isPrivate);
-        
-        console.log('Submitting description data:', descriptionData);
-        
-        // Make API call to update description
-        const response = await UpdateEventDescriptionAPI(eventId, descriptionData);
-        console.log('Description update successful:', response);
-        
-        // Update the saved event data with the new description info
-        const currentEventData = getEventData();
-        saveEventData({
-          ...currentEventData,
-          description: response.data.description,
-          shortDescription: response.data.shortDescription
-        });
-        
-      } catch (error) {
-        console.error('Error updating description:', error);
-        setError(error.response?.data?.message || 'Failed to update description. Please try again.');
-        setIsLoading(prev => ({ ...prev, saveEvent: false }));
-        return; // Return early to prevent navigation
-      }
-    }
-
-    // Handle art step submission
-    else if (currentStep === 5 && eventId) {
-      try {
-        // Check if there are any files selected
-        const hasThumbnail = eventData.art?.thumbnailFile !== null;
-        const hasBanner = eventData.art?.bannerFile !== null;
-        
-        console.log('Art data to be uploaded:', {
-          hasThumbnail,
-          hasBanner,
-          thumbnailName: eventData.art?.thumbnailName,
-          bannerName: eventData.art?.bannerName
-        });
-        
-        // First, we need to upload the actual files to your server (this is a separate process)
-        // For now, we'll assume the files are uploaded elsewhere and we're just sending the file names
-        
-        // Prepare the JSON payload for the API
-        if (hasBanner) {
-          const bannerData = prepareArtDataForAPI(eventData.art, eventId, 'banner');
-          
-          console.log('Sending banner data:', bannerData);
-          
-          // Make API call to update banner info
-          const bannerResponse = await UploadEventBannerAPI(eventId, bannerData);
-          console.log('Banner update successful:', bannerResponse);
-          
-          // Update the saved event data with the new art info
-          const currentEventData = getEventData();
-          saveEventData({
-            ...currentEventData,
-            art: {
-              ...currentEventData.art,
-              ...eventData.art
-            }
-          });
-        }
-        
-        // Handle thumbnail similarly if needed
-        if (hasThumbnail) {
-          const thumbnailData = prepareArtDataForAPI(eventData.art, eventId, 'thumbnail');
-          
-          console.log('Sending thumbnail data:', thumbnailData);
-          
-          // Make API call to update thumbnail info (might need a separate endpoint)
-          // For now, using the same endpoint
-          const thumbnailResponse = await UploadEventBannerAPI(eventId, thumbnailData);
-          console.log('Thumbnail update successful:', thumbnailResponse);
-        }
-        
-        // If no files to upload, still proceed
-        if (!hasThumbnail && !hasBanner) {
-          console.log('No art files to upload, skipping API call');
-        }
-        
-      } catch (error) {
-        console.error('Error updating art information:', error);
-        setError(error.response?.data?.message || 'Failed to update image information. Please try again.');
-        setIsLoading(prev => ({ ...prev, saveEvent: false }));
-        return; // Return early to prevent navigation
-      }
-    }
-
-    // Handle tickets step submission
-    else if (currentStep === 6 && eventId) {
-      try {
-        // Prepare tickets data for API submission
-        const ticketsData = prepareTicketsDataForAPI(eventData.tickets, eventId);
-        
-        console.log('Submitting tickets data:', ticketsData);
-        
-        // Make API call to update tickets
-        const response = await UpdateEventTicketsAPI(eventId, ticketsData);
-        console.log('Tickets update successful:', response);
-        
-        // Update the saved event data with the new tickets info
-        const currentEventData = getEventData();
-        saveEventData({
-          ...currentEventData,
-          tickets: eventData.tickets
-        });
-        
-      } catch (error) {
-        console.error('Error updating tickets:', error);
-        setError(error.response?.data?.message || 'Failed to update ticket information. Please try again.');
-        setIsLoading(prev => ({ ...prev, saveEvent: false }));
-        return; // Return early to prevent navigation
-      }
-    }
-
-    // Handle discount codes step submission
-    else if (currentStep === 7 && eventId) {
-
-      // Check if all previous steps are completed
-      if (currentStep === 7 && !areAllPreviousStepsCompleted()) {
-        // This is the step before publish (step 7 is discount codes)
-        alert("Please complete all previous steps before proceeding to publish.");
+      } else {
+        // If step is not valid, show alert and return
+        alert("Please complete the Basic Info step first to create your event.");
         return;
       }
-
-      try {
-        // Prepare discount codes data for API submission
-        const discountCodesData = prepareDiscountCodesDataForAPI(eventData.discountCodes, eventId);
-        
-        console.log('Submitting discount codes data:', discountCodesData);
-        
-        // Make API call to update discount codes
-        const response = await UpdateEventDiscountCodesAPI(eventId, discountCodesData);
-        console.log('Discount codes update successful:', response);
-        
-        // Update the saved event data with the new discount codes info
-        const currentEventData = getEventData();
-        saveEventData({
-          ...currentEventData,
-          discountCodes: eventData.discountCodes
-        });
-        
-      } catch (error) {
-        console.error('Error updating discount codes:', error);
-        setError(error.response?.data?.message || 'Failed to update discount codes information. Please try again.');
-        setIsLoading(prev => ({ ...prev, saveEvent: false }));
-        return; // Return early to prevent navigation
-      }
     }
-      
-      // Mark current step as completed
-      const stepKey = getStepKeyByNumber(currentStep);
-      setStepStatus(prevStatus => ({
-        ...prevStatus,
-        [stepKey]: {
-          completed: true,
-          valid: true,
-          visited: true
-        }
-      }));
 
-      // Fetch updated event status after successful API call
-      if (eventId || updatedEventId) {
+    // For steps after BasicInfo that require an eventId
+    if (eventId) {
+      if (isValid) {
+        // Handle location step submission
+        if (currentStep === 2) {
+          try {
+            // Prepare location data for API submission
+            const locationData = prepareLocationDataForAPI(eventData.location);
+            
+            // Make API call to update location
+            const response = await UpdateEventLocationAPI(eventId, locationData);
+            console.log('Location update successful:', response);
+            
+            // Update the saved event data with the new location info
+            const currentEventData = getEventData();
+            saveEventData({
+              ...currentEventData,
+              location: eventData.location
+            });
+            
+          } catch (error) {
+            console.error('Error updating location:', error);
+            setError(error.response?.data?.message || 'Failed to update location. Please try again.');
+            
+            // Reset loading state in case of error
+            setIsLoading(prev => ({ ...prev, saveEvent: false }));
+            return;
+          }
+        }
+
+        // Handle date/time step submission
+        else if (currentStep === 3) {
+          try {
+            // Determine if the event is private based on event type
+            const isPrivate = eventData.eventType === 'private';
+        
+            // Prepare date/time data for API submission
+            const dateTimeData = prepareDateTimeDataForAPI(eventData.dateTime, eventId, isPrivate);
+            
+            console.log('Submitting date/time data:', dateTimeData);
+            
+            // Make API call to update date/time
+            const response = await UpdateEventDateTimeAPI(eventId, dateTimeData);
+            console.log('Date/time update successful:', response);
+            
+            // Update the saved event data with the new date/time info
+            const currentEventData = getEventData();
+            saveEventData({
+              ...currentEventData,
+              dateTime: eventData.dateTime
+            });
+            
+          } catch (error) {
+            console.error('Error updating date/time:', error);
+            setError(error.response?.data?.message || 'Failed to update date/time information. Please try again.');
+            
+            // Reset loading state in case of error
+            setIsLoading(prev => ({ ...prev, saveEvent: false }));
+            return;
+          }
+        }
+
+        // Handle description step submission
+        else if (currentStep === 4) {
+          try {
+            // Determine if the event is private based on event type
+            const isPrivate = eventData.eventType === 'private';
+            
+            // Prepare description data for API submission
+            const descriptionData = prepareDescriptionDataForAPI(eventData.description, eventId, isPrivate);
+            
+            console.log('Submitting description data:', descriptionData);
+            
+            // Make API call to update description
+            const response = await UpdateEventDescriptionAPI(eventId, descriptionData);
+            console.log('Description update successful:', response);
+            
+            // Update the saved event data with the new description info
+            const currentEventData = getEventData();
+            saveEventData({
+              ...currentEventData,
+              description: response.data.description,
+              shortDescription: response.data.shortDescription
+            });
+            
+          } catch (error) {
+            console.error('Error updating description:', error);
+            setError(error.response?.data?.message || 'Failed to update description. Please try again.');
+            
+            // Reset loading state in case of error
+            setIsLoading(prev => ({ ...prev, saveEvent: false }));
+            return;
+          }
+        }
+
+        // Handle art step submission
+        else if (currentStep === 5) {
+          try {
+            // Check if there are any files selected
+            const hasThumbnail = eventData.art?.thumbnailFile !== null;
+            const hasBanner = eventData.art?.bannerFile !== null;
+            
+            console.log('Art data to be uploaded:', {
+              hasThumbnail,
+              hasBanner,
+              thumbnailName: eventData.art?.thumbnailName,
+              bannerName: eventData.art?.bannerName
+            });
+            
+            // Prepare the JSON payload for the API
+            if (hasBanner) {
+              const bannerData = prepareArtDataForAPI(eventData.art, eventId, 'banner');
+              
+              console.log('Sending banner data:', bannerData);
+              
+              // Make API call to update banner info
+              const bannerResponse = await UploadEventBannerAPI(eventId, bannerData);
+              console.log('Banner update successful:', bannerResponse);
+              
+              // Update the saved event data with the new art info
+              const currentEventData = getEventData();
+              saveEventData({
+                ...currentEventData,
+                art: {
+                  ...currentEventData.art,
+                  ...eventData.art
+                }
+              });
+            }
+            
+            // Handle thumbnail similarly if needed
+            if (hasThumbnail) {
+              const thumbnailData = prepareArtDataForAPI(eventData.art, eventId, 'thumbnail');
+              
+              console.log('Sending thumbnail data:', thumbnailData);
+              
+              // Make API call to update thumbnail info
+              const thumbnailResponse = await UploadEventBannerAPI(eventId, thumbnailData);
+              console.log('Thumbnail update successful:', thumbnailResponse);
+            }
+            
+            // If no files to upload, still proceed
+            if (!hasThumbnail && !hasBanner) {
+              console.log('No art files to upload, skipping API call');
+            }
+            
+          } catch (error) {
+            console.error('Error updating art information:', error);
+            setError(error.response?.data?.message || 'Failed to update image information. Please try again.');
+            
+            // Reset loading state in case of error
+            setIsLoading(prev => ({ ...prev, saveEvent: false }));
+            return;
+          }
+        }
+
+        // Handle tickets step submission
+        else if (currentStep === 6) {
+          try {
+            // Prepare tickets data for API submission
+            const ticketsData = prepareTicketsDataForAPI(eventData.tickets, eventId);
+            
+            console.log('Submitting tickets data:', ticketsData);
+            
+            // Make API call to update tickets
+            const response = await UpdateEventTicketsAPI(eventId, ticketsData);
+            console.log('Tickets update successful:', response);
+            
+            // Update the saved event data with the new tickets info
+            const currentEventData = getEventData();
+            saveEventData({
+              ...currentEventData,
+              tickets: eventData.tickets
+            });
+            
+          } catch (error) {
+            console.error('Error updating tickets:', error);
+            setError(error.response?.data?.message || 'Failed to update ticket information. Please try again.');
+            
+            // Reset loading state in case of error
+            setIsLoading(prev => ({ ...prev, saveEvent: false }));
+            return;
+          }
+        }
+
+        // Handle discount codes step submission
+        else if (currentStep === 7) {
+          // Check if all previous steps are completed
+          if (!areAllPreviousStepsCompleted()) {
+            // This is the step before publish (step 7 is discount codes)
+            alert("Please complete all previous steps before proceeding to publish.");
+            
+            // Reset loading state
+            setIsLoading(prev => ({ ...prev, saveEvent: false }));
+            return;
+          }
+
+          try {
+            // Prepare discount codes data for API submission
+            const discountCodesData = prepareDiscountCodesDataForAPI(eventData.discountCodes, eventId);
+            
+            console.log('Submitting discount codes data:', discountCodesData);
+            
+            // Make API call to update discount codes
+            const response = await UpdateEventDiscountCodesAPI(eventId, discountCodesData);
+            console.log('Discount codes update successful:', response);
+            
+            // Update the saved event data with the new discount codes info
+            const currentEventData = getEventData();
+            saveEventData({
+              ...currentEventData,
+              discountCodes: eventData.discountCodes
+            });
+            
+          } catch (error) {
+            console.error('Error updating discount codes:', error);
+            setError(error.response?.data?.message || 'Failed to update discount codes information. Please try again.');
+            
+            // Reset loading state in case of error
+            setIsLoading(prev => ({ ...prev, saveEvent: false }));
+            return;
+          }
+        }
+
+        // Mark current step as completed
+        const stepKey = getStepKeyByNumber(currentStep);
+        setStepStatus(prevStatus => ({
+          ...prevStatus,
+          [stepKey]: {
+            completed: true,
+            valid: true,
+            visited: true
+          }
+        }));
+
+        // Fetch updated event status after successful API call
         try {
-          const response = await GetEventStatusAPI(eventId || updatedEventId);
+          const response = await GetEventStatusAPI(eventId);
           if (response.data) {
             console.log('Updated event status:', response.data);
           }
@@ -1111,31 +1146,22 @@ const handlePublishEvent = async () => {
         }
       }
       
-      // Navigate to the next step with the actual event ID
-      navigate(`/events/create/${updatedEventId || eventId || 'draft-event-123'}/${currentStep + 1}`);
+      // For steps after BasicInfo, always navigate to next step
+      navigate(`/events/create/${eventId}/${currentStep + 1}`);
       setCurrentStep(prevStep => prevStep + 1);
     } else {
-      // If the step is not valid, just navigate to the next step without making API calls
-      // Mark the step as visited but not completed
-      const stepKey = getStepKeyByNumber(currentStep);
-      setStepStatus(prevStatus => ({
-        ...prevStatus,
-        [stepKey]: {
-          ...prevStatus[stepKey],
-          visited: true
-        }
-      }));
-      
-      // Navigate to the next step without making API calls
-      navigate(`/events/create/${eventId || 'draft-event-123'}/${currentStep + 1}`);
-      setCurrentStep(prevStep => prevStep + 1);
+      // No eventId and not on step 1 - should not happen, but handle anyway
+      alert("Please complete the Basic Info step first to create your event.");
     }
   } catch (error) {
-    console.error('Error saving event data:', error);
+    // General error handler
+    console.error('Error in handleNextStep:', error);
+    setError('An unexpected error occurred. Please try again.');
   } finally {
+    // Always reset loading state
     setIsLoading(prev => ({ ...prev, saveEvent: false }));
   }
-  };
+};
   
   /**
    * Get data for the current step to update
@@ -1215,7 +1241,7 @@ const handlePublishEvent = async () => {
     }
     
     // Navigate to the selected step
-    navigate(`/events/create/${eventId || 'draft-event-123'}/${stepNumber}`);
+    navigate(`/events/create/${eventId}/${stepNumber}`);
     setCurrentStep(stepNumber);
   };
   

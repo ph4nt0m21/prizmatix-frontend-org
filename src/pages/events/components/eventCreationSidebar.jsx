@@ -1,4 +1,3 @@
-// eventCreationSidebar.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
 import styles from './eventCreationSidebar.module.scss';
@@ -89,11 +88,6 @@ const EventCreationSidebar = ({
     };
     
     fetchEventStatus();
-    
-    // Clean up function to handle component unmounting
-    return () => {
-      // Nothing to clean up in this case
-    };
   }, [eventId, currentStep]); // Only re-run when eventId or currentStep changes
   
   /**
@@ -116,7 +110,29 @@ const EventCreationSidebar = ({
    * @param {Object} step Step object
    */
   const handleStepClick = (step) => {
-    // Remove the restriction on navigation - allow clicking any step
+    // Check if we're trying to navigate to a step beyond step 1 without an eventId
+    if (step.number > 1 && !eventId && !getEventData()?.eventId) {
+      alert("Please complete the Basic Info step first to create your event.");
+      return;
+    }
+    
+    // Special case for publish step (step 8)
+    if (step.number === 8) {
+      const areAllPreviousCompleted = 
+        stepStatus.basicInfo.completed &&
+        stepStatus.location.completed &&
+        stepStatus.dateTime.completed &&
+        stepStatus.description.completed &&
+        stepStatus.art.completed &&
+        stepStatus.tickets.completed;
+        
+      if (!areAllPreviousCompleted) {
+        alert("Please complete all previous steps before publishing.");
+        return;
+      }
+    }
+    
+    // Allow navigation to the selected step
     navigateToStep(step.number);
   };
   
@@ -133,12 +149,15 @@ const EventCreationSidebar = ({
           const status = stepStatus[step.key];
           const isActive = currentStep === step.number;
           const isCompleted = status.completed;
+          // Calculate if this step is disabled (steps after step 1 are disabled if no eventId)
+          const isDisabled = step.number > 1 && !eventId && !getEventData()?.eventId;
           
           return (
             <div
               key={step.key}
-              className={getStepClass(step)}
-              onClick={() => handleStepClick(step)}
+              className={`${getStepClass(step)} ${isDisabled ? styles.disabled : ''}`}
+              onClick={() => !isDisabled && handleStepClick(step)}
+              title={isDisabled ? "Please complete Basic Info step first" : ""}
             >
               <div className={styles.stepIconContainer}>
                 <IconComponent className={styles.stepIcon} />
