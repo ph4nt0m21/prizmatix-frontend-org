@@ -1,0 +1,203 @@
+@import '../../../styles/variables';
+@import '../../../styles/mixins';
+
+.sidebar {
+  display: flex;
+  width: 280px;
+  min-width: 280px;
+  flex-direction: column;
+  align-items: flex-start;
+  background: #FFF;
+  box-shadow: 0px 2px 4px 0px rgba(0, 0, 0, 0.05);
+  border-radius: 8px;
+  margin: 20px 0 20px 20px;
+}
+
+.sidebarHeader {
+  padding: 24px 24px 16px;
+  border-bottom: 1px solid #f0f0f0;
+  width: 100%;
+}
+
+.sidebarTitle {
+  font-size: 18px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 4px 0;
+}
+
+.sidebarSubtitle {
+  font-size: 12px;
+  color: #6b7280;
+  margin: 0;
+}
+
+.sectionsList {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  padding: 16px 0;
+  overflow-y: auto;
+}
+
+.sectionGroup {
+  margin-bottom: 24px;
+  width: 100%;
+}
+
+.groupTitle {
+  font-size: 12px;
+  font-weight: 600;
+  color: #4B5563;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0 24px;
+  margin: 0 0 8px 0;
+}
+
+.section {
+  display: flex;
+  align-items: center;
+  padding: 10px 24px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  position: relative;
+  
+  &:hover:not(.active) {
+    background-color: rgba(124, 58, 237, 0.05);
+  }
+  
+  &.active {
+    background-color: rgba(124, 58, 237, 0.1);
+  }
+  
+  &.completed {
+    .sectionLabel {
+      color: #7C3AED;
+    }
+  }
+}
+
+.sectionIconContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  margin-right: 12px;
+  position: relative;
+}
+
+.sectionIcon {
+  width: 20px;
+  height: 20px;
+  opacity: 0.7;
+  
+  .active & {
+    opacity: 1;
+  }
+  
+  .completed & {
+    opacity: 1;
+  }
+}
+
+.sectionStatusIndicator {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1px solid #E9EAEC;
+  background-color: #FFF;
+  margin-left: auto; /* This pushes it to the right */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  &.activeIndicator {
+    background-color: #7C3AED;
+    border-color: #7C3AED;
+  }
+  
+  &.completedIndicator {
+    background-color: #22C55E;
+    border-color: #22C55E;
+  }
+
+  svg {
+    width: 10px;
+    height: 10px;
+  }
+}
+
+.sectionLabel {
+  font-size: 14px;
+  color: #6b7280;
+  flex: 1; /* This ensures the label takes up available space */
+  
+  .active & {
+    color: #7C3AED;
+    font-weight: 500;
+  }
+  
+  .completed & {
+    color: #7C3AED;
+    font-weight: 500;
+  }
+}
+
+// Event actions section
+.eventActions {
+  border-top: 1px solid #f0f0f0;
+  padding: 16px 24px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.duplicateButton, .deleteButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+  border: none;
+  text-align: left;
+}
+
+.duplicateButton {
+  background-color: #F9FAFB;
+  border: 1px solid #E5E7EB;
+  color: #4B5563;
+  
+  &:hover {
+    background-color: #F3F4F6;
+    border-color: #D1D5DB;
+  }
+}
+
+.deleteButton {
+  background-color: #FEF2F2;
+  border: 1px solid #FEE2E2;
+  color: #EF4444;
+  
+  &:hover {
+    background-color: #FEE2E2;
+    border-color: #FCA5A5;
+  }
+}
+
+// Responsive styles
+@media (max-width: 768px) {
+  .sidebar {
+    width: 100%;
+    min-width: auto;
+    margin: 20px;
+  }
+}

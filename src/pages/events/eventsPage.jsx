@@ -141,37 +141,9 @@ const fetchEvents = async () => {
  * Navigate to event details page
  * @param {string} eventId - Event ID
  */
-const handleViewEvent = async (eventId) => {
-  try {
-    // Show loading state
-    setIsLoading(true);
-    
-    // Fetch event details using the GetEventAPI
-    const response = await GetEventAPI(eventId);
-    
-    // Check if the response is successful
-    if (response && response.data) {
-      // Save the event data to localStorage using the eventUtil function
-      saveEventData({
-        ...response.data,
-        eventId: eventId,
-        // Add a flag to indicate this event is being edited
-        isEditMode: true
-      });
-      
-      console.log('Event data saved to localStorage for editing:', response.data);
-      
-      // Navigate to the createEventPage with the eventId
-      navigate(`/events/create/${eventId}/1`);
-    } else {
-      setError('Failed to load event details. Please try again.');
-    }
-  } catch (error) {
-    console.error('Error fetching event data:', error);
-    setError('Failed to load event details. Please try again.');
-  } finally {
-    setIsLoading(false);
-  }
+const handleViewEvent = (eventId) => {
+  // Simply navigate to the event management page with the eventId
+  navigate(`/events/manage/${eventId}/overview`);
 };
   
   /**
