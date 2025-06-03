@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import Header from '../../layout/header/header';
 import EventHeaderNav from './components/eventHeaderNav';
 import EventManageSidebar from './components/eventManageSidebar';
 import LoadingSpinner from '../../components/common/loadingSpinner/loadingSpinner';
@@ -11,6 +10,7 @@ import OverviewSection from './sections/overviewSection';
 import OrdersAndAttendeesSection from './sections/ordersAndAttendeesSection';
 import PayoutSection from './sections/payoutSection';
 import PromotionsSection from './sections/promotionsSection';
+import EventPageSection from './sections/eventPageSection';
 
 /**
  * EventManagePage component for managing existing events
@@ -180,7 +180,7 @@ const EventManagePage = () => {
       case 'promotions':
         return <PromotionsSection eventData={eventData} />;
       case 'eventPage':
-        return renderPlaceholder('Event Page');
+        return <EventPageSection eventData={eventData} />;
       case 'tickets':
         return renderPlaceholder('Tickets');
       default:
@@ -196,8 +196,6 @@ const EventManagePage = () => {
   
   return (
     <>
-      {/* Main Header */}
-      <Header />
       
       {/* Event-specific sub-header with breadcrumbs and actions */}
       <EventHeaderNav 
