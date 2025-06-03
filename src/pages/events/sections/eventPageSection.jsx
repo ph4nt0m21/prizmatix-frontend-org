@@ -1,17 +1,17 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import styles from './payoutSection.module.scss';
+import styles from './eventPageSection.module.scss';
 
 /**
- * PayoutSection component - Template for other sections
+ * EventPageSection component - Template for other sections
  * This can be used as a base for the remaining section components
  * 
  * @param {Object} props Component props
  * @param {string} props.title Section title to display
  * @param {string} props.description Brief description of the section
- * @returns {JSX.Element} PayoutSection component
+ * @returns {JSX.Element} EventPageSection component
  */
-const PayoutSection = ({ title, description }) => {
+const EventPageSection = ({ title, description }) => {
   return (
     <div className={styles.sectionContainer}>
       <div className={styles.sectionHeader}>
@@ -40,9 +40,9 @@ const PayoutSection = ({ title, description }) => {
   );
 };
 
-PayoutSection.propTypes = {
+EventPageSection.propTypes = {
   title: PropTypes.string.isRequired,
   description: PropTypes.string.isRequired
 };
 
-export default PayoutSection;
+export default EventPageSection;

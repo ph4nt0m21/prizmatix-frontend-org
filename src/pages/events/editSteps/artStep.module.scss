@@ -1,0 +1,286 @@
+// Import variables and mixins from main style files
+@import '../../../styles/variables';
+@import '../../../styles/mixins';
+
+// Main container styling
+.stepContainer {
+  width: 100%;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 24px;
+}
+
+// Section header styling - matches the purple icon with text
+.stepHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.stepIcon {
+  flex-shrink: 0;
+  color: #7C3AED;
+}
+
+.stepTitle {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+}
+
+// Form section styling
+.formSection {
+  padding: 0;
+}
+
+.formGroup {
+  margin-bottom: 40px;
+  width: 100%;
+}
+
+// Label and description styling
+.formLabel {
+  display: block;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 4px;
+}
+
+.formDescription {
+  font-size: 13px;
+  color: #6b7280;
+  margin-top: 0;
+  margin-bottom: 16px;
+}
+
+// Upload dropzone - square for thumbnail, rectangle for banner
+.uploadDropzone {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: white;
+  border: 1px dashed #d1d5db;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  
+  &.dragActive {
+    border-color: #7C3AED;
+    background-color: rgba(124, 58, 237, 0.05);
+  }
+  
+  &.hasFile {
+    border-style: solid;
+    border-color: #e5e7eb;
+    background-color: white;
+  }
+}
+
+/* Banner is rectangular and wider */
+.uploadDropzone:last-of-type {
+  width: 100%;
+  height: 200px; /* Increased height */
+  margin-bottom: 8px;
+}
+
+/* You might also want to update the thumbnail to keep it square but larger */
+.uploadDropzone:first-of-type {
+  width: 250px;
+  height: 250px;
+  margin-bottom: 8px;
+}
+
+// Upload interface with centered text
+.uploadInterface {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  text-align: center;
+  padding: 16px;
+}
+
+// Hidden in current design
+.uploadIcon {
+  display: none;
+}
+
+// Text styling for "Drop your files here"
+.uploadText {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 0;
+  text-align: center;
+  line-height: 1.5;
+}
+
+// Purple "click to browse" button
+.browseButton {
+  background: none;
+  border: none;
+  color: #7C3AED;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0;
+  font-size: inherit;
+  
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+// Hidden file input
+.fileInput {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  overflow: hidden;
+}
+
+// File information text layout
+.fileInfoText {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 4px;
+  padding: 0 4px;
+}
+
+// Supported file types text
+.supportedTypes {
+  font-size: 12px;
+  color: #6b7280;
+  
+  svg {
+    display: none; // Hidden in the design
+  }
+}
+
+// Maximum file size text
+.maxSize {
+  font-size: 12px;
+  color: #6b7280;
+  
+  svg {
+    display: none; // Hidden in the design
+  }
+}
+
+// Image preview styling
+.imagePreview {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.previewImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.fileInfo {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+}
+
+.fileName {
+  font-size: 12px;
+  font-weight: 500;
+  color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 70%;
+}
+
+.fileSize {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+// Remove button styling
+.removeButton {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: rgba(0, 0, 0, 0.6);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  cursor: pointer;
+  
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.8);
+  }
+  
+  svg {
+    width: 14px;
+    height: 14px;
+  }
+}
+
+// Error message styling
+.fieldError {
+  margin-top: 5px;
+  font-size: 12px;
+  color: #e53e3e;
+}
+
+// Back and Next buttons
+.actionButtons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 32px;
+}
+
+.backButton {
+  padding: 8px 16px;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  color: #6b7280;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  
+  &:hover {
+    background-color: #f9fafb;
+  }
+}
+
+.nextButton {
+  padding: 8px 24px;
+  background: #7C3AED;
+  border: none;
+  border-radius: 6px;
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  
+  &:hover {
+    background-color: #6D28D9;
+  }
+  
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}

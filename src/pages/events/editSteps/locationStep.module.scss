@@ -1,0 +1,458 @@
+// Import variables and mixins from main style files
+@import '../../../styles/variables';
+@import '../../../styles/mixins';
+
+// Main container styling
+.stepContainer {
+  width: 100%;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 24px;
+}
+
+// Form section styling
+.formSection {
+  padding: 0;
+}
+
+.formGroup {
+  margin-bottom: 24px;
+  width: 100%;
+}
+
+.formLabel {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 4px;
+}
+
+.formDescription {
+  font-size: 13px;
+  color: #666;
+  margin-top: 0;
+  margin-bottom: 12px;
+}
+
+// Error message styling
+.fieldError {
+  margin-top: 5px;
+  font-size: 12px;
+  color: #e53e3e;
+}
+
+// Error alert styling
+.errorAlert {
+  margin-bottom: 16px;
+  padding: 12px 16px;
+  background-color: #fef2f2;
+  border: 1px solid #fee2e2;
+  border-radius: 6px;
+  color: #b91c1c;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.dismissButton {
+  background: none;
+  border: none;
+  color: #b91c1c;
+  font-size: 18px;
+  cursor: pointer;
+  
+  &:hover {
+    opacity: 0.8;
+  }
+}
+
+// Location Type section styling based on the design
+.locationOptions {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 24px;
+  
+  @media (max-width: 640px) {
+    flex-direction: column;
+  }
+}
+
+.locationOption {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  
+  &:hover {
+    border-color: #7C3AED;
+    background-color: rgba(124, 58, 237, 0.05);
+  }
+  
+  &.selected {
+    border-color: #7C3AED;
+    background-color: rgba(124, 58, 237, 0.05);
+  }
+}
+
+.locationIcon {
+  width: 40px;
+  height: 40px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  svg {
+    width: 24px;
+    height: 24px;
+  }
+}
+
+.locationContent {
+  text-align: center;
+  width: 100%;
+}
+
+.locationTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 4px 0;
+}
+
+.locationDescription {
+  font-size: 12px;
+  color: #666;
+  margin: 0;
+}
+
+// Radio button styling for location options
+.locationSelector {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 20px;
+  height: 20px;
+  
+  svg {
+    width: 20px;
+    height: 20px;
+    color: #7C3AED;
+    display: none;
+  }
+  
+  .selected & {
+    svg {
+      display: block;
+    }
+  }
+}
+
+// Search section styling
+.searchContainer {
+  position: relative;
+  margin-bottom: 16px;
+}
+
+.searchInput {
+  width: 100%;
+  height: 44px;
+  padding: 0 44px 0 16px;
+  background-color: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  color: #333;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  
+  &:focus {
+    outline: none;
+    border-color: #7C3AED;
+    box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.05);
+  }
+  
+  &::placeholder {
+    color: #9ca3af;
+  }
+  
+  &.inputError {
+    border-color: #e53e3e;
+    
+    &:focus {
+      box-shadow: 0 0 0 2px rgba(229, 62, 62, 0.1);
+    }
+  }
+}
+
+.searchButton {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  
+  svg {
+    width: 18px;
+    height: 18px;
+    color: #9ca3af;
+  }
+  
+  &:hover svg {
+    color: #7C3AED;
+  }
+  
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+// Loading spinner
+.loadingSpinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(124, 58, 237, 0.2);
+  border-radius: 50%;
+  border-top-color: #7C3AED;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// Map container styling
+.mapContainerWithControls {
+  margin-bottom: 24px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+}
+
+.mapTabControls {
+  display: flex;
+  background-color: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.mapTabButton {
+  padding: 8px 16px;
+  background: none;
+  border: none;
+  font-size: 13px;
+  font-weight: 500;
+  color: #4b5563;
+  cursor: pointer;
+  
+  &.activeTab {
+    color: #7C3AED;
+    position: relative;
+    
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background-color: #7C3AED;
+    }
+  }
+  
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.mapContainer {
+  width: 100%;
+  height: 300px;
+}
+
+.googleMap {
+  width: 100%;
+  height: 100%;
+}
+
+.mapLoading {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
+  font-size: 14px;
+  background-color: #f9fafb;
+}
+
+// Form inputs with dropdown styling
+.formInput {
+  width: 100%;
+  height: 44px;
+  padding: 0 16px;
+  background-color: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  color: #333;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  
+  &:focus {
+    outline: none;
+    border-color: #7C3AED;
+    box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.05);
+  }
+  
+  &::placeholder {
+    color: #9ca3af;
+  }
+}
+
+.dropdownInput {
+  position: relative;
+}
+
+.dropdownArrow {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  
+  svg {
+    color: #9ca3af;
+  }
+}
+
+// Form row for multi-column layout
+.formRow {
+  display: flex;
+  gap: 16px;
+  
+  @media (max-width: 640px) {
+    flex-direction: column;
+    gap: 20px;
+  }
+  
+  .formGroup {
+    flex: 1;
+  }
+}
+
+// Textarea styling
+.formTextarea {
+  width: 100%;
+  min-height: 100px;
+  padding: 12px 16px;
+  background-color: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  color: #333;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  resize: vertical;
+  
+  &:focus {
+    outline: none;
+    border-color: #7C3AED;
+    box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.05);
+  }
+  
+  &::placeholder {
+    color: #9ca3af;
+  }
+}
+
+// Input error state
+.inputError {
+  border-color: #e53e3e !important;
+  
+  &:focus {
+    box-shadow: 0 0 0 2px rgba(229, 62, 62, 0.1) !important;
+  }
+}
+
+// Saving indicator
+.savingIndicator {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16px;
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(124, 58, 237, 0.2);
+  border-radius: 50%;
+  border-top-color: #7C3AED;
+  animation: spin 1s linear infinite;
+  margin-right: 8px;
+}
+
+// Tips section
+.locationTips {
+  margin-top: 24px;
+  padding: 16px;
+  background-color: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+}
+
+.tipTitle {
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: #4b5563;
+  margin-top: 0;
+  margin-bottom: 12px;
+  
+  svg {
+    margin-right: 8px;
+    width: 18px;
+    height: 18px;
+  }
+}
+
+.tipsList {
+  margin: 0;
+  padding-left: 20px;
+  
+  li {
+    margin-bottom: 8px;
+    color: #6b7280;
+    font-size: 13px;
+    
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+}
+
+/* Add these styles to locationStep.module.scss */
+.stepTitleContainer {
+  display: flex;
+  flex-direction: column;
+}
+
+.stepSubtitle {
+  font-size: 14px;
+  color: #666;
+  margin: 4px 0 0 0;
+}

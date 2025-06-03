@@ -16,6 +16,7 @@ import LoadingSpinner from "./components/common/loadingSpinner/loadingSpinner";
 import EventsPage from "./pages/events/eventsPage";
 import CreateEventPage from "./pages/events/createEventPage";
 import EventManagePage from './pages/events/manageEventPage'; 
+import EditEventPage from './pages/events/editEventPage';
 import { setupEventDataCleanup, checkAndCleanupEventData } from './utils/eventUtil';
 
 /**
@@ -108,6 +109,7 @@ function App() {
             <Route path="events/manage" element={<EventManagePage/>}/>
             <Route path="events/manage/:eventId" element={<EventManagePage />} />
             <Route path="events/manage/:eventId/:section" element={<EventManagePage />} />
+            <Route path="events/edit" element={<EditEventPage/>} />
 
             {/* Event Creation Routes */}
             <Route path="events/create" element={<CreateEventPage />} />
