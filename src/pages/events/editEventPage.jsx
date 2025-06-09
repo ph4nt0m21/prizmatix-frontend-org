@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Header from '../../layout/header/header';
 import EventHeaderNav from './components/eventHeaderNav';
-import EventEditSidebar from './components/eventEditSidebar';
+import EditEventSidebar from './components/eventEditSidebar';
 import BasicInfoStep from './editSteps/basicInfoStep';
 import LocationStep from './editSteps/locationStep';
 import DateTimeStep from './editSteps/dateTimeStep';
@@ -88,11 +88,11 @@ const EditEventPage = () => {
         canPreview={true} 
       />
       <div className={styles.content}>
-        <
-  currentStep={currentStep}
-  navigateToStep={(s) => navigate(`/events/edit/${eventId}/${s}`)}
-  eventId={eventId}
-/>
+        <EditEventSidebar
+          currentStep={currentStep}
+          navigateToStep={(s) => navigate(`/events/edit/${eventId}/${s}`)}
+          eventId={eventId}
+        />
         <div className={styles.mainContent}>
           {StepComponent && (
             <StepComponent
