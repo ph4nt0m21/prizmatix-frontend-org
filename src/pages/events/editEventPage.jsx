@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Header from '../../layout/header/header';
 import EventHeaderNav from './components/eventHeaderNav';
-import EventCreationSidebar from './components/eventCreationSidebar'; // Reuse if applicable
+import EditEventSidebar from './components/eventEditSidebar';
 import BasicInfoStep from './editSteps/basicInfoStep';
 import LocationStep from './editSteps/locationStep';
 import DateTimeStep from './editSteps/dateTimeStep';
@@ -88,8 +88,7 @@ const EditEventPage = () => {
         canPreview={true} 
       />
       <div className={styles.content}>
-        {/* Reuse sidebar if appropriate */}
-        <EventCreationSidebar 
+        <EditEventSidebar
           currentStep={currentStep}
           navigateToStep={(s) => navigate(`/events/edit/${eventId}/${s}`)}
           eventId={eventId}
