@@ -106,8 +106,6 @@ function App() {
             <Route path="events" element={<EventsPage />} />
             
             {/* Manage Event Routes*/}
-            <Route path="events/manage" element={<EventManagePage/>}/>
-            <Route path="events/manage/:eventId" element={<EventManagePage />} />
             <Route path="events/manage/:eventId/:section" element={<EventManagePage />} />
             <Route path="events/edit" element={<EditEventPage/>} />
 
