@@ -107,7 +107,8 @@ function App() {
             
             {/* Manage Event Routes*/}
             <Route path="events/manage/:eventId/:section" element={<EventManagePage />} />
-            <Route path="events/edit" element={<EditEventPage/>} />
+            <Route path="/events/edit/:eventId/:step" element={<EditEventPage />} />
+
 
             {/* Event Creation Routes */}
             <Route path="events/create" element={<CreateEventPage />} />
