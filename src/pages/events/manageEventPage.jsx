@@ -1,3 +1,6 @@
+/*
+File: manageEventPage.jsx
+*/
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import EventHeaderNav from './components/eventHeaderNav';
@@ -5,12 +8,14 @@ import EventManageSidebar from './components/eventManageSidebar';
 import LoadingSpinner from '../../components/common/loadingSpinner/loadingSpinner';
 import styles from './manageEventPage.module.scss';
 
-// Import section components
+// Import manage section components
 import OverviewSection from './sections/overviewSection';
 import OrdersAndAttendeesSection from './sections/ordersAndAttendeesSection';
 import PayoutSection from './sections/payoutSection';
 import PromotionsSection from './sections/promotionsSection';
-import EventPageSection from './sections/eventPageSection';
+// EventPageSection is removed as it's not a generic section, but specific edit content for eventEditPage
+// import EventPageSection from './sections/eventPageSection';
+
 
 /**
  * EventManagePage component for managing existing events
@@ -19,16 +24,16 @@ import EventPageSection from './sections/eventPageSection';
 const EventManagePage = () => {
   const navigate = useNavigate();
   const { eventId, section } = useParams();
-  
+
   // Loading state
   const [isLoading, setIsLoading] = useState(true);
-  
+
   // Error state
   const [error, setError] = useState(null);
-  
+
   // Success message state
   const [successMessage, setSuccessMessage] = useState(null);
-  
+
   // Event data state with dummy values
   const [eventData, setEventData] = useState({
     id: eventId || '12345',
@@ -70,20 +75,19 @@ const EventManagePage = () => {
       timeframe: '10 days'
     }
   });
-  
+
   // Current section state (default to 'overview' if not specified)
   const [currentSection, setCurrentSection] = useState('overview');
-  
-  // Track completion status for each step (dummy data)
+
+  // Track completion status for each manage section (dummy data)
   const [sectionStatus, setSectionStatus] = useState({
     overview: { completed: true, valid: true, visited: true },
     ordersAndAttendees: { completed: true, valid: true, visited: false },
     payout: { completed: true, valid: true, visited: false },
     promotions: { completed: true, valid: true, visited: false },
-    eventPage: { completed: true, valid: true, visited: false },
-    tickets: { completed: true, valid: true, visited: false }
+    // 'eventPage' and 'tickets' are now separate pages, no longer tracked here
   });
-  
+
   // Simulate data fetching on mount
   useEffect(() => {
     const fetchEventData = async () => {
@@ -91,7 +95,7 @@ const EventManagePage = () => {
         setIsLoading(true);
         // Simulate API call delay
         await new Promise(resolve => setTimeout(resolve, 800));
-        
+
         // In a real app, you would fetch event data here
         // For now, we're using the dummy data from state
 
@@ -103,16 +107,14 @@ const EventManagePage = () => {
         setIsLoading(false);
       }
     };
-    
+
     fetchEventData();
   }, [eventId]);
-  
-  // Parse section parameter and update current section
+
+  // Parse section parameter and update current section for manage sections
   useEffect(() => {
-    if (section) {
+    if (section && sectionStatus[section]) { // Only update if the section is one of the "manage" sections
       setCurrentSection(section);
-      
-      // Mark the current section as visited
       setSectionStatus(prevStatus => ({
         ...prevStatus,
         [section]: {
@@ -121,15 +123,15 @@ const EventManagePage = () => {
         }
       }));
     } else {
-      setCurrentSection('overview');
+      setCurrentSection('overview'); // Default to overview if no valid section or section is external
     }
-  }, [section]);
-  
+  }, [section, sectionStatus]);
+
   /**
-   * Navigate to a specific section
+   * Navigate to a specific section within manageEventPage
    * @param {string} sectionName - Section to navigate to
    */
-  const navigateToSection = (sectionName) => {
+  const navigateToManageSection = (sectionName) => {
     navigate(`/events/manage/${eventId}/${sectionName}`);
     setCurrentSection(sectionName);
   };
@@ -144,16 +146,16 @@ const EventManagePage = () => {
       <div className={styles.placeholderContainer}>
         <h2 className={styles.placeholderTitle}>{sectionName} Section</h2>
         <p className={styles.placeholderMessage}>This section is coming soon.</p>
-        <button 
+        <button
           className={styles.placeholderButton}
-          onClick={() => navigateToSection('overview')}
+          onClick={() => navigateToManageSection('overview')}
         >
           Back to Overview
         </button>
       </div>
     );
   };
-  
+
   /**
    * Render the current section
    * @returns {JSX.Element} Current section component
@@ -168,7 +170,7 @@ const EventManagePage = () => {
         </div>
       );
     }
-    
+
     // Handle different sections
     switch (currentSection) {
       case 'overview':
@@ -179,46 +181,45 @@ const EventManagePage = () => {
         return <PayoutSection eventData={eventData} />;
       case 'promotions':
         return <PromotionsSection eventData={eventData} />;
-      case 'eventPage':
-        return <EventPageSection eventData={eventData} />;
-      case 'tickets':
-        return renderPlaceholder('Tickets');
+      // 'eventPage' and 'tickets' are now full pages, not rendered here.
       default:
         return <OverviewSection eventData={eventData} />;
     }
   };
-  
+
   // Check if the current event is live
   const isEventLive = eventData.status === 'Live';
-  
+
   // Determine if preview is available
   const canPreview = true; // In management view, preview should always be available
-  
+
   return (
     <>
-      
+
       {/* Event-specific sub-header with breadcrumbs and actions */}
-      <EventHeaderNav 
-        currentStep={currentSection === 'overview' ? 'Overview' : currentSection} 
+      <EventHeaderNav
+        currentStep={currentSection === 'overview' ? 'Overview' : currentSection}
         eventName={eventData.name}
         isDraft={!isEventLive}
         canPreview={canPreview}
       />
-       
+
       <div className={styles.content}>
-        <EventManageSidebar 
+        <EventManageSidebar
           currentSection={currentSection}
           sectionStatus={sectionStatus}
-          navigateToSection={navigateToSection}
+          navigateToSection={navigateToManageSection} // For 'manage' sections
+          navigateToEventEditPage={() => navigate(`/events/edit-page/${eventId}`)} // For 'Event Page'
+          navigateToTicketEditPage={() => navigate(`/events/tickets/${eventId}`)} // For 'Tickets'
           eventId={eventId}
         />
-        
+
         <div className={styles.mainContent}>
           {/* Success message (if any) */}
           {successMessage && (
             <div className={styles.successMessage}>
               {successMessage}
-              <button 
+              <button
                 className={styles.dismissButton}
                 onClick={() => setSuccessMessage(null)}
               >
@@ -226,12 +227,12 @@ const EventManagePage = () => {
               </button>
             </div>
           )}
-          
+
           {/* Error message (if any) */}
           {error && (
             <div className={styles.errorMessage}>
               {error}
-              <button 
+              <button
                 className={styles.dismissButton}
                 onClick={() => setError(null)}
               >
@@ -239,14 +240,14 @@ const EventManagePage = () => {
               </button>
             </div>
           )}
-          
+
           {/* Section content */}
           <div className={styles.sectionContent}>
             {renderCurrentSection()}
           </div>
         </div>
       </div>
-      
+
       {/* Footer */}
       <div className={styles.footer}>
         © 2025 Event Tickets Platform

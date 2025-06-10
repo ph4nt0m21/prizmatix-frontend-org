@@ -1,0 +1,201 @@
+/*
+File: ticketEditPage.module.scss
+*/
+.ticketEditPageContainer {
+  display: flex;
+  background-color: #f9fafb;
+  min-height: calc(100vh - 64px);
+  width: 100%;
+}
+
+.eventEditSidebar {
+  width: 200px;
+  min-width: 200px;
+  background: #FFFFFF;
+  box-shadow: 0px 2px 4px 0px rgba(0, 0, 0, 0.05);
+  border-radius: 8px;
+  margin: 20px 0 20px 20px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+
+  h3 {
+    font-size: 16px;
+    font-weight: 600;
+    color: #111827;
+    margin-bottom: 15px;
+    border-bottom: 1px solid #f0f0f0;
+    padding-bottom: 10px;
+  }
+
+  ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  li {
+    padding: 10px 0;
+    cursor: pointer;
+    color: #6B7280;
+    font-size: 14px;
+    transition: color 0.2s;
+
+    &:hover {
+      color: #7C3AED;
+    }
+
+    &.activeEditOption {
+      color: #7C3AED;
+      font-weight: 500;
+    }
+  }
+}
+
+.mainContent {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+
+  h2 {
+    font-size: 24px;
+    font-weight: 600;
+    color: #111827;
+    margin-bottom: 8px;
+  }
+
+  .sectionDescription {
+    font-size: 14px;
+    color: #6B7280;
+    margin-bottom: 24px;
+  }
+}
+
+.contentCard {
+  background: #FFFFFF;
+  border-radius: 8px;
+  box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.05);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px; // Spacing between form groups
+}
+
+.ticketList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ticketItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 15px;
+  border: 1px solid #E5E7EB;
+  border-radius: 6px;
+  background-color: #F9FAFB;
+  font-size: 14px;
+  color: #374151;
+
+  span {
+    flex: 1;
+  }
+}
+
+.editButton {
+  padding: 6px 12px;
+  background-color: #60A5FA;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+
+  &:hover {
+    background-color: #3B82F6;
+  }
+}
+
+.addTicketButton {
+  padding: 10px 15px;
+  background-color: #22C55E;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  align-self: flex-start; // Align to left
+  margin-top: 15px;
+
+  &:hover {
+    background-color: #16A34A;
+  }
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.saveButton, .cancelButton {
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+}
+
+.saveButton {
+  background-color: #7C3AED;
+  color: #FFFFFF;
+  border: 1px solid #7C3AED;
+
+  &:hover {
+    background-color: #6D28D9;
+    border-color: #6D28D9;
+  }
+}
+
+.cancelButton {
+  background-color: #FFFFFF;
+  color: #4B5563;
+  border: 1px solid #D1D5DB;
+
+  &:hover {
+    background-color: #F3F4F6;
+  }
+}
+
+
+.loadingContainer, .errorContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  width: 100%;
+
+  p {
+    margin-top: 16px;
+    color: #6B7280;
+  }
+  button {
+    margin-top: 20px;
+    padding: 10px 20px;
+    background-color: #7C3AED;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    &:hover {
+      background-color: #6D28D9;
+    }
+  }
+}
