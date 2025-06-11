@@ -1,0 +1,151 @@
+/*
+File: src/pages/events/components/editEventSidebar.module.scss
+*/
+@import '../../../styles/variables';
+@import '../../../styles/mixins';
+
+.sidebar {
+  display: flex;
+  width: 292px;
+  min-width: 292px;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 1px;
+  align-self: stretch;
+  border-radius: 8px;
+  background: #FFF;
+  box-shadow: 0px 2px 4px 0px rgba(0, 0, 0, 0.05);
+  margin: 20px 0 20px 20px;
+}
+
+.sidebarHeader {
+  padding: 0 24px 16px;
+  border-bottom: 1px solid #f0f0f0;
+  margin-bottom: 20px;
+  width: 100%;
+}
+
+.sidebarTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 4px 0;
+}
+
+.sidebarSubtitle {
+  font-size: 12px;
+  color: #6b7280;
+  margin: 0;
+}
+
+.stepsList {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 0 12px;
+  overflow-y: auto;
+  width: 100%;
+}
+
+.step {
+  display: flex;
+  align-items: center;
+  padding: 10px 12px;
+  margin-bottom: 4px;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background-color 0.2s ease-in-out;
+  width: 100%;
+
+  &:hover {
+    background-color: #F3F4F6;
+  }
+
+  &.active {
+    background-color: #F3EBFE;
+    .stepIconContainer {
+      background-color: #7C3AED;
+      svg {
+        color: #FFFFFF;
+      }
+    }
+  }
+
+  &.completed {
+    .stepIconContainer {
+      background-color: #22C55E;
+      svg {
+        color: #FFFFFF;
+      }
+    }
+  }
+
+  &.visited {
+    // Styles for visited steps (can be same as default or slightly different)
+  }
+}
+
+.stepIconContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background-color: #F3F4F6;
+  margin-right: 12px;
+  transition: background-color 0.2s ease-in-out;
+
+  svg {
+    width: 20px;
+    height: 20px;
+    color: #4B5563;
+    transition: color 0.2s ease-in-out;
+  }
+}
+
+.stepStatusIndicator {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1px solid #E9EAEC;
+  background-color: #FFF;
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &.activeIndicator {
+    background-color: #7C3AED;
+    border-color: #7C3AED;
+  }
+
+  &.completedIndicator {
+    background-color: #22C55E;
+    border-color: #22C55E;
+  }
+
+  svg {
+    width: 10px;
+    height: 10px;
+  }
+}
+
+.stepLabel {
+  font-size: 14px;
+  color: #6b7280;
+  flex: 1;
+
+  .active & {
+    color: #7C3AED;
+    font-weight: 500;
+  }
+
+  .completed & {
+    color: #7C3AED;
+    font-weight: 500;
+  }
+}
+
+/* Removed the progressInfoContainer and related styles from here */

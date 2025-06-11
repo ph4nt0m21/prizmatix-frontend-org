@@ -1,45 +1,61 @@
 /*
-File: src/pages/events/createEventPage.jsx
+File: src/pages/events/eventEditPage.jsx
 */
 import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
-import { LoginAPI } from '../../services/allApis';
-import Header from '../../layout/header/header';
 import EventHeaderNav from './components/eventHeaderNav';
-import EventCreationSidebar from './components/eventCreationSidebar';
+import EditEventSidebar from './components/editEventSidebar';
+import LoadingSpinner from '../../components/common/loadingSpinner/loadingSpinner';
+import styles from './eventEditPage.module.scss';
+
+// Import step components (reusing existing ones)
 import BasicInfoStep from './steps/basicInfoStep';
 import LocationStep from './steps/locationStep';
 import DateTimeStep from './steps/dateTimeStep';
 import DescriptionStep from './steps/descriptionStep';
 import ArtStep from './steps/artStep';
-import TicketsStep from './steps/ticketsStep';
-import DiscountCodesStep from './steps/discountCodesStep';
-import PublishStep from './steps/publishStep';
-import LoadingSpinner from '../../components/common/loadingSpinner/loadingSpinner';
-import { CreateEventAPI, UpdateEventLocationAPI, UpdateEventDateTimeAPI ,UpdateEventDescriptionAPI, GetEventAPI, UploadEventBannerAPI, UpdateEventTicketsAPI, UpdateEventDiscountCodesAPI, PublishEventAPI, GetEventStatusAPI } from '../../services/allApis';
-import styles from './createEventPage.module.scss';
-import { getUserData, setUserData } from '../../utils/authUtil';
-import { saveEventData, getEventData,clearEventData, prepareLocationDataForAPI, prepareDateTimeDataForAPI, prepareDescriptionDataForAPI, prepareArtDataForAPI, prepareTicketsDataForAPI, prepareDiscountCodesDataForAPI,preparePublishEventDataForAPI } from '../../utils/eventUtil';
+
+// Import API services (placeholder, will be actual APIs later)
+import {
+  GetEventAPI,
+  UpdateEventBasicInfoAPI,
+  UpdateEventLocationAPI,
+  UpdateEventDateTimeAPI,
+  UpdateEventDescriptionAPI,
+  UpdateEventArtAPI,
+} from '../../services/allApis';
+
+// Import utility functions
+import {
+  getEventData,
+  saveEventData,
+  clearEventData,
+  // prepareBasicInfoDataForAPI,
+  prepareLocationDataForAPI,
+  prepareDateTimeDataForAPI,
+  prepareDescriptionDataForAPI,
+  prepareArtDataForAPI,
+} from '../../utils/eventUtil';
+
 
 /**
- * CreateEventPage component for multi-step event creation.
- * Handles the flow of collecting event details through various steps.
+ * EventEditPage component for editing existing event details in a multi-step flow.
  */
-const CreateEventPage = () => {
+const EventEditPage = () => {
   const { eventId: paramEventId, step: paramStep } = useParams();
   const navigate = useNavigate();
 
   // State for current step
   const [currentStep, setCurrentStep] = useState(1);
-  const totalSteps = 8; // Basic Info, Location, Date & Time, Description, Art, Tickets, Discount Codes, Publish
+  const totalSteps = 5; // Basic Info, Location, Date & Time, Description, Art
 
-  // State for event data
+  // State for event data being edited
   const [eventData, setEventData] = useState(() => {
     // Try to load from session storage first, then default structure
     const storedEventData = getEventData(paramEventId);
     return storedEventData || {
-      id: paramEventId || null, // Will be set after initial event creation
+      id: paramEventId || null,
       basicInfo: {
         eventName: '',
         organizerName: '',
@@ -78,27 +94,18 @@ const CreateEventPage = () => {
         bannerFile: null,
         bannerUrl: null,
       },
-      tickets: [],
-      discountCodes: [],
-      publish: {
-        confirmTerms: false,
-        isLive: false,
-      },
     };
   });
 
   // State for step validity and visited status for validation
   const [stepStatus, setStepStatus] = useState(() => {
-    const storedStatus = sessionStorage.getItem(`eventCreationStepStatus_${paramEventId}`);
+    const storedStatus = sessionStorage.getItem(`eventEditStepStatus_${paramEventId}`);
     return storedStatus ? JSON.parse(storedStatus) : {
       basicInfo: { completed: false, valid: false, visited: false },
       location: { completed: false, valid: false, visited: false },
       dateTime: { completed: false, valid: false, visited: false },
       description: { completed: false, valid: false, visited: false },
       art: { completed: false, valid: false, visited: false },
-      tickets: { completed: false, valid: false, visited: false },
-      discountCodes: { completed: false, valid: false, visited: false },
-      publish: { completed: false, valid: false, visited: false },
     };
   });
 
@@ -106,11 +113,9 @@ const CreateEventPage = () => {
   const [isLoading, setIsLoading] = useState({
     initialLoad: true,
     saveEvent: false,
-    publishEvent: false,
   });
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
-
 
   // Map step numbers to their keys for status tracking
   const stepKeys = {
@@ -119,12 +124,9 @@ const CreateEventPage = () => {
     3: 'dateTime',
     4: 'description',
     5: 'art',
-    6: 'tickets',
-    7: 'discountCodes',
-    8: 'publish',
   };
 
-  const getStepKey = (stepNum) => stepKeys[stepNum];
+  const getStepKey = useCallback((stepNum) => stepKeys[stepNum], []);
 
   // Effect to sync URL param with current step
   useEffect(() => {
@@ -133,70 +135,99 @@ const CreateEventPage = () => {
       if (!isNaN(stepNum) && stepNum >= 1 && stepNum <= totalSteps) {
         setCurrentStep(stepNum);
       } else {
-        // If an invalid step is in the URL, navigate to step 1
-        navigate(paramEventId ? `/events/create/${paramEventId}/1` : '/events/create', { replace: true });
+        navigate(`/events/edit-page/${paramEventId}/1`, { replace: true });
       }
     } else if (paramEventId) {
-      // If eventId exists but no step, default to step 1
-      navigate(`/events/create/${paramEventId}/1`, { replace: true });
+      // If no step specified, default to 1
+      navigate(`/events/edit-page/${paramEventId}/1`, { replace: true });
     }
   }, [paramStep, paramEventId, navigate, totalSteps]);
 
-  // Effect to load initial event data or create a new event
+
+  // Effect to load initial event data on component mount
   useEffect(() => {
-    const initializeEvent = async () => {
+    const fetchEventData = async () => {
+      if (!paramEventId) {
+        setError('No Event ID provided. Please navigate from the Manage Event page.');
+        setIsLoading({ ...isLoading, initialLoad: false });
+        return;
+      }
+
       setIsLoading(prev => ({ ...prev, initialLoad: true }));
       try {
         const storedData = getEventData(paramEventId);
         if (storedData && storedData.id === paramEventId) {
-          // If data found in session storage, use it
           setEventData(storedData);
-          const storedStatus = sessionStorage.getItem(`eventCreationStepStatus_${paramEventId}`);
+          const storedStatus = sessionStorage.getItem(`eventEditStepStatus_${paramEventId}`);
           if (storedStatus) {
             setStepStatus(JSON.parse(storedStatus));
           }
-          console.log("Loaded event data from session storage:", storedData);
-        } else if (paramEventId) {
-          // If eventId exists but no data in session storage, fetch from API
+          console.log("Loaded event data from session storage for editing:", storedData);
+        } else {
           const token = Cookies.get('token');
           if (!token) {
             navigate('/login');
             return;
           }
-          // Simulate API call to get existing draft event
+          // Simulate API call
           // const response = await GetEventAPI(paramEventId, token);
-          await new Promise(resolve => setTimeout(resolve, 800)); // Simulate network delay
+          await new Promise(resolve => setTimeout(resolve, 800));
           const mockResponse = {
             id: paramEventId,
             basicInfo: {
-              eventName: 'My Draft Event',
-              organizerName: 'Organizer Co.',
-              category: 'Other',
-              eventType: 'Conference',
-              searchTags: ['draft', 'test'],
-              visibility: 'private',
+              eventName: 'NORR Festival 2022',
+              organizerName: 'Eventure Co.',
+              category: 'Music',
+              eventType: 'Festival',
+              searchTags: ['music', 'festival', 'norway'],
+              visibility: 'public',
             },
-            // ... rest of the event data, typically empty or default for draft
+            location: {
+              locationType: 'physical',
+              isToBeAnnounced: false,
+              isPrivateLocation: false,
+              searchQuery: 'Queenstown Gardens, New Zealand',
+              venue: 'Queenstown Gardens',
+              street: 'Park Street',
+              streetNumber: '',
+              city: 'Queenstown',
+              postalCode: '9300',
+              state: 'Otago',
+              country: 'New Zealand',
+              additionalInfo: 'Near the pond.',
+              latitude: '-45.0317',
+              longitude: '168.6583',
+              formattedAddress: 'Queenstown Gardens, Park St, Queenstown 9300, New Zealand',
+            },
+            dateTime: {
+              startDate: '2025-05-12',
+              startTime: '10:00',
+              endDate: '2025-05-12',
+              endTime: '22:00',
+            },
+            description: 'The premier music festival in Norway, featuring top artists and immersive experiences.',
+            artData: {
+              thumbnailFile: null,
+              thumbnailUrl: 'https://via.placeholder.com/150?text=Thumb',
+              bannerFile: null,
+              bannerUrl: 'https://via.placeholder.com/800x300?text=Banner',
+            },
           };
           setEventData(mockResponse);
           saveEventData(paramEventId, mockResponse);
-          console.log("Fetched event data from API (draft):", mockResponse);
-        } else {
-          // No eventId, starting fresh, use default initial state (already set)
-          // No API call needed here, eventId will be generated on first save
-          console.log("Starting new event creation.");
+          console.log("Fetched event data from API for editing:", mockResponse);
         }
         setError(null);
       } catch (err) {
-        console.error("Error initializing event:", err);
-        setError('Failed to load event data. Please try again.');
-        clearEventData(paramEventId); // Clear potentially corrupted data
+        console.error("Error fetching event for editing:", err);
+        setError('Failed to load event details. Please try again.');
+        clearEventData(paramEventId);
       } finally {
         setIsLoading(prev => ({ ...prev, initialLoad: false }));
       }
     };
 
-    initializeEvent();
+    fetchEventData();
   }, [paramEventId, navigate]);
 
 
@@ -204,9 +235,10 @@ const CreateEventPage = () => {
   useEffect(() => {
     if (eventData.id) {
       saveEventData(eventData.id, eventData);
-      sessionStorage.setItem(`eventCreationStepStatus_${eventData.id}`, JSON.stringify(stepStatus));
+      sessionStorage.setItem(`eventEditStepStatus_${eventData.id}`, JSON.stringify(stepStatus));
     }
   }, [eventData, stepStatus]);
+
 
   /**
    * Universal handler for input changes in child step components.
@@ -219,11 +251,13 @@ const CreateEventPage = () => {
     setEventData(prevData => {
       const updatedData = { ...prevData };
       if (typeof updatedData[sectionKey] === 'object' && updatedData[sectionKey] !== null) {
+        // For nested objects (basicInfo, location, dateTime, artData)
         updatedData[sectionKey] = {
           ...updatedData[sectionKey],
           [fieldName]: value,
         };
       } else {
+        // For direct fields (description)
         updatedData[sectionKey] = value;
       }
       return updatedData;
@@ -259,7 +293,7 @@ const CreateEventPage = () => {
         if (loc.locationType === 'physical' && !loc.isToBeAnnounced && !loc.isPrivateLocation) {
           isValid = !!loc.venue && !!loc.street && !!loc.city && !!loc.country;
         } else if (loc.locationType === 'online') {
-          isValid = true; // No specific validation for online events yet
+          isValid = true;
         }
         break;
       case 'dateTime':
@@ -268,7 +302,7 @@ const CreateEventPage = () => {
         if (isValid) {
           const startDateTime = new Date(`${dt.startDate}T${dt.startTime}`);
           const endDateTime = new Date(`${dt.endDate}T${dt.endTime}`);
-          isValid = startDateTime <= endDateTime; // End date/time must be after or same as start
+          isValid = startDateTime <= endDateTime;
         }
         break;
       case 'description':
@@ -277,15 +311,6 @@ const CreateEventPage = () => {
       case 'art':
         const art = eventData.artData;
         isValid = !!art.thumbnailUrl && !!art.bannerUrl;
-        break;
-      case 'tickets':
-        isValid = eventData.tickets && eventData.tickets.length > 0; // At least one ticket type
-        break;
-      case 'discountCodes':
-        isValid = true; // Optional step, always considered valid for progression
-        break;
-      case 'publish':
-        isValid = eventData.publish.confirmTerms;
         break;
       default:
         isValid = true;
@@ -296,12 +321,11 @@ const CreateEventPage = () => {
       [currentStepKey]: {
         ...prevStatus[currentStepKey],
         valid: isValid,
-        visited: true, // Mark as visited when validation is triggered
+        visited: true,
       },
     }));
     return isValid;
-  }, [currentStep, eventData]);
-
+  }, [currentStep, eventData, getStepKey]);
 
   /**
    * Handles navigation to the previous step.
@@ -310,13 +334,13 @@ const CreateEventPage = () => {
     if (currentStep > 1) {
       const prevStep = currentStep - 1;
       setCurrentStep(prevStep);
-      navigate(`/events/create/${eventData.id}/${prevStep}`);
-      setError(null); // Clear any errors when navigating back
+      navigate(`/events/edit-page/${paramEventId}/${prevStep}`);
+      setError(null);
     }
   };
 
   /**
-   * Handles navigation to the next step or publishing the event.
+   * Handles navigation to the next step or submitting the event.
    */
   const handleNextStep = async () => {
     const currentStepKey = getStepKey(currentStep);
@@ -327,9 +351,9 @@ const CreateEventPage = () => {
       return;
     }
 
-    setError(null); // Clear previous errors
+    setError(null);
 
-    // Start loading for API call
+    // Simulate API call for the current step
     setIsLoading(prev => ({ ...prev, saveEvent: true }));
     try {
       const token = Cookies.get('token');
@@ -338,75 +362,34 @@ const CreateEventPage = () => {
         return;
       }
 
-      let apiResponse;
-      let newEventId = eventData.id;
+      let apiCall;
+      let payload;
 
-      // Handle initial event creation or update based on step
-      if (!eventData.id) {
-        // Step 1: Create event (Basic Info) - this sets the eventId
-        const userData = getUserData();
-        const organizerId = userData ? userData.id : null;
-        if (!organizerId) {
-          throw new Error("Organizer ID not found. Please login.");
-        }
-        const createPayload = {
-          eventName: eventData.basicInfo.eventName,
-          organizerName: eventData.basicInfo.organizerName,
-          category: eventData.basicInfo.category,
-          eventType: eventData.basicInfo.eventType,
-          searchTags: eventData.basicInfo.searchTags,
-          visibility: eventData.basicInfo.visibility,
-          organizerId: organizerId,
-        };
-        // apiResponse = await CreateEventAPI(createPayload, token);
-        await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
-        newEventId = `evt_${Date.now()}`; // Mock event ID
-        setEventData(prev => ({ ...prev, id: newEventId }));
-        setSuccessMessage('Event draft created successfully!');
-      } else {
-        // Subsequent steps: Update specific sections
-        switch (currentStepKey) {
-          case 'location':
-            const locationPayload = prepareLocationDataForAPI(eventData.location);
-            // apiResponse = await UpdateEventLocationAPI(eventData.id, locationPayload, token);
-            break;
-          case 'dateTime':
-            const dateTimePayload = prepareDateTimeDataForAPI(eventData.dateTime);
-            // apiResponse = await UpdateEventDateTimeAPI(eventData.id, dateTimePayload, token);
-            break;
-          case 'description':
-            const descriptionPayload = prepareDescriptionDataForAPI(eventData.description);
-            // apiResponse = await UpdateEventDescriptionAPI(eventData.id, descriptionPayload, token);
-            break;
-          case 'art':
-            const artPayload = prepareArtDataForAPI(eventData.artData);
-            // For art, it might be separate uploads for thumbnail and banner, then update event.
-            // For simplicity, assuming a single API or handling within prepareArtDataForAPI
-            // apiResponse = await UpdateEventArtAPI(eventData.id, artPayload, token);
-            break;
-          case 'tickets':
-            const ticketsPayload = prepareTicketsDataForAPI(eventData.tickets);
-            // apiResponse = await UpdateEventTicketsAPI(eventData.id, ticketsPayload, token);
-            break;
-          case 'discountCodes':
-            const discountPayload = prepareDiscountCodesDataForAPI(eventData.discountCodes);
-            // apiResponse = await UpdateEventDiscountCodesAPI(eventData.id, discountPayload, token);
-            break;
-          case 'publish':
-            // Final step, publish the event
-            setIsLoading(prev => ({ ...prev, publishEvent: true }));
-            const publishPayload = preparePublishEventDataForAPI(eventData.publish);
-            // apiResponse = await PublishEventAPI(eventData.id, publishPayload, token);
-            break;
-          default:
-            // For basicInfo after initial creation, or if no specific update needed.
-            // This might need a generic update endpoint or skip.
-            setSuccessMessage(`${currentStepKey} updated successfully!`);
-            break;
-        }
+      switch (currentStepKey) {
+        case 'basicInfo':
+          // payload = prepareBasicInfoDataForAPI(eventData.basicInfo);
+          // // apiCall = UpdateEventBasicInfoAPI(eventData.id, payload, token);
+          // break;
+        case 'location':
+          payload = prepareLocationDataForAPI(eventData.location);
+          // apiCall = UpdateEventLocationAPI(eventData.id, payload, token);
+          break;
+        case 'dateTime':
+          payload = prepareDateTimeDataForAPI(eventData.dateTime);
+          // apiCall = UpdateEventDateTimeAPI(eventData.id, payload, token);
+          break;
+        case 'description':
+          payload = prepareDescriptionDataForAPI(eventData.description);
+          // apiCall = UpdateEventDescriptionAPI(eventData.id, payload, token);
+          break;
+        case 'art':
+          payload = prepareArtDataForAPI(eventData.artData);
+          // apiCall = UpdateEventArtAPI(eventData.id, payload, token);
+          break;
+        default:
+          break;
       }
 
-      // Simulate API call success
       await new Promise(resolve => setTimeout(resolve, 500));
 
       setStepStatus(prevStatus => ({
@@ -417,40 +400,35 @@ const CreateEventPage = () => {
           valid: true,
         },
       }));
-      if (currentStepKey !== 'publish') {
-        setSuccessMessage(`${currentStepKey} saved successfully!`);
-      }
+      setSuccessMessage(`${currentStepKey} updated successfully!`);
 
-
-      // Navigate to the next step or finalize
+      // Move to the next step or finalize
       if (currentStep < totalSteps) {
         const nextStep = currentStep + 1;
         setCurrentStep(nextStep);
-        navigate(`/events/create/${newEventId || eventData.id}/${nextStep}`);
+        navigate(`/events/edit-page/${paramEventId}/${nextStep}`);
       } else {
-        // Last step (Publish) completed
-        setSuccessMessage('Event published successfully!');
-        clearEventData(eventData.id); // Clear session storage after successful publish
-        navigate(`/events/manage/${eventData.id}/overview`); // Redirect to manage page
+        setSuccessMessage('Event details updated successfully!');
+        navigate(`/events/manage/${eventData.id}/overview`);
+        clearEventData(eventData.id);
       }
     } catch (err) {
-      console.error(`Error saving ${currentStepKey}:`, err);
-      setError(`Failed to save ${currentStepKey}. Please try again.`);
+      console.error(`Error updating ${currentStepKey}:`, err);
+      setError(`Failed to update ${currentStepKey}. Please try again.`);
       setStepStatus(prevStatus => ({
         ...prevStatus,
         [currentStepKey]: {
           ...prevStatus[currentStepKey],
-          completed: false, // Mark as not completed if save failed
+          completed: false,
         },
       }));
     } finally {
-      setIsLoading(prev => ({ ...prev, saveEvent: false, publishEvent: false }));
+      setIsLoading(prev => ({ ...prev, saveEvent: false }));
     }
   };
 
-
   /**
-   * Renders the current step component based on the currentStep state.
+   * Renders the current step component.
    * @returns {JSX.Element} The component for the current step.
    */
   const renderCurrentStep = useCallback(() => {
@@ -473,12 +451,6 @@ const CreateEventPage = () => {
         return <DescriptionStep {...stepProps} />;
       case 'art':
         return <ArtStep {...stepProps} />;
-      case 'tickets':
-        return <TicketsStep {...stepProps} />;
-      case 'discountCodes':
-        return <DiscountCodesStep {...stepProps} />;
-      case 'publish':
-        return <PublishStep {...stepProps} />;
       default:
         return (
           <div className={styles.placeholderContainer}>
@@ -487,40 +459,50 @@ const CreateEventPage = () => {
           </div>
         );
     }
-  }, [currentStep, eventData, handleInputChange, stepStatus]);
+  }, [currentStep, eventData, handleInputChange, stepStatus, getStepKey]);
+
 
   // Show loading spinner for initial data fetch
   if (isLoading.initialLoad) {
     return (
       <div className={styles.loadingContainer}>
         <LoadingSpinner size="large" />
-        <p>Loading event creation flow...</p>
+        <p>Loading event details for editing...</p>
       </div>
     );
   }
 
-  // Determine if 'Next' button should be disabled (only for publishing step)
-  const isNextDisabled = currentStep === totalSteps && !stepStatus.publish?.valid;
-  const canPreview = eventData.id !== null; // Can preview once event has an ID (i.e., created)
+  // Show error if eventId is missing after initial load
+  if (error && !eventData.id) {
+    return (
+      <div className={styles.errorContainer}>
+        <p>{error}</p>
+        <button onClick={() => navigate('/events')}>Back to Events</button>
+      </div>
+    );
+  }
+
+
+  const isNextDisabled = !stepStatus[getStepKey(currentStep)]?.valid || isLoading.saveEvent;
+  const canPreview = true;
 
   return (
     <>
-      <Header />
       <EventHeaderNav
-        currentStep={getStepKey(currentStep)}
-        eventName={eventData.basicInfo?.eventName || 'New Event'}
-        isDraft={currentStep < totalSteps} // Event is a draft until the last step (Publish)
+        currentStep={`Edit ${getStepKey(currentStep)}`}
+        eventName={eventData.basicInfo?.eventName || 'Loading Event...'}
+        isDraft={false}
         canPreview={canPreview}
-        context="create" // Pass the context
-        eventId={eventData.id || ''} // Pass eventId
+        context="edit" // Pass the context
+        eventId={paramEventId || ''} // Pass eventId
       />
 
       <div className={styles.content}>
-        <EventCreationSidebar
+        <EditEventSidebar
           currentStep={currentStep}
           stepStatus={stepStatus}
           navigateToStep={setCurrentStep}
-          eventId={eventData.id} // Pass eventId to sidebar for status updates
+          eventId={paramEventId}
         />
 
         <div className={styles.mainContent}>
@@ -565,22 +547,19 @@ const CreateEventPage = () => {
               Back
             </button>
 
-            {/* Change button text based on current step */}
             <button
               type="button"
               onClick={handleNextStep}
-              disabled={isNextDisabled || isLoading.saveEvent || isLoading.publishEvent}
-              className={`${styles.nextButton} ${currentStep === totalSteps ? styles.publishButton : ''}`}
+              disabled={isNextDisabled}
+              className={styles.nextButton} /* Keep .nextButton class for styling */
             >
-              {isLoading.saveEvent || isLoading.publishEvent
-                ? (currentStep === totalSteps ? 'Publishing...' : 'Saving...')
-                : (currentStep === totalSteps ? 'Publish Event' : 'Next')}
+              {isLoading.saveEvent ? 'Saving...' : 'Submit'}
             </button>
           </div>
         </div>
       </div>
 
-      {/* Footer div with specific styling */}
+      {/* Footer */}
       <div className={styles.footer}>
         © 2025 Event Tickets Platform
       </div>
@@ -588,4 +567,4 @@ const CreateEventPage = () => {
   );
 };
 
-export default CreateEventPage;
+export default EventEditPage;

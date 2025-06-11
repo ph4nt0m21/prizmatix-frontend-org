@@ -1,0 +1,259 @@
+/*
+File: eventEditPage.module.scss
+*/
+@import '../../styles/variables';
+@import '../../styles/mixins';
+
+.eventEditPageContainer {
+  display: flex;
+  background-color: #f9fafb;
+  min-height: calc(100vh - 64px); // Adjust based on your header height
+  width: 100%;
+}
+
+.content {
+  display: flex;
+  background: #f9fafb;
+  min-height: calc(100vh - 112px); // Adjusted to account for event header nav and main layout header
+  width: 100%;
+}
+
+.mainContent {
+  flex: 1;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto; // Allows scrolling if content is too long
+
+  h2 {
+    font-size: 24px;
+    font-weight: 600;
+    color: #111827;
+    margin-bottom: 8px;
+  }
+
+  .sectionDescription {
+    font-size: 14px;
+    color: #6B7280;
+    margin-bottom: 24px;
+  }
+}
+
+.sectionContent {
+  flex: 1; // Allows content to take available space
+  width: 100%;
+  max-width: 100%;
+  padding-bottom: 20px; // Padding before navigation buttons
+}
+
+.contentCard {
+  background: #FFFFFF;
+  border-radius: 8px;
+  box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.05);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px; // Spacing between form groups
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+
+  label {
+    font-size: 14px;
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 8px;
+  }
+
+  input[type="text"],
+  textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #D1D5DB;
+    border-radius: 6px;
+    font-size: 14px;
+    color: #111827;
+    transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+
+    &:focus {
+      border-color: #7C3AED;
+      box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+      outline: none;
+    }
+  }
+
+  textarea {
+    resize: vertical;
+    min-height: 120px;
+  }
+}
+
+.previewImage {
+  max-width: 100%;
+  height: auto;
+  margin-top: 10px;
+  border-radius: 8px;
+  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+// Navigation buttons (back, next/submit)
+.navigation {
+  display: flex;
+  justify-content: space-between;
+  padding: 20px 0; // Add padding around buttons
+  border-top: 1px solid #E9EAEC; // Separator from content
+  margin-top: auto; // Push to bottom
+}
+
+.backButton, .nextButton {
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.backButton {
+  background-color: #FFFFFF;
+  color: #4B5563;
+  border: 1px solid #D1D5DB;
+
+  &:hover:not(:disabled) {
+    background-color: #F3F4F6;
+  }
+}
+
+.nextButton {
+  background-color: #7C3AED;
+  color: #FFFFFF;
+  border: 1px solid #7C3AED;
+
+  &:hover:not(:disabled) {
+    background-color: #6D28D9;
+    border-color: #6D28D9;
+  }
+
+  &.submitButton {
+    background-color: #22C55E; // Green for submit
+    border-color: #22C55E;
+
+    &:hover:not(:disabled) {
+      background-color: #16A34A;
+      border-color: #16A34A;
+    }
+  }
+}
+
+// Error and success messages
+.errorMessage, .successMessage {
+  padding: 12px 20px;
+  margin-bottom: 20px;
+  border-radius: 6px;
+  font-size: 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.errorMessage {
+  background-color: #FEE2E2;
+  color: #EF4444;
+  border: 1px solid #FCA5A5;
+}
+
+.successMessage {
+  background-color: #D1FAE5;
+  color: #059669;
+  border: 1px solid #A7F3D0;
+}
+
+.dismissButton {
+  background: none;
+  border: none;
+  color: inherit;
+  font-size: 16px;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+
+  &:hover {
+    opacity: 1;
+  }
+}
+
+// Loading/Error states for the entire page
+.loadingContainer, .errorContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  width: 100%;
+
+  p {
+    margin-top: 16px;
+    color: #6B7280;
+  }
+  button {
+    margin-top: 20px;
+    padding: 10px 20px;
+    background-color: #7C3AED;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    &:hover {
+      background-color: #6D28D9;
+    }
+  }
+}
+
+// Placeholder for unknown steps
+.placeholderContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 400px;
+  text-align: center;
+  background: #FFFFFF;
+  border-radius: 8px;
+  padding: 32px;
+  box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.placeholderTitle {
+  font-size: 24px;
+  margin-bottom: 16px;
+  color: #111827;
+}
+
+.placeholderMessage {
+  font-size: 16px;
+  color: #6B7280;
+  margin-bottom: 24px;
+}
+
+// Footer
+.footer {
+  display: flex;
+  height: 48px;
+  padding: 0 24px;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  align-self: stretch;
+  border-top: 1px solid #E9EAEC;
+  background: #FFF;
+  color: #6B7280;
+  font-size: 12px;
+  width: 100%;
+}
