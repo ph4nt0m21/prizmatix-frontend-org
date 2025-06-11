@@ -79,69 +79,69 @@ function App() {
   }
 
   return (
-    <div>
-      <Routes>
-        {/* Public Routes */}
-        <Route
-          path="/login"
-          element={isAuthenticated ? <Navigate to="/" /> : <LoginPage />}
-        />
-        <Route
-          path="/register"
-          element={isAuthenticated ? <Navigate to="/" /> : <RegisterPage />}
-        />
-        <Route
-          path="/forgot-password"
-          element={isAuthenticated ? <Navigate to="/" /> : <ForgotPasswordPage />}
-        />
-        <Route
-          path="/reset-link-sent"
-          element={isAuthenticated ? <Navigate to="/" /> : <ResetLinkSentPage />}
-        />
-        <Route
-          path="/reset-password"
-          element={isAuthenticated ? <Navigate to="/" /> : <ResetPasswordPage />}
-        />
+      <div>
+        <Routes>
+          {/* Public Routes */}
+          <Route
+            path="/login"
+            element={isAuthenticated ? <Navigate to="/" /> : <LoginPage />}
+          />
+          <Route
+            path="/register"
+            element={isAuthenticated ? <Navigate to="/" /> : <RegisterPage />}
+          />
+          <Route
+            path="/forgot-password"
+            element={isAuthenticated ? <Navigate to="/" /> : <ForgotPasswordPage />}
+          />
+          <Route
+            path="/reset-link-sent"
+            element={isAuthenticated ? <Navigate to="/" /> : <ResetLinkSentPage />}
+          />
+          <Route
+            path="/reset-password"
+            element={isAuthenticated ? <Navigate to="/" /> : <ResetPasswordPage />}
+          />
 
-        {/* Protected Routes using ProtectedRoute component */}
-        <Route element={<ProtectedRoute />}>
-          <Route path="/" element={<MainLayout />}>
-            <Route index element={<HomePage />} />
-            <Route path="events" element={<EventsPage />} />
+          {/* Protected Routes using ProtectedRoute component */}
+          <Route element={<ProtectedRoute />}>
+            <Route path="/" element={<MainLayout />}>
+              <Route index element={<HomePage />} />
+              <Route path="events" element={<EventsPage />} />
 
-            {/* Manage Event Routes*/}
-            <Route path="events/manage/:eventId/:section" element={<EventManagePage />} />
+              {/* Manage Event Routes*/}
+              <Route path="events/manage/:eventId/:section" element={<EventManagePage />} />
 
-            {/* Edit Event Pages - Dedicated routes for each main edit section */}
-            {/* Event Page Edit */}
-            {/* Updated route for eventEditPage to include optional :step parameter */}
-            <Route path="events/edit-page/:eventId/:step" element={<EventEditPage/>} />
-            <Route path="events/edit-page/:eventId" element={<EventEditPage/>} /> {/* Fallback route without step */}
-            <Route path="events/edit-page" element={<EventEditPage/>} /> {/* Fallback without eventId or step */}
-
-
-            {/* Tickets Edit */}
-            <Route path="events/tickets/:eventId" element={<TicketEditPage/>} />
-            <Route path="events/tickets" element={<TicketEditPage/>} /> Fallback route without eventId
+              {/* Edit Event Pages - Dedicated routes for each main edit section */}
+              {/* Event Page Edit */}
+              {/* Updated route for eventEditPage to include optional :step parameter */}
+              <Route path="events/edit-page/:eventId/:step" element={<EventEditPage/>} />
+              <Route path="events/edit-page/:eventId" element={<EventEditPage/>} /> {/* Fallback route without step */}
+              <Route path="events/edit-page" element={<EventEditPage/>} /> {/* Fallback without eventId or step */}
 
 
-            {/* Event Creation Routes */}
-            <Route path="events/create" element={<CreateEventPage />} />
-            <Route path="events/create/:eventId" element={<CreateEventPage />} />
-            <Route path="events/create/:eventId/:step" element={<CreateEventPage />} />
+              {/* Tickets Edit */}
+              <Route path="events/tickets/:eventId" element={<TicketEditPage/>} />
+              <Route path="events/tickets" element={<TicketEditPage/>} /> Fallback route without eventId
 
-            {/* Add more protected routes as needed */}
+
+              {/* Event Creation Routes */}
+              <Route path="events/create" element={<CreateEventPage />} />
+              <Route path="events/create/:eventId" element={<CreateEventPage />} />
+              <Route path="events/create/:eventId/:step" element={<CreateEventPage />} />
+
+              {/* Add more protected routes as needed */}
+            </Route>
           </Route>
-        </Route>
 
-        {/* 404 handler */}
-        <Route
-          path="*"
-          element={<NotFoundPage />}
-        />
-      </Routes>
-    </div>
-  );
+          {/* 404 handler */}
+          <Route
+            path="*"
+            element={<NotFoundPage />}
+          />
+        </Routes>
+      </div>
+    );
 }
 
 export default App;
