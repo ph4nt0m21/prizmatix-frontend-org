@@ -10,7 +10,6 @@ import OverviewSection from './sections/overviewSection';
 import OrdersAndAttendeesSection from './sections/ordersAndAttendeesSection';
 import PayoutSection from './sections/payoutSection';
 import PromotionsSection from './sections/promotionsSection';
-import EventPageSection from './sections/eventPageSection'; // This is likely the placeholder component
 
 /**
  * EventManagePage component for managing existing events
