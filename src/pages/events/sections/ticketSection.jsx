@@ -1,402 +1,180 @@
-import React, { useState, useEffect } from 'react';
-import PropTypes from 'prop-types';
-import styles from './ticketSection.module.scss';
+import React, { useState } from "react"; // Import useState
+import PropTypes from "prop-types";
+import styles from "./ticketSection.module.scss";
+import TicketDetailsModal from "./ticketDetailsModal"; // Import the modal
 
-// Temporary unique ID generator for new tickets
-const generateUniqueId = () => `ticket_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+// Dummy data to match the design. Replace with your actual ticket data.
+const dummyTickets = [
+  { id: "01", name: "Early Bird", quantity: 100, sold: 46, price: 20.0 },
+  { id: "02", name: "VIP", quantity: 100, sold: 46, price: 20.0 },
+  { id: "03", name: "Early Bird", quantity: 100, sold: 46, price: 20.0 },
+  { id: "04", name: "Early Bird", quantity: 100, sold: 46, price: 20.0 },
+];
 
 /**
- * TicketSection component for managing event tickets.
- * Allows adding, editing, and deleting ticket types.
- *
+ * TicketSection component - Displays and manages event tickets
  * @param {Object} props Component props
- * @param {Object} props.eventData Event data from parent component (e.g., manageEventPage)
- * @param {Function} props.onSave Function to call when changes are saved
- * @param {Function} props.onCancel Function to call when editing is cancelled
+ * @param {Object} props.eventData Event data containing ticket information
  * @returns {JSX.Element} TicketSection component
  */
-const TicketSection = ({ eventData = {}, onSave = () => {}, onCancel = () => {} }) => {
-  const [tickets, setTickets] = useState(eventData.tickets || []);
-  const [editingTicketId, setEditingTicketId] = useState(null); // ID of the ticket being edited
-  const [newTicket, setNewTicket] = useState({
-    id: null,
-    name: '',
-    type: 'paid', // 'paid', 'free', 'donation'
-    quantity: '',
-    price: '', // Only for paid tickets
-    description: '',
-    salesStart: '',
-    salesEnd: '',
-    minPerOrder: 1,
-    maxPerOrder: 10,
-    isHidden: false,
-  });
-  const [showForm, setShowForm] = useState(false);
-  const [error, setError] = useState(null);
+const TicketSection = ({ eventData }) => {
+  // State for modal visibility and the ticket being edited
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingTicket, setEditingTicket] = useState(null);
 
-  // Sync internal state with eventData prop
-  useEffect(() => {
-    setTickets(eventData.tickets || []);
-  }, [eventData.tickets]);
+  // In a real app, you would fetch and use tickets from eventData
+  const tickets = dummyTickets;
 
   /**
-   * Resets the newTicket form state.
+   * Handle clicking the "Create New Ticket" button
    */
-  const resetForm = () => {
-    setNewTicket({
-      id: null,
-      name: '',
-      type: 'paid',
-      quantity: '',
-      price: '',
-      description: '',
-      salesStart: '',
-      salesEnd: '',
-      minPerOrder: 1,
-      maxPerOrder: 10,
-      isHidden: false,
-    });
-    setEditingTicketId(null);
-    setShowForm(false);
-    setError(null);
+  const handleCreateNew = () => {
+    setEditingTicket(null); // No ticket data for a new one
+    setIsModalOpen(true);
   };
 
   /**
-   * Handles changes in the ticket form fields.
-   * @param {Object} e - The event object.
+   * Handle clicking the edit button on a ticket row
+   * @param {Object} ticket The ticket to edit
    */
-  const handleInputChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setNewTicket(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value,
-    }));
+  const handleEditClick = (ticket) => {
+    setEditingTicket(ticket);
+    setIsModalOpen(true);
   };
 
   /**
-   * Validates the current ticket form data.
-   * @returns {boolean} True if valid, false otherwise.
+   * Handle closing the modal
    */
-  const validateTicketForm = () => {
-    if (!newTicket.name.trim()) {
-      setError('Ticket name is required.');
-      return false;
-    }
-    if (newTicket.type === 'paid') {
-      if (newTicket.price === '' || isNaN(parseFloat(newTicket.price)) || parseFloat(newTicket.price) < 0) {
-        setError('Price is required and must be a non-negative number for paid tickets.');
-        return false;
-      }
-    }
-    if (newTicket.quantity !== '' && (isNaN(parseInt(newTicket.quantity)) || parseInt(newTicket.quantity) <= 0)) {
-        setError('Quantity must be a positive number or left blank for unlimited.');
-        return false;
-    }
-    if (!newTicket.salesStart || !newTicket.salesEnd) {
-      setError('Sales start and end dates/times are required.');
-      return false;
-    }
-    if (new Date(newTicket.salesStart) >= new Date(newTicket.salesEnd)) {
-      setError('Sales end date/time must be after sales start date/time.');
-      return false;
-    }
-    if (newTicket.minPerOrder <= 0 || newTicket.maxPerOrder <= 0 || newTicket.minPerOrder > newTicket.maxPerOrder) {
-      setError('Min/Max per order values are invalid.');
-      return false;
-    }
-    setError(null);
-    return true;
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setEditingTicket(null);
   };
 
   /**
-   * Adds a new ticket or updates an existing one.
+   * Handle saving the ticket from the modal
+   * @param {Object} ticketData The data from the modal form
    */
-  const handleSubmitTicket = () => {
-    if (!validateTicketForm()) {
-      return;
-    }
-
-    if (editingTicketId) {
-      // Update existing ticket
-      setTickets(prev => prev.map(ticket =>
-        ticket.id === editingTicketId ? { ...newTicket, quantity: newTicket.quantity === '' ? null : parseInt(newTicket.quantity), price: newTicket.type === 'paid' ? parseFloat(newTicket.price) : 0 } : ticket
-      ));
+  const handleSaveTicket = (ticketData) => {
+    if (editingTicket) {
+      // Logic to update an existing ticket
+      console.log("Updating ticket:", ticketData);
     } else {
-      // Add new ticket
-      setTickets(prev => [
-        ...prev,
-        { ...newTicket, id: generateUniqueId(), quantity: newTicket.quantity === '' ? null : parseInt(newTicket.quantity), price: newTicket.type === 'paid' ? parseFloat(newTicket.price) : 0 }
-      ]);
+      // Logic to create a new ticket
+      console.log("Creating new ticket:", ticketData);
     }
-    resetForm();
-  };
-
-  /**
-   * Sets a ticket for editing.
-   * @param {Object} ticket - The ticket object to edit.
-   */
-  const handleEditTicket = (ticket) => {
-    setNewTicket({
-      ...ticket,
-      quantity: ticket.quantity === null ? '' : ticket.quantity, // Convert null back to empty string for input
-      price: ticket.type === 'paid' ? ticket.price : '', // Ensure price is empty for non-paid types when editing
-    });
-    setEditingTicketId(ticket.id);
-    setShowForm(true);
-  };
-
-  /**
-   * Deletes a ticket by its ID.
-   * @param {string} id - The ID of the ticket to delete.
-   */
-  const handleDeleteTicket = (id) => {
-    if (window.confirm('Are you sure you want to delete this ticket type?')) {
-      setTickets(prev => prev.filter(ticket => ticket.id !== id));
-      setError(null);
-    }
-  };
-
-  /**
-   * Saves all changes and calls the parent onSave function.
-   */
-  const handleSaveAll = () => {
-    if (tickets.length === 0) {
-      setError('Please add at least one ticket type.');
-      return;
-    }
-    onSave({ tickets: tickets });
-    setError(null);
+    handleCloseModal(); // Close the modal after save
   };
 
   return (
-    <div className={styles.ticketSection}>
-      <div className={styles.sectionHeader}>
-        <h2 className={styles.sectionTitle}>Tickets</h2>
-        <p className={styles.sectionDescription}>
-          Create and manage ticket types for your event.
-        </p>
-      </div>
-
-      <div className={styles.contentCard}>
-        {error && <div className={styles.errorMessage}>{error}</div>}
-
-        {/* Existing Tickets List */}
-        {tickets.length > 0 && (
-          <div className={styles.ticketsList}>
-            <div className={styles.listHeader}>
-              <div className={styles.headerItem}>Ticket Name</div>
-              <div className={styles.headerItem}>Type</div>
-              <div className={styles.headerItem}>Quantity</div>
-              <div className={styles.headerItem}>Price</div>
-              <div className={styles.headerItem}>Sales Period</div>
-              <div className={styles.headerItem}>Actions</div>
-            </div>
-            {tickets.map(ticket => (
-              <div key={ticket.id} className={styles.ticketItem}>
-                <div className={styles.ticketDetail}>{ticket.name}</div>
-                <div className={styles.ticketDetail}>
-                  <span className={`${styles.ticketTypeBadge} ${styles[ticket.type]}`}>
-                    {ticket.type.charAt(0).toUpperCase() + ticket.type.slice(1)}
-                  </span>
-                </div>
-                <div className={styles.ticketDetail}>{ticket.quantity === null ? 'Unlimited' : ticket.quantity}</div>
-                <div className={styles.ticketDetail}>
-                  {ticket.type === 'paid' ? `$${ticket.price.toFixed(2)}` : 'N/A'}
-                </div>
-                <div className={styles.ticketDetail}>
-                  {new Date(ticket.salesStart).toLocaleDateString()} - {new Date(ticket.salesEnd).toLocaleDateString()}
-                </div>
-                <div className={styles.ticketActions}>
-                  <button onClick={() => handleEditTicket(ticket)} className={styles.actionButton}>
-                    Edit
-                  </button>
-                  <button onClick={() => handleDeleteTicket(ticket.id)} className={`${styles.actionButton} ${styles.deleteButton}`}>
-                    Delete
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Add New Ticket Button / Form Toggle */}
-        {!showForm && (
-          <button onClick={() => setShowForm(true)} className={styles.addNewButton}>
-            + Add New Ticket Type
+    <>
+      <div className={styles.ticketSectionContainer}>
+        <div className={styles.header}>
+          <h2 className={styles.title}>Tickets</h2>
+          <button
+            className={styles.createTicketButton}
+            onClick={handleCreateNew} // Add onClick handler
+          >
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 20 20"
+              fill="none"
+              xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)"
+            >
+              <path
+                d="M10 4.16669V15.8334"
+                stroke="white"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <path
+                d="M4.16602 10H15.8327"
+                stroke="white"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+            Create New Ticket
           </button>
-        )}
+        </div>
 
-        {/* Ticket Creation/Edit Form */}
-        {showForm && (
-          <div className={styles.ticketForm}>
-            <h3>{editingTicketId ? 'Edit Ticket Type' : 'Add New Ticket Type'}</h3>
-            <div className={styles.formRow}>
-              <div className={styles.formGroup}>
-                <label htmlFor="name">Ticket Name *</label>
-                <input
-                  type="text"
-                  id="name"
-                  name="name"
-                  value={newTicket.name}
-                  onChange={handleInputChange}
-                  placeholder="e.g., General Admission, VIP"
-                  className={styles.formInput}
-                />
-              </div>
-              <div className={styles.formGroup}>
-                <label htmlFor="type">Ticket Type *</label>
-                <select
-                  id="type"
-                  name="type"
-                  value={newTicket.type}
-                  onChange={handleInputChange}
-                  className={styles.formSelect}
-                >
-                  <option value="paid">Paid</option>
-                  <option value="free">Free</option>
-                  <option value="donation">Donation</option>
-                </select>
-              </div>
+        <div className={styles.ticketsList}>
+          {/* Table Header */}
+          <div className={`${styles.ticketRow} ${styles.ticketsHeader}`}>
+            <div className={`${styles.ticketCell} ${styles.cellId}`}>#</div>
+            <div className={`${styles.ticketCell} ${styles.cellTicket}`}>
+              Ticket
             </div>
-
-            <div className={styles.formRow}>
-              <div className={styles.formGroup}>
-                <label htmlFor="quantity">Quantity Available</label>
-                <input
-                  type="number"
-                  id="quantity"
-                  name="quantity"
-                  value={newTicket.quantity}
-                  onChange={handleInputChange}
-                  placeholder="Leave blank for unlimited"
-                  min="1"
-                  className={styles.formInput}
-                />
-              </div>
-              {newTicket.type === 'paid' && (
-                <div className={styles.formGroup}>
-                  <label htmlFor="price">Price *</label>
-                  <input
-                    type="number"
-                    id="price"
-                    name="price"
-                    value={newTicket.price}
-                    onChange={handleInputChange}
-                    placeholder="e.g., 25.00"
-                    min="0"
-                    step="0.01"
-                    className={styles.formInput}
-                  />
-                </div>
-              )}
+            <div className={`${styles.ticketCell} ${styles.cellQuantity}`}>
+              Quantity
             </div>
-
-            <div className={styles.formGroup}>
-              <label htmlFor="description">Description</label>
-              <textarea
-                id="description"
-                name="description"
-                value={newTicket.description}
-                onChange={handleInputChange}
-                placeholder="Brief description of the ticket type (optional)"
-                rows="2"
-                className={styles.formTextarea}
-              ></textarea>
+            <div className={`${styles.ticketCell} ${styles.cellSold}`}>
+              Sold
             </div>
-
-            <div className={styles.formRow}>
-              <div className={styles.formGroup}>
-                <label htmlFor="salesStart">Sales Start *</label>
-                <input
-                  type="datetime-local"
-                  id="salesStart"
-                  name="salesStart"
-                  value={newTicket.salesStart}
-                  onChange={handleInputChange}
-                  className={styles.formInput}
-                />
-              </div>
-              <div className={styles.formGroup}>
-                <label htmlFor="salesEnd">Sales End *</label>
-                <input
-                  type="datetime-local"
-                  id="salesEnd"
-                  name="salesEnd"
-                  value={newTicket.salesEnd}
-                  onChange={handleInputChange}
-                  className={styles.formInput}
-                />
-              </div>
+            <div className={`${styles.ticketCell} ${styles.cellPrice}`}>
+              Price
             </div>
-
-            <div className={styles.formRow}>
-              <div className={styles.formGroup}>
-                <label htmlFor="minPerOrder">Min Tickets Per Order</label>
-                <input
-                  type="number"
-                  id="minPerOrder"
-                  name="minPerOrder"
-                  value={newTicket.minPerOrder}
-                  onChange={handleInputChange}
-                  min="1"
-                  className={styles.formInput}
-                />
-              </div>
-              <div className={styles.formGroup}>
-                <label htmlFor="maxPerOrder">Max Tickets Per Order</label>
-                <input
-                  type="number"
-                  id="maxPerOrder"
-                  name="maxPerOrder"
-                  value={newTicket.maxPerOrder}
-                  onChange={handleInputChange}
-                  min="1"
-                  className={styles.formInput}
-                />
-              </div>
-            </div>
-
-            <div className={styles.formGroup}>
-              <label className={styles.checkboxContainer}>
-                <input
-                  type="checkbox"
-                  name="isHidden"
-                  checked={newTicket.isHidden}
-                  onChange={handleInputChange}
-                  className={styles.checkboxInput}
-                />
-                <span className={styles.checkboxLabel}>Hide this ticket type</span>
-              </label>
-            </div>
-
-            <div className={styles.formActions}>
-              <button onClick={resetForm} className={styles.cancelButton}>
-                Cancel
-              </button>
-              <button onClick={handleSubmitTicket} className={styles.saveButton}>
-                {editingTicketId ? 'Update Ticket' : 'Add Ticket'}
-              </button>
-            </div>
+            <div className={`${styles.ticketCell} ${styles.cellActions}`}></div>
           </div>
-        )}
 
-        {/* Save All Button */}
-        {tickets.length > 0 && !showForm && (
-            <div className={styles.overallActions}>
-                <button onClick={handleSaveAll} className={styles.saveAllButton}>
-                    Save All Ticket Changes
+          {/* Table Body */}
+          {tickets.map((ticket) => (
+            <div key={ticket.id} className={styles.ticketRow}>
+              <div className={`${styles.ticketCell} ${styles.cellId}`}>
+                {ticket.id}
+              </div>
+              <div className={`${styles.ticketCell} ${styles.cellTicket}`}>
+                {ticket.name}
+              </div>
+              <div className={`${styles.ticketCell} ${styles.cellQuantity}`}>
+                {ticket.quantity}
+              </div>
+              <div className={`${styles.ticketCell} ${styles.cellSold}`}>
+                {ticket.sold}
+              </div>
+              <div className={`${styles.ticketCell} ${styles.cellPrice}`}>
+                ${ticket.price.toFixed(2)}
+              </div>
+              <div className={`${styles.ticketCell} ${styles.cellActions}`}>
+                <button
+                  className={styles.editButton}
+                  onClick={() => handleEditClick(ticket)} // Add onClick handler
+                >
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)"
+                  >
+                    <path
+                      d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"
+                      fill="currentColor"
+                    />
+                  </svg>
                 </button>
+              </div>
             </div>
-        )}
+          ))}
+        </div>
       </div>
-    </div>
+
+      {/* Render the modal */}
+      <TicketDetailsModal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        onSave={handleSaveTicket}
+        ticket={editingTicket || {}}
+        saveButtonText={editingTicket ? "Save Changes" : "Create Ticket"}
+      />
+    </>
   );
 };
 
 TicketSection.propTypes = {
-  eventData: PropTypes.object,
-  onSave: PropTypes.func,
-  onCancel: PropTypes.func,
+  eventData: PropTypes.object.isRequired,
 };
 
 export default TicketSection;
