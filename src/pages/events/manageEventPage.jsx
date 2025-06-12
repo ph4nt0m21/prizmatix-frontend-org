@@ -1,18 +1,20 @@
 /*
 File: manageEventPage.jsx
 */
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import EventHeaderNav from './components/eventHeaderNav';
-import EventManageSidebar from './components/eventManageSidebar';
-import LoadingSpinner from '../../components/common/loadingSpinner/loadingSpinner';
-import styles from './manageEventPage.module.scss';
+import React, { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import EventHeaderNav from "./components/eventHeaderNav";
+import EventManageSidebar from "./components/eventManageSidebar";
+import LoadingSpinner from "../../components/common/loadingSpinner/loadingSpinner";
+import styles from "./manageEventPage.module.scss";
 
 // Import manage section components
-import OverviewSection from './sections/overviewSection';
-import OrdersAndAttendeesSection from './sections/ordersAndAttendeesSection';
-import PayoutSection from './sections/payoutSection';
-import PromotionsSection from './sections/promotionsSection';
+import OverviewSection from "./sections/overviewSection";
+import OrdersAndAttendeesSection from "./sections/ordersAndAttendeesSection";
+import PayoutSection from "./sections/payoutSection";
+import PromotionsSection from "./sections/promotionsSection";
+import TicketSection from "./sections/ticketSection";
+import DiscountSection from "./sections/discountSection";
 
 /**
  * EventManagePage component for managing existing events
@@ -30,103 +32,104 @@ const EventManagePage = () => {
 
   // Success message state
   const [successMessage, setSuccessMessage] = useState(null);
-  
+
   // Event data state with dummy values
   const [eventData, setEventData] = useState({
-    id: eventId || '12345',
-    name: 'NORR Festival 2022',
-    status: 'Live',
+    id: eventId || "12345",
+    name: "NORR Festival 2022",
+    status: "Live",
     location: {
-      city: 'Queenstown',
-      venue: 'Skyline Gondola'
+      city: "Queenstown",
+      country: "New Zealand",
     },
     dateTime: {
-      startDate: '2025-07-10',
-      startTime: '18:00',
-      endDate: '2025-07-10',
-      endTime: '22:00'
+      startDate: "2025-05-12",
+      startTime: "10:00",
+      endDate: "2025-05-12",
+      endTime: "22:00",
     },
-    description: 'A vibrant music and arts festival.',
-    bannerImageUrl: 'https://example.com/banner.jpg',
-    thumbnailImageUrl: 'https://example.com/thumbnail.jpg',
+    earnings: {
+      total: 6583.25,
+      percentageChange: 15.8,
+    },
     tickets: {
-      total: 500,
       issued: 250,
-      paid: 200,
-      free: 50
+      total: 1050,
+      percentageChange: 15.8,
     },
     orders: {
-      count: 100,
-      totalRevenue: 5000,
-      grossRevenue: 5500 // Assuming some fees included in total but not net
+      count: 189,
+      percentageChange: 15.8,
     },
-    payout: {
-      status: 'Pending',
-      amount: 4500,
-      lastPayoutDate: '2025-06-01'
+    views: {
+      count: 1,
+      percentageChange: 15.8,
     },
-    promotions: {
-      active: true,
-      count: 5
-    }
+    ticketTypes: [
+      { name: "Early Bird", sales: 3200.0 },
+      { name: "VIP", sales: 3300.0 },
+    ],
+    salesData: {
+      dailyRevenue: 1220.0,
+      timeframe: "10 days",
+    },
   });
-  
+
   // Current section state (default to 'overview' if not specified)
-  const [currentSection, setCurrentSection] = useState('overview');
-  
-  // Track completion status for each step (dummy data)
+  const [currentSection, setCurrentSection] = useState("overview");
+
+  // Track completion status for each manage section (dummy data)
   const [sectionStatus, setSectionStatus] = useState({
     overview: { completed: true, valid: true, visited: true },
     ordersAndAttendees: { completed: true, valid: true, visited: false },
     payout: { completed: true, valid: true, visited: false },
     promotions: { completed: true, valid: true, visited: false },
-    eventPage: { completed: true, valid: true, visited: false },
-    tickets: { completed: true, valid: true, visited: false }
+    tickets: { completed: false, valid: true, visited: false },
+    discounts: { completed: false, valid: true, visited: false },
   });
-  
+
   // Simulate data fetching on mount
   useEffect(() => {
     const fetchEventData = async () => {
       try {
         setIsLoading(true);
         // Simulate API call delay
-        await new Promise(resolve => setTimeout(resolve, 800));
-        
+        await new Promise((resolve) => setTimeout(resolve, 800));
+
         // In a real app, you would fetch event data here
         // For now, we're using the dummy data from state
 
         // Set loading to false after "fetching" data
         setIsLoading(false);
       } catch (error) {
-        console.error('Error fetching event data:', error);
-        setError('Failed to load event data. Please try again.');
+        console.error("Error fetching event data:", error);
+        setError("Failed to load event data. Please try again.");
         setIsLoading(false);
       }
     };
-    
+
     fetchEventData();
   }, [eventId]);
-  
-  // Parse section parameter and update current section
+
+  // Parse section parameter and update current section for manage sections
   useEffect(() => {
-    if (section) {
+    if (section && sectionStatus[section]) {
+      // Only update if the section is one of the "manage" sections
       setCurrentSection(section);
-      
-      // Mark the current section as visited
-      setSectionStatus(prevStatus => ({
+      setSectionStatus((prevStatus) => ({
         ...prevStatus,
         [section]: {
           ...prevStatus[section],
-          visited: true
-        }
+          visited: true,
+        },
       }));
     } else {
-      setCurrentSection('overview');
+      setCurrentSection("overview"); // Default to overview if no valid section or section is external
     }
-  }, [section]);
-  
+  }, [section, sectionStatus]);
+
   /**
-   * Navigate to a specific section
+   * Navigate to a specific section within manageEventPage
    * @param {string} sectionName - Section to navigate to
    */
   const navigateToManageSection = (sectionName) => {
@@ -143,17 +146,19 @@ const EventManagePage = () => {
     return (
       <div className={styles.placeholderContainer}>
         <h2 className={styles.placeholderTitle}>{sectionName} Section</h2>
-        <p className={styles.placeholderMessage}>This section is coming soon.</p>
-        <button 
+        <p className={styles.placeholderMessage}>
+          This section is coming soon.
+        </p>
+        <button
           className={styles.placeholderButton}
-          onClick={() => navigateToManageSection('overview')}
+          onClick={() => navigateToManageSection("overview")}
         >
           Back to Overview
         </button>
       </div>
     );
   };
-  
+
   /**
    * Render the current section
    * @returns {JSX.Element} Current section component
@@ -168,46 +173,52 @@ const EventManagePage = () => {
         </div>
       );
     }
-    
+
     // Handle different sections
     switch (currentSection) {
-      case 'overview':
+      case "overview":
         return <OverviewSection eventData={eventData} />;
-      case 'ordersAndAttendees':
+      case "ordersAndAttendees":
         return <OrdersAndAttendeesSection eventData={eventData} />;
-      case 'payouts':
+      case "payout":
         return <PayoutSection eventData={eventData} />;
-      case 'promotions':
+      case "promotions":
         return <PromotionsSection eventData={eventData} />;
+      case "tickets":
+        return <TicketSection eventData={eventData} />;
+      case "discounts":
+        return <DiscountSection eventData={eventData} />;
       default:
-        return <OverviewSection eventData={eventData} />; // Default to Overview
+        return <OverviewSection eventData={eventData} />;
     }
   };
-  
+
   // Check if the current event is live
-  const isEventLive = eventData.status === 'Live';
-  
+  const isEventLive = eventData.status === "Live";
+
   // Determine if preview is available
   const canPreview = true; // In management view, preview should always be available
-  
+
   return (
     <>
-      
       {/* Event-specific sub-header with breadcrumbs and actions */}
-      <EventHeaderNav 
-        currentStep={currentSection === 'overview' ? 'Overview' : currentSection} 
+      <EventHeaderNav
+        currentStep={
+          currentSection === "overview" ? "Overview" : currentSection
+        }
         eventName={eventData.name}
         isDraft={!isEventLive}
         canPreview={canPreview}
       />
 
       <div className={styles.content}>
-        <EventManageSidebar 
+        <EventManageSidebar
           currentSection={currentSection}
           sectionStatus={sectionStatus}
           navigateToSection={navigateToManageSection} // For 'manage' sections
-          navigateToEventEditPage={() => navigate(`/events/edit-page/${eventId}`)} // For 'Event Page'
-          navigateToTicketEditPage={() => navigate(`/events/tickets/${eventId}`)} // For 'Tickets'
+          navigateToEventEditPage={() =>
+            navigate(`/events/edit-page/${eventId}`)
+          } // For 'Event Page'
           eventId={eventId}
         />
 
@@ -239,16 +250,12 @@ const EventManagePage = () => {
           )}
 
           {/* Section content */}
-          <div className={styles.sectionContent}>
-            {renderCurrentSection()}
-          </div>
+          <div className={styles.sectionContent}>{renderCurrentSection()}</div>
         </div>
       </div>
 
       {/* Footer */}
-      <div className={styles.footer}>
-        © 2025 Event Tickets Platform
-      </div>
+      <div className={styles.footer}>© 2025 Event Tickets Platform</div>
     </>
   );
 };

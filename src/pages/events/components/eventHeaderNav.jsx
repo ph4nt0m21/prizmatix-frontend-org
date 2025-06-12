@@ -1,6 +1,4 @@
-/*
-File: src/pages/events/components/EventHeaderNav.jsx
-*/
+// src/pages/events/components/EventHeaderNav.jsx
 import React from 'react';
 import PropTypes from 'prop-types';
 import { Link } from 'react-router-dom';
@@ -13,17 +11,15 @@ import { ReactComponent as PreviewIcon } from '../../../assets/icons/preview-ico
 /**
  * EventHeaderNav component displays the breadcrumb navigation and event status
  * Modified to use specific icon files from the assets folder
- *
+ * 
  * @param {Object} props Component props
- * @param {string} props.currentStep Current step name (e.g., "Basic Info", "Overview")
+ * @param {string} props.currentStep Current step name
  * @param {string} props.eventName Event name
  * @param {boolean} props.isDraft Whether the event is in draft mode
  * @param {boolean} props.canPreview Whether the event can be previewed
- * @param {string} props.context 'create' or 'edit' to determine breadcrumb path
- * @param {string} props.eventId Event ID, necessary for correct navigation links
  * @returns {JSX.Element} EventHeaderNav component
  */
-const EventHeaderNav = ({ currentStep, eventName, isDraft, canPreview, context, eventId }) => {
+const EventHeaderNav = ({ currentStep, eventName, isDraft, canPreview }) => {
   /**
    * Handle preview click
    */
@@ -33,53 +29,19 @@ const EventHeaderNav = ({ currentStep, eventName, isDraft, canPreview, context, 
     console.log('Preview event:', eventName);
   };
 
-  const getEventLinkPath = () => {
-    if (context === 'create') {
-      return `/events/create/${eventId}/1`; // Link to the first step of creation
-    } else if (context === 'edit') {
-      return `/events/manage/${eventId}/overview`; // Link to the overview section of manage event
-    }
-    return '#'; // Fallback
-  };
-
   return (
     <div className={styles.eventNav}>
       <div className={styles.breadcrumbContainer}>
         <div className={styles.breadcrumb}>
-          {context === 'create' && (
-            <>
-              <Link to="/" className={styles.breadcrumbLink}>
-                Home
-              </Link>
-              <span className={styles.breadcrumbSeparator}>
-                <ArrowIcon />
-              </span>
-              <Link to={getEventLinkPath()} className={styles.breadcrumbLink}>
-                {eventName}
-              </Link>
-            </>
-          )}
-
-          {context === 'edit' && (
-            <>
-              <Link to="/events" className={styles.breadcrumbLink}>
-                Events
-              </Link>
-              <span className={styles.breadcrumbSeparator}>
-                <ArrowIcon />
-              </span>
-              <Link to={`/events/manage/${eventId}/overview`} className={styles.breadcrumbLink}>
-                Manage Events
-              </Link>
-              <span className={styles.breadcrumbSeparator}>
-                <ArrowIcon />
-              </span>
-              <Link to={getEventLinkPath()} className={styles.breadcrumbLink}>
-                {eventName}
-              </Link>
-            </>
-          )}
-
+          <Link to="/events" className={styles.breadcrumbLink}>
+            Events
+          </Link>
+          <span className={styles.breadcrumbSeparator}>
+            <ArrowIcon />
+          </span>
+          <Link to="/events/create" className={styles.breadcrumbLink}>
+            {eventName}
+          </Link>
           {isDraft && (
             <>
               <span className={styles.breadcrumbDraft}>
@@ -89,7 +51,7 @@ const EventHeaderNav = ({ currentStep, eventName, isDraft, canPreview, context, 
           )}
         </div>
       </div>
-
+      
       <div className={styles.actionButtons}>
         <button
           className={styles.previewButton}
@@ -108,14 +70,12 @@ EventHeaderNav.propTypes = {
   currentStep: PropTypes.string.isRequired,
   eventName: PropTypes.string.isRequired,
   isDraft: PropTypes.bool,
-  canPreview: PropTypes.bool,
-  context: PropTypes.oneOf(['create', 'edit']).isRequired, // New prop
-  eventId: PropTypes.string.isRequired, // New prop
+  canPreview: PropTypes.bool
 };
 
 EventHeaderNav.defaultProps = {
   isDraft: true,
-  canPreview: false,
+  canPreview: false
 };
 
 export default EventHeaderNav;

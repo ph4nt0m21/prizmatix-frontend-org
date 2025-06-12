@@ -1,7 +1,7 @@
 @import '../../../styles/variables';
 @import '../../../styles/mixins';
 
-.ticketSectionContainer {
+.discountSectionContainer {
   background: #FFFFFF;
   border-radius: 8px;
   padding: 24px;
@@ -23,7 +23,7 @@
   margin: 0;
 }
 
-.createTicketButton {
+.createDiscountButton {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -42,12 +42,12 @@
   }
 }
 
-.ticketsList {
+.discountsList {
   display: flex;
   flex-direction: column;
 }
 
-.ticketRow {
+.discountRow {
   display: flex;
   align-items: center;
   border-bottom: 1px solid #E9EAEC;
@@ -58,17 +58,17 @@
     border-bottom: none;
   }
 
-  &:not(.ticketsHeader):hover {
+  &:not(.discountsHeader):hover {
     background-color: #F9FAFB;
   }
 }
 
-.ticketsHeader {
+.discountsHeader {
   border-bottom: 1px solid #D1D5DB;
   padding-bottom: 12px;
   margin-bottom: 8px;
 
-  .ticketCell {
+  .discountCell {
     color: #6B7280;
     font-size: 12px;
     font-weight: 500;
@@ -76,7 +76,7 @@
   }
 }
 
-.ticketCell {
+.discountCell {
   display: flex;
   align-items: center;
   padding: 0 12px;
@@ -84,11 +84,10 @@
   color: #374151;
 
   &.cellId { flex-basis: 5%; }
-  &.cellTicket { flex-basis: 35%; font-weight: 500; }
-  &.cellQuantity { flex-basis: 15%; }
-  &.cellSold { flex-basis: 15%; }
-  &.cellPrice { flex-basis: 20%; }
-  &.cellActions { flex-basis: 10%; justify-content: flex-end; }
+  &.cellCode { flex-basis: 35%; font-weight: 500; }
+  &.cellDiscount { flex-basis: 20%; }
+  &.cellStatus { flex-basis: 20%; }
+  &.cellActions { flex-basis: 20%; justify-content: flex-end; }
 }
 
 .editButton {
@@ -106,5 +105,22 @@
   &:hover {
     color: #4B5563;
     background-color: #E5E7EB;
+  }
+}
+
+.statusBadge {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  
+  &.active {
+    background-color: #ECFDF5;
+    color: #065F46;
+  }
+  
+  &.expired {
+    background-color: #FEF2F2;
+    color: #991B1B;
   }
 }

@@ -366,10 +366,10 @@ const EventEditPage = () => {
       let payload;
 
       switch (currentStepKey) {
-        case 'basicInfo':
-          // payload = prepareBasicInfoDataForAPI(eventData.basicInfo);
-          // // apiCall = UpdateEventBasicInfoAPI(eventData.id, payload, token);
-          // break;
+        // case 'basicInfo':
+        //   payload = prepareBasicInfoDataForAPI(eventData.basicInfo);
+        //   // apiCall = UpdateEventBasicInfoAPI(eventData.id, payload, token);
+        //   break;
         case 'location':
           payload = prepareLocationDataForAPI(eventData.location);
           // apiCall = UpdateEventLocationAPI(eventData.id, payload, token);
