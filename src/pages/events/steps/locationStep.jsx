@@ -133,95 +133,257 @@ const LocationStep = ({
   };
 
   /**
-     * Parses a Google Maps URL to extract latitude and longitude.
-     */
-    const parseGoogleMapsUrl = (url) => {
-      const regex = /@(-?\d+\.\d+),(-?\d+\.\d+)/;
-      const match = url.match(regex);
-      return match ? { lat: parseFloat(match[1]), lng: parseFloat(match[2]) } : null;
-    };
+   * Parse a Google Maps URL to extract coordinates
+   * @param {string} url - Google Maps URL
+   * @returns {Object|null} - Latitude and longitude if found, null otherwise
+   */
+  const parseGoogleMapsUrl = (url) => {
+    try {
+      console.log("Attempting to parse Google Maps URL:", url);
+
+      // Format: https://www.google.com/maps?q=-41.2865,174.7762
+      let match = url.match(/maps\?q=(-?\d+\.\d+),(-?\d+\.\d+)/);
+      if (match) {
+        const coords = {
+          lat: parseFloat(match[1]),
+          lng: parseFloat(match[2]),
+        };
+        console.log("Coordinates extracted from ?q= parameter:", coords);
+        return coords;
+      }
+
+      // Format: https://www.google.com/maps/place/.../@-41.2865,174.7762,15z
+      match = url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+      if (match) {
+        const coords = {
+          lat: parseFloat(match[1]),
+          lng: parseFloat(match[2]),
+        };
+        console.log("Coordinates extracted from @ parameter:", coords);
+        return coords;
+      }
+
+      console.log("No coordinates found in URL, will use geocoding instead");
+      return null;
+    } catch (error) {
+      console.error("Error parsing Google Maps URL:", error);
+      return null;
+    }
+  };
 
   /**
-     * Fetches address details from coordinates using Google's Geocoding REST API.
-     */
-    const geocodeCoordinates = async (coords) => {
-      if (!coords) {
-          setIsLoadingMap(false);
-          return;
-      }
-      // ==================================================================
-      //  IMPORTANT: Replace YOUR_Maps_API_KEY with your actual key
-      // ==================================================================
-      const apiKey = 'YOUR_Maps_API_KEY';
-      const geocodingUrl = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${coords.lat},${coords.lng}&key=${apiKey}`;
-
-      try {
-          const response = await fetch(geocodingUrl);
-          if (!response.ok) {
-              throw new Error(`Google Maps API responded with status: ${response.status}`);
-          }
-          const data = await response.json();
-
-          if (data.status !== 'OK') {
-              throw new Error(data.error_message || `Geocoding failed with status: ${data.status}`);
-          }
-
-          const result = data.results[0];
-          if (!result) {
-              throw new Error('No location details found for these coordinates.');
-          }
-          
-          const newLocation = { venue: "", street: "", streetNumber: "", city: "", postalCode: "", state: "" };
-
-          result.address_components.forEach((component) => {
-              const types = component.types;
-              if (types.includes("premise") || types.includes("point_of_interest") || types.includes("establishment")) newLocation.venue = component.long_name;
-              if (types.includes("street_number")) newLocation.streetNumber = component.long_name;
-              if (types.includes("route")) newLocation.street = component.long_name;
-              if (types.includes("locality")) newLocation.city = component.long_name;
-              if (types.includes("postal_code")) newLocation.postalCode = component.long_name;
-              if (types.includes("administrative_area_level_1")) newLocation.state = component.long_name;
-          });
-          
-          if (!newLocation.venue && result.formatted_address) {
-              newLocation.venue = result.formatted_address.split(',')[0];
-          }
-
-          setLocation(prev => ({ 
-              ...prev, 
-              ...newLocation,
-              latitude: coords.lat,
-              longitude: coords.lng,
-          }));
-          
-          initializeMap(coords.lat, coords.lng, 17); // Re-center and zoom map
-      } catch (error) {
-          console.error('Error fetching location details:', error);
-          alert(error.message);
-      } finally {
-          setIsLoadingMap(false);
-      }
+   * Process geocoding result and extract address components
+   */
+  const processGeocodingResult = (result, position) => {
+    // Extract address components
+    let updatedLocation = {
+      ...location,
+      latitude: position.lat(),
+      longitude: position.lng(),
+      searchQuery: result.formatted_address,
     };
 
-    /**
-     * Processes the pasted link when the search icon is clicked.
-     */
-    const processGoogleMapsLink = () => {
-      const url = location.searchQuery;
-      // CORRECTED: This now checks for the correct string.
-      if (url && url.includes('[google.com/maps](https://google.com/maps)')) {
-        setIsLoadingMap(true);
-        const coords = parseGoogleMapsUrl(url);
-        if (coords) {
-          geocodeCoordinates(coords);
-        } else {
-          alert('Could not find coordinates in the link. Please use a valid Google Maps URL with an "@" symbol.');
-          setIsLoadingMap(false);
+    console.log("Processing geocoding result:");
+    console.log("Latitude:", position.lat());
+    console.log("Longitude:", position.lng());
+    console.log("Formatted address:", result.formatted_address);
+
+    // Process address components
+    for (const component of result.address_components) {
+      const types = component.types;
+
+      if (types.includes("street_number")) {
+        updatedLocation.streetNumber = component.long_name;
+        console.log("Street Number:", component.long_name);
+      } else if (types.includes("route")) {
+        updatedLocation.street = component.long_name;
+        console.log("Street:", component.long_name);
+      } else if (types.includes("locality")) {
+        updatedLocation.city = component.long_name;
+        console.log("City:", component.long_name);
+      } else if (types.includes("administrative_area_level_1")) {
+        updatedLocation.state = component.long_name;
+        console.log("State/Province:", component.long_name);
+      } else if (types.includes("country")) {
+        updatedLocation.country = component.long_name;
+        console.log("Country:", component.long_name);
+      } else if (types.includes("postal_code")) {
+        updatedLocation.postalCode = component.long_name;
+        console.log("Postal Code:", component.long_name);
+      }
+    }
+
+    // Try to determine the venue name
+    const pointOfInterest = result.address_components.find(
+      (comp) =>
+        comp.types.includes("point_of_interest") ||
+        comp.types.includes("establishment")
+    );
+
+    if (pointOfInterest) {
+      updatedLocation.venue = pointOfInterest.long_name;
+      console.log("Venue (from POI):", pointOfInterest.long_name);
+    } else {
+      // Default to first line of formatted address
+      updatedLocation.venue = result.formatted_address.split(",")[0];
+      console.log("Venue (from first part of address):", updatedLocation.venue);
+    }
+
+    // Create formatted address string
+    updatedLocation.formattedAddress = formatAddress(updatedLocation);
+    console.log(
+      "Final formatted address string:",
+      updatedLocation.formattedAddress
+    );
+
+    // Log the complete location object
+    console.log("Final location object:", updatedLocation);
+
+    // Update location state
+    setLocation(updatedLocation);
+    setIsLoadingMap(false);
+  };
+
+  /**
+   * Handle Google Maps link pasting
+   * @param {Event} e - Paste event
+   */
+  const handlePasteMapLink = (e) => {
+    // Get pasted text
+    const pastedText = e.clipboardData.getData("text");
+
+    console.log("Pasted text:", pastedText);
+
+    // Check if it looks like a Google Maps link
+    if (
+      pastedText.includes("google.com/maps") ||
+      pastedText.includes("goo.gl/maps")
+    ) {
+      e.preventDefault(); // Prevent default paste behavior
+
+      console.log("Google Maps link detected");
+
+      // Set the search query to the pasted link
+      setLocation((prev) => ({
+        ...prev,
+        searchQuery: pastedText,
+      }));
+
+      // Show loading state
+      setIsLoadingMap(true);
+
+      // Parse the URL to get coordinates
+      const coordinates = parseGoogleMapsUrl(pastedText);
+      console.log("Extracted coordinates from URL:", coordinates);
+
+      // If we have coordinates from the URL
+      if (coordinates) {
+        console.log("Using coordinates directly from URL:", coordinates);
+
+        // Update map with the coordinates
+        if (googleMapRef.current) {
+          // Clear any existing markers
+          googleMapRef.current.setCenter(coordinates);
+          googleMapRef.current.setZoom(15);
+
+          // Add marker
+          new window.google.maps.Marker({
+            position: coordinates,
+            map: googleMapRef.current,
+            title: "Selected Location",
+          });
+        }
+
+        // Get address details using reverse geocoding
+        if (window.google && window.google.maps) {
+          console.log(
+            "Starting reverse geocoding with coordinates:",
+            coordinates
+          );
+          const geocoder = new window.google.maps.Geocoder();
+          geocoder.geocode({ location: coordinates }, (results, status) => {
+            if (status === "OK" && results[0]) {
+              console.log("Reverse geocoding successful, result:", results[0]);
+
+              // Log formatted address
+              console.log("Formatted address:", results[0].formatted_address);
+
+              // Log address components in detail
+              console.log("Address components:");
+              results[0].address_components.forEach((component) => {
+                console.log(
+                  `${component.types.join(", ")}: ${component.long_name}`
+                );
+              });
+
+              processGeocodingResult(
+                results[0],
+                new window.google.maps.LatLng(coordinates.lat, coordinates.lng)
+              );
+            } else {
+              console.error("Reverse geocoding failed:", status);
+              setIsLoadingMap(false);
+            }
+          });
         }
       } else {
-        alert('Please provide a valid Google Maps link.');
+        // If no coordinates in URL, try geocoding the entire URL
+        console.log(
+          "No coordinates in URL, attempting to geocode the entire URL"
+        );
+
+        if (window.google && window.google.maps) {
+          const geocoder = new window.google.maps.Geocoder();
+          geocoder.geocode({ address: pastedText }, (results, status) => {
+            if (status === "OK" && results[0]) {
+              const result = results[0];
+              const position = result.geometry.location;
+
+              console.log("Geocoding successful, result:", result);
+              console.log("Location:", {
+                lat: position.lat(),
+                lng: position.lng(),
+                address: result.formatted_address,
+              });
+
+              // Log address components in detail
+              console.log("Address components:");
+              result.address_components.forEach((component) => {
+                console.log(
+                  `${component.types.join(", ")}: ${component.long_name}`
+                );
+              });
+
+              // Update map
+              if (googleMapRef.current) {
+                googleMapRef.current.setCenter(position);
+                googleMapRef.current.setZoom(15);
+
+                // Add marker
+                new window.google.maps.Marker({
+                  position,
+                  map: googleMapRef.current,
+                  title: "Selected Location",
+                });
+              }
+
+              // Process the result
+              processGeocodingResult(result, position);
+            } else {
+              console.error("Geocoding failed:", status);
+              alert(
+                "Could not process the Google Maps link. Please try a different link format."
+              );
+              setIsLoadingMap(false);
+            }
+          });
+        } else {
+          console.error("Google Maps API not available");
+          setIsLoadingMap(false);
+        }
       }
-    };
+    }
+  };
 
   /**
    * Switch map type (map or satellite)
@@ -439,30 +601,34 @@ const LocationStep = ({
 
             {/* Google Maps Link Field */}
             <div className={styles.searchContainer}>
-          <input
-            type="text"
-            name="searchQuery"
-            className={styles.searchInput}
-            placeholder="Paste Google Maps link here"
-            value={location.searchQuery}
-            onChange={handleFieldChange}
-            onPaste={(e) => setLocation(prev => ({ ...prev, searchQuery: e.clipboardData.getData('text') }))}
-          />
-          <button
-            type="button"
-            className={styles.searchButton}
-            onClick={processGoogleMapsLink}
-            disabled={isLoadingMap}
-          >
-            {isLoadingMap ? (
-              <span className={styles.loadingSpinner}></span>
-            ) : (
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)">
-                <path d="M15.5 14H14.71L14.43 13.73C15.41 12.59 16 11.11 16 9.5C16 5.91 13.09 3 9.5 3C5.91 3 3 5.91 3 9.5C3 13.09 5.91 16 9.5 16C11.11 16 12.59 15.41 13.73 14.43L14 14.71V15.5L19 20.49L20.49 19L15.5 14ZM9.5 14C7.01 14 5 11.99 5 9.5C5 7.01 7.01 5 9.5 5C11.99 5 14 7.01 14 9.5C14 11.99 11.99 14 9.5 14Z" fill="#7C3AED"/>
-              </svg>
-            )}
-          </button>
-        </div>
+              <input
+                type="text"
+                name="searchQuery"
+                className={styles.searchInput}
+                placeholder="Paste Google Maps link here"
+                value={location.searchQuery}
+                onChange={handleFieldChange}
+                onPaste={handlePasteMapLink}
+              />
+              <div className={styles.searchButton}>
+                {isLoadingMap ? (
+                  <span className={styles.loadingSpinner}></span>
+                ) : (
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M15.5 14H14.71L14.43 13.73C15.41 12.59 16 11.11 16 9.5C16 5.91 13.09 3 9.5 3C5.91 3 3 5.91 3 9.5C3 13.09 5.91 16 9.5 16C11.11 16 12.59 15.41 13.73 14.43L14 14.71V15.5L19 20.49L20.49 19L15.5 14ZM9.5 14C7.01 14 5 11.99 5 9.5C5 7.01 7.01 5 9.5 5C11.99 5 14 7.01 14 9.5C14 11.99 11.99 14 9.5 14Z"
+                      fill="#7C3AED"
+                    />
+                  </svg>
+                )}
+              </div>
+            </div>
 
             {/* Map Container */}
             <div className={styles.mapContainerWithControls}>
@@ -651,7 +817,8 @@ const LocationStep = ({
               </div>
             </div>
 
-            {/* State & Country */}
+            {/* Country */}
+
             <div className={styles.formGroup}>
               <label htmlFor="country" className={styles.formLabel}>
                 Country
