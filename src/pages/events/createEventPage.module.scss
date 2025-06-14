@@ -134,10 +134,11 @@
 .navigation {
   display: flex;
   height: 64px;
-  justify-content: space-between;
-  /* margin-top: auto; This is no longer needed */
-  padding: 16px 24px;
-  border-top: 1px solid #e5e7eb;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 32px;
+  padding: 16px 80px;
+  align-self: stretch;
 }
 
 // Back button styling
