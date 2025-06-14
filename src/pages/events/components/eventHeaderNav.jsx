@@ -20,14 +20,7 @@ import { ReactComponent as PreviewIcon } from '../../../assets/icons/preview-ico
  * @returns {JSX.Element} EventHeaderNav component
  */
 const EventHeaderNav = ({ currentStep, eventName, isDraft, canPreview }) => {
-  /**
-   * Handle preview click
-   */
-  const handlePreview = () => {
-    // In a real implementation, this would navigate to a preview page
-    // or open a preview modal
-    console.log('Preview event:', eventName);
-  };
+
 
   return (
     <div className={styles.eventNav}>
@@ -50,17 +43,6 @@ const EventHeaderNav = ({ currentStep, eventName, isDraft, canPreview }) => {
             </>
           )}
         </div>
-      </div>
-      
-      <div className={styles.actionButtons}>
-        <button
-          className={styles.previewButton}
-          onClick={handlePreview}
-          disabled={!canPreview}
-        >
-          <PreviewIcon className={styles.previewIcon} />
-          Preview
-        </button>
       </div>
     </div>
   );

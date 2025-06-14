@@ -5,15 +5,18 @@
 .outerContainer {
   display: flex;
   width: 100%;
+  height: 100vh;
+  /* Make container fill the screen height */
   padding: 8px 8px 8px 0px;
   align-items: flex-start;
   background: var(--gradient, linear-gradient(180deg, #31204B 0%, #1E202C 100%));
+  box-sizing: border-box;
+  /* Include padding in the height calculation */
 }
 
 // Wrapper for all content except sidebar
 .mainContentWrapper {
   flex: 1;
-  height: 1356px;
   display: flex;
   flex-direction: column;
   margin-left: 70px; // Match sidebar width
@@ -23,14 +26,13 @@
 
 .contentArea {
   flex: 1;
-  height: 1356px;
   padding: 20px 30px;
   position: relative;
   overflow-y: auto;
   background-color: #ffffff;
   display: flex;
   flex-direction: column;
-  
+
   // Create a subtle gradient overlay for the background
   &::before {
     content: '';
@@ -43,12 +45,12 @@
     z-index: -1;
     pointer-events: none;
   }
-  
+
   // For event creation routes, ensure full height and no background
   &.fullHeight {
     padding: 0;
     background-color: #ffffff;
-    
+
     &::before {
       display: none; // Remove the gradient overlay for event creation pages
     }
@@ -68,10 +70,10 @@
     width: calc(100% - 70px);
     margin-left: 70px;
   }
-  
+
   .contentArea {
     padding: 15px 20px;
-    
+
     &.fullHeight {
       padding: 0;
     }

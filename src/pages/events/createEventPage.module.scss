@@ -1,8 +1,21 @@
 @import '../../styles/variables';
 @import '../../styles/mixins';
 
+/* New container to control the overall page layout */
+.pageContainer {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  /* Make the page fill the entire screen height */
+  overflow: hidden;
+  /* Prevent the whole page from scrolling */
+  background-color: #F1F1F1;
+  /* Match the content background */
+}
+
 // Main container for the create event page
 .pageWrapper {
+  /* This class appears to be unused and can be removed */
   display: flex;
   flex-direction: column;
   min-height: 100vh;
@@ -11,6 +24,7 @@
 
 // Container for the content area that accounts for the sidebar
 .createEventContainer {
+  /* This class appears to be unused and can be removed */
   display: flex;
   flex-direction: column;
   width: calc(100% - 70px);
@@ -23,11 +37,12 @@
   display: flex;
   background: #F1F1F1;
   gap: 16px;
-  padding: 64px;
+  padding: 16px 24px;
+  /* Adjusted padding */
   flex: 1;
+  /* This makes the content area fill the available space */
   overflow: hidden;
-  padding-top: 16px;
-  padding-bottom: 32px;
+  /* Prevent this container from showing scrollbars */
 }
 
 // Main content area that contains the form
@@ -36,6 +51,7 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  /* Important: this keeps the main content from scrolling */
   background-color: #FFFFFF;
   border-radius: 8px;
   box-shadow: 0px 2px 4px 0px rgba(0, 0, 0, 0.05);
@@ -44,8 +60,11 @@
 // Container for the step content
 .stepContent {
   flex: 1;
+  /* This makes the step content fill the space between the header/footer of the card */
   display: flex;
-  overflow: auto;
+  overflow-y: auto;
+  /* Allow ONLY this container to scroll vertically */
+  overflow-x: hidden;
 }
 
 // Error message styling
@@ -57,7 +76,7 @@
   padding: 12px 16px;
   margin: 16px;
   position: relative;
-  
+
   .dismissButton {
     position: absolute;
     top: 8px;
@@ -81,7 +100,7 @@
   padding: 12px 16px;
   margin: 16px;
   position: relative;
-  
+
   .dismissButton {
     position: absolute;
     top: 8px;
@@ -104,7 +123,7 @@
   justify-content: center;
   height: 100%;
   width: 100%;
-  
+
   p {
     margin-top: 16px;
     color: #6b7280;
@@ -116,7 +135,7 @@
   display: flex;
   height: 64px;
   justify-content: space-between;
-  margin-top: auto;
+  /* margin-top: auto; This is no longer needed */
   padding: 16px 24px;
   border-top: 1px solid #e5e7eb;
 }
@@ -132,12 +151,12 @@
   font-size: 14px;
   cursor: pointer;
   transition: all 0.2s ease;
-  
+
   &:hover:not(:disabled) {
     background-color: #f9fafb;
     border-color: #9ca3af;
   }
-  
+
   &:disabled {
     opacity: 0.5;
     cursor: not-allowed;
@@ -155,11 +174,11 @@
   font-size: 14px;
   cursor: pointer;
   transition: background-color 0.2s ease;
-  
+
   &:hover:not(:disabled) {
     background-color: #6d28d9;
   }
-  
+
   &:disabled {
     opacity: 0.7;
     cursor: not-allowed;
@@ -202,16 +221,16 @@
   font-size: 12px;
   font-weight: 600;
   margin-right: 8px;
-  
+
   &.active {
     background-color: #7C3AED;
     color: white;
   }
-  
+
   &.completed {
     background-color: #7C3AED;
     color: white;
-    
+
     &:after {
       content: '✓';
     }
@@ -222,11 +241,11 @@
   font-size: 14px;
   font-weight: 500;
   color: #6b7280;
-  
+
   &.active {
     color: #111827;
   }
-  
+
   &.completed {
     color: #7C3AED;
   }
@@ -235,7 +254,7 @@
 // Section containers
 .sectionContainer {
   margin-bottom: 32px;
-  
+
   &:last-child {
     margin-bottom: 0;
   }
@@ -275,20 +294,20 @@
   z-index: 100;
 }
 
-// Footer styling
+// Footer styling - Note: this footer is part of createEventPage.jsx, not mainLayout
 .footer {
   display: flex;
-  height: 25px;
-  padding: 16px;
-  flex-direction: column;
+  height: 48px;
+  /* Set a fixed height */
+  padding: 0 24px;
   justify-content: center;
   align-items: center;
-  gap: 10px;
-  align-self: stretch;
   background: #FFF;
   color: #6b7280;
   font-size: 14px;
   box-shadow: 0px -1px 3px rgba(0, 0, 0, 0.05);
+  flex-shrink: 0;
+  /* Prevent footer from shrinking */
 }
 
 // Responsive adjustments
@@ -299,25 +318,18 @@
 }
 
 @media (max-width: 1024px) {
-  .createEventContainer {
-    width: calc(100% - 60px);
-    margin-left: 60px;
+  .content {
+    padding: 12px;
   }
 }
 
 @media (max-width: 768px) {
-  .createEventContainer {
-    width: 100%;
-    margin-left: 0;
-  }
-  
   .content {
     flex-direction: column;
-    height: auto;
-    max-height: none;
     overflow-y: auto;
+    /* Allow content to scroll on smaller screens */
   }
-  
+
   .mainContent {
     min-height: 500px;
   }
@@ -328,12 +340,13 @@
     padding: 8px;
     gap: 8px;
   }
-  
+
   .navigation {
     padding: 12px 16px;
   }
-  
-  .backButton, .nextButton {
+
+  .backButton,
+  .nextButton {
     padding: 8px 16px;
     font-size: 13px;
   }
