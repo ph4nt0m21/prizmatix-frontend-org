@@ -78,7 +78,7 @@ const CreateEventPage = () => {
     location: {
       isToBeAnnounced: false,
       isPrivateLocation: false,
-      searchQuery: "",
+      googleMapLink: "",
       venue: "",
       street: "",
       streetNumber: "",

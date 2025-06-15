@@ -24,7 +24,7 @@ const LocationStep = ({
     locationType: locationData.locationType || 'physical',
     isToBeAnnounced: locationData.isToBeAnnounced || false,
     isPrivateLocation: locationData.isPrivateLocation || false,
-    searchQuery: locationData.searchQuery || '',
+    googleMapLink: locationData.googleMapLink || '',
     venue: locationData.venue || '',
     street: locationData.street || '',
     streetNumber: locationData.streetNumber || '',
@@ -174,7 +174,7 @@ const LocationStep = ({
       ...location,
       latitude: position.lat(),
       longitude: position.lng(),
-      searchQuery: result.formatted_address
+      googleMapLink: result.formatted_address
     };
     
     console.log('Processing geocoding result:');
@@ -253,7 +253,7 @@ const LocationStep = ({
       // Set the search query to the pasted link
       setLocation(prev => ({
         ...prev,
-        searchQuery: pastedText
+        googleMapLink: pastedText
       }));
       
       // Show loading state
@@ -509,10 +509,10 @@ const LocationStep = ({
             <div className={styles.searchContainer}>
               <input
                 type="text"
-                name="searchQuery"
+                name="googleMapLink"
                 className={styles.searchInput}
                 placeholder="Paste Google Maps link here"
-                value={location.searchQuery}
+                value={location.googleMapLink}
                 onChange={handleFieldChange}
                 onPaste={handlePasteMapLink}
               />
