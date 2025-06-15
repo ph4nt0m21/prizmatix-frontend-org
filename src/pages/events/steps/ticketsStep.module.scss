@@ -59,6 +59,95 @@
   font-size: 14px;
 }
 
+.actionMenuContainer {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.actionMenu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  background-color: white;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+  width: 160px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+
+  button {
+    background: none;
+    border: none;
+    padding: 8px 12px;
+    text-align: left;
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: 14px;
+    color: #333;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    &:hover {
+      background-color: #f3f4f6;
+    }
+  }
+}
+
+.deleteAction {
+  color: #ef4444; // Red for delete actions
+
+  &:hover {
+    color: #ef4444 !important;
+    background-color: #fee2e2 !important;
+  }
+}
+
+.emptyStateTitle {
+  font-size: 18px;
+  font-weight: 600;
+  color: #374151;
+  margin: 0 0 4px 0;
+}
+
+.emptyStateDescription {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 0 0 24px 0;
+}
+
+.createTicketButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 44px;
+  padding: 0 24px;
+  background-color: #ffffff;
+  color: #4f46e5; // Using a purple shade
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+
+  svg {
+    margin-right: 8px;
+    color: #818cf8;
+  }
+
+  &:hover {
+    border-color: #d1d5db;
+    background-color: #f9fafb;
+  }
+}
+
 .dismissButton {
   background: none;
   border: none;
@@ -83,10 +172,10 @@
   justify-content: center;
   min-height: 240px;
   background-color: #f9fafb;
-  border: 1px dashed #d1d5db;
   border-radius: 8px;
   padding: 32px;
   text-align: center;
+  border: 1px solid #f3f4f6; // A softer border
 }
 
 .addTicketButton {
