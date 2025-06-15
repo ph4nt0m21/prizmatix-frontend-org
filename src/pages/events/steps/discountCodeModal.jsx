@@ -28,6 +28,12 @@ const DiscountCodeModal = ({
     quantity: '',
     ...discountCode
   });
+
+  const [selectedTicketType, setSelectedTicketType] = useState('');
+
+  const handleTicketTypeChange = (e) => {
+    setSelectedTicketType(e.target.value);
+  };
   
   // Update local discount code when prop changes
   useEffect(() => {
@@ -96,6 +102,25 @@ const DiscountCodeModal = ({
               onChange={handleInputChange}
             />
           </div>
+
+          <div className={styles.formGroup}>
+  <label htmlFor="ticketType" className={styles.formLabel}>
+    Ticket Type
+  </label>
+  <select
+    id="ticketType"
+    name="ticketType"
+    className={styles.formInput}
+    value={selectedTicketType} // You'll need to manage this state in your component
+    onChange={handleTicketTypeChange} // A new handler for the dropdown
+  >
+    <option value="">Select a ticket type</option>
+    <option value="EARLY10">Early Bird</option>
+    <option value="GENERAL">General Admission</option>
+    <option value="VIP">VIP</option>
+    {/* Add more ticket types as needed */}
+  </select>
+</div>
           
           <div className={styles.formGroup}>
             <label htmlFor="discountPercentage" className={styles.formLabel}>

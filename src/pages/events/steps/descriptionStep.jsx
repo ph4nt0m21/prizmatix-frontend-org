@@ -134,9 +134,9 @@ const DescriptionStep = ({
             </svg>
           </button>
           
-          <span className={styles.editorDivider}></span>
+          {/* <span className={styles.editorDivider}></span> */}
           
-          <button 
+          {/* <button 
             type="button"
             className={styles.editorButton}
             onClick={() => applyFormatting('createLink', prompt('Enter URL:'))}
@@ -167,9 +167,9 @@ const DescriptionStep = ({
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M6 17H8.6L13.2 9.2V7H6V17ZM14.8 17H17.4L22 9.2V7H14.8V17Z" fill="currentColor"/>
             </svg>
-          </button>
+          </button> */}
           
-          <span className={styles.editorDivider}></span>
+          {/* <span className={styles.editorDivider}></span> */}
         </div>
         
         {/* Rich Text Editor Content */}
@@ -184,22 +184,6 @@ const DescriptionStep = ({
         {stepStatus.visited && !description.trim() && (
           <div className={styles.fieldError}>Event description is required</div>
         )}
-
-        {/* Character count and help text */}
-        <div className={styles.editorHelp}>
-          <div className={styles.characterCount}>
-            {description.length} / {MAX_CHARS} characters
-            <span className={styles.remainingChars}>
-              ({MAX_CHARS - description.length} characters remaining)
-            </span>
-          </div>
-          <div className={styles.editorTip}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 20C7.59 20 4 16.41 4 12C4 7.59 7.59 4 12 4C16.41 4 20 7.59 20 12C20 16.41 16.41 20 12 20ZM11 15H13V17H11V15ZM11 7H13V13H11V7Z" fill="#666666"/>
-            </svg>
-            Rich formatting helps make your event description more engaging
-          </div>
-        </div>
       </div>
     </div>
   );

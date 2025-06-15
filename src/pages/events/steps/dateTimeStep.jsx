@@ -81,12 +81,12 @@ const DateTimeStep = ({
                   className={styles.formInput}
                   value={dateTime.startDate}
                   onChange={handleFieldChange}
-                  placeholder="mm/dd/yyyy"
+                  placeholder="yyyy/mm/dd"
                   onFocus={(e) => e.target.type = 'date'}
                   onBlur={(e) => {
                     e.target.type = 'text';
                     if (!e.target.value) {
-                      e.target.placeholder = "mm/dd/yyyy";
+                      e.target.placeholder = "yyyy/mm/dd";
                     }
                   }}
                 />

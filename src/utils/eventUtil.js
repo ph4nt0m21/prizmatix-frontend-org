@@ -127,7 +127,7 @@ export const prepareLocationDataForAPI = (locationData) => {
     streetNo: locationData.streetNumber || "",
     street: locationData.street || "",
     city: locationData.city || "",
-    state: null, // State is now always passed as null
+    state: "string", // State is now always passed as null
     country: "New Zealand", // Country is now hardcoded
     postalCode: locationData.postalCode || "",
     googleMapLink: locationData.searchQuery || "",
