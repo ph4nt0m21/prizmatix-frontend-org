@@ -12,6 +12,22 @@
   padding-top: 48px;
   padding-bottom: 48px;
 }
+// Header styling
+.stepHeader {
+  display: flex;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #f0f0f0;
+  gap: 12px;
+}
+
+.stepTitle {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+}
 
 // Form section styling
 .formSection {

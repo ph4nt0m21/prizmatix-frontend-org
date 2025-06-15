@@ -279,7 +279,7 @@ const ArtStep = ({
           </p>
           
           <div 
-            className={`${styles.uploadDropzone} ${dragActive.thumbnail ? styles.dragActive : ''} ${files.thumbnail ? styles.hasFile : ''}`}
+            className={`${styles.uploadDropzoneThumbnail} ${dragActive.thumbnail ? styles.dragActive : ''} ${files.thumbnail ? styles.hasFile : ''}`}
             onDragEnter={(e) => handleDrag(e, 'thumbnail', 'enter')}
             onDragOver={(e) => handleDrag(e, 'thumbnail', 'enter')}
             onDragLeave={(e) => handleDrag(e, 'thumbnail', 'leave')}
@@ -312,7 +312,7 @@ const ArtStep = ({
               </div>
             ) : (
               // Upload interface
-              <div className={styles.uploadInterface}>
+              <div className={styles.uploadInterfaceThumbnail}>
                 <div className={styles.uploadIcon}>
                   <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M19 5V19H5V5H19ZM19 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V5C21 3.9 20.1 3 19 3ZM14.14 11.86L11.14 15.73L9 13.14L6 17H18L14.14 11.86Z" fill="#7C3AED"/>
@@ -350,6 +350,7 @@ const ArtStep = ({
           )}
           
           <div className={styles.fileInfoText}>
+            div
             <div className={styles.supportedTypes}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 20C7.59 20 4 16.41 4 12C4 7.59 7.59 4 12 4C16.41 4 20 7.59 20 12C20 16.41 16.41 20 12 20ZM11 15H13V17H11V15ZM11 7H13V13H11V7Z" fill="#666666"/>
@@ -372,7 +373,7 @@ const ArtStep = ({
           </p>
           
           <div 
-            className={`${styles.uploadDropzone} ${dragActive.banner ? styles.dragActive : ''} ${files.banner ? styles.hasFile : ''}`}
+            className={`${styles.uploadDropzoneBanner} ${dragActive.banner ? styles.dragActive : ''} ${files.banner ? styles.hasFile : ''}`}
             onDragEnter={(e) => handleDrag(e, 'banner', 'enter')}
             onDragOver={(e) => handleDrag(e, 'banner', 'enter')}
             onDragLeave={(e) => handleDrag(e, 'banner', 'leave')}
@@ -405,7 +406,7 @@ const ArtStep = ({
               </div>
             ) : (
               // Upload interface
-              <div className={styles.uploadInterface}>
+              <div className={styles.uploadInterfaceBanner}>
                 <div className={styles.uploadIcon}>
                   <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M19 5V19H5V5H19ZM19 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V5C21 3.9 20.1 3 19 3ZM14.14 11.86L11.14 15.73L9 13.14L6 17H18L14.14 11.86Z" fill="#7C3AED"/>
@@ -449,7 +450,7 @@ const ArtStep = ({
             </div>
             <div className={styles.maxSize}>
               Maximum Size: {maxSizes.banner} MB
-            </div>
+            </div> 
           </div>
         </div>
 

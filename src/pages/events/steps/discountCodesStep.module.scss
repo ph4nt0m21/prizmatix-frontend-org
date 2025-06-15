@@ -20,13 +20,7 @@
   margin-bottom: 24px;
   padding-bottom: 16px;
   border-bottom: 1px solid #f0f0f0;
-}
-
-.stepIcon {
-  margin-right: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  gap: 12px;
 }
 
 .stepTitle {
@@ -34,6 +28,12 @@
   font-weight: 600;
   color: #333;
   margin: 0;
+}
+
+.stepIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .stepDescription {
