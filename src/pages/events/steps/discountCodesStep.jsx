@@ -48,17 +48,24 @@ const DiscountCodesStep = ({
    * Open discount code modal for creating a new discount code
    */
   // UPDATE the create handler to include a default ticketType
-  const handleCreateDiscountCode = () => {
-    setCurrentDiscountCode({
+  const handleAddDiscountCodeRow = () => {
+    const newDiscountCode = {
       code: '',
+      ticketType: 'all', // Default to 'All Tickets'
       discountPercentage: '',
       maxDiscountAmount: '',
       minDiscountAmount: '',
       quantity: '',
-      ticketType: 'all', // Default to 'All Tickets'
-    });
-    setCurrentDiscountCodeIndex(null);
-    setIsModalOpen(true);
+    };
+    setDiscountCodes(prevCodes => [...prevCodes, newDiscountCode]);
+  };
+
+    // ADD this new handler for the inline input fields.
+  const handleDiscountCodeRowChange = (e, index) => {
+    const { name, value } = e.target;
+    const updatedDiscountCodes = [...discountCodes];
+    updatedDiscountCodes[index] = { ...updatedDiscountCodes[index], [name]: value };
+    setDiscountCodes(updatedDiscountCodes);
   };
 
     // ADD a handler to manage the new Ticket Type dropdown in the table
@@ -114,7 +121,7 @@ const DiscountCodesStep = ({
   
   return (
     <div className={styles.stepContainer}>
-      <div className={styles.stepHeader}>
+<div className={styles.stepHeader}>
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={styles.stepIcon}>
           <path d="M21.41 11.58L12.41 2.58C12.05 2.22 11.55 2 11 2H4C2.9 2 2 2.9 2 4V11C2 11.55 2.22 12.05 2.59 12.42L11.59 21.42C11.95 21.78 12.45 22 13 22C13.55 22 14.05 21.78 14.41 21.41L21.41 14.41C21.78 14.05 22 13.55 22 13C22 12.45 21.77 11.94 21.41 11.58ZM5.5 7C4.67 7 4 6.33 4 5.5C4 4.67 4.67 4 5.5 4C6.33 4 7 4.67 7 5.5C7 6.33 6.33 7 5.5 7Z" fill="#7C3AED"/>
         </svg>
@@ -130,14 +137,14 @@ const DiscountCodesStep = ({
             <button 
               type="button" 
               className={styles.createCouponButton}
-              onClick={handleCreateDiscountCode}
+              onClick={handleAddDiscountCodeRow} // Changed to add a row
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M19 13H13V19H11V13H5V11H11V5H13V11H19V13Z" fill="currentColor"/></svg>
               Create Coupon code
             </button>
           </div>
         ) : (
-          // ============== CODES TABLE ==============
+          // ============== INLINE-EDITABLE CODES TABLE ==============
           <div className={styles.discountCodesContainer}>
             <div className={styles.discountCodeTableHeader}>
               <div className={styles.discountCode}>Name</div>
@@ -151,25 +158,28 @@ const DiscountCodesStep = ({
             
             {discountCodes.map((code, index) => (
               <div key={index} className={styles.discountCodeItem}>
-                <div className={styles.discountCode} onClick={() => handleEditDiscountCode(index)}>
-                  <span className={styles.codePill}>{code.code}</span>
+                <div className={styles.discountCode}>
+                    <input type="text" name="code" placeholder="e.g. BUZZ25" value={code.code || ''} onChange={(e) => handleDiscountCodeRowChange(e, index)} className={styles.inlineInput} />
                 </div>
                 <div className={styles.ticketType}>
-                  <select
-                    value={code.ticketType || 'all'}
-                    onChange={(e) => handleTicketTypeChange(e, index)}
-                    className={styles.ticketTypeSelect}
-                    onClick={(e) => e.stopPropagation()} // Prevents modal from opening when clicking dropdown
-                  >
+                  <select value={code.ticketType || 'all'} onChange={(e) => handleTicketTypeChange(e, index)} className={styles.ticketTypeSelect} >
                     {availableTickets.map(ticket => (
                       <option key={ticket.id} value={ticket.id}>{ticket.name}</option>
                     ))}
                   </select>
                 </div>
-                <div className={styles.discountPercentage}>{code.discountPercentage}%</div>
-                <div className={styles.maxDiscountAmount}>${parseFloat(code.maxDiscountAmount || 0).toFixed(2)}</div>
-                <div className={styles.minDiscountAmount}>${parseFloat(code.minDiscountAmount || 0).toFixed(2)}</div>
-                <div className={styles.discountQuantity}>{code.quantity}</div>
+                <div className={styles.discountPercentage}>
+                    <input type="number" name="discountPercentage" placeholder="15" value={code.discountPercentage || ''} onChange={(e) => handleDiscountCodeRowChange(e, index)} className={styles.inlineInput} />
+                </div>
+                <div className={styles.maxDiscountAmount}>
+                    <input type="number" name="maxDiscountAmount" placeholder="20.00" step="0.01" value={code.maxDiscountAmount || ''} onChange={(e) => handleDiscountCodeRowChange(e, index)} className={styles.inlineInput} />
+                </div>
+                <div className={styles.minDiscountAmount}>
+                    <input type="number" name="minDiscountAmount" placeholder="5.00" step="0.01" value={code.minDiscountAmount || ''} onChange={(e) => handleDiscountCodeRowChange(e, index)} className={styles.inlineInput} />
+                </div>
+                <div className={styles.discountQuantity}>
+                    <input type="number" name="quantity" placeholder="100" value={code.quantity || ''} onChange={(e) => handleDiscountCodeRowChange(e, index)} className={styles.inlineInput} />
+                </div>
                 <div className={styles.discountActions}>
                   <div className={styles.actionMenuContainer}>
                     <button type="button" className={styles.discountActionButton} onClick={(e) => { e.stopPropagation(); setOpenMenuIndex(openMenuIndex === index ? null : index); }} aria-label="Actions">
@@ -177,7 +187,7 @@ const DiscountCodesStep = ({
                     </button>
                     {openMenuIndex === index && (
                       <div className={styles.actionMenu}>
-                        <button onClick={(e) => { e.stopPropagation(); handleEditDiscountCode(index); setOpenMenuIndex(null); }}>Edit</button>
+                        <button onClick={(e) => { e.stopPropagation(); handleEditDiscountCode(index); setOpenMenuIndex(null); }}>Edit in Modal</button>
                         <button onClick={(e) => { e.stopPropagation(); handleDeleteDiscountCode(index); setOpenMenuIndex(null); }} className={styles.deleteAction}>Delete</button>
                       </div>
                     )}
@@ -187,7 +197,7 @@ const DiscountCodesStep = ({
             ))}
             
             <div className={styles.addDiscountCodeRow}>
-              <button type="button" className={styles.addDiscountCodeInlineButton} onClick={handleCreateDiscountCode}>
+              <button type="button" className={styles.addDiscountCodeInlineButton} onClick={handleAddDiscountCodeRow}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M19 13H13V19H11V13H5V11H11V5H13V11H19V13Z" fill="currentColor"/></svg>
                 Create Coupon code
               </button>

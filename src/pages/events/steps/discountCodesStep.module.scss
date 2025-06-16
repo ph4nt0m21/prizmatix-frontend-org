@@ -82,6 +82,62 @@
   }
 }
 
+.inlineInput {
+  width: 100%;
+  padding: 8px 4px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background-color: transparent;
+  font-size: 14px;
+  text-align: center;
+  -moz-appearance: textfield; // Hides arrows from number inputs in Firefox
+
+  &::placeholder {
+    color: #9ca3af;
+  }
+
+  // Hide arrows from number inputs in Chrome, Safari, etc.
+  &::-webkit-outer-spin-button,
+  &::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  
+  &:hover {
+    border-color: #e5e7eb;
+  }
+  
+  &:focus {
+    outline: none;
+    border-color: #7C3AED;
+    background-color: white;
+  }
+}
+
+// Adjust column alignment for inputs
+.discountPercentage,
+.maxDiscountAmount,
+.minDiscountAmount,
+.discountQuantity {
+  flex: 1;
+  text-align: center;
+  color: #4b5563;
+  // Remove padding if it exists, as the input has its own
+  padding: 0 4px;
+}
+
+.discountCode {
+    padding: 0 4px;
+    .inlineInput {
+        text-align: left;
+        background-color: #f3f4f6; // Makes the code stand out a bit
+        padding: 8px 12px;
+        &:focus {
+            background-color: white;
+        }
+    }
+}
+
 .actionMenuContainer {
   position: relative;
 }
