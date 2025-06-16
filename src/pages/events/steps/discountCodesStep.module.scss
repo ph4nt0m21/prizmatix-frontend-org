@@ -42,6 +42,133 @@
   margin-top: 0;
 }
 
+.emptyStateTitle {
+  font-size: 18px;
+  font-weight: 600;
+  color: #374151;
+  margin: 0 0 4px 0;
+}
+
+.emptyStateDescription {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 0 0 24px 0;
+}
+
+.createCouponButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 44px;
+  padding: 0 24px;
+  background-color: #ffffff;
+  color: #4f46e5;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+
+  svg {
+    margin-right: 8px;
+    color: #818cf8;
+  }
+
+  &:hover {
+    border-color: #d1d5db;
+    background-color: #f9fafb;
+  }
+}
+
+.actionMenuContainer {
+  position: relative;
+}
+
+.actionMenu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background-color: white;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+  width: 120px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+
+  button {
+    background: none;
+    border: none;
+    padding: 8px 12px;
+    text-align: left;
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: 14px;
+    color: #333;
+    &:hover {
+      background-color: #f3f4f6;
+    }
+  }
+}
+
+.deleteAction {
+  color: #ef4444;
+  &:hover {
+    color: #ef4444 !important;
+    background-color: #fee2e2 !important;
+  }
+}
+
+.codePill {
+  background-color: #eef2ff;
+  color: #4338ca;
+  padding: 4px 10px;
+  border-radius: 16px;
+  font-weight: 500;
+  font-size: 12px;
+}
+
+.ticketType {
+  flex: 2; // Give it more space
+  text-align: left;
+  padding: 0 8px;
+}
+
+.ticketTypeSelect {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background-color: #fff;
+  font-size: 13px;
+  cursor: pointer;
+
+  &:focus {
+    outline: none;
+    border-color: #7C3AED;
+    box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.1);
+  }
+}
+
+// UPDATE existing styles to make space for the new column
+.discountCode {
+  flex: 2;
+  font-weight: 500;
+  color: #333;
+  cursor: pointer;
+}
+
+.discountActions {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
 .formSection {
   padding: 0;
 }
