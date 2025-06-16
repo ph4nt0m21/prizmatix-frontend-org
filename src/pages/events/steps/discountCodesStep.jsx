@@ -28,6 +28,15 @@ const DiscountCodesStep = ({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentDiscountCode, setCurrentDiscountCode] = useState(null);
   const [currentDiscountCodeIndex, setCurrentDiscountCodeIndex] = useState(null);
+
+  const [openMenuIndex, setOpenMenuIndex] = useState(null);
+
+    const availableTickets = [
+    { id: 'all', name: 'All Tickets' },
+    { id: 'TICKET_01', name: 'Early Bird' },
+    { id: 'TICKET_02', name: 'General Admission' },
+    { id: 'TICKET_03', name: 'VIP Pass' },
+  ];
   
   // Effect to propagate discount codes changes to parent component
   useEffect(() => {
@@ -38,16 +47,28 @@ const DiscountCodesStep = ({
   /**
    * Open discount code modal for creating a new discount code
    */
+  // UPDATE the create handler to include a default ticketType
   const handleCreateDiscountCode = () => {
     setCurrentDiscountCode({
       code: '',
       discountPercentage: '',
       maxDiscountAmount: '',
       minDiscountAmount: '',
-      quantity: ''
+      quantity: '',
+      ticketType: 'all', // Default to 'All Tickets'
     });
     setCurrentDiscountCodeIndex(null);
     setIsModalOpen(true);
+  };
+
+    // ADD a handler to manage the new Ticket Type dropdown in the table
+  const handleTicketTypeChange = (e, index) => {
+    const newTicketType = e.target.value;
+    const updatedDiscountCodes = [...discountCodes];
+    updatedDiscountCodes[index].ticketType = newTicketType;
+    setDiscountCodes(updatedDiscountCodes);
+    // Note: This changes the value directly. You might want to add a "save" button
+    // or automatically persist this change to your backend if necessary.
   };
   
   /**
@@ -98,92 +119,82 @@ const DiscountCodesStep = ({
           <path d="M21.41 11.58L12.41 2.58C12.05 2.22 11.55 2 11 2H4C2.9 2 2 2.9 2 4V11C2 11.55 2.22 12.05 2.59 12.42L11.59 21.42C11.95 21.78 12.45 22 13 22C13.55 22 14.05 21.78 14.41 21.41L21.41 14.41C21.78 14.05 22 13.55 22 13C22 12.45 21.77 11.94 21.41 11.58ZM5.5 7C4.67 7 4 6.33 4 5.5C4 4.67 4.67 4 5.5 4C6.33 4 7 4.67 7 5.5C7 6.33 6.33 7 5.5 7Z" fill="#7C3AED"/>
         </svg>
         <h2 className={styles.stepTitle}>Add Coupon Code</h2>
-        {/* <p className={styles.stepDescription}>Add discount codes that attendees can use during checkout</p> */}
       </div>
       
       <div className={styles.formSection}>
         {discountCodes.length === 0 ? (
-          // Empty state for no discount codes
+          // ============== EMPTY STATE ==============
           <div className={styles.emptyDiscountCodesContainer}>
+            <h3 className={styles.emptyStateTitle}>Add Coupon Code</h3>
+            <p className={styles.emptyStateDescription}>You can add them later or don't add at all if you want</p>
             <button 
               type="button" 
-              className={styles.addDiscountCodeButton}
+              className={styles.createCouponButton}
               onClick={handleCreateDiscountCode}
             >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M19 13H13V19H11V13H5V11H11V5H13V11H19V13Z" fill="currentColor"/>
-              </svg>
-              Add Coupon Code
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M19 13H13V19H11V13H5V11H11V5H13V11H19V13Z" fill="currentColor"/></svg>
+              Create Coupon code
             </button>
           </div>
         ) : (
-          // List of discount codes
+          // ============== CODES TABLE ==============
           <div className={styles.discountCodesContainer}>
-            {/* Discount Codes table header */}
             <div className={styles.discountCodeTableHeader}>
-              <div className={styles.discountCode}>Discount Code</div>
-              <div className={styles.discountPercentage}>Discount Percentage</div>
-              <div className={styles.maxDiscountAmount}>Max Discount amount</div>
-              <div className={styles.minDiscountAmount}>Min discount amount</div>
+              <div className={styles.discountCode}>Name</div>
+              <div className={styles.ticketType}>Ticket Type</div>
+              <div className={styles.discountPercentage}>Discount %</div>
+              <div className={styles.maxDiscountAmount}>Max Discount</div>
+              <div className={styles.minDiscountAmount}>Min Discount</div>
               <div className={styles.discountQuantity}>Quantity</div>
-              <div className={styles.discountActions}></div>
+              <div className={styles.discountActions}>Action</div>
             </div>
             
-            {/* Discount codes list */}
             {discountCodes.map((code, index) => (
               <div key={index} className={styles.discountCodeItem}>
                 <div className={styles.discountCode} onClick={() => handleEditDiscountCode(index)}>
-                  {code.code}
+                  <span className={styles.codePill}>{code.code}</span>
                 </div>
-                <div className={styles.discountPercentage}>
-                  {code.discountPercentage}%
-                </div>
-                <div className={styles.maxDiscountAmount}>
-                  ${parseFloat(code.maxDiscountAmount).toFixed(2)}
-                </div>
-                <div className={styles.minDiscountAmount}>
-                  ${parseFloat(code.minDiscountAmount).toFixed(2)}
-                </div>
-                <div className={styles.discountQuantity}>
-                  {code.quantity}
-                </div>
-                <div className={styles.discountActions}>
-                  <button 
-                    type="button" 
-                    className={styles.discountActionButton}
-                    onClick={() => handleDeleteDiscountCode(index)}
-                    aria-label="Delete discount code"
+                <div className={styles.ticketType}>
+                  <select
+                    value={code.ticketType || 'all'}
+                    onChange={(e) => handleTicketTypeChange(e, index)}
+                    className={styles.ticketTypeSelect}
+                    onClick={(e) => e.stopPropagation()} // Prevents modal from opening when clicking dropdown
                   >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M6 19C6 20.1 6.9 21 8 21H16C17.1 21 18 20.1 18 19V7H6V19ZM19 4H15.5L14.5 3H9.5L8.5 4H5V6H19V4Z" fill="#666666"/>
-                    </svg>
-                  </button>
+                    {availableTickets.map(ticket => (
+                      <option key={ticket.id} value={ticket.id}>{ticket.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className={styles.discountPercentage}>{code.discountPercentage}%</div>
+                <div className={styles.maxDiscountAmount}>${parseFloat(code.maxDiscountAmount || 0).toFixed(2)}</div>
+                <div className={styles.minDiscountAmount}>${parseFloat(code.minDiscountAmount || 0).toFixed(2)}</div>
+                <div className={styles.discountQuantity}>{code.quantity}</div>
+                <div className={styles.discountActions}>
+                  <div className={styles.actionMenuContainer}>
+                    <button type="button" className={styles.discountActionButton} onClick={(e) => { e.stopPropagation(); setOpenMenuIndex(openMenuIndex === index ? null : index); }} aria-label="Actions">
+                      <svg width="4" height="16" viewBox="0 0 4 16" fill="#6B7280" xmlns="http://www.w3.org/2000/svg"><path d="M2 4C3.1 4 4 3.1 4 2s-.9-2-2-2-2 .9-2 2 .9 4 2 4zm0 6c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 6c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z"/></svg>
+                    </button>
+                    {openMenuIndex === index && (
+                      <div className={styles.actionMenu}>
+                        <button onClick={(e) => { e.stopPropagation(); handleEditDiscountCode(index); setOpenMenuIndex(null); }}>Edit</button>
+                        <button onClick={(e) => { e.stopPropagation(); handleDeleteDiscountCode(index); setOpenMenuIndex(null); }} className={styles.deleteAction}>Delete</button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             ))}
             
-            {/* Add discount code button */}
             <div className={styles.addDiscountCodeRow}>
-              <button 
-                type="button" 
-                className={styles.addDiscountCodeInlineButton}
-                onClick={handleCreateDiscountCode}
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M19 13H13V19H11V13H5V11H11V5H13V11H19V13Z" fill="currentColor"/>
-                </svg>
-                Add Coupon Code
+              <button type="button" className={styles.addDiscountCodeInlineButton} onClick={handleCreateDiscountCode}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M19 13H13V19H11V13H5V11H11V5H13V11H19V13Z" fill="currentColor"/></svg>
+                Create Coupon code
               </button>
             </div>
           </div>
         )}
-        
-        {/* Show validation error if the step has been visited and is not valid */}
-        {!isValid && stepStatus.visited && (
-          <div className={styles.fieldError}>
-            Please ensure all discount codes have required fields filled correctly
-          </div>
-        )}
+      </div>
 
         {/* Discount codes information box */}
         {/* <div className={styles.infoBox}>
@@ -199,7 +210,6 @@ const DiscountCodesStep = ({
             </p>
           </div>
         </div> */}
-      </div>
       
       {/* Discount code modal */}
       {isModalOpen && (
