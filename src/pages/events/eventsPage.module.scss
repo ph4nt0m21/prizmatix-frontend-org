@@ -1,154 +1,133 @@
-// src/pages/events/eventsPage.module.scss
 @import '../../styles/variables';
 @import '../../styles/mixins';
 
-// Main container
-.eventsPageContainer {
+// NEW: Two-column page layout
+.pageWrapper {
+  display: flex;
+  background-color: #F9FAFB;
+  min-height: 100vh;
+}
+
+// NEW: Sidebar styles
+.sidebar {
+  width: 256px;
+  flex-shrink: 0;
+  background-color: #FFFFFF;
+  border-right: 1px solid #E5E7EB;
+  padding: 32px 16px;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebarTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: #111827;
+  padding: 0 8px 12px 8px;
+  margin: 0 0 16px 0;
+  border-bottom: 1px solid #F3F4F6;
+}
+
+.filterNav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.filterItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background-color 0.2s ease;
+
+  &:hover {
+    background-color: #F3F4F6;
+  }
+
+  &.activeFilter {
+    background-color: #F3F4F6;
+    color: #111827;
+  }
+
+  span {
+    font-size: 12px;
+    color: #6B7280;
+    background-color: #E5E7EB;
+    padding: 2px 8px;
+    border-radius: 9999px;
+  }
+}
+
+// Main content area
+.mainContent {
   flex: 1;
   display: flex;
   flex-direction: column;
   padding: 32px;
-  background-color: #F9FAFB;
 }
 
-// Page title
-.pageTitle {
-  font-size: 24px;
-  font-weight: 600;
-  color: #111827;
-  margin: 0 0 24px 0;
-}
-
-// Filters section
-.filtersContainer {
+.header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 24px;
-  
-  @media (max-width: 768px) {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 16px;
-  }
 }
 
-.filterTabs {
+.pageTitle {
+  font-size: 24px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+}
+
+.headerActions {
   display: flex;
-  gap: 8px;
-  overflow-x: auto;
-  padding-bottom: 4px;
-  
-  @media (max-width: 768px) {
-    width: 100%;
-  }
-}
-
-.filterTab {
-  padding: 8px 16px;
-  border-radius: 9999px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  background-color: transparent;
-  color: #6B7280;
-  border: 1px solid transparent;
-  transition: all 0.2s ease;
-  white-space: nowrap;
-  
-  &:hover {
-    color: #111827;
-    background-color: #F3F4F6;
-  }
-  
-  &.activeFilter {
-    background-color: #8B5CF6;
-    color: white;
-  }
-}
-
-.searchAndActions {
-  display: flex;
-  gap: 12px;
-  
-  @media (max-width: 768px) {
-    width: 100%;
-  }
+  align-items: center;
+  gap: 16px;
 }
 
 .searchContainer {
   position: relative;
-  width: 240px;
-  
-  @media (max-width: 768px) {
-    width: 100%;
-  }
 }
 
 .searchInput {
-  width: 100%;
   height: 40px;
-  padding: 0 40px 0 16px;
+  width: 280px;
+  padding-left: 16px;
+  padding-right: 40px;
   border-radius: 6px;
   border: 1px solid #D1D5DB;
+  background-color: #FFFFFF;
   font-size: 14px;
-  color: #111827;
-  background-color: white;
-  
   &:focus {
     outline: none;
-    border-color: #8B5CF6;
-    box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
-  }
-  
-  &::placeholder {
-    color: #9CA3AF;
+    // Using a hardcoded color as the variable wasn't provided in context
+    border-color: #8B5CF6; 
   }
 }
 
-.searchButton {
+.searchIcon {
   position: absolute;
-  right: 12px;
   top: 50%;
+  right: 12px;
   transform: translateY(-50%);
-  background: transparent;
-  border: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  color: #9CA3AF;
-  
-  &:hover {
-    color: #6B7280;
-  }
-}
-
-.filterButton {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  height: 40px;
-  padding: 0 16px;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 500;
-  background-color: white;
-  border: 1px solid #D1D5DB;
   color: #6B7280;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  
-  &:hover {
-    border-color: #9CA3AF;
-    color: #4B5563;
-  }
 }
 
 .createEventButton {
+  // FIXED: Replaced the undefined mixin with direct styles
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: center;
   height: 40px;
   padding: 0 16px;
   border-radius: 6px;
@@ -159,220 +138,123 @@
   color: white;
   cursor: pointer;
   transition: background-color 0.2s ease;
-  
+
   &:hover {
     background-color: #7C3AED;
   }
-  
-  .plusIcon {
-    font-weight: 600;
-  }
 }
 
-// Error message
-.errorMessage {
-  background-color: #FEE2E2;
-  border: 1px solid #FCA5A5;
-  border-radius: 6px;
-  color: #B91C1C;
-  padding: 12px 16px;
-  margin-bottom: 24px;
-  position: relative;
-  
-  .dismissButton {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    background: none;
-    border: none;
-    color: #B91C1C;
-    cursor: pointer;
-    font-size: 16px;
-    padding: 4px;
-    line-height: 1;
-  }
-}
-
-// Loading container
-.loadingContainer {
-  flex: 1;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 64px 0;
-}
-
-// Events table
+// Events table and rows
 .eventsTable {
   background-color: white;
   border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #E5E7EB;
 }
 
-// Table header
 .tableHeader {
   display: grid;
-  grid-template-columns: auto 100px 120px 120px 50px;
+  grid-template-columns: 1fr 120px 120px 120px 60px;
   padding: 12px 24px;
   background-color: #F9FAFB;
-  border-bottom: 1px solid #E5E7EB;
   color: #6B7280;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  
-  @media (max-width: 768px) {
-    grid-template-columns: 1fr 80px 80px 50px;
-  }
-  
-  @media (max-width: 640px) {
-    grid-template-columns: 1fr 70px 50px;
-  }
+  border-bottom: 1px solid #E5E7EB;
 }
 
-.eventColumn {
+.eventColumn, .eventInfoCell {
   text-align: left;
 }
-
-.statusColumn {
-  text-align: center;
-  
-  @media (max-width: 640px) {
-    display: none;
-  }
+.statusColumn, .statusCell {
+  text-align: left;
+  padding-left: 10px;
 }
-
-.soldColumn {
-  text-align: center;
+.soldColumn, .soldCell {
+  text-align: left;
 }
-
-.grossColumn {
-  text-align: right;
-  
-  @media (max-width: 768px) {
-    display: none;
-  }
-}
-
-.actionsColumn {
+.grossColumn, .grossCell {
   text-align: right;
 }
+.actionsColumn, .actionsCell {
+  text-align: center;
+}
 
-// Event row
 .eventRow {
   display: grid;
-  grid-template-columns: auto 100px 120px 120px 50px;
-  padding: 16px 24px;
+  grid-template-columns: 1fr 120px 120px 120px 60px;
+  align-items: center;
+  padding: 12px 24px;
   border-bottom: 1px solid #E5E7EB;
   cursor: pointer;
   transition: background-color 0.2s ease;
-  position: relative;
-  
   &:hover {
     background-color: #F9FAFB;
   }
-  
   &:last-child {
     border-bottom: none;
   }
-  
-  @media (max-width: 768px) {
-    grid-template-columns: 1fr 80px 80px 50px;
-  }
-  
-  @media (max-width: 640px) {
-    grid-template-columns: 1fr 70px 50px;
-  }
 }
 
-// Date display
-.dateDisplay {
-  position: absolute;
-  left: 24px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 40px;
+.eventInfoCell {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.dateBlock {
+  width: 48px;
   height: 48px;
+  border-radius: 6px;
+  background-color: #F3F4F6;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background-color: #F3F4F6;
-  border-radius: 6px;
-}
+  flex-shrink: 0;
 
-.dateMonth {
-  font-size: 10px;
-  font-weight: 600;
-  color: #8B5CF6;
-  text-transform: uppercase;
-}
-
-.dateDay {
-  font-size: 16px;
-  font-weight: 600;
-  color: #111827;
-}
-
-// Event info
-.eventInfo {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding-left: 56px; // Make space for the date display
+  .dateMonth {
+    font-size: 10px;
+    font-weight: 600;
+    color: #4F46E5;
+    text-transform: uppercase;
+  }
+  .dateDay {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1F2937;
+    line-height: 1.2;
+  }
 }
 
 .eventThumbnail {
-  width: 48px;
+  width: 64px;
   height: 48px;
   border-radius: 4px;
   overflow: hidden;
-  background-color: #F3F4F6;
-}
-
-.thumbnailImage {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.placeholderThumbnail {
-  width: 100%;
-  height: 100%;
-  background-color: #E5E7EB;
+  flex-shrink: 0;
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
 }
 
 .eventDetails {
-  flex: 1;
-  min-width: 0;
+  .eventName {
+    font-size: 14px;
+    font-weight: 600;
+    color: #111827;
+  }
+  .eventLocation {
+    font-size: 12px;
+    color: #6B7280;
+  }
 }
 
-.eventName {
-  font-size: 14px;
-  font-weight: 600;
-  color: #111827;
-  margin: 0 0 4px 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.eventLocation {
-  font-size: 12px;
-  color: #6B7280;
-  margin: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-// Status badge
 .statusBadge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  display: inline-block;
   padding: 4px 12px;
   border-radius: 9999px;
   font-size: 12px;
@@ -381,84 +263,62 @@
 
 .draftBadge {
   background-color: #FEF3C7;
-  color: #B45309;
+  color: #92400E;
 }
 
-.liveBadge {
-  background-color: #ECFDF5;
-  color: #047857;
+.liveBadge { // Example style
+  background-color: #D1FAE5;
+  color: #065F46;
 }
 
-.pastBadge {
-  background-color: #F3F4F6;
-  color: #6B7280;
+.soldCell {
+  font-size: 14px;
+  color: #374151;
+  .salesProgress {
+    height: 4px;
+    background-color: #E5E7EB;
+    border-radius: 2px;
+    margin-top: 4px;
+    width: 100%;
+    .progressBar {
+      height: 100%;
+      width: 0%; // Default to 0
+      background-color: #4F46E5;
+      border-radius: 2px;
+    }
+  }
 }
 
-.pausedBadge {
-  background-color: #EFF6FF;
-  color: #1D4ED8;
-}
-
-.archivedBadge {
-  background-color: #F3F4F6;
-  color: #4B5563;
-}
-
-// Ticket sales
-.ticketSales {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.salesText {
+.grossCell {
   font-size: 14px;
   font-weight: 500;
   color: #111827;
 }
 
-.salesProgress {
-  height: 4px;
-  background-color: #E5E7EB;
-  border-radius: 2px;
-  overflow: hidden;
-}
-
-.progressBar {
-  height: 100%;
-  background-color: #8B5CF6;
-  border-radius: 2px;
-}
-
-// Gross revenue
-.grossText {
-  font-size: 14px;
-  font-weight: 600;
-  color: #111827;
-}
-
-// Actions button
 .actionsButton {
   width: 32px;
   height: 32px;
-  border-radius: 4px;
+  border-radius: 50%;
   background-color: transparent;
   border: none;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s ease;
-  
   &:hover {
     background-color: #F3F4F6;
   }
 }
 
-// No events message
 .noEventsMessage {
-  padding: 48px 24px;
+  padding: 64px 24px;
   text-align: center;
   color: #6B7280;
-  font-size: 14px;
+}
+
+.loadingContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
 }
