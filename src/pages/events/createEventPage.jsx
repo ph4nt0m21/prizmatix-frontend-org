@@ -843,27 +843,27 @@ const CreateEventPage = () => {
       return false;
     }
 
-    // // Location validation - either TBA or has location details
-    // if (!eventData.location.isToBeAnnounced &&
-    //     (!eventData.location.venue || !eventData.location.city || !eventData.location.country)) {
-    //   return false;
-    // }
+    // Location validation - either TBA or has location details
+    if (!eventData.location.isToBeAnnounced &&
+        (!eventData.location.venue || !eventData.location.city || !eventData.location.country)) {
+      return false;
+    }
 
-    // // Date/Time validation
-    // if (!eventData.dateTime.startDate || !eventData.dateTime.startTime ||
-    //     !eventData.dateTime.endDate || !eventData.dateTime.endTime) {
-    //   return false;
-    // }
+    // Date/Time validation
+    if (!eventData.dateTime.startDate || !eventData.dateTime.startTime ||
+        !eventData.dateTime.endDate || !eventData.dateTime.endTime) {
+      return false;
+    }
 
-    // // Description validation
-    // if (!eventData.description) {
-    //   return false;
-    // }
+    // Description validation
+    if (!eventData.description) {
+      return false;
+    }
 
-    // // Tickets validation - at least one ticket is required
-    // if (!eventData.tickets || eventData.tickets.length === 0) {
-    //   return false;
-    // }
+    // Tickets validation - at least one ticket is required
+    if (!eventData.tickets || eventData.tickets.length === 0) {
+      return false;
+    }
 
     // All required steps are valid
     return true;
@@ -1574,7 +1574,7 @@ const CreateEventPage = () => {
       {/* Event-specific sub-header with breadcrumbs and actions */}
       <EventHeaderNav
         currentStep={getCurrentStepName()}
-        eventName={eventData.name || "NORR Festival 2022"}
+        eventName={eventData.name || "new event"}
         isDraft={true}
         canPreview={canPreview}
       />

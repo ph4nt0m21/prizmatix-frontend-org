@@ -130,7 +130,7 @@ const BasicInfoStep = ({ eventData, handleInputChange, isValid, stepStatus }) =>
             id="name"
             name="name"
             className={styles.formInput}
-            placeholder="NORR Festival 2022"
+            placeholder="new event name"
             value={eventData.name}
             onChange={handleInputChange}
           />
