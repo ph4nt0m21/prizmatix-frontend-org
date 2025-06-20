@@ -260,32 +260,46 @@ export const prepareTicketsDataForAPI = (tickets, eventId = null) => {
   // Use provided eventId first, or fall back to stored eventId
   const eventDataId = eventId || eventData?.eventId || 0;
 
+  // CHANGED: Get the main event's date and time for fallback logic
+  const eventDateTime = eventData?.dateTime || {};
+
+  // CHANGED: Helper function to format date and time into an ISO-like string
+  const formatToISO = (date, time) => {
+    if (!date || !time) return null;
+    return `${date}T${time.includes(':') ? time : time + ':00'}:00Z`;
+  };
+
   return {
     id: parseInt(eventDataId, 10),
-    ticketStructures: tickets.map((ticket) => ({
-      id: ticket.id || null, // Use existing ID or null for new tickets
-      name: ticket.name,
-      price: parseFloat(ticket.price),
-      finalPrice: parseFloat(ticket.price), // Same as price unless there are fees
-      ticketCapacity:
-        ticket.quantity === "No Limit" ? 0 : parseInt(ticket.quantity),
-      maxPurchasePerOrder: ticket.enableMaxPurchase
-        ? parseInt(ticket.purchaseLimit)
-        : 0,
-      currency: "USD", // Default to USD, could be made configurable
-      limitedQuantity: ticket.quantity !== "No Limit",
-      description: ticket.description || "",
-      // Convert dates and times to ISO format for API
-      listingStartTime:
-        ticket.salesStartDate && ticket.salesStartTime
-          ? `${ticket.salesStartDate}T${ticket.salesStartTime}:00Z`
-          : null,
-      listingEndTime:
-        ticket.salesEndDate && ticket.salesEndTime
-          ? `${ticket.salesEndDate}T${ticket.salesEndTime}:00Z`
-          : null,
-      toBeDeleted: false,
-    })),
+    ticketStructures: tickets.map((ticket) => {
+      const maxPurchase = parseInt(ticket.maxPurchaseAmount, 10);
+
+      // CHANGED: Determine the listing start and end times with fallback to event's date/time
+      const listingStartTime =
+        formatToISO(ticket.salesStartDate, ticket.salesStartTime) ||
+        formatToISO(eventDateTime.startDate, eventDateTime.startTime);
+
+      const listingEndTime =
+        formatToISO(ticket.salesEndDate, ticket.salesEndTime) ||
+        formatToISO(eventDateTime.endDate, eventDateTime.endTime);
+
+      return {
+        id: ticket.id || null, // Use existing ID or null for new tickets
+        name: ticket.name,
+        price: parseFloat(ticket.price),
+        finalPrice: parseFloat(ticket.price), // Same as price unless there are fees
+        ticketCapacity:
+          ticket.quantity === "No Limit" ? 0 : parseInt(ticket.quantity),
+        maxPurchasePerOrder: !isNaN(maxPurchase) && maxPurchase > 0 ? maxPurchase : 0,
+        currency: "USD", // Default to USD, could be made configurable
+        limitedQuantity: ticket.quantity !== "No Limit",
+        description: ticket.description || "",
+        // CHANGED: Use the new variables which contain the fallback logic
+        listingStartTime: listingStartTime,
+        listingEndTime: listingEndTime,
+        toBeDeleted: false,
+      };
+    }),
     updatedBy: userData?.id || eventData?.createdBy || 0,
   };
 };

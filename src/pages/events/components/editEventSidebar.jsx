@@ -1,6 +1,3 @@
-/*
-File: src/pages/events/components/editEventSidebar.jsx
-*/
 import React from 'react';
 import PropTypes from 'prop-types';
 import styles from './editEventSidebar.module.scss'; // Link to new SCSS module

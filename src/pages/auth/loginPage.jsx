@@ -12,7 +12,7 @@ import { ReactComponent as EyeOffIcon } from "../../assets/icons/eye-off-icon.sv
 import { ReactComponent as ArrowIcon } from "../../assets/icons/arrow-icon.svg";
 
 // Import images
-import wallpaperBg from "../../assets/images/auth-bg.png";
+import wallpaperBg from "../../assets/images/auth-bg.jpg";
 import logoImage from "../../assets/images/logo.svg";
 import emojiSparkles from "../../assets/images/emoji-sparkles_.svg";
 

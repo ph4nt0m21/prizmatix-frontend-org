@@ -6,8 +6,7 @@ import styles from './ticketsStep.module.scss';
 /**
  * TicketsStep component - Sixth step of event creation
  * Allows creating and managing different ticket types for the event
- * 
- * @param {Object} props Component props
+ * * @param {Object} props Component props
  * @param {Object} props.eventData Event data from parent component
  * @param {Function} props.handleInputChange Function to handle input changes
  * @param {boolean} props.isValid Whether the form is valid
@@ -174,13 +173,14 @@ const handleDuplicateTicket = (index) => {
               <div className={styles.ticketName}>Ticket Name</div>
               <div className={styles.ticketCount}>Ticket Count</div>
               <div className={styles.ticketPrice}>Ticket Price</div>
+              {/* ADDED: Header for the new column */}
+              <div className={styles.ticketCount}>Max Purchase</div>
               <div className={styles.ticketActions} style={{ justifyContent: 'center' }}>Action</div>
             </div>
             
             {/* Tickets list */}
             {tickets.map((ticket, index) => (
               <div key={index} className={styles.ticketRow}>
-                {/* ... existing ticket row JSX from previous step ... */}
                 <div className={styles.ticketDrag}>
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-grip-vertical" viewBox="0 0 16 16">
                         <path d="M7 2a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 5a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 8a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm-3 3a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm-3 3a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
@@ -189,6 +189,17 @@ const handleDuplicateTicket = (index) => {
                 <div className={styles.ticketName}><input name="name" type="text" className={styles.ticketInput} placeholder="eg. General Admission" value={ticket.name || ''} onChange={(e) => handleTicketRowChange(e, index)}/></div>
                 <div className={styles.ticketCount}><input name="quantity" type="number" className={styles.ticketInput} placeholder="100" value={ticket.quantity === 'No Limit' ? '' : ticket.quantity || ''} onChange={(e) => handleTicketRowChange(e, index)}/></div>
                 <div className={styles.ticketPrice}><input name="price" type="number" step="0.01" className={styles.ticketInput} placeholder="10.00" value={ticket.price || ''} onChange={(e) => handleTicketRowChange(e, index)}/></div>
+                {/* ADDED: Input field for max purchase amount */}
+                <div className={styles.ticketCount}>
+                  <input
+                    name="maxPurchaseAmount"
+                    type="text"
+                    className={styles.ticketInput}
+                    placeholder="No Limit"
+                    value={ticket.maxPurchaseAmount || ''}
+                    onChange={(e) => handleTicketRowChange(e, index)}
+                  />
+                </div>
                 <div className={styles.ticketActions}><div className={styles.actionMenuContainer}><button type="button" className={styles.ticketActionButton} onClick={() => handleEditTicket(index)} aria-label="Advanced settings"><svg width="16" height="16" viewBox="0 0 24 24" fill="#6B7280" xmlns="http://www.w3.org/2000/svg"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.69-1.62-.92L14.4 2.25C14.34 2.02 14.12 1.87 13.88 1.87H10.12c-.25 0-.47.15-.53.38L9.2 4.87c-.58.23-1.12.54-1.62.92L5.19 4.81c-.22-.08-.47 0-.59.22L2.69 8.35c-.11.2-.06.47.12.61l2.03 1.58c-.05.32-.07.64-.07.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.69 1.62.92l.39 2.62c.06.23.28.38.53.38h3.75c.25 0 .47-.15.53-.38l.39-2.62c.58.23 1.12.54 1.62-.92l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.11-.2-.06-.47-.12-.61l-2.03-1.58zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/></svg></button><button type="button" className={styles.ticketActionButton} onClick={() => setOpenMenuIndex(openMenuIndex === index ? null : index)} aria-label="More actions"><svg width="4" height="16" viewBox="0 0 4 16" fill="#6B7280" xmlns="http://www.w3.org/2000/svg"><path d="M2 4C3.1 4 4 3.1 4 2s-.9-2-2-2-2 .9-2 2 .9 4 2 4zm0 6c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 6c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z"/></svg></button>{openMenuIndex === index && (<div className={styles.actionMenu}><button onClick={() => { handleDuplicateTicket(index); }}>Duplicate</button><button onClick={() => { handleEditTicket(index); setOpenMenuIndex(null); }}>Edit</button><button onClick={() => { handleDeleteTicket(index); setOpenMenuIndex(null); }} className={styles.deleteAction}>Delete</button></div>)}</div></div>
               </div>
             ))}
@@ -209,29 +220,6 @@ const handleDuplicateTicket = (index) => {
         )}
       </div>
         
-        {/* Show validation error if the step has been visited and is not valid */}
-        {/* {!isValid && stepStatus.visited && tickets.length === 0 && (
-          <div className={styles.fieldError}>
-            Please add at least one ticket type for your event
-          </div>
-        )} */}
-
-        {/* Ticket types information box */}
-        {/* <div className={styles.infoBox}>
-          <div className={styles.infoIcon}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 20C7.59 20 4 16.41 4 12C4 7.59 7.59 4 12 4C16.41 4 20 7.59 20 12C20 16.41 16.41 20 12 20ZM11 15H13V17H11V15ZM11 7H13V13H11V7Z" fill="#7C3AED"/>
-            </svg>
-          </div>
-          <div className={styles.infoContent}>
-            <h3 className={styles.infoTitle}>Ticket Types</h3>
-            <p className={styles.infoText}>
-              Create different ticket types for your event, such as 'General Admission', 'VIP', or 'Early Bird'.
-              You can set different prices, quantities, and sale periods for each ticket type.
-            </p>
-          </div>
-        </div> */}
-      
       {/* Ticket details modal */}
       {isModalOpen && (
         <TicketDetailsModal

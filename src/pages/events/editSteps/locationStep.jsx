@@ -4,7 +4,7 @@ import styles from './locationStep.module.scss';
 
 /**
  * LocationStep component - Second step of event creation
- * Focused on Google Maps link pasting functionality
+ * Extracts latitude and longitude from a pasted Google Maps link to update the map.
  */
 const LocationStep = ({ 
   eventData = {}, 
@@ -15,16 +15,17 @@ const LocationStep = ({
   // Extract location data from eventData or use defaults
   const locationData = eventData.location || {};
   
-  // Map references
+  // Map and Marker references
   const mapRef = useRef(null);
   const googleMapRef = useRef(null);
+  const markerRef = useRef(null);
   
   // Local state for form management
   const [location, setLocation] = useState({
     locationType: locationData.locationType || 'physical',
     isToBeAnnounced: locationData.isToBeAnnounced || false,
     isPrivateLocation: locationData.isPrivateLocation || false,
-    searchQuery: locationData.searchQuery || '',
+    googleMapLink: locationData.googleMapLink || '',
     venue: locationData.venue || '',
     street: locationData.street || '',
     streetNumber: locationData.streetNumber || '',
@@ -40,15 +41,15 @@ const LocationStep = ({
   
   // State for map UI
   const [isLoadingMap, setIsLoadingMap] = useState(false);
-  const [activeTab, setActiveTab] = useState('map'); // 'map' or 'satellite'
-  
+  const [activeTab, setActiveTab] = useState('map');
+
   /**
-   * Initialize Google Maps
+   * Dynamically load the Google Maps API script
    */
   useEffect(() => {
-    // Check if Google Maps API is loaded
     if (!window.google || !window.google.maps) {
       const script = document.createElement('script');
+      // IMPORTANT: Replace with your actual Google Maps API key
       script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyBAp9QrQIKe6JRxSiF5xV4HPMIym8GBi_0&libraries=places`;
       script.async = true;
       script.defer = true;
@@ -60,7 +61,6 @@ const LocationStep = ({
       document.head.appendChild(script);
       
       return () => {
-        // Clean up if component unmounts before script loads
         if (document.head.contains(script)) {
           document.head.removeChild(script);
         }
@@ -69,22 +69,30 @@ const LocationStep = ({
       initializeMap();
     }
   }, []);
-  
+
+  // Add this useEffect hook to synchronize with incoming props
+  useEffect(() => {
+    // When the eventData.location prop changes (e.g., after the API call),
+    // update the component's internal state to match.
+    if (eventData.location) {
+      setLocation(eventData.location);
+    }
+  }, [eventData.location]); // The dependency array ensures this runs whenever eventData.location changes
+
   /**
-   * Initialize the Google Map
+   * Initialize the Google Map, defaulting to Auckland, New Zealand
    */
   const initializeMap = () => {
     if (!mapRef.current) return;
     
-    // Default to Australia as shown in your design image
-    const defaultPosition = { lat: -25.2744, lng: 133.7751 }; // Center of Australia
+    const defaultPosition = { lat: -36.8485, lng: 174.7633 }; 
     const position = location.latitude && location.longitude
       ? { lat: parseFloat(location.latitude), lng: parseFloat(location.longitude) }
       : defaultPosition;
       
     const mapOptions = {
       center: position,
-      zoom: 4, // Zoom out for Australia view
+      zoom: location.latitude ? 15 : 10,
       mapTypeId: activeTab === 'map' ? 'roadmap' : 'satellite',
       mapTypeControl: false,
       streetViewControl: true,
@@ -93,145 +101,69 @@ const LocationStep = ({
       gestureHandling: 'cooperative'
     };
     
-    // Create the map
     const map = new window.google.maps.Map(mapRef.current, mapOptions);
     googleMapRef.current = map;
     
-    // Create a marker if location is set
     if (location.latitude && location.longitude) {
-      new window.google.maps.Marker({
-        position,
-        map,
-        title: location.venue || 'Selected Location'
-      });
+      updateMapAndMarker(position);
     }
   };
 
   /**
-   * Format address from location components
-   * @param {Object} locationData - Location data
-   * @returns {string} Formatted address
+   * Update map center and place a single marker
+   * @param {Object} position - The latitude and longitude for the marker.
    */
-  const formatAddress = (locationData) => {
-    const components = [];
-    
-    if (locationData.venue) components.push(locationData.venue);
-    if (locationData.streetNumber) components.push(locationData.streetNumber);
-    if (locationData.street) components.push(locationData.street);
-    if (locationData.city) components.push(locationData.city);
-    if (locationData.state) components.push(locationData.state);
-    if (locationData.country) components.push(locationData.country);
-    if (locationData.postalCode) components.push(locationData.postalCode);
-    
-    return components.join(', ');
-  };
+  const updateMapAndMarker = (position) => {
+    if (googleMapRef.current) {
+        googleMapRef.current.setCenter(position);
+        googleMapRef.current.setZoom(15);
 
+        if (markerRef.current) {
+            markerRef.current.setMap(null);
+        }
+
+        const newMarker = new window.google.maps.Marker({
+            position,
+            map: googleMapRef.current,
+            title: 'Selected Location'
+        });
+
+        markerRef.current = newMarker;
+    }
+  };
+  
   /**
-   * Parse a Google Maps URL to extract coordinates
-   * @param {string} url - Google Maps URL
-   * @returns {Object|null} - Latitude and longitude if found, null otherwise
+   * NEW/SIMPLIFIED: Extracts latitude and longitude from a Google Maps URL
+   * and updates the state.
+   * @param {string} url - The Google Maps URL
    */
-  const parseGoogleMapsUrl = (url) => {
+  const extractCoordsFromUrl = (url) => {
+    setIsLoadingMap(true);
     try {
-      console.log('Attempting to parse Google Maps URL:', url);
-      
-      // Format: https://www.google.com/maps?q=-41.2865,174.7762
-      let match = url.match(/maps\?q=(-?\d+\.\d+),(-?\d+\.\d+)/);
-      if (match) {
-        const coords = {
-          lat: parseFloat(match[1]),
-          lng: parseFloat(match[2])
-        };
-        console.log('Coordinates extracted from ?q= parameter:', coords);
-        return coords;
+      const matches = url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+      if (!matches || matches.length < 3) {
+        alert('Could not find coordinates in the provided link. Please use a valid Google Maps link (e.g., one containing "@lat,lng").');
+        return;
       }
+  
+      const lat = parseFloat(matches[1]);
+      const lng = parseFloat(matches[2]);
+  
+      // Update state with ONLY the link and the new coordinates
+      setLocation(prevLocation => ({
+        ...prevLocation,
+        latitude: lat,
+        longitude: lng,
+        googleMapLink: url,
+      }));
       
-      // Format: https://www.google.com/maps/place/.../@-41.2865,174.7762,15z
-      match = url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
-      if (match) {
-        const coords = {
-          lat: parseFloat(match[1]),
-          lng: parseFloat(match[2])
-        };
-        console.log('Coordinates extracted from @ parameter:', coords);
-        return coords;
-      }
-      
-      console.log('No coordinates found in URL, will use geocoding instead');
-      return null;
     } catch (error) {
-      console.error('Error parsing Google Maps URL:', error);
-      return null;
+      console.error('Error parsing URL:', error);
+      alert('An unexpected error occurred while parsing the URL.');
+    } finally {
+        // Use a short timeout to give React time to re-render the map
+        setTimeout(() => setIsLoadingMap(false), 500);
     }
-  };
-
-  /**
-   * Process geocoding result and extract address components
-   */
-  const processGeocodingResult = (result, position) => {
-    // Extract address components
-    let updatedLocation = {
-      ...location,
-      latitude: position.lat(),
-      longitude: position.lng(),
-      searchQuery: result.formatted_address
-    };
-    
-    console.log('Processing geocoding result:');
-    console.log('Latitude:', position.lat());
-    console.log('Longitude:', position.lng());
-    console.log('Formatted address:', result.formatted_address);
-    
-    // Process address components
-    for (const component of result.address_components) {
-      const types = component.types;
-      
-      if (types.includes('street_number')) {
-        updatedLocation.streetNumber = component.long_name;
-        console.log('Street Number:', component.long_name);
-      } else if (types.includes('route')) {
-        updatedLocation.street = component.long_name;
-        console.log('Street:', component.long_name);
-      } else if (types.includes('locality')) {
-        updatedLocation.city = component.long_name;
-        console.log('City:', component.long_name);
-      } else if (types.includes('administrative_area_level_1')) {
-        updatedLocation.state = component.long_name;
-        console.log('State/Province:', component.long_name);
-      } else if (types.includes('country')) {
-        updatedLocation.country = component.long_name;
-        console.log('Country:', component.long_name);
-      } else if (types.includes('postal_code')) {
-        updatedLocation.postalCode = component.long_name;
-        console.log('Postal Code:', component.long_name);
-      }
-    }
-    
-    // Try to determine the venue name
-    const pointOfInterest = result.address_components.find(comp => 
-      comp.types.includes('point_of_interest') || 
-      comp.types.includes('establishment')
-    );
-    
-    if (pointOfInterest) {
-      updatedLocation.venue = pointOfInterest.long_name;
-      console.log('Venue (from POI):', pointOfInterest.long_name);
-    } else {
-      // Default to first line of formatted address
-      updatedLocation.venue = result.formatted_address.split(',')[0];
-      console.log('Venue (from first part of address):', updatedLocation.venue);
-    }
-    
-    // Create formatted address string
-    updatedLocation.formattedAddress = formatAddress(updatedLocation);
-    console.log('Final formatted address string:', updatedLocation.formattedAddress);
-    
-    // Log the complete location object
-    console.log('Final location object:', updatedLocation);
-    
-    // Update location state
-    setLocation(updatedLocation);
-    setIsLoadingMap(false);
   };
 
   /**
@@ -239,168 +171,50 @@ const LocationStep = ({
    * @param {Event} e - Paste event
    */
   const handlePasteMapLink = (e) => {
-    // Get pasted text
+    e.preventDefault();
     const pastedText = e.clipboardData.getData('text');
-    
-    console.log('Pasted text:', pastedText);
-    
-    // Check if it looks like a Google Maps link
-    if (pastedText.includes('google.com/maps') || pastedText.includes('goo.gl/maps')) {
-      e.preventDefault(); // Prevent default paste behavior
-      
-      console.log('Google Maps link detected');
-      
-      // Set the search query to the pasted link
-      setLocation(prev => ({
-        ...prev,
-        searchQuery: pastedText
-      }));
-      
-      // Show loading state
-      setIsLoadingMap(true);
-      
-      // Parse the URL to get coordinates
-      const coordinates = parseGoogleMapsUrl(pastedText);
-      console.log('Extracted coordinates from URL:', coordinates);
-      
-      // If we have coordinates from the URL
-      if (coordinates) {
-        console.log('Using coordinates directly from URL:', coordinates);
-        
-        // Update map with the coordinates
-        if (googleMapRef.current) {
-          // Clear any existing markers
-          googleMapRef.current.setCenter(coordinates);
-          googleMapRef.current.setZoom(15);
-          
-          // Add marker
-          new window.google.maps.Marker({
-            position: coordinates,
-            map: googleMapRef.current,
-            title: 'Selected Location',
-          });
-        }
-        
-        // Get address details using reverse geocoding
-        if (window.google && window.google.maps) {
-          console.log('Starting reverse geocoding with coordinates:', coordinates);
-          const geocoder = new window.google.maps.Geocoder();
-          geocoder.geocode({ location: coordinates }, (results, status) => {
-            if (status === 'OK' && results[0]) {
-              console.log('Reverse geocoding successful, result:', results[0]);
-              
-              // Log formatted address 
-              console.log('Formatted address:', results[0].formatted_address);
-              
-              // Log address components in detail
-              console.log('Address components:');
-              results[0].address_components.forEach(component => {
-                console.log(`${component.types.join(', ')}: ${component.long_name}`);
-              });
-              
-              processGeocodingResult(results[0], new window.google.maps.LatLng(coordinates.lat, coordinates.lng));
-            } else {
-              console.error('Reverse geocoding failed:', status);
-              setIsLoadingMap(false);
-            }
-          });
-        }
-      } else {
-        // If no coordinates in URL, try geocoding the entire URL
-        console.log('No coordinates in URL, attempting to geocode the entire URL');
-        
-        if (window.google && window.google.maps) {
-          const geocoder = new window.google.maps.Geocoder();
-          geocoder.geocode({ address: pastedText }, (results, status) => {
-            if (status === 'OK' && results[0]) {
-              const result = results[0];
-              const position = result.geometry.location;
-              
-              console.log('Geocoding successful, result:', result);
-              console.log('Location:', { 
-                lat: position.lat(), 
-                lng: position.lng(), 
-                address: result.formatted_address 
-              });
-              
-              // Log address components in detail
-              console.log('Address components:');
-              result.address_components.forEach(component => {
-                console.log(`${component.types.join(', ')}: ${component.long_name}`);
-              });
-              
-              // Update map
-              if (googleMapRef.current) {
-                googleMapRef.current.setCenter(position);
-                googleMapRef.current.setZoom(15);
-                
-                // Add marker
-                new window.google.maps.Marker({
-                  position,
-                  map: googleMapRef.current,
-                  title: 'Selected Location',
-                });
-              }
-              
-              // Process the result
-              processGeocodingResult(result, position);
-            } else {
-              console.error('Geocoding failed:', status);
-              alert('Could not process the Google Maps link. Please try a different link format.');
-              setIsLoadingMap(false);
-            }
-          });
-        } else {
-          console.error('Google Maps API not available');
-          setIsLoadingMap(false);
-        }
-      }
-    }
+    extractCoordsFromUrl(pastedText);
   };
-  
+
   /**
-   * Switch map type (map or satellite)
+   * Effect to update the map whenever coordinates change
    */
+  useEffect(() => {
+    if (location.latitude && location.longitude && googleMapRef.current) {
+        const position = {
+            lat: parseFloat(location.latitude),
+            lng: parseFloat(location.longitude),
+        };
+        updateMapAndMarker(position);
+    }
+  }, [location.latitude, location.longitude]);
+
+  /**
+   * Effect to propagate all location changes to the parent component
+   */
+  useEffect(() => {
+    handleInputChange({ ...location }, 'location');
+  }, [location]);
+  
+  // --- Other handlers ---
+
   const switchMapType = (type) => {
     setActiveTab(type);
     if (googleMapRef.current) {
       googleMapRef.current.setMapTypeId(type === 'map' ? 'roadmap' : 'satellite');
     }
   };
-  
-  // Effect to propagate location changes to parent component
-  useEffect(() => {
-    // Send the updated location data to parent component
-    handleInputChange(location, 'location');
-  }, [location, handleInputChange]);
-  
-  /**
-   * Handle location type selection
-   */
+
   const handleLocationTypeChange = (type) => {
     let updatedLocation = { ...location, locationType: type };
-    
-    // Update isToBeAnnounced flag based on type
-    if (type === 'tba') {
-      updatedLocation.isToBeAnnounced = true;
-    } else {
-      updatedLocation.isToBeAnnounced = false;
-      updatedLocation.isPrivateLocation = type === 'private';
-    }
-    
+    updatedLocation.isToBeAnnounced = type === 'tba';
+    updatedLocation.isPrivateLocation = type === 'private';
     setLocation(updatedLocation);
   };
   
-  /**
-   * Handle input changes
-   */
   const handleFieldChange = (e) => {
     const { name, value } = e.target;
-    
-    setLocation(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    setLocation(prev => ({ ...prev, [name]: value }));
   };
   
   return (
@@ -509,12 +323,12 @@ const LocationStep = ({
             <div className={styles.searchContainer}>
               <input
                 type="text"
-                name="searchQuery"
+                name="googleMapLink"
                 className={styles.searchInput}
                 placeholder="Paste Google Maps link here"
-                value={location.searchQuery}
-                onChange={handleFieldChange}
-                onPaste={handlePasteMapLink}
+                value={location.googleMapLink}
+                onChange={handleFieldChange} // Allow manual changes
+                onPaste={handlePasteMapLink} // Handle paste event
               />
               <div className={styles.searchButton}>
                 {isLoadingMap ? (

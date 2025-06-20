@@ -20,8 +20,7 @@ const ArtStep = ({
   stepStatus = { visited: false }
 }) => {
   // Extract art data from eventData or use defaults
-  const artData = eventData.artData || {};
-  
+const artData = eventData.art || {}; // Use eventData.art for consistency  
   // State for uploaded files and previews
   const [files, setFiles] = useState({
     thumbnail: artData.thumbnailFile || null,
@@ -58,6 +57,22 @@ const ArtStep = ({
       if (previews.banner) releaseFilePreviewUrl(previews.banner);
     };
   }, []);
+
+  useEffect(() => {
+  // When the eventData.art prop changes from the parent
+  if (eventData.art) {
+    // Update the local state for previews
+    setPreviews({
+      thumbnail: eventData.art.thumbnailUrl || null,
+      banner: eventData.art.bannerUrl || null,
+    });
+    // Also update the local file state if needed (though files themselves aren't props)
+    setFiles({
+        thumbnail: eventData.art.thumbnailFile || null,
+        banner: eventData.art.bannerFile || null
+    })
+  }
+}, [eventData.art]); // Dependency array watches for changes in the art prop
   
   /**
    * Release a file preview URL to free browser memory
