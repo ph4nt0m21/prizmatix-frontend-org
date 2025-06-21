@@ -1,7 +1,7 @@
 import axios from "axios";
 import Cookies from "js-cookie";
 
-const BASEURL = process.env.REACT_APP_API_URL || "https://sascode.sbs";
+const BASEURL = process.env.REACT_APP_API_URL;
 
 console.log("API Base URL:", BASEURL); // Add this for debugging
 

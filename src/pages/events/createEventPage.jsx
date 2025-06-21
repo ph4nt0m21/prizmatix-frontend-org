@@ -71,8 +71,8 @@ const CreateEventPage = () => {
     showHostProfile: true,
     organizationId: null, // Will be set from user context
     createdBy: null, // Will be set from user context
-    category: "", // Category field
-    searchTags: [], // Search tags array
+    // category: "", // Category field
+    // searchTags: [], // Search tags array
 
     // Location (Step 2)
     location: {
@@ -523,8 +523,8 @@ const CreateEventPage = () => {
       field === "dateTime" ||
       field === "art" ||
       field === "tickets" ||
-      field === "discountCodes" ||
-      field === "searchTags"
+      field === "discountCodes"
+      // field === "searchTags"
     ) {
       setEventData((prevData) => ({
         ...prevData,
@@ -597,7 +597,8 @@ const CreateEventPage = () => {
    */
   const validateBasicInfo = () => {
     // Check if name is filled and category is selected
-    return eventData.name.trim() !== "" && eventData.category.trim() !== "";
+    return eventData.name.trim() !== "";
+    // && eventData.category.trim() !== ""
   };
 
   /**
@@ -839,19 +840,21 @@ const CreateEventPage = () => {
     // Check if all required event information is available
 
     // Basic Info validation
-    if (!eventData.name || !eventData.category) {
+    if (!eventData.name)
+    //  || !eventData.category 
+    {
       return false;
     }
 
     // Location validation - either TBA or has location details
     if (!eventData.location.isToBeAnnounced &&
-        (!eventData.location.venue || !eventData.location.city || !eventData.location.country)) {
+      (!eventData.location.venue || !eventData.location.city || !eventData.location.country)) {
       return false;
     }
 
     // Date/Time validation
     if (!eventData.dateTime.startDate || !eventData.dateTime.startTime ||
-        !eventData.dateTime.endDate || !eventData.dateTime.endTime) {
+      !eventData.dateTime.endDate || !eventData.dateTime.endTime) {
       return false;
     }
 
@@ -935,7 +938,7 @@ const CreateEventPage = () => {
       console.error("Error publishing event:", error);
       setError(
         error.response?.data?.message ||
-          "Failed to publish event. Please try again."
+        "Failed to publish event. Please try again."
       );
     } finally {
       setIsLoading((prev) => ({ ...prev, publishEvent: false }));
@@ -1064,7 +1067,7 @@ const CreateEventPage = () => {
               console.error("Error updating location:", error);
               setError(
                 error.response?.data?.message ||
-                  "Failed to update location. Please try again."
+                "Failed to update location. Please try again."
               );
 
               // Reset loading state in case of error
@@ -1105,7 +1108,7 @@ const CreateEventPage = () => {
               console.error("Error updating date/time:", error);
               setError(
                 error.response?.data?.message ||
-                  "Failed to update date/time information. Please try again."
+                "Failed to update date/time information. Please try again."
               );
 
               // Reset loading state in case of error
@@ -1147,7 +1150,7 @@ const CreateEventPage = () => {
               console.error("Error updating description:", error);
               setError(
                 error.response?.data?.message ||
-                  "Failed to update description. Please try again."
+                "Failed to update description. Please try again."
               );
 
               // Reset loading state in case of error
@@ -1157,81 +1160,65 @@ const CreateEventPage = () => {
           }
 
           // Handle art step submission
-          else if (currentStep === 5) {
-            try {
-              // Check if there are any files selected
-              const hasThumbnail = eventData.art?.thumbnailFile !== null;
-              const hasBanner = eventData.art?.bannerFile !== null;
+else if (currentStep === 5) {
+  try {
+    const hasThumbnail = !!eventData.art?.thumbnailFile;
+    const hasBanner = !!eventData.art?.bannerFile;
 
-              console.log("Art data to be uploaded:", {
-                hasThumbnail,
-                hasBanner,
-                thumbnailName: eventData.art?.thumbnailName,
-                bannerName: eventData.art?.bannerName,
-              });
+    console.log("Art data to be uploaded:", {
+      hasThumbnail,
+      hasBanner,
+      thumbnailName: eventData.art?.thumbnailName,
+      bannerName: eventData.art?.bannerName,
+    });
 
-              // Prepare the JSON payload for the API
-              if (hasBanner) {
-                const bannerData = prepareArtDataForAPI(
-                  eventData.art,
-                  eventId,
-                  "banner"
-                );
+    if (hasThumbnail || hasBanner) {
+      // ✅ Extract metadata only (id, updatedBy)
+      const metadata = prepareArtDataForAPI(eventData.art, eventId, "banner");
 
-                console.log("Sending banner data:", bannerData);
+      // ✅ Create FormData manually
+      const formData = new FormData();
+      formData.append("id", metadata.id);
+      formData.append("updatedBy", metadata.updatedBy);
 
-                // Make API call to update banner info
-                const bannerResponse = await UploadEventBannerAPI(
-                  eventId,
-                  bannerData
-                );
-                console.log("Banner update successful:", bannerResponse);
+      if (hasBanner) {
+        formData.append("bannerFile", eventData.art.bannerFile);
+      }
+      if (hasThumbnail) {
+        formData.append("thumbnailFile", eventData.art.thumbnailFile);
+      }
 
-                // Update the saved event data with the new art info
-                const currentEventData = getEventData();
-                saveEventData({
-                  ...currentEventData,
-                  art: {
-                    ...currentEventData.art,
-                    ...eventData.art,
-                  },
-                });
-              }
+      // ✅ Log for debugging
+      for (let [key, val] of formData.entries()) {
+        console.log(`${key}:`, val instanceof File ? val.name : val);
+      }
 
-              // Handle thumbnail similarly if needed
-              if (hasThumbnail) {
-                const thumbnailData = prepareArtDataForAPI(
-                  eventData.art,
-                  eventId,
-                  "thumbnail"
-                );
+      // ✅ Single API call for both files
+      const response = await UploadEventBannerAPI(eventId, formData);
+      console.log("Art upload successful:", response);
 
-                console.log("Sending thumbnail data:", thumbnailData);
-
-                // Make API call to update thumbnail info
-                const thumbnailResponse = await UploadEventBannerAPI(
-                  eventId,
-                  thumbnailData
-                );
-                console.log("Thumbnail update successful:", thumbnailResponse);
-              }
-
-              // If no files to upload, still proceed
-              if (!hasThumbnail && !hasBanner) {
-                console.log("No art files to upload, skipping API call");
-              }
-            } catch (error) {
-              console.error("Error updating art information:", error);
-              setError(
-                error.response?.data?.message ||
-                  "Failed to update image information. Please try again."
-              );
-
-              // Reset loading state in case of error
-              setIsLoading((prev) => ({ ...prev, saveEvent: false }));
-              return;
-            }
-          }
+      // ✅ Save updated art info locally
+      const currentEventData = getEventData();
+      saveEventData({
+        ...currentEventData,
+        art: {
+          ...currentEventData.art,
+          ...eventData.art,
+        },
+      });
+    } else {
+      console.log("No art files to upload, skipping API call");
+    }
+  } catch (error) {
+    console.error("Error updating art information:", error);
+    setError(
+      error.response?.data?.message ||
+        "Failed to update image information. Please try again."
+    );
+    setIsLoading((prev) => ({ ...prev, saveEvent: false }));
+    return;
+  }
+}
 
           // Handle tickets step submission
           else if (currentStep === 6) {
@@ -1261,7 +1248,7 @@ const CreateEventPage = () => {
               console.error("Error updating tickets:", error);
               setError(
                 error.response?.data?.message ||
-                  "Failed to update ticket information. Please try again."
+                "Failed to update ticket information. Please try again."
               );
 
               // Reset loading state in case of error
@@ -1310,7 +1297,7 @@ const CreateEventPage = () => {
               console.error("Error updating discount codes:", error);
               setError(
                 error.response?.data?.message ||
-                  "Failed to update discount codes information. Please try again."
+                "Failed to update discount codes information. Please try again."
               );
 
               // Reset loading state in case of error

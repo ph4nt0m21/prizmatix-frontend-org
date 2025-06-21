@@ -16,8 +16,8 @@ import styles from './basicInfoStep.module.scss';
  */
 const BasicInfoStep = ({ eventData, handleInputChange, isValid, stepStatus }) => {
   // State for managing search tags
-  const [searchTags, setSearchTags] = useState(eventData.searchTags || []);
-  const [tagInput, setTagInput] = useState('');
+  // const [searchTags, setSearchTags] = useState(eventData.searchTags || []);
+  // const [tagInput, setTagInput] = useState('');
   
   // State for user data and modal
   const [userData, setUserData] = useState(null);
@@ -58,51 +58,51 @@ const BasicInfoStep = ({ eventData, handleInputChange, isValid, stepStatus }) =>
    * Handle category selection
    * @param {Object} e Event object
    */
-  const handleCategoryChange = (e) => {
-    handleInputChange(e.target.value, 'category');
-  };
+  // const handleCategoryChange = (e) => {
+  //   handleInputChange(e.target.value, 'category');
+  // };
 
   /**
    * Add a new search tag
    * @param {string} tag - Tag to add
    */
-  const addTag = (tag) => {
-    if (tag && !searchTags.includes(tag)) {
-      const newTags = [...searchTags, tag];
-      setSearchTags(newTags);
-      handleInputChange(newTags, 'searchTags');
-      setTagInput('');
-    }
-  };
+  // const addTag = (tag) => {
+  //   if (tag && !searchTags.includes(tag)) {
+  //     const newTags = [...searchTags, tag];
+  //     setSearchTags(newTags);
+  //     handleInputChange(newTags, 'searchTags');
+  //     setTagInput('');
+  //   }
+  // };
 
   /**
    * Remove a search tag
    * @param {string} tagToRemove - Tag to remove
    */
-  const removeTag = (tagToRemove) => {
-    const newTags = searchTags.filter(tag => tag !== tagToRemove);
-    setSearchTags(newTags);
-    handleInputChange(newTags, 'searchTags');
-  };
+  // const removeTag = (tagToRemove) => {
+  //   const newTags = searchTags.filter(tag => tag !== tagToRemove);
+  //   setSearchTags(newTags);
+  //   handleInputChange(newTags, 'searchTags');
+  // };
 
   /**
    * Handle tag input change
    * @param {Object} e Event object
    */
-  const handleTagInputChange = (e) => {
-    setTagInput(e.target.value);
-  };
+  // const handleTagInputChange = (e) => {
+  //   setTagInput(e.target.value);
+  // };
 
   /**
    * Handle tag input keydown events
    * @param {Object} e Event object
    */
-  const handleTagKeyDown = (e) => {
-    if (e.key === 'Enter' && tagInput.trim()) {
-      e.preventDefault();
-      addTag(tagInput.trim());
-    }
-  };
+  // const handleTagKeyDown = (e) => {
+  //   if (e.key === 'Enter' && tagInput.trim()) {
+  //     e.preventDefault();
+  //     addTag(tagInput.trim());
+  //   }
+  // };
   
   return (
     <div className={styles.stepContainer}>
@@ -194,7 +194,7 @@ const BasicInfoStep = ({ eventData, handleInputChange, isValid, stepStatus }) =>
           </div>
         </div>
 
-        <div className={styles.formGroup}>
+        {/* <div className={styles.formGroup}>
           <label htmlFor="category" className={styles.formLabel}>
             Category
           </label>
@@ -222,9 +222,9 @@ const BasicInfoStep = ({ eventData, handleInputChange, isValid, stepStatus }) =>
               </svg>
             </div>
           </div>
-        </div>
+        </div> */}
 
-        <div className={styles.formGroup}>
+        {/* <div className={styles.formGroup}>
           <label htmlFor="searchTags" className={styles.formLabel}>
             Search Tags
           </label>
@@ -254,7 +254,7 @@ const BasicInfoStep = ({ eventData, handleInputChange, isValid, stepStatus }) =>
               placeholder="Add Search keyword to your events"
             />
           </div>
-        </div>
+        </div> */}
         
         <div className={styles.formGroup}>
           <label className={styles.formLabel}>

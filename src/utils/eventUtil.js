@@ -235,14 +235,10 @@ export const prepareArtDataForAPI = (
   const userData = getUserData();
   const eventData = getEventData();
 
-  // Use provided eventId first, or fall back to stored eventId
   const eventDataId = eventId || eventData?.eventId || 0;
 
-  // The API expects a JSON object, not FormData
   return {
     id: parseInt(eventDataId, 10),
-    bannerImage:
-      artData && artData[`${imageType}Name`] ? artData[`${imageType}Name`] : "",
     updatedBy: userData?.id || eventData?.createdBy || 0,
   };
 };
@@ -260,13 +256,44 @@ export const prepareTicketsDataForAPI = (tickets, eventId = null) => {
   // Use provided eventId first, or fall back to stored eventId
   const eventDataId = eventId || eventData?.eventId || 0;
 
-  // CHANGED: Get the main event's date and time for fallback logic
+  // Get the main event's date and time for fallback logic
   const eventDateTime = eventData?.dateTime || {};
 
-  // CHANGED: Helper function to format date and time into an ISO-like string
+  // ✅ Create "frontend-generated" creation date and time in New Zealand time (UTC+12 or UTC+13 with DST)
+  const now = new Date();
+
+  const nzFormatterDate = new Intl.DateTimeFormat('en-NZ', {
+    timeZone: 'Pacific/Auckland',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  });
+
+  const nzFormatterTime = new Intl.DateTimeFormat('en-NZ', {
+    timeZone: 'Pacific/Auckland',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  });
+
+  // Safely extract parts from the formatted date
+  const dateParts = nzFormatterDate.formatToParts(now);
+  const year = dateParts.find(p => p.type === 'year')?.value;
+  const month = dateParts.find(p => p.type === 'month')?.value;
+  const day = dateParts.find(p => p.type === 'day')?.value;
+  const createdDate = `${year}-${month}-${day}`; // ✅ Correct: YYYY-MM-DD
+
+  // Safely extract parts from the formatted time
+  const timeParts = nzFormatterTime.formatToParts(now);
+  const hour = timeParts.find(p => p.type === 'hour')?.value;
+  const minute = timeParts.find(p => p.type === 'minute')?.value;
+  const createdTime = `${hour}:${minute}`; // ✅ HH:MM
+
+  // ✅ Helper to format to ISO 8601 UTC string
   const formatToISO = (date, time) => {
     if (!date || !time) return null;
-    return `${date}T${time.includes(':') ? time : time + ':00'}:00Z`;
+    const paddedTime = time.includes(':') ? time : `${time}:00`;
+    return `${date}T${paddedTime}:00.000Z`;
   };
 
   return {
@@ -274,27 +301,26 @@ export const prepareTicketsDataForAPI = (tickets, eventId = null) => {
     ticketStructures: tickets.map((ticket) => {
       const maxPurchase = parseInt(ticket.maxPurchaseAmount, 10);
 
-      // CHANGED: Determine the listing start and end times with fallback to event's date/time
+      // ✅ Use fallback: createdDate/Time in NZ time if sales date/time not given
       const listingStartTime =
         formatToISO(ticket.salesStartDate, ticket.salesStartTime) ||
-        formatToISO(eventDateTime.startDate, eventDateTime.startTime);
+        formatToISO(createdDate, createdTime);
 
       const listingEndTime =
         formatToISO(ticket.salesEndDate, ticket.salesEndTime) ||
-        formatToISO(eventDateTime.endDate, eventDateTime.endTime);
+        formatToISO(eventDateTime.startDate, eventDateTime.startTime);
 
       return {
-        id: ticket.id || null, // Use existing ID or null for new tickets
+        id: ticket.id || null, // Existing or new ticket
         name: ticket.name,
         price: parseFloat(ticket.price),
-        finalPrice: parseFloat(ticket.price), // Same as price unless there are fees
+        finalPrice: parseFloat(ticket.price),
         ticketCapacity:
           ticket.quantity === "No Limit" ? 0 : parseInt(ticket.quantity),
         maxPurchasePerOrder: !isNaN(maxPurchase) && maxPurchase > 0 ? maxPurchase : 0,
-        currency: "USD", // Default to USD, could be made configurable
+        currency: "NZD",
         limitedQuantity: ticket.quantity !== "No Limit",
-        description: ticket.description || "",
-        // CHANGED: Use the new variables which contain the fallback logic
+        description: ticket.description || "description",
         listingStartTime: listingStartTime,
         listingEndTime: listingEndTime,
         toBeDeleted: false,

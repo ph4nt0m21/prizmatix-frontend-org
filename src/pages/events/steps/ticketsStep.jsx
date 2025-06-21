@@ -186,16 +186,16 @@ const handleDuplicateTicket = (index) => {
                         <path d="M7 2a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 5a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 8a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm-3 3a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm-3 3a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
                     </svg>
                 </div>
-                <div className={styles.ticketName}><input name="name" type="text" className={styles.ticketInput} placeholder="eg. General Admission" value={ticket.name || ''} onChange={(e) => handleTicketRowChange(e, index)}/></div>
-                <div className={styles.ticketCount}><input name="quantity" type="number" className={styles.ticketInput} placeholder="100" value={ticket.quantity === 'No Limit' ? '' : ticket.quantity || ''} onChange={(e) => handleTicketRowChange(e, index)}/></div>
-                <div className={styles.ticketPrice}><input name="price" type="number" step="0.01" className={styles.ticketInput} placeholder="10.00" value={ticket.price || ''} onChange={(e) => handleTicketRowChange(e, index)}/></div>
+                <div className={styles.ticketName}><input name="name" type="text" className={styles.ticketInput} placeholder="0" value={ticket.name || ''} onChange={(e) => handleTicketRowChange(e, index)}/></div>
+                <div className={styles.ticketCount}><input name="quantity" type="number" className={styles.ticketInput} placeholder="0" value={ticket.quantity === 'No Limit' ? '' : ticket.quantity || ''} onChange={(e) => handleTicketRowChange(e, index)}/></div>
+                <div className={styles.ticketPrice}><input name="price" type="number" step="0.01" className={styles.ticketInput} placeholder="0" value={ticket.price || ''} onChange={(e) => handleTicketRowChange(e, index)}/></div>
                 {/* ADDED: Input field for max purchase amount */}
                 <div className={styles.ticketCount}>
                   <input
                     name="maxPurchaseAmount"
                     type="text"
                     className={styles.ticketInput}
-                    placeholder="No Limit"
+                    placeholder="0"
                     value={ticket.maxPurchaseAmount || ''}
                     onChange={(e) => handleTicketRowChange(e, index)}
                   />
