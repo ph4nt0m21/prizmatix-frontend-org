@@ -128,34 +128,46 @@ const LocationStep = ({
    * and updates the state.
    * @param {string} url - The Google Maps URL
    */
-  const extractCoordsFromUrl = (url) => {
-    setIsLoadingMap(true);
-    try {
-      const matches = url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
-      if (!matches || matches.length < 3) {
-        alert('Could not find coordinates in the provided link. Please use a valid Google Maps link (e.g., one containing "@lat,lng").');
-        return;
-      }
-  
-      const lat = parseFloat(matches[1]);
-      const lng = parseFloat(matches[2]);
-  
-      // Update state with ONLY the link and the new coordinates
-      setLocation(prevLocation => ({
-        ...prevLocation,
-        latitude: lat,
-        longitude: lng,
-        googleMapLink: url,
-      }));
-      
-    } catch (error) {
-      console.error('Error parsing URL:', error);
-      alert('An unexpected error occurred while parsing the URL.');
-    } finally {
-        // Use a short timeout to give React time to re-render the map
-        setTimeout(() => setIsLoadingMap(false), 500);
+const extractCoordsFromUrl = (url) => {
+  setIsLoadingMap(true);
+  try {
+    let lat, lng;
+
+    // Pattern 1: @lat,lng
+    let match = url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+    if (match && match.length >= 3) {
+      lat = parseFloat(match[1]);
+      lng = parseFloat(match[2]);
     }
-  };
+
+    // Pattern 2: !3d<lat>!4d<lng> (fallback)
+    if (!lat || !lng) {
+      match = url.match(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/);
+      if (match && match.length >= 3) {
+        lat = parseFloat(match[1]);
+        lng = parseFloat(match[2]);
+      }
+    }
+
+    if (!lat || !lng) {
+      alert('Could not find coordinates in the provided link. Please use a valid Google Maps URL.');
+      return;
+    }
+
+    // Update state
+    setLocation(prevLocation => ({
+      ...prevLocation,
+      latitude: lat,
+      longitude: lng,
+      googleMapLink: url,
+    }));
+  } catch (error) {
+    console.error('Error parsing URL:', error);
+    alert('An unexpected error occurred while parsing the URL.');
+  } finally {
+    setTimeout(() => setIsLoadingMap(false), 500);
+  }
+};
 
   /**
    * Handle Google Maps link pasting

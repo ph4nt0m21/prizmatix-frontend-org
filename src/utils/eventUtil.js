@@ -127,8 +127,8 @@ export const prepareLocationDataForAPI = (locationData) => {
     streetNo: locationData.streetNumber || "",
     street: locationData.street || "",
     city: locationData.city || "",
-    state: "string", // State is now always passed as null
-    country: "New Zealand", // Country is now hardcoded
+    state: locationData.state || "", // State is now always passed as null
+    country: locationData.country || "", // Country is now hardcoded
     postalCode: locationData.postalCode || "",
     googleMapLink: locationData.googleMapLink || "",
     onlineEventUrl: "", // Not used in current implementation
@@ -259,59 +259,31 @@ export const prepareTicketsDataForAPI = (tickets, eventId = null) => {
   // Get the main event's date and time for fallback logic
   const eventDateTime = eventData?.dateTime || {};
 
-  // ✅ Create "frontend-generated" creation date and time in New Zealand time (UTC+12 or UTC+13 with DST)
-  const now = new Date();
-
-  const nzFormatterDate = new Intl.DateTimeFormat('en-NZ', {
-    timeZone: 'Pacific/Auckland',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  });
-
-  const nzFormatterTime = new Intl.DateTimeFormat('en-NZ', {
-    timeZone: 'Pacific/Auckland',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  });
-
-  // Safely extract parts from the formatted date
-  const dateParts = nzFormatterDate.formatToParts(now);
-  const year = dateParts.find(p => p.type === 'year')?.value;
-  const month = dateParts.find(p => p.type === 'month')?.value;
-  const day = dateParts.find(p => p.type === 'day')?.value;
-  const createdDate = `${year}-${month}-${day}`; // ✅ Correct: YYYY-MM-DD
-
-  // Safely extract parts from the formatted time
-  const timeParts = nzFormatterTime.formatToParts(now);
-  const hour = timeParts.find(p => p.type === 'hour')?.value;
-  const minute = timeParts.find(p => p.type === 'minute')?.value;
-  const createdTime = `${hour}:${minute}`; // ✅ HH:MM
-
-  // ✅ Helper to format to ISO 8601 UTC string
+  // ✅ Helper to format provided date & time into ISO string
   const formatToISO = (date, time) => {
     if (!date || !time) return null;
     const paddedTime = time.includes(':') ? time : `${time}:00`;
     return `${date}T${paddedTime}:00.000Z`;
   };
 
+  // ✅ Fallback to 12 hours ago from now (current system time)
+  const fallbackListingStartTime = new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString();
+
   return {
     id: parseInt(eventDataId, 10),
     ticketStructures: tickets.map((ticket) => {
       const maxPurchase = parseInt(ticket.maxPurchaseAmount, 10);
 
-      // ✅ Use fallback: createdDate/Time in NZ time if sales date/time not given
       const listingStartTime =
         formatToISO(ticket.salesStartDate, ticket.salesStartTime) ||
-        formatToISO(createdDate, createdTime);
+        fallbackListingStartTime;
 
       const listingEndTime =
         formatToISO(ticket.salesEndDate, ticket.salesEndTime) ||
         formatToISO(eventDateTime.startDate, eventDateTime.startTime);
 
       return {
-        id: ticket.id || null, // Existing or new ticket
+        id: ticket.id || null,
         name: ticket.name,
         price: parseFloat(ticket.price),
         finalPrice: parseFloat(ticket.price),
