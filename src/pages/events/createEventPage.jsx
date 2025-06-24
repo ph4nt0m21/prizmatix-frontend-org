@@ -720,57 +720,52 @@ const CreateEventPage = () => {
     return !hasThumbnailError && !hasBannerError;
   };
 
-  /**
-   * Validate the Tickets step
-   * @returns {boolean} Is the Tickets step valid
-   */
-  const validateTickets = () => {
-    // Check if there is at least one ticket
-    if (!eventData.tickets || eventData.tickets.length === 0) {
-      return false;
+/**
+ * Validates the data in the Tickets step.
+ * This function is designed to be used in the parent CreateEventPage.
+ * @returns {boolean} - True if the tickets data is valid, false otherwise.
+ */
+const validateTickets = () => {
+  // Rule 1: Check if there is at least one ticket.
+  if (!eventData.tickets || eventData.tickets.length === 0) {
+    console.error("Validation Failed: No tickets have been added.");
+    return false;
+  }
+
+  // Rule 2: Check if every ticket has all its required fields filled correctly.
+  const invalidTickets = eventData.tickets.filter((ticket) => {
+    // Validate Ticket Name: Must not be empty.
+    if (!ticket.name || ticket.name.trim() === "") {
+      return true; // Invalid: Name is missing.
     }
 
-    // Check if all tickets have required fields
-    const invalidTickets = eventData.tickets.filter((ticket) => {
-      // Basic required fields validation
-      if (!ticket.name || ticket.name.trim() === "") {
-        return true; // Invalid
-      }
+    // Validate Price: Must be a number equal to or greater than 0.
+    if (ticket.price === null || ticket.price === '' || isNaN(ticket.price) || parseFloat(ticket.price) < 0) {
+      return true; // Invalid: Price is missing or invalid.
+    }
 
-      // Price validation
-      if (!ticket.price) {
-        return true; // Invalid
-      }
+    // Validate Quantity: Must be a whole number greater than 0.
+    if (ticket.quantity === null || ticket.quantity === '' || isNaN(ticket.quantity) || !Number.isInteger(Number(ticket.quantity)) || parseInt(ticket.quantity, 10) <= 0) {
+        return true; // Invalid: Quantity is missing or invalid.
+    }
+    
+    // Validate Max Purchase Amount (Optional): If a value is entered, it must be a whole number greater than 0.
+    if (ticket.maxPurchaseAmount && (isNaN(ticket.maxPurchaseAmount) || !Number.isInteger(Number(ticket.maxPurchaseAmount)) || parseInt(ticket.maxPurchaseAmount, 10) <= 0)) {
+        return true; // Invalid: Max purchase amount is present but invalid.
+    }
 
-      // Price must be a valid positive number
-      if (isNaN(ticket.price) || parseFloat(ticket.price) < 0) {
-        return true; // Invalid
-      }
+    // If all checks pass for this ticket, it's valid.
+    return false;
+  });
 
-      // Quantity validation - if not "No Limit", must be a positive number
-      if (ticket.quantity !== "No Limit") {
-        if (
-          !ticket.quantity ||
-          isNaN(ticket.quantity) ||
-          parseInt(ticket.quantity) <= 0
-        ) {
-          return true; // Invalid
-        }
-      }
-
-      // If purchase limit is enabled, it must have a value
-      if (
-        ticket.enableMaxPurchase &&
-        (!ticket.purchaseLimit || parseInt(ticket.purchaseLimit) <= 0)
-      ) {
-        return true; // Invalid
-      }
-
-      return false; // Valid ticket
-    });
-
-    return invalidTickets.length === 0;
-  };
+  // If the invalidTickets array is empty, it means all tickets are valid.
+  const isValid = invalidTickets.length === 0;
+  if (!isValid) {
+      console.error("Validation Failed: One or more tickets have invalid data.");
+  }
+  
+  return isValid;
+};
 
   /**
    * Validate the Discount Codes step
@@ -1160,65 +1155,65 @@ const CreateEventPage = () => {
           }
 
           // Handle art step submission
-else if (currentStep === 5) {
-  try {
-    const hasThumbnail = !!eventData.art?.thumbnailFile;
-    const hasBanner = !!eventData.art?.bannerFile;
+          else if (currentStep === 5) {
+            try {
+              const hasThumbnail = !!eventData.art?.thumbnailFile;
+              const hasBanner = !!eventData.art?.bannerFile;
 
-    console.log("Art data to be uploaded:", {
-      hasThumbnail,
-      hasBanner,
-      thumbnailName: eventData.art?.thumbnailName,
-      bannerName: eventData.art?.bannerName,
-    });
+              console.log("Art data to be uploaded:", {
+                hasThumbnail,
+                hasBanner,
+                thumbnailName: eventData.art?.thumbnailName,
+                bannerName: eventData.art?.bannerName,
+              });
 
-    if (hasThumbnail || hasBanner) {
-      // ✅ Extract metadata only (id, updatedBy)
-      const metadata = prepareArtDataForAPI(eventData.art, eventId, "banner");
+              if (hasThumbnail || hasBanner) {
+                // ✅ Extract metadata only (id, updatedBy)
+                const metadata = prepareArtDataForAPI(eventData.art, eventId, "banner");
 
-      // ✅ Create FormData manually
-      const formData = new FormData();
-      formData.append("id", metadata.id);
-      formData.append("updatedBy", metadata.updatedBy);
+                // ✅ Create FormData manually
+                const formData = new FormData();
+                formData.append("id", metadata.id);
+                formData.append("updatedBy", metadata.updatedBy);
 
-      if (hasBanner) {
-        formData.append("bannerFile", eventData.art.bannerFile);
-      }
-      if (hasThumbnail) {
-        formData.append("thumbnailFile", eventData.art.thumbnailFile);
-      }
+                if (hasBanner) {
+                  formData.append("bannerFile", eventData.art.bannerFile);
+                }
+                if (hasThumbnail) {
+                  formData.append("thumbnailFile", eventData.art.thumbnailFile);
+                }
 
-      // ✅ Log for debugging
-      for (let [key, val] of formData.entries()) {
-        console.log(`${key}:`, val instanceof File ? val.name : val);
-      }
+                // ✅ Log for debugging
+                for (let [key, val] of formData.entries()) {
+                  console.log(`${key}:`, val instanceof File ? val.name : val);
+                }
 
-      // ✅ Single API call for both files
-      const response = await UploadEventBannerAPI(eventId, formData);
-      console.log("Art upload successful:", response);
+                // ✅ Single API call for both files
+                const response = await UploadEventBannerAPI(eventId, formData);
+                console.log("Art upload successful:", response);
 
-      // ✅ Save updated art info locally
-      const currentEventData = getEventData();
-      saveEventData({
-        ...currentEventData,
-        art: {
-          ...currentEventData.art,
-          ...eventData.art,
-        },
-      });
-    } else {
-      console.log("No art files to upload, skipping API call");
-    }
-  } catch (error) {
-    console.error("Error updating art information:", error);
-    setError(
-      error.response?.data?.message ||
-        "Failed to update image information. Please try again."
-    );
-    setIsLoading((prev) => ({ ...prev, saveEvent: false }));
-    return;
-  }
-}
+                // ✅ Save updated art info locally
+                const currentEventData = getEventData();
+                saveEventData({
+                  ...currentEventData,
+                  art: {
+                    ...currentEventData.art,
+                    ...eventData.art,
+                  },
+                });
+              } else {
+                console.log("No art files to upload, skipping API call");
+              }
+            } catch (error) {
+              console.error("Error updating art information:", error);
+              setError(
+                error.response?.data?.message ||
+                "Failed to update image information. Please try again."
+              );
+              setIsLoading((prev) => ({ ...prev, saveEvent: false }));
+              return;
+            }
+          }
 
           // Handle tickets step submission
           else if (currentStep === 6) {

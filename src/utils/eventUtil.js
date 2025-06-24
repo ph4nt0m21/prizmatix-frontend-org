@@ -288,11 +288,11 @@ export const prepareTicketsDataForAPI = (tickets, eventId = null) => {
         price: parseFloat(ticket.price),
         finalPrice: parseFloat(ticket.price),
         ticketCapacity:
-          ticket.quantity === "No Limit" ? 0 : parseInt(ticket.quantity),
+        ticket.quantity === "No Limit" ? 0 : parseInt(ticket.quantity),
         maxPurchasePerOrder: !isNaN(maxPurchase) && maxPurchase > 0 ? maxPurchase : 0,
         currency: "NZD",
         limitedQuantity: ticket.quantity !== "No Limit",
-        description: ticket.description || "description",
+        description: ticket.description || null,
         listingStartTime: listingStartTime,
         listingEndTime: listingEndTime,
         toBeDeleted: false,

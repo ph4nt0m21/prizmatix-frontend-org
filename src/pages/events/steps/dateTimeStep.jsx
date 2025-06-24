@@ -141,9 +141,9 @@ const DateTimeStep = ({
                 showPopperArrow={false}
                 minDate={new Date()} // ✅ disallow past dates
               />
-              {stepStatus.visited && !startDate && (
+              {/* {stepStatus.visited && !startDate && (
                 <div className={styles.fieldError}>Start date is required</div>
-              )}
+              )} */}
             </div>
 
             {/* Start Time Picker */}
@@ -160,9 +160,9 @@ const DateTimeStep = ({
                 timeCaption="Time"
                 timeFormat="HH:mm" // FIXED: Add this prop to show 24-hour format in the list
               />
-              {stepStatus.visited && !startDate && (
+              {/* {stepStatus.visited && !startDate && (
                 <div className={styles.fieldError}>Start time is required</div>
-              )}
+              )} */}
             </div>
           </div>
         </div>
@@ -187,9 +187,9 @@ const DateTimeStep = ({
                 minDate={startDate || new Date()} // ✅ Prevent before start date
                 disabled={!startDate} // ✅ Disable until start date exists
               />
-              {stepStatus.visited && !endDate && (
+              {/* {stepStatus.visited && !endDate && (
                 <div className={styles.fieldError}>End date is required</div>
-              )}
+              )} */}
             </div>
 
             {/* End Time Picker */}
@@ -207,9 +207,9 @@ const DateTimeStep = ({
                 timeFormat="HH:mm"
                 disabled={!startDate} // ✅ Disable until start selected
               />
-              {stepStatus.visited && !endDate && (
+              {/* {stepStatus.visited && !endDate && (
                 <div className={styles.fieldError}>End time is required</div>
-              )}
+              )} */}
             </div>
           </div>
         </div>

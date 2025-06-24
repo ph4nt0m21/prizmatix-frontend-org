@@ -134,9 +134,9 @@ const BasicInfoStep = ({ eventData, handleInputChange, isValid, stepStatus }) =>
             value={eventData.name}
             onChange={handleInputChange}
           />
-          {!eventData.name && stepStatus.visited && (
+          {/* {!eventData.name && stepStatus.visited && (
             <div className={styles.fieldError}>Event name is required</div>
-          )}
+          )} */}
         </div>
         
         <div className={styles.formGroup}>

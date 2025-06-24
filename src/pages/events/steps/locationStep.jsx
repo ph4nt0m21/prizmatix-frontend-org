@@ -391,15 +391,15 @@ const extractCoordsFromUrl = (url) => {
                   value={location.venue}
                   onChange={handleFieldChange}
                 />
-                <div className={styles.dropdownArrow}>
+                {/* <div className={styles.dropdownArrow}>
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M7 10L12 15L17 10H7Z" fill="#666666"/>
                   </svg>
-                </div>
+                </div> */}
               </div>
-              {stepStatus.visited && !location.venue && (
+              {/* {stepStatus.visited && !location.venue && (
                 <div className={styles.fieldError}>Venue is required</div>
-              )}
+              )} */}
             </div>
             
             {/* Street & Street No */}
@@ -418,15 +418,15 @@ const extractCoordsFromUrl = (url) => {
                     value={location.street}
                     onChange={handleFieldChange}
                   />
-                  <div className={styles.dropdownArrow}>
+                  {/* <div className={styles.dropdownArrow}>
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <path d="M7 10L12 15L17 10H7Z" fill="#666666"/>
                     </svg>
-                  </div>
+                  </div> */}
                 </div>
-                {stepStatus.visited && !location.street && (
+                {/* {stepStatus.visited && !location.street && (
                   <div className={styles.fieldError}>Street is required</div>
-                )}
+                )} */}
               </div>
               <div className={styles.formGroup}>
                 <label htmlFor="streetNumber" className={styles.formLabel}>
@@ -442,11 +442,11 @@ const extractCoordsFromUrl = (url) => {
                     value={location.streetNumber}
                     onChange={handleFieldChange}
                   />
-                  <div className={styles.dropdownArrow}>
+                  {/* <div className={styles.dropdownArrow}>
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <path d="M7 10L12 15L17 10H7Z" fill="#666666"/>
                     </svg>
-                  </div>
+                  </div> */}
                 </div>
               </div>
             </div>
@@ -467,15 +467,15 @@ const extractCoordsFromUrl = (url) => {
                     value={location.city}
                     onChange={handleFieldChange}
                   />
-                  <div className={styles.dropdownArrow}>
+                  {/* <div className={styles.dropdownArrow}>
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <path d="M7 10L12 15L17 10H7Z" fill="#666666"/>
                     </svg>
-                  </div>
+                  </div> */}
                 </div>
-                {stepStatus.visited && !location.city && (
+                {/* {stepStatus.visited && !location.city && (
                   <div className={styles.fieldError}>City is required</div>
-                )}
+                )} */}
               </div>
               <div className={styles.formGroup}>
                 <label htmlFor="postalCode" className={styles.formLabel}>
@@ -491,11 +491,11 @@ const extractCoordsFromUrl = (url) => {
                     value={location.postalCode}
                     onChange={handleFieldChange}
                   />
-                  <div className={styles.dropdownArrow}>
+                  {/* <div className={styles.dropdownArrow}>
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <path d="M7 10L12 15L17 10H7Z" fill="#666666"/>
                     </svg>
-                  </div>
+                  </div> */}
                 </div>
               </div>
             </div>
@@ -516,15 +516,15 @@ const extractCoordsFromUrl = (url) => {
                     value={location.state}
                     onChange={handleFieldChange}
                   />
-                  <div className={styles.dropdownArrow}>
+                  {/* <div className={styles.dropdownArrow}>
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M7 10L12 15L17 10H7Z" fill="#666666"/>
                     </svg>
-                  </div>
+                  </div> */}
                 </div>
-                {stepStatus.visited && !location.state && (
+                {/* {stepStatus.visited && !location.state && (
                   <div className={styles.fieldError}>State/Province is required</div>
-                )}
+                )} */}
               </div>
               <div className={styles.formGroup}>
                 <label htmlFor="country" className={styles.formLabel}>
@@ -540,11 +540,11 @@ const extractCoordsFromUrl = (url) => {
                     value={location.country}
                     onChange={handleFieldChange}
                   />
-                  <div className={styles.dropdownArrow}>
+                  {/* <div className={styles.dropdownArrow}>
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <path d="M7 10L12 15L17 10H7Z" fill="#666666"/>
                     </svg>
-                  </div>
+                  </div> */}
                 </div>
               </div>
             </div>
