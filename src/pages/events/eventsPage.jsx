@@ -19,7 +19,7 @@ const EventsPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   
   // MODIFIED: Filter options for the new sidebar
-  const filterOptions = ['All Events', 'Live Events', 'Drafts', 'Paused', 'Archive'];
+  const filterOptions = ['All Events', 'Live Events', 'Drafts'];
   const userId = Cookies.get('userId');
   
   useEffect(() => {

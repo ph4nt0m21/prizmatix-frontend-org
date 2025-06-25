@@ -256,16 +256,16 @@ const BasicInfoStep = ({ eventData, handleInputChange, isValid, stepStatus }) =>
           </div>
         </div> */}
         
-        <div className={styles.formGroup}>
+        {/* <div className={styles.formGroup}>
           <label className={styles.formLabel}>
             Host Profile
           </label>
           <p className={styles.formDescription}>
             Information about the event organizer that will be shown to attendees
-          </p>
+          </p> */}
           
-          <div className={styles.hostProfileSection}>
-            <div className={styles.checkboxContainer}>
+          {/* <div className={styles.hostProfileSection}> */}
+            {/* <div className={styles.checkboxContainer}>
               <input
                 type="checkbox"
                 id="showHostProfile"
@@ -277,10 +277,10 @@ const BasicInfoStep = ({ eventData, handleInputChange, isValid, stepStatus }) =>
               <label htmlFor="showHostProfile" className={styles.checkboxLabel}>
                 Display host information on the ticket page
               </label>
-            </div>
+            </div> */}
             
             {/* Only show the host info card when showHostProfile is true */}
-            {eventData.showHostProfile && (
+            {/* {eventData.showHostProfile && (
               <div 
                 className={styles.hostInfoCard}
                 onClick={toggleModal}
@@ -292,7 +292,7 @@ const BasicInfoStep = ({ eventData, handleInputChange, isValid, stepStatus }) =>
                   <img src="/icons/organizer-logo.svg" alt="Organizer Logo" />
                 </div>
                 <div className={styles.hostDetails}>
-                  <h4 className={styles.hostName}>{userData?.organizationName || 'City Music Festival Ltd.'}</h4>
+                  <h4 className={styles.hostName}>{userData?.organizationName}</h4>
                   <p className={styles.hostStats}>Events Conducted</p>
                 </div>
                 <button 
@@ -307,10 +307,10 @@ const BasicInfoStep = ({ eventData, handleInputChange, isValid, stepStatus }) =>
                   </svg>
                 </button>
               </div>
-            )}
+            )} */}
 
             {/* User Info Modal */}
-            {showModal && (
+            {/* {showModal && (
               <div className={styles.modalOverlay}>
                 <div className={styles.modal}>
                   <div className={styles.modalHeader}>
@@ -346,9 +346,9 @@ const BasicInfoStep = ({ eventData, handleInputChange, isValid, stepStatus }) =>
                   </div>
                 </div>
               </div>
-            )}
-          </div>
-        </div>
+            )} */}
+          {/* </div> */}
+        {/* </div> */}
       </div>
     </div>
   );
