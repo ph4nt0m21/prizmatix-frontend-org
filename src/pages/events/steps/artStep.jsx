@@ -30,8 +30,8 @@ const ArtStep = ({
   });
 
   const [previews, setPreviews] = useState({
-    thumbnail: artData.thumbnailUrl || null,
-    banner: artData.bannerUrl || null
+    thumbnail: null,
+    banner: null
   });
 
   const [dragActive, setDragActive] = useState({
@@ -59,11 +59,32 @@ const ArtStep = ({
   };
 
   useEffect(() => {
+    // Get the file objects from the parent component's data
+    const thumbnailFile = artData.thumbnailFile;
+    const bannerFile = artData.bannerFile;
+
+    // Create new blob URLs only if the files exist
+    const newThumbnailUrl = thumbnailFile ? URL.createObjectURL(thumbnailFile) : null;
+    const newBannerUrl = bannerFile ? URL.createObjectURL(bannerFile) : null;
+
+    // Update the local preview state
+    setPreviews({
+      thumbnail: newThumbnailUrl,
+      banner: newBannerUrl
+    });
+        // IMPORTANT: Return a cleanup function
+    // This runs when the component unmounts or when the files change,
+    // preventing memory leaks by revoking the old URLs.
     return () => {
-      if (previews.thumbnail) releaseFilePreviewUrl(previews.thumbnail);
-      if (previews.banner) releaseFilePreviewUrl(previews.banner);
+      if (newThumbnailUrl) {
+        URL.revokeObjectURL(newThumbnailUrl);
+      }
+      if (newBannerUrl) {
+        URL.revokeObjectURL(newBannerUrl);
+      }
     };
-  }, []);
+    // This effect's dependency array ensures it re-runs if the file objects change
+  }, [artData.thumbnailFile, artData.bannerFile]);
 
   const releaseFilePreviewUrl = (url) => {
     if (url && url.startsWith('blob:')) {

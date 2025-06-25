@@ -34,7 +34,8 @@ const TicketDetailsModal = ({
   ticket = {},
   isOpen = false,
   onClose = () => {},
-  onSave = () => {}
+  onSave = () => {},
+  allTickets = []
 }) => {
   const [activePanel, setActivePanel] = useState('basic');
   const [saleDateType, setSaleDateType] = useState('custom');
@@ -305,7 +306,7 @@ const TicketDetailsModal = ({
                       className={`${styles.saleTypeBtn} ${saleDateType === 'beforeAfter' ? styles.active : ''}`}
                       onClick={() => setSaleDateType('beforeAfter')}
                     >
-                      Relative to other tickets
+                      After
                     </button>
                   </div>
                   
@@ -345,12 +346,23 @@ const TicketDetailsModal = ({
                       <p className={`${styles.formHelper} ${styles.salesAfter}`}>
                         Start sales for this ticket once the selected ticket is sold out.
                       </p>
-                      <input
-                        type="text"
-                        id="saleAfterTicket" name="saleAfterTicket"
-                        className={styles.formInput} placeholder="Select ticket type"
-                        value={localTicket.saleAfterTicket || ''} onChange={handleInputChange}
-                      />
+                      <select
+                        id="saleAfterTicket"
+                        name="saleAfterTicket"
+                        className={styles.formSelect} // Use formSelect for dropdown styling
+                        value={localTicket.saleAfterTicket || ''}
+                        onChange={handleInputChange}
+                      >
+                        <option value="" disabled>Select a ticket to start after...</option>
+                        {/* Filter out the current ticket from the options */}
+                        {allTickets
+                          .filter(t => t.name !== ticket.name)
+                          .map((t, index) => (
+                            <option key={index} value={t.name}>
+                              {t.name}
+                            </option>
+                        ))}
+                      </select>
                     </div>
                   )}
                 </div>
