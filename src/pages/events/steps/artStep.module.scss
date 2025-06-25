@@ -251,6 +251,8 @@
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 70%;
+    flex-shrink: 1;
+  min-width: 0;
 }
 
 .fileSize {
@@ -331,5 +333,87 @@
   &:disabled {
     opacity: 0.6;
     cursor: not-allowed;
+  }
+}
+
+// --- [NEW] Styles for the Cropping Modal ---
+
+.cropModalBackdrop {
+  position: fixed;
+  z-index: 1050; // High z-index to ensure it's on top
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 1rem;
+}
+
+.cropModalContent {
+  background-color: #fff;
+  padding: 2rem;
+  border-radius: 8px;
+  width: 100%;
+  max-width: 700px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+
+  h2 {
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+    text-align: center;
+    font-size: 22px;
+    font-weight: 600;
+    color: #333;
+  }
+}
+
+.cropContainer {
+  margin-bottom: 1.5rem;
+  display: flex;
+  justify-content: center;
+
+  // This targets the image inside the react-crop component
+  img {
+    max-height: 70vh;
+  }
+}
+
+.cropModalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+// Re-use button styles for consistency
+.cancelButton, .doneButton {
+  padding: 8px 24px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+}
+
+.cancelButton {
+  background: #f3f4f6; // A light gray
+  border: 1px solid #e5e7eb;
+  color: #6b7280;
+
+  &:hover {
+    background-color: #e5e7eb;
+  }
+}
+
+.doneButton {
+  background: #7C3AED;
+  color: white;
+
+  &:hover {
+    background-color: #6D28D9; // Darker shade from your nextButton
   }
 }

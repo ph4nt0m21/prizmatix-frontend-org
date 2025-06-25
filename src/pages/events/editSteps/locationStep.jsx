@@ -70,15 +70,6 @@ const LocationStep = ({
     }
   }, []);
 
-  // Add this useEffect hook to synchronize with incoming props
-  useEffect(() => {
-    // When the eventData.location prop changes (e.g., after the API call),
-    // update the component's internal state to match.
-    if (eventData.location) {
-      setLocation(eventData.location);
-    }
-  }, [eventData.location]); // The dependency array ensures this runs whenever eventData.location changes
-
   /**
    * Initialize the Google Map, defaulting to Auckland, New Zealand
    */

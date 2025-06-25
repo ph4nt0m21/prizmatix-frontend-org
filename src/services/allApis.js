@@ -99,8 +99,8 @@ export const UpdateEventDescriptionAPI = async (eventId, descriptionData) => {
 };
 
 // Step 5: Upload event banner image
-export const UploadEventBannerAPI = async (eventId, bannerData) => {
-  return await apiClient.put(`/api/events/${eventId}/banner-image`, bannerData);
+export const UploadEventBannerAPI = async (eventId, formData) => {
+  return await apiClient.put(`/api/events/${eventId}/banner-image`, formData);
 };
 
 // Step 6: Update event tickets

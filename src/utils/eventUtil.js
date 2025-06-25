@@ -127,8 +127,8 @@ export const prepareLocationDataForAPI = (locationData) => {
     streetNo: locationData.streetNumber || "",
     street: locationData.street || "",
     city: locationData.city || "",
-    state: "string", // State is now always passed as null
-    country: "New Zealand", // Country is now hardcoded
+    state: locationData.state || "", // State is now always passed as null
+    country: locationData.country || "", // Country is now hardcoded
     postalCode: locationData.postalCode || "",
     googleMapLink: locationData.googleMapLink || "",
     onlineEventUrl: "", // Not used in current implementation
@@ -235,14 +235,10 @@ export const prepareArtDataForAPI = (
   const userData = getUserData();
   const eventData = getEventData();
 
-  // Use provided eventId first, or fall back to stored eventId
   const eventDataId = eventId || eventData?.eventId || 0;
 
-  // The API expects a JSON object, not FormData
   return {
     id: parseInt(eventDataId, 10),
-    bannerImage:
-      artData && artData[`${imageType}Name`] ? artData[`${imageType}Name`] : "",
     updatedBy: userData?.id || eventData?.createdBy || 0,
   };
 };
@@ -260,41 +256,43 @@ export const prepareTicketsDataForAPI = (tickets, eventId = null) => {
   // Use provided eventId first, or fall back to stored eventId
   const eventDataId = eventId || eventData?.eventId || 0;
 
-  // CHANGED: Get the main event's date and time for fallback logic
+  // Get the main event's date and time for fallback logic
   const eventDateTime = eventData?.dateTime || {};
 
-  // CHANGED: Helper function to format date and time into an ISO-like string
+  // ✅ Helper to format provided date & time into ISO string
   const formatToISO = (date, time) => {
     if (!date || !time) return null;
-    return `${date}T${time.includes(':') ? time : time + ':00'}:00Z`;
+    const paddedTime = time.includes(':') ? time : `${time}:00`;
+    return `${date}T${paddedTime}:00.000Z`;
   };
+
+  // ✅ Fallback to 12 hours ago from now (current system time)
+  const fallbackListingStartTime = new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString();
 
   return {
     id: parseInt(eventDataId, 10),
     ticketStructures: tickets.map((ticket) => {
       const maxPurchase = parseInt(ticket.maxPurchaseAmount, 10);
 
-      // CHANGED: Determine the listing start and end times with fallback to event's date/time
       const listingStartTime =
         formatToISO(ticket.salesStartDate, ticket.salesStartTime) ||
-        formatToISO(eventDateTime.startDate, eventDateTime.startTime);
+        fallbackListingStartTime;
 
       const listingEndTime =
         formatToISO(ticket.salesEndDate, ticket.salesEndTime) ||
-        formatToISO(eventDateTime.endDate, eventDateTime.endTime);
+        formatToISO(eventDateTime.startDate, eventDateTime.startTime);
 
       return {
-        id: ticket.id || null, // Use existing ID or null for new tickets
+        id: ticket.id || null,
         name: ticket.name,
         price: parseFloat(ticket.price),
-        finalPrice: parseFloat(ticket.price), // Same as price unless there are fees
+        finalPrice: parseFloat(ticket.price),
         ticketCapacity:
-          ticket.quantity === "No Limit" ? 0 : parseInt(ticket.quantity),
+        ticket.quantity === "No Limit" ? 0 : parseInt(ticket.quantity),
         maxPurchasePerOrder: !isNaN(maxPurchase) && maxPurchase > 0 ? maxPurchase : 0,
-        currency: "USD", // Default to USD, could be made configurable
+        currency: "NZD",
         limitedQuantity: ticket.quantity !== "No Limit",
-        description: ticket.description || "",
-        // CHANGED: Use the new variables which contain the fallback logic
+        description: ticket.description || null,
         listingStartTime: listingStartTime,
         listingEndTime: listingEndTime,
         toBeDeleted: false,

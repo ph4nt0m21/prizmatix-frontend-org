@@ -71,8 +71,8 @@ const CreateEventPage = () => {
     showHostProfile: true,
     organizationId: null, // Will be set from user context
     createdBy: null, // Will be set from user context
-    category: "", // Category field
-    searchTags: [], // Search tags array
+    // category: "", // Category field
+    // searchTags: [], // Search tags array
 
     // Location (Step 2)
     location: {
@@ -523,8 +523,8 @@ const CreateEventPage = () => {
       field === "dateTime" ||
       field === "art" ||
       field === "tickets" ||
-      field === "discountCodes" ||
-      field === "searchTags"
+      field === "discountCodes"
+      // field === "searchTags"
     ) {
       setEventData((prevData) => ({
         ...prevData,
@@ -597,7 +597,8 @@ const CreateEventPage = () => {
    */
   const validateBasicInfo = () => {
     // Check if name is filled and category is selected
-    return eventData.name.trim() !== "" && eventData.category.trim() !== "";
+    return eventData.name.trim() !== "";
+    // && eventData.category.trim() !== ""
   };
 
   /**
@@ -719,57 +720,52 @@ const CreateEventPage = () => {
     return !hasThumbnailError && !hasBannerError;
   };
 
-  /**
-   * Validate the Tickets step
-   * @returns {boolean} Is the Tickets step valid
-   */
-  const validateTickets = () => {
-    // Check if there is at least one ticket
-    if (!eventData.tickets || eventData.tickets.length === 0) {
-      return false;
+/**
+ * Validates the data in the Tickets step.
+ * This function is designed to be used in the parent CreateEventPage.
+ * @returns {boolean} - True if the tickets data is valid, false otherwise.
+ */
+const validateTickets = () => {
+  // Rule 1: Check if there is at least one ticket.
+  if (!eventData.tickets || eventData.tickets.length === 0) {
+    console.error("Validation Failed: No tickets have been added.");
+    return false;
+  }
+
+  // Rule 2: Check if every ticket has all its required fields filled correctly.
+  const invalidTickets = eventData.tickets.filter((ticket) => {
+    // Validate Ticket Name: Must not be empty.
+    if (!ticket.name || ticket.name.trim() === "") {
+      return true; // Invalid: Name is missing.
     }
 
-    // Check if all tickets have required fields
-    const invalidTickets = eventData.tickets.filter((ticket) => {
-      // Basic required fields validation
-      if (!ticket.name || ticket.name.trim() === "") {
-        return true; // Invalid
-      }
+    // Validate Price: Must be a number equal to or greater than 0.
+    if (ticket.price === null || ticket.price === '' || isNaN(ticket.price) || parseFloat(ticket.price) < 0) {
+      return true; // Invalid: Price is missing or invalid.
+    }
 
-      // Price validation
-      if (!ticket.price) {
-        return true; // Invalid
-      }
+    // Validate Quantity: Must be a whole number greater than 0.
+    if (ticket.quantity === null || ticket.quantity === '' || isNaN(ticket.quantity) || !Number.isInteger(Number(ticket.quantity)) || parseInt(ticket.quantity, 10) <= 0) {
+        return true; // Invalid: Quantity is missing or invalid.
+    }
+    
+    // Validate Max Purchase Amount (Optional): If a value is entered, it must be a whole number greater than 0.
+    if (ticket.maxPurchaseAmount && (isNaN(ticket.maxPurchaseAmount) || !Number.isInteger(Number(ticket.maxPurchaseAmount)) || parseInt(ticket.maxPurchaseAmount, 10) <= 0)) {
+        return true; // Invalid: Max purchase amount is present but invalid.
+    }
 
-      // Price must be a valid positive number
-      if (isNaN(ticket.price) || parseFloat(ticket.price) < 0) {
-        return true; // Invalid
-      }
+    // If all checks pass for this ticket, it's valid.
+    return false;
+  });
 
-      // Quantity validation - if not "No Limit", must be a positive number
-      if (ticket.quantity !== "No Limit") {
-        if (
-          !ticket.quantity ||
-          isNaN(ticket.quantity) ||
-          parseInt(ticket.quantity) <= 0
-        ) {
-          return true; // Invalid
-        }
-      }
-
-      // If purchase limit is enabled, it must have a value
-      if (
-        ticket.enableMaxPurchase &&
-        (!ticket.purchaseLimit || parseInt(ticket.purchaseLimit) <= 0)
-      ) {
-        return true; // Invalid
-      }
-
-      return false; // Valid ticket
-    });
-
-    return invalidTickets.length === 0;
-  };
+  // If the invalidTickets array is empty, it means all tickets are valid.
+  const isValid = invalidTickets.length === 0;
+  if (!isValid) {
+      console.error("Validation Failed: One or more tickets have invalid data.");
+  }
+  
+  return isValid;
+};
 
   /**
    * Validate the Discount Codes step
@@ -839,19 +835,21 @@ const CreateEventPage = () => {
     // Check if all required event information is available
 
     // Basic Info validation
-    if (!eventData.name || !eventData.category) {
+    if (!eventData.name)
+    //  || !eventData.category 
+    {
       return false;
     }
 
     // Location validation - either TBA or has location details
     if (!eventData.location.isToBeAnnounced &&
-        (!eventData.location.venue || !eventData.location.city || !eventData.location.country)) {
+      (!eventData.location.venue || !eventData.location.city || !eventData.location.country)) {
       return false;
     }
 
     // Date/Time validation
     if (!eventData.dateTime.startDate || !eventData.dateTime.startTime ||
-        !eventData.dateTime.endDate || !eventData.dateTime.endTime) {
+      !eventData.dateTime.endDate || !eventData.dateTime.endTime) {
       return false;
     }
 
@@ -935,7 +933,7 @@ const CreateEventPage = () => {
       console.error("Error publishing event:", error);
       setError(
         error.response?.data?.message ||
-          "Failed to publish event. Please try again."
+        "Failed to publish event. Please try again."
       );
     } finally {
       setIsLoading((prev) => ({ ...prev, publishEvent: false }));
@@ -1064,7 +1062,7 @@ const CreateEventPage = () => {
               console.error("Error updating location:", error);
               setError(
                 error.response?.data?.message ||
-                  "Failed to update location. Please try again."
+                "Failed to update location. Please try again."
               );
 
               // Reset loading state in case of error
@@ -1105,7 +1103,7 @@ const CreateEventPage = () => {
               console.error("Error updating date/time:", error);
               setError(
                 error.response?.data?.message ||
-                  "Failed to update date/time information. Please try again."
+                "Failed to update date/time information. Please try again."
               );
 
               // Reset loading state in case of error
@@ -1147,7 +1145,7 @@ const CreateEventPage = () => {
               console.error("Error updating description:", error);
               setError(
                 error.response?.data?.message ||
-                  "Failed to update description. Please try again."
+                "Failed to update description. Please try again."
               );
 
               // Reset loading state in case of error
@@ -1159,9 +1157,8 @@ const CreateEventPage = () => {
           // Handle art step submission
           else if (currentStep === 5) {
             try {
-              // Check if there are any files selected
-              const hasThumbnail = eventData.art?.thumbnailFile !== null;
-              const hasBanner = eventData.art?.bannerFile !== null;
+              const hasThumbnail = !!eventData.art?.thumbnailFile;
+              const hasBanner = !!eventData.art?.bannerFile;
 
               console.log("Art data to be uploaded:", {
                 hasThumbnail,
@@ -1170,24 +1167,32 @@ const CreateEventPage = () => {
                 bannerName: eventData.art?.bannerName,
               });
 
-              // Prepare the JSON payload for the API
-              if (hasBanner) {
-                const bannerData = prepareArtDataForAPI(
-                  eventData.art,
-                  eventId,
-                  "banner"
-                );
+              if (hasThumbnail || hasBanner) {
+                // ✅ Extract metadata only (id, updatedBy)
+                const metadata = prepareArtDataForAPI(eventData.art, eventId, "banner");
 
-                console.log("Sending banner data:", bannerData);
+                // ✅ Create FormData manually
+                const formData = new FormData();
+                formData.append("id", metadata.id);
+                formData.append("updatedBy", metadata.updatedBy);
 
-                // Make API call to update banner info
-                const bannerResponse = await UploadEventBannerAPI(
-                  eventId,
-                  bannerData
-                );
-                console.log("Banner update successful:", bannerResponse);
+                if (hasBanner) {
+                  formData.append("bannerFile", eventData.art.bannerFile);
+                }
+                if (hasThumbnail) {
+                  formData.append("thumbnailFile", eventData.art.thumbnailFile);
+                }
 
-                // Update the saved event data with the new art info
+                // ✅ Log for debugging
+                for (let [key, val] of formData.entries()) {
+                  console.log(`${key}:`, val instanceof File ? val.name : val);
+                }
+
+                // ✅ Single API call for both files
+                const response = await UploadEventBannerAPI(eventId, formData);
+                console.log("Art upload successful:", response);
+
+                // ✅ Save updated art info locally
                 const currentEventData = getEventData();
                 saveEventData({
                   ...currentEventData,
@@ -1196,38 +1201,15 @@ const CreateEventPage = () => {
                     ...eventData.art,
                   },
                 });
-              }
-
-              // Handle thumbnail similarly if needed
-              if (hasThumbnail) {
-                const thumbnailData = prepareArtDataForAPI(
-                  eventData.art,
-                  eventId,
-                  "thumbnail"
-                );
-
-                console.log("Sending thumbnail data:", thumbnailData);
-
-                // Make API call to update thumbnail info
-                const thumbnailResponse = await UploadEventBannerAPI(
-                  eventId,
-                  thumbnailData
-                );
-                console.log("Thumbnail update successful:", thumbnailResponse);
-              }
-
-              // If no files to upload, still proceed
-              if (!hasThumbnail && !hasBanner) {
+              } else {
                 console.log("No art files to upload, skipping API call");
               }
             } catch (error) {
               console.error("Error updating art information:", error);
               setError(
                 error.response?.data?.message ||
-                  "Failed to update image information. Please try again."
+                "Failed to update image information. Please try again."
               );
-
-              // Reset loading state in case of error
               setIsLoading((prev) => ({ ...prev, saveEvent: false }));
               return;
             }
@@ -1261,7 +1243,7 @@ const CreateEventPage = () => {
               console.error("Error updating tickets:", error);
               setError(
                 error.response?.data?.message ||
-                  "Failed to update ticket information. Please try again."
+                "Failed to update ticket information. Please try again."
               );
 
               // Reset loading state in case of error
@@ -1310,7 +1292,7 @@ const CreateEventPage = () => {
               console.error("Error updating discount codes:", error);
               setError(
                 error.response?.data?.message ||
-                  "Failed to update discount codes information. Please try again."
+                "Failed to update discount codes information. Please try again."
               );
 
               // Reset loading state in case of error

@@ -465,6 +465,24 @@
   align-items: center;
 }
 
+// In ticketsStep.module.scss
+.inputWithPrefix {
+  position: relative;
+  display: flex;
+  align-items: center;
+
+  .prefix {
+    position: absolute;
+    left: 12px; // Adjust as needed
+    pointer-events: none;
+    color: #6b7280; // Or your preferred color
+  }
+
+  .ticketInput {
+    padding-left: 24px; // Make space for the prefix
+  }
+}
+
 .inputIcon {
   position: absolute;
   right: 16px;

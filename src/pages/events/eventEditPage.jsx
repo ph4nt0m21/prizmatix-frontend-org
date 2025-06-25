@@ -147,24 +147,47 @@ const EventEditPage = () => {
         const fetchedData = response.data;
 
         // --- DATA TRANSFORMATION ---
-        // Transform the nested API response to the flat structure our components expect.
+        // Transform the flat API response to the nested structure our components expect.
         const flatEventData = {
             id: fetchedData.id,
             name: fetchedData.name,
-            eventType: fetchedData.private ? 'private' : 'public',
+        
+            // Use `isPrivate` from API, not `private`.
+            eventType: fetchedData.isPrivate ? 'private' : 'public',
+        
+            // Note: 'category' is not present in the API response. This will default to empty.
             category: fetchedData.category || '',
-            searchTags: fetchedData.searchTags || [],
-            organizerName: fetchedData.organization?.name || 'Organizer',
-
+            
+            // Use `keywords` from API, not `searchTags`. Assuming keywords are comma-separated.
+            searchTags: fetchedData.keywords ? fetchedData.keywords.split(',').map(tag => tag.trim()) : [],
+            
+            // Use `organizationName` directly from API.
+            organizerName: fetchedData.organizationName || 'Organizer',
+        
+            // Critical: The API response is missing a `location` object with details like 'venue', 'street', etc.
+            // The `locationStep` will be empty until the API provides this data.
+            // This code gracefully handles the missing data for now.
             location: fetchedData.location || eventData.location,
-            dateTime: fetchedData.dateTime || eventData.dateTime,
-            description: fetchedData.description || '',
-
+        
+            // Create the `dateTime` object from top-level API fields.
+            dateTime: {
+                startDate: fetchedData.startDate || '',
+                startTime: fetchedData.startTime || '',
+                endDate: fetchedData.endDate || '',
+                endTime: fetchedData.endTime || '',
+            },
+        
+            description: fetchedData.description,
+        
+            // Create the `art` object.
+            // Note: `thumbnailUrl` is missing from the API response.
+            // `bannerImage` is a filename; it needs to be converted to a full URL.
             art: {
                 thumbnailFile: null,
-                thumbnailUrl: fetchedData.thumbnailUrl || null,
+                thumbnailUrl: fetchedData.thumbnailUrl || null, // Will be null
                 bannerFile: null,
-                bannerUrl: fetchedData.bannerUrl || null,
+                // IMPORTANT: Replace 'YOUR_IMAGE_BASE_URL' with your actual image server path.
+                bannerUrl: fetchedData.bannerImage ? `https://your-api-domain.com/images/${fetchedData.bannerImage}` : null,
             },
         };
         

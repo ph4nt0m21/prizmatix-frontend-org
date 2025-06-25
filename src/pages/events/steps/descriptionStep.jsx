@@ -181,9 +181,9 @@ const DescriptionStep = ({
           placeholder="Describe your event, including what attendees can expect, highlights, and any other important details..."
         ></div>
         
-        {stepStatus.visited && !description.trim() && (
+        {/* {stepStatus.visited && !description.trim() && (
           <div className={styles.fieldError}>Event description is required</div>
-        )}
+        )} */}
       </div>
     </div>
   );

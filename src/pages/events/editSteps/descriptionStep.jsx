@@ -39,12 +39,6 @@ const DescriptionStep = ({
       editorRef.current.innerHTML = description;
     }
   }, []);
-
-  useEffect(() => {
-    if (eventData.description) {
-      setDescription(eventData.description);
-    }
-  }, [eventData.description]);
   
   // Effect to propagate description changes to parent component
   useEffect(() => {
@@ -190,7 +184,7 @@ const DescriptionStep = ({
         {stepStatus.visited && !description.trim() && (
           <div className={styles.fieldError}>Event description is required</div>
         )}
-
+        
       </div>
     </div>
   );

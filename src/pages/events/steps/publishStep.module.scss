@@ -53,6 +53,7 @@
   cursor: pointer;
   display: flex;
   align-items: center;
+  margin-left: auto;
   
   &:hover {
     background: rgba(255, 255, 255, 0.1);
@@ -152,7 +153,6 @@
   display: flex;
   flex: 1;
   background-color: #121212; // Matching the content area color in image
-  max-width: 1200px;
   margin: 0 auto;
   width: 100%;
   border-bottom-left-radius: 8px; // Rounded corners as seen in image
@@ -349,6 +349,9 @@
     &:last-child {
       margin-bottom: 0;
     }
+  }
+  :global(*) {
+    color: #FFFFFF !important;
   }
 }
 

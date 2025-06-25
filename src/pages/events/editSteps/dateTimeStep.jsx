@@ -1,4 +1,4 @@
-import React, { forwardRef } from 'react';
+import React, { useState, useEffect, forwardRef } from 'react';
 import PropTypes from 'prop-types';
 import DatePicker from 'react-datepicker';
 
@@ -6,16 +6,15 @@ import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import styles from './dateTimeStep.module.scss';
 
-// --- Helper Functions to handle data translation ---
+// --- Helper Functions to handle data translation within this component ---
 
 const parseDateTimeStrings = (dateStr, timeStr) => {
   if (!dateStr || !timeStr) return null;
-  // This correctly parses ISO 8601 date strings and time strings
   return new Date(`${dateStr}T${timeStr}`);
 };
 
 const formatDateToString = (date) => {
-  if (!date || isNaN(date.getTime())) return '';
+  if (!date) return '';
   const year = date.getFullYear();
   const month = (date.getMonth() + 1).toString().padStart(2, '0');
   const day = date.getDate().toString().padStart(2, '0');
@@ -23,14 +22,14 @@ const formatDateToString = (date) => {
 };
 
 const formatTimeToString = (date) => {
-  if (!date || isNaN(date.getTime())) return '';
+  if (!date) return '';
   const hours = date.getHours().toString().padStart(2, '0');
   const minutes = date.getMinutes().toString().padStart(2, '0');
   return `${hours}:${minutes}`;
 };
 
 
-// --- Custom Input Components to match the design ---
+// --- Custom Input Components to match the new design ---
 
 const CustomDateInput = forwardRef(({ value, onClick, placeholder }, ref) => (
     <div className={styles.inputWithIcon} onClick={onClick} ref={ref}>
@@ -48,8 +47,8 @@ const CustomDateInput = forwardRef(({ value, onClick, placeholder }, ref) => (
       </div>
     </div>
 ));
-CustomDateInput.displayName = 'CustomDateInput';
 
+CustomDateInput.displayName = 'CustomDateInput';
 
 const CustomTimeInput = forwardRef(({ value, onClick, placeholder }, ref) => (
     <div className={styles.inputWithIcon} onClick={onClick} ref={ref}>
@@ -67,6 +66,7 @@ const CustomTimeInput = forwardRef(({ value, onClick, placeholder }, ref) => (
       </div>
     </div>
 ));
+
 CustomTimeInput.displayName = 'CustomTimeInput';
 
 
@@ -76,36 +76,37 @@ const DateTimeStep = ({
   isValid = false, 
   stepStatus = { visited: false }
 }) => {
-  // --- VALUES ARE DERIVED DIRECTLY FROM PROPS ON EVERY RENDER ---
-  // This ensures the component always shows the parent's "source of truth".
-  const startDate = parseDateTimeStrings(eventData.dateTime?.startDate, eventData.dateTime?.startTime);
-  const endDate = parseDateTimeStrings(eventData.dateTime?.endDate, eventData.dateTime?.endTime);
+  const initialStartDate = parseDateTimeStrings(eventData.dateTime?.startDate, eventData.dateTime?.startTime);
+  const initialEndDate = parseDateTimeStrings(eventData.dateTime?.endDate, eventData.dateTime?.endTime);
 
-  // --- REVISED handler to update the parent directly ---
-  const handleDateTimeChange = (newDate, type, isDateOnlyChange) => {
-    let targetDate = type === 'start' ? (startDate || new Date()) : (endDate || new Date());
-    let combinedDate = new Date(targetDate);
+  const [startDate, setStartDate] = useState(initialStartDate);
+  const [endDate, setEndDate] = useState(initialEndDate);
 
-    if (isDateOnlyChange) {
-        combinedDate.setFullYear(newDate.getFullYear(), newDate.getMonth(), newDate.getDate());
-    } else {
-        combinedDate.setHours(newDate.getHours(), newDate.getMinutes());
+  const handleDateChange = (newDate, stateUpdater, existingDateTime) => {
+    const combinedDate = new Date(newDate);
+    if (existingDateTime) {
+      combinedDate.setHours(existingDateTime.getHours());
+      combinedDate.setMinutes(existingDateTime.getMinutes());
     }
-    
-    // Create a copy of the parent's dateTime object to modify
-    const updatedDateTime = { ...eventData.dateTime };
-
-    if (type === 'start') {
-        updatedDateTime.startDate = formatDateToString(combinedDate);
-        updatedDateTime.startTime = formatTimeToString(combinedDate);
-    } else { // type === 'end'
-        updatedDateTime.endDate = formatDateToString(combinedDate);
-        updatedDateTime.endTime = formatTimeToString(combinedDate);
-    }
-    
-    // Notify the parent component of the change
-    handleInputChange(updatedDateTime, 'dateTime');
+    stateUpdater(combinedDate);
   };
+
+  const handleTimeChange = (newTime, stateUpdater, existingDateTime) => {
+    const combinedDate = existingDateTime ? new Date(existingDateTime) : new Date();
+    combinedDate.setHours(newTime.getHours());
+    combinedDate.setMinutes(newTime.getMinutes());
+    stateUpdater(combinedDate);
+  };
+  
+  useEffect(() => {
+    const formattedDataForParent = {
+      startDate: formatDateToString(startDate),
+      startTime: formatTimeToString(startDate),
+      endDate: formatDateToString(endDate),
+      endTime: formatTimeToString(endDate),
+    };
+    handleInputChange(formattedDataForParent, 'dateTime');
+  }, [startDate, endDate, handleInputChange]);
   
   return (
     <div className={styles.stepContainer}>
@@ -130,7 +131,7 @@ const DateTimeStep = ({
               <label htmlFor="startDate" className={styles.formLabel}>Start Date</label>
               <DatePicker
                 selected={startDate}
-                onChange={(date) => handleDateTimeChange(date, 'start', true)}
+                onChange={(date) => handleDateChange(date, setStartDate, startDate)}
                 customInput={<CustomDateInput placeholder="dd-mm-yyyy" />}
                 dateFormat="dd-MM-yyyy"
                 showPopperArrow={false}
@@ -145,7 +146,7 @@ const DateTimeStep = ({
               <label htmlFor="startTime" className={styles.formLabel}>Start Time</label>
               <DatePicker
                 selected={startDate}
-                onChange={(time) => handleDateTimeChange(time, 'start', false)}
+                onChange={(time) => handleTimeChange(time, setStartDate, startDate)}
                 customInput={<CustomTimeInput placeholder="HH:MM" />}
                 dateFormat="HH:mm"
                 showTimeSelect
@@ -174,7 +175,7 @@ const DateTimeStep = ({
               <label htmlFor="endDate" className={styles.formLabel}>End Date</label>
               <DatePicker
                 selected={endDate}
-                onChange={(date) => handleDateTimeChange(date, 'end', true)}
+                onChange={(date) => handleDateChange(date, setEndDate, endDate)}
                 customInput={<CustomDateInput placeholder="dd-mm-yyyy" />}
                 dateFormat="dd-MM-yyyy"
                 showPopperArrow={false}
@@ -190,7 +191,7 @@ const DateTimeStep = ({
               <label htmlFor="endTime" className={styles.formLabel}>End Time</label>
                <DatePicker
                 selected={endDate}
-                onChange={(time) => handleDateTimeChange(time, 'end', false)}
+                onChange={(time) => handleTimeChange(time, setEndDate, endDate)}
                 customInput={<CustomTimeInput placeholder="HH:MM" />}
                 dateFormat="HH:mm"
                 showTimeSelect
