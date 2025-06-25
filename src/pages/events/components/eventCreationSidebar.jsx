@@ -77,7 +77,12 @@ const EventCreationSidebar = ({
             updatedStepStatus.art.completed = response.data.step5Completed || false;
             updatedStepStatus.tickets.completed = response.data.step6Completed || false;
             updatedStepStatus.discountCodes.completed = response.data.step7Completed || false;
-            updatedStepStatus.publish.completed = response.data.step8Completed || false;
+            
+            
+            const step8Completed = response.data.step8Completed || false;
+            updatedStepStatus.publish.completed = step8Completed;
+            // Mark as visited if viewed or if it's already completed.
+            updatedStepStatus.publish.visited = response.data.step8Viewed || step8Completed;
             
             onStatusUpdate(updatedStepStatus);
           }

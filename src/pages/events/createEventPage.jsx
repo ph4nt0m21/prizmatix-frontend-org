@@ -269,6 +269,8 @@ const CreateEventPage = () => {
           const response = await GetEventStatusAPI(eventId);
 
           if (response.data) {
+            const step8Completed = response.data.step8Completed || false;
+
             // Create a new step status object based on API response
             const apiStepStatus = {
               basicInfo: {
@@ -301,7 +303,9 @@ const CreateEventPage = () => {
               },
               publish: {
                 ...stepStatus.publish,
-                completed: response.data.step8Completed || false,
+                completed: step8Completed,
+                // Mark as visited if viewed or if it's already completed.
+                visited: response.data.step8Viewed || step8Completed,
               },
             };
 

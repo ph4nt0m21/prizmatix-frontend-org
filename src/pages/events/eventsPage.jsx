@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
-import { GetAllOrganizationEventsAPI, DeleteEventAPI } from '../../services/allApis';
+import { GetAllOrganizationEventsAPI, DeleteEventAPI, GetEventStatusAPI } from '../../services/allApis';
 import LoadingSpinner from '../../components/common/loadingSpinner/loadingSpinner';
 import styles from './eventsPage.module.scss';
 import { getUserData } from '../../utils/authUtil';
@@ -15,12 +15,15 @@ const EventsPage = () => {
   const [error, setError] = useState(null);
   
   // MODIFIED: Default filter is 'All Events' to match the new design
-  const [currentFilter, setCurrentFilter] = useState('All Events');
+  const [currentFilter, setCurrentFilter] = useState('All Events', 'Live', 'Draft');
   const [searchQuery, setSearchQuery] = useState('');
   
   // MODIFIED: Filter options for the new sidebar
-  const filterOptions = ['All Events', 'Live Events', 'Drafts'];
+  const filterOptions = ['All Events', 'Live', 'Draft'];
   const userId = Cookies.get('userId');
+
+    const liveCount = events.filter(event => event.isLive).length;
+  const draftCount = events.filter(event => !event.isLive).length;
   
   useEffect(() => {
     fetchEvents();
@@ -30,49 +33,68 @@ const EventsPage = () => {
     applyFilters();
   }, [events, currentFilter, searchQuery]);
   
-  const fetchEvents = async () => {
-    try {
-      setIsLoading(true);
-      const userData = getUserData();
-      const organizationId = userData?.organizationId;
-      
-      if (!organizationId) {
-        setError('Organization ID not found. Please login again.');
-        setIsLoading(false);
-        return;
-      }
-      
-      const params = { page: 0, size: 100, sort: 'startDate,desc' };
-      const response = await GetAllOrganizationEventsAPI(organizationId, params);
-      setEvents(response.data || []);
-      setError(null);
-    } catch (error) {
-      console.error('Error fetching events:', error);
-      setError('Failed to load events. Please try again.');
-    } finally {
+const fetchEvents = async () => {
+  try {
+    setIsLoading(true);
+    const userData = getUserData();
+    const organizationId = userData?.organizationId;
+    
+    if (!organizationId) {
+      setError('Organization ID not found. Please login again.');
       setIsLoading(false);
+      return;
     }
-  };
+    
+    const params = { page: 0, size: 100, sort: 'startDate,desc' };
+    const response = await GetAllOrganizationEventsAPI(organizationId, params);
+    const initialEvents = response.data || [];
+
+    // --- NEW: Fetch status for each event ---
+    const eventsWithStatus = await Promise.all(
+      initialEvents.map(async (event) => {
+        try {
+          const statusResponse = await GetEventStatusAPI(event.id);
+          // Check if the 'publish' step (step 8) is completed.
+          const isPublished = statusResponse.data?.step8Completed || false;
+          return { ...event, isLive: isPublished }; // Add the 'isLive' property
+        } catch (statusError) {
+          console.error(`Failed to get status for event ${event.id}:`, statusError);
+          return { ...event, isLive: false }; // Default to Draft if status check fails
+        }
+      })
+    );
+    
+    setEvents(eventsWithStatus);
+    setError(null);
+  } catch (error) {
+    console.error('Error fetching events:', error);
+    setError('Failed to load events. Please try again.');
+  } finally {
+    setIsLoading(false);
+  }
+};
   
-  const applyFilters = () => {
-    let filtered = [...events];
-    
-    // NOTE: Per your request, filtering logic is simplified for now.
-    // 'All Events' will be shown. You can add more complex logic here later.
-    if (currentFilter !== 'All Events') {
-      // Future logic for 'Live Events', 'Drafts', etc. will go here.
-      // For now, it will just show all events.
-    }
-    
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase().trim();
-      filtered = filtered.filter(event => 
-        event.name?.toLowerCase().includes(query)
-      );
-    }
-    
-    setFilteredEvents(filtered);
-  };
+const applyFilters = () => {
+  let filtered = [...events];
+  
+  // Apply status filters
+  if (currentFilter === 'Live') {
+    filtered = filtered.filter(event => event.isLive);
+  } else if (currentFilter === 'Draft') {
+    filtered = filtered.filter(event => !event.isLive);
+  }
+  // No action needed for 'All Events' as it starts with the full list.
+  
+  // Apply search query filter
+  if (searchQuery.trim()) {
+    const query = searchQuery.toLowerCase().trim();
+    filtered = filtered.filter(event => 
+      event.name?.toLowerCase().includes(query)
+    );
+  }
+  
+  setFilteredEvents(filtered);
+};
   
   const handleFilterClick = (filter) => {
     setCurrentFilter(filter);
@@ -92,15 +114,16 @@ const EventsPage = () => {
 
   // --- HELPER FUNCTIONS MODIFIED FOR NEW DESIGN ---
 
-  const getStatusText = (event) => {
-    // Per request, all events will show 'Draft' status for now.
-    return 'Draft';
-  };
+const getStatusText = (event) => {
+  // MODIFIED: Dynamically return status based on the isLive property
+  return event.isLive ? 'Live' : 'Draft';
+};
 
-  const getStatusBadgeClass = (event) => {
-    // Per request, all events will use the draft badge style.
-    return styles.draftBadge;
-  };
+const getStatusBadgeClass = (event) => {
+  // MODIFIED: Use a different CSS class for the 'Live' status
+  // Make sure you have a 'liveBadge' style defined in your eventsPage.module.scss
+  return event.isLive ? styles.liveBadge : styles.draftBadge;
+};
   
   const formatTicketSales = (event) => {
     // Per request, show a nil value.
@@ -135,18 +158,33 @@ const EventsPage = () => {
       {/* NEW: Sidebar for event management */}
       <aside className={styles.sidebar}>
         <h2 className={styles.sidebarTitle}>Manage Event</h2>
-        <nav className={styles.filterNav}>
-          {filterOptions.map(filter => (
-            <button
-              key={filter}
-              className={`${styles.filterItem} ${currentFilter === filter ? styles.activeFilter : ''}`}
-              onClick={() => handleFilterClick(filter)}
-            >
-              {filter}
-              {/* This count is static for now, can be made dynamic later */}
-              <span>{filter === 'All Events' ? 4 : 1}</span>
-            </button>
-          ))}
+         <nav className={styles.filterNav}>
+          {filterOptions.map(filter => {
+            let count;
+            switch (filter) {
+              case 'All Events':
+                count = events.length;
+                break;
+              case 'Live':
+                count = liveCount;
+                break;
+              case 'Draft':
+                count = draftCount;
+                break;
+              default:
+                count = 0;
+            }
+            return (
+              <button
+                key={filter}
+                className={`${styles.filterItem} ${currentFilter === filter ? styles.activeFilter : ''}`}
+                onClick={() => handleFilterClick(filter)}
+              >
+                {filter}
+                <span>{count}</span>
+              </button>
+            );
+          })}
         </nav>
       </aside>
 
