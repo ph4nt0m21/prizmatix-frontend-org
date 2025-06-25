@@ -209,6 +209,7 @@ const PublishStep = ({
                   <p className={styles.venueAddress}>{getVenueAddress()}</p>
 
                   {/* --- MODIFIED: This section now renders the dynamic map --- */}
+                  {!localEventData.location?.isToBeAnnounced && (
                   <div className={styles.venueMap}>
                     <div ref={mapRef} style={{ width: '100%', height: '100%' }}>
                       {/* If lat/lng are missing, show a placeholder message */}
@@ -221,7 +222,7 @@ const PublishStep = ({
                     {/* <div className={styles.mapOverlay}>
                       <div className={styles.mapLogo}><svg width="20" height="20" viewBox="0 0 24 24" fill="#4285F4" xmlns="http://www.w3.org/2000/svg"><path d="M12 11.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5ZM12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13C19 5.13 15.87 2 12 2Z" /></svg></div>
                     </div> */}
-                  </div>
+                  </div>)}
 
                 </div>
               </div>

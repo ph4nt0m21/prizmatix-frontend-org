@@ -83,7 +83,7 @@ const EventsPage = () => {
   };
   
   const handleCreateEvent = () => {
-    navigate('/events/create/1');
+    navigate('/events/create/');
   };
   
   const handleViewEvent = (eventId) => {
