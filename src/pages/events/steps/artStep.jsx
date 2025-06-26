@@ -54,8 +54,8 @@ const ArtStep = ({
 
   const supportedTypes = ['.jpg', '.png', '.webp'];
   const maxSizes = {
-    thumbnail: 10, // 10 MB
-    banner: 10 // 10 MB
+    thumbnail: 100, // 100 MB
+    banner: 100 // 100 MB
   };
 
   useEffect(() => {
@@ -106,11 +106,15 @@ const ArtStep = ({
     return supportedTypes.includes(fileExtension);
   };
 
-  const isFileSizeValid = (file, maxSizeMB) => {
-    if (!file || !file.size) return false;
-    const fileSizeMB = file.size / (1024 * 1024);
-    return fileSizeMB <= maxSizeMB;
-  };
+const isFileSizeValid = (file, maxSizeMB) => {
+  // Return false if the file or its size is not available
+  if (!file?.size) {
+    return false;
+  }
+
+  const maxSizeInBytes = maxSizeMB * 1024 * 1024;
+  return file.size <= maxSizeInBytes;
+};
 
   /**
    * [MODIFIED] Opens the cropping modal instead of directly setting the file.
@@ -216,8 +220,31 @@ const ArtStep = ({
 
   function onImageLoad(e) {
     const { width, height } = e.currentTarget;
-    const aspect = croppingType === 'banner' ? 16 / 9 : 1;
-    setCrop(centerCrop(makeAspectCrop({ unit: '%', width: 90 }, aspect, width, height), width, height));
+    const isBanner = croppingType === 'banner';
+    
+    // --- [MODIFIED] ---
+    // Change the aspect ratio for the banner to 4:1 (from 1200 / 300).
+    // The thumbnail aspect ratio remains 1:1.
+    const aspect = isBanner ? 4 : 1; 
+    
+    // This sets the initial width of the crop selection. 98% is fine.
+    const cropWidth = isBanner ? 98 : 90;
+
+    setCrop(
+      centerCrop(
+        makeAspectCrop(
+          {
+            unit: '%',
+            width: cropWidth,
+          },
+          aspect, // Use the new aspect ratio here
+          width,
+          height
+        ),
+        width,
+        height
+      )
+    );
   }
 
   const handleCropComplete = () => {
@@ -485,7 +512,7 @@ const ArtStep = ({
                   crop={crop}
                   onChange={(_, percentCrop) => setCrop(percentCrop)}
                   onComplete={(c) => setCompletedCrop(c)}
-                  aspect={croppingType === 'banner' ? 16 / 9 : 1}
+                  aspect={croppingType === 'banner' ? 4 / 1 : 1}
                   minWidth={100}
                   minHeight={100}
                 >

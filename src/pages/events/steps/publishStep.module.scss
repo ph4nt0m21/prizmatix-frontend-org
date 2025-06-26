@@ -104,7 +104,7 @@
 // Event banner
 .eventBanner {
   position: relative;
-  height: 180px;
+  aspect-ratio: 4 / 1;
   background: linear-gradient(60deg, #67e8f9 0%, #818cf8 30%, #f87171 60%, #fbbf24 100%); // Updated to match image
   overflow: hidden;
   display: flex;

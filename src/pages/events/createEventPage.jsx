@@ -160,8 +160,8 @@ const CreateEventPage = () => {
   // Constants for file validations
   const supportedImageTypes = [".jpg", ".png", ".webp"];
   const maxFileSizes = {
-    thumbnail: 10, // 10MB
-    banner: 10, // 10MB
+    thumbnail: 100, // 100MB
+    banner: 100, // 100MB
   };
 
   // Fetch user data on component mount
