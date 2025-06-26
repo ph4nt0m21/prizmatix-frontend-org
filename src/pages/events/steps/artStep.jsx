@@ -225,7 +225,7 @@ const isFileSizeValid = (file, maxSizeMB) => {
     // --- [MODIFIED] ---
     // Change the aspect ratio for the banner to 4:1 (from 1200 / 300).
     // The thumbnail aspect ratio remains 1:1.
-    const aspect = isBanner ? 16/9 : 1; 
+    const aspect = isBanner ? 16/6 : 1; 
     
     // This sets the initial width of the crop selection. 98% is fine.
     const cropWidth = isBanner ? 98 : 90;
@@ -493,7 +493,7 @@ const isFileSizeValid = (file, maxSizeMB) => {
           </h3>
           <ul className={styles.recommendationsList}>
             <li>Thumbnail: Use a square image (1:1 ratio), minimum 500x500 pixels</li>
-            <li>Banner: Use a wide image (16:9 ratio), minimum 1200x675 pixels</li>
+            <li>Banner: Use a wide image (16:6 ratio), minimum 1200x450 pixels</li>
             <li>Make sure text is readable and images are clear</li>
             <li>Use high-quality images that represent your event well</li>
           </ul>
@@ -512,7 +512,7 @@ const isFileSizeValid = (file, maxSizeMB) => {
                   crop={crop}
                   onChange={(_, percentCrop) => setCrop(percentCrop)}
                   onComplete={(c) => setCompletedCrop(c)}
-                  aspect={croppingType === 'banner' ? 16 / 9 : 1}
+                  aspect={croppingType === 'banner' ? 16 / 6 : 1}
                   minWidth={100}
                   minHeight={100}
                 >
