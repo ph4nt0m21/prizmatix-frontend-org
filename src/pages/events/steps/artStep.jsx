@@ -276,15 +276,28 @@ const isFileSizeValid = (file, maxSizeMB) => {
         crop.height * scaleY
       );
 
-      canvas.toBlob((blob) => {
-        if (!blob) {
-          console.error('Canvas is empty');
-          return;
-        }
-        const croppedFile = new File([blob], originalFile.name, { type: originalFile.type });
-        handleCropFinalized(croppingType, croppedFile);
-        handleCancelCrop();
-      }, originalFile.type);
+      // Define your desired quality level (0.0 to 1.0)
+      const quality = 0.85; 
+
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) {
+            console.error('Canvas is empty');
+            return;
+          }
+          
+          // If the original was a PNG, we should update the name to reflect the new JPG format
+          const newFileName = originalFile.name.replace(/\.(png|gif)$/i, '.jpg');
+
+          const croppedFile = new File([blob], newFileName, {
+            type: 'image/jpeg', // Force the blob to be treated as a JPEG
+          });
+          handleCropFinalized(croppingType, croppedFile);
+          handleCancelCrop();
+        },
+        'image/jpeg', // Force the output format to JPEG
+        quality 
+      );
     }
   };
 
