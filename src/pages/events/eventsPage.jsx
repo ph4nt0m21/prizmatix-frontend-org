@@ -18,6 +18,10 @@ const EventsPage = () => {
   const [currentFilter, setCurrentFilter] = useState('All Events', 'Live', 'Draft');
   const [searchQuery, setSearchQuery] = useState('');
   
+  const [openMenuId, setOpenMenuId] = useState(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [eventToDelete, setEventToDelete] = useState(null);
+
   // MODIFIED: Filter options for the new sidebar
   const filterOptions = ['All Events', 'Live', 'Draft'];
   const userId = Cookies.get('userId');
@@ -110,6 +114,50 @@ const applyFilters = () => {
   
   const handleViewEvent = (eventId) => {
     navigate(`/events/manage/${eventId}/overview`);
+  };
+
+    const handleToggleMenu = (e, eventId) => {
+    e.stopPropagation(); // Prevent the row's onClick from firing
+    setOpenMenuId(openMenuId === eventId ? null : eventId);
+  };
+
+    const handleEditEvent = (e, eventId) => {
+    e.stopPropagation();
+    navigate(`/events/edit-page/${eventId}/1`);
+  };
+
+    const handleDeleteClick = (e, event) => {
+    e.stopPropagation();
+    setEventToDelete(event);
+    setShowDeleteConfirm(true);
+    setOpenMenuId(null); // Close the actions menu
+  };
+
+    const confirmDeleteEvent = async () => {
+    if (!eventToDelete) return;
+    try {
+      // The API requires userId, ensure you have it.
+      // We're getting it from cookies, but you can get it from your auth context if preferred.
+      const currentUserId = getUserData()?.id || userId; 
+      if (!currentUserId) {
+          setError("User ID not found. Cannot delete event.");
+          setShowDeleteConfirm(false);
+          return;
+      }
+      
+      await DeleteEventAPI(eventToDelete.id, currentUserId);
+      
+      // Remove the event from the state to update the UI instantly
+      setEvents(prevEvents => prevEvents.filter(e => e.id !== eventToDelete.id));
+      
+      setShowDeleteConfirm(false);
+      setEventToDelete(null);
+
+    } catch (err) {
+      console.error('Failed to delete event:', err);
+      setError(err.response?.data?.message || 'Failed to delete the event.');
+      setShowDeleteConfirm(false);
+    }
   };
 
   // --- HELPER FUNCTIONS MODIFIED FOR NEW DESIGN ---
@@ -259,11 +307,21 @@ const getStatusBadgeClass = (event) => {
                   </div>
 
                   <div className={styles.actionsCell}>
-                    <button className={styles.actionsButton} onClick={(e) => e.stopPropagation()}>
-                       <svg width="20" height="20" viewBox="0 0 24 24"><path d="M12 8C13.1 8 14 7.1 14 6C14 4.9 13.1 4 12 4C10.9 4 10 4.9 10 6C10 7.1 10.9 8 12 8ZM12 10C10.9 10 10 10.9 10 12C10 13.1 10.9 14 12 14C13.1 14 14 13.1 14 12C14 10.9 13.1 10 12 10ZM12 16C10.9 16 10 16.9 10 18C10 19.1 10.9 20 12 20C13.1 20 14 19.1 14 18C14 16.9 13.1 16 12 16Z" fill="#6B7280"/></svg>
-                    </button>
+                      <div className={styles.actionsMenuContainer}>
+                        <button className={styles.actionsButton} onClick={(e) => handleToggleMenu(e, event.id)}>
+                          <svg width="20" height="20" viewBox="0 0 24 24"><path d="M12 8C13.1 8 14 7.1 14 6C14 4.9 13.1 4 12 4C10.9 4 10 4.9 10 6C10 7.1 10.9 8 12 8ZM12 10C10.9 10 10 10.9 10 12C10 13.1 10.9 14 12 14C13.1 14 14 13.1 14 12C14 10.9 13.1 10 12 10ZM12 16C10.9 16 10 16.9 10 18C10 19.1 10.9 20 12 20C13.1 20 14 19.1 14 18C14 16.9 13.1 16 12 16Z" fill="#6B7280"/></svg>
+                        </button>
+                        
+                        {/* --- NEW: Conditionally rendered actions menu --- */}
+                        {openMenuId === event.id && (
+                          <div className={styles.actionsMenu}>
+                            <button onClick={(e) => handleEditEvent(e, event.id)}>Edit</button>
+                            <button onClick={(e) => handleDeleteClick(e, event)} className={styles.deleteAction}>Delete</button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                </div>
               );
             })
           ) : (
@@ -273,6 +331,18 @@ const getStatusBadgeClass = (event) => {
           )}
         </div>
       </main>
+      {showDeleteConfirm && (
+  <div className={styles.deleteModalOverlay}>
+    <div className={styles.deleteModal}>
+      <h3>Confirm Deletion</h3>
+      <p>Are you sure you want to delete the event "{eventToDelete?.name}"? This action cannot be undone.</p>
+      <div className={styles.deleteModalActions}>
+        <button onClick={() => setShowDeleteConfirm(false)} className={styles.cancelButton}>Cancel</button>
+        <button onClick={confirmDeleteEvent} className={styles.confirmDeleteButton}>Delete</button>
+      </div>
+    </div>
+  </div>
+)}
     </div>
   );
 };
