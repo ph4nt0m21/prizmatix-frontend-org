@@ -100,7 +100,7 @@ const LoginPage = () => {
       
       if (response.status === 200) {
         // Store token in cookie - adjust expiry based on remember me
-        const expiryDays = rememberMe ? 7 : 0.25; // 7 days or 6 hours
+        const expiryDays = rememberMe ? 7 : 1; // 7 days or 1 day
         Cookies.set('token', response.data.token, { 
           expires: expiryDays,
         });

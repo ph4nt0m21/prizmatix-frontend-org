@@ -158,7 +158,7 @@ const CreateEventPage = () => {
   const [error, setError] = useState(null);
 
   // Constants for file validations
-  const supportedImageTypes = [".jpg", ".png", ".webp"];
+  const supportedImageTypes = [".jpg", ".jpeg", ".png", ".webp"];
   const maxFileSizes = {
     thumbnail: 100, // 100MB
     banner: 100, // 100MB
