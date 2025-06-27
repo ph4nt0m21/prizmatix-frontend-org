@@ -5,7 +5,6 @@
 .content {
   display: flex;
   background: #f9fafb;
-  min-height: calc(100vh - 112px); // Subtract header heights
   width: 100%;
 }
 
@@ -28,12 +27,12 @@
 // Footer
 .footer {
   display: flex;
-  height: 48px;
-  padding: 0 24px;
+  // height: 48px;
+  // padding: 0 24px;
   justify-content: center;
-  align-items: center;
+  // align-items: center;
   gap: 10px;
-  align-self: stretch;
+  // align-self: stretch;
   border-top: 1px solid #E9EAEC;
   background: #FFF;
   color: #6B7280;

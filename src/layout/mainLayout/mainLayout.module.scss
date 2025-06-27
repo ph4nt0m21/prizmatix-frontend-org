@@ -4,7 +4,7 @@
 // Outer container that wraps the entire application
 .outerContainer {
   display: flex;
-  width: 100%;
+  width: 100%; 
   height: 100vh;
   /* Make container fill the screen height */
   padding: 8px 8px 8px 0px;
@@ -61,7 +61,7 @@
 @media (max-width: 1440px) {
   .outerContainer {
     width: 100%;
-    height: auto;
+    height: 100vh;
   }
 }
 
@@ -71,11 +71,11 @@
     margin-left: 70px;
   }
 
-  .contentArea {
-    padding: 15px 20px;
+  // .contentArea {
+  //   padding: 15px 20px;
 
-    &.fullHeight {
-      padding: 0;
-    }
-  }
+  //   &.fullHeight {
+  //     padding: 0;
+  //   }
+  // }
 }

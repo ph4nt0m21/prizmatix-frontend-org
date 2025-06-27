@@ -76,6 +76,7 @@ const HomePage = () => {
   
   return (
     <div className={styles.homePageContainer}>
+      <div className={styles.homePageContent}>
       {/* Promotion Banner */}
       <div className={styles.promotionBanner}>
         <div className={styles.bannerContent}>
@@ -131,6 +132,7 @@ const HomePage = () => {
             Create Event
           </button>
         </div>
+      </div>
       </div>
     </div>
   );
