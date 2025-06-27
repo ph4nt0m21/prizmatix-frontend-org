@@ -158,10 +158,10 @@ const CreateEventPage = () => {
   const [error, setError] = useState(null);
 
   // Constants for file validations
-  const supportedImageTypes = [".jpg", ".png", ".webp"];
+  const supportedImageTypes = [".jpg", ".jpeg", ".png", ".webp"];
   const maxFileSizes = {
-    thumbnail: 10, // 10MB
-    banner: 10, // 10MB
+    thumbnail: 100, // 100MB
+    banner: 100, // 100MB
   };
 
   // Fetch user data on component mount
@@ -269,6 +269,8 @@ const CreateEventPage = () => {
           const response = await GetEventStatusAPI(eventId);
 
           if (response.data) {
+            const step8Completed = response.data.step8Completed || false;
+
             // Create a new step status object based on API response
             const apiStepStatus = {
               basicInfo: {
@@ -301,7 +303,9 @@ const CreateEventPage = () => {
               },
               publish: {
                 ...stepStatus.publish,
-                completed: response.data.step8Completed || false,
+                completed: step8Completed,
+                // Mark as visited if viewed or if it's already completed.
+                visited: response.data.step8Viewed || step8Completed,
               },
             };
 

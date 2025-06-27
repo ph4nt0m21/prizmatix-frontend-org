@@ -169,12 +169,12 @@ const TicketsStep = ({
   <div className={styles.ticketsContainer}>
     {/* Tickets table header */}
     <div className={styles.ticketTableHeader}>
-      <div className={styles.ticketDrag} style={{ marginRight: '8px' }} />
+      <div className={styles.ticketDrag}/>
       <div className={styles.ticketName}>Name</div>
       <div className={styles.ticketCount}>Quantity</div>
       <div className={styles.ticketPrice}>Price</div>
       <div className={styles.ticketCount}>Max Purchase</div>
-      <div className={styles.ticketActions} style={{ justifyContent: 'center' }}>Action</div>
+      <div className={styles.ticketActions}>Action</div>
     </div>
 
     {/* Tickets list */}
@@ -275,6 +275,7 @@ const TicketsStep = ({
           onSave={handleSaveTicket}
           activeStep={activeModalStep}
           setActiveStep={setActiveModalStep}
+          allTickets={tickets}
         />
       )}
     </div>

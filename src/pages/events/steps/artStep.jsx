@@ -30,8 +30,8 @@ const ArtStep = ({
   });
 
   const [previews, setPreviews] = useState({
-    thumbnail: artData.thumbnailUrl || null,
-    banner: artData.bannerUrl || null
+    thumbnail: null,
+    banner: null
   });
 
   const [dragActive, setDragActive] = useState({
@@ -52,18 +52,39 @@ const ArtStep = ({
   const imgRef = useRef(null); // Ref to the image element in the cropper
   const previewCanvasRef = useRef(null); // Ref to the hidden canvas for drawing the preview
 
-  const supportedTypes = ['.jpg', '.png', '.webp'];
+  const supportedTypes = ['.jpg', '.jpeg', '.png', '.webp'];
   const maxSizes = {
-    thumbnail: 10, // 10 MB
-    banner: 10 // 10 MB
+    thumbnail: 100, // 100 MB
+    banner: 100 // 100 MB
   };
 
   useEffect(() => {
+    // Get the file objects from the parent component's data
+    const thumbnailFile = artData.thumbnailFile;
+    const bannerFile = artData.bannerFile;
+
+    // Create new blob URLs only if the files exist
+    const newThumbnailUrl = thumbnailFile ? URL.createObjectURL(thumbnailFile) : null;
+    const newBannerUrl = bannerFile ? URL.createObjectURL(bannerFile) : null;
+
+    // Update the local preview state
+    setPreviews({
+      thumbnail: newThumbnailUrl,
+      banner: newBannerUrl
+    });
+        // IMPORTANT: Return a cleanup function
+    // This runs when the component unmounts or when the files change,
+    // preventing memory leaks by revoking the old URLs.
     return () => {
-      if (previews.thumbnail) releaseFilePreviewUrl(previews.thumbnail);
-      if (previews.banner) releaseFilePreviewUrl(previews.banner);
+      if (newThumbnailUrl) {
+        URL.revokeObjectURL(newThumbnailUrl);
+      }
+      if (newBannerUrl) {
+        URL.revokeObjectURL(newBannerUrl);
+      }
     };
-  }, []);
+    // This effect's dependency array ensures it re-runs if the file objects change
+  }, [artData.thumbnailFile, artData.bannerFile]);
 
   const releaseFilePreviewUrl = (url) => {
     if (url && url.startsWith('blob:')) {
@@ -85,11 +106,15 @@ const ArtStep = ({
     return supportedTypes.includes(fileExtension);
   };
 
-  const isFileSizeValid = (file, maxSizeMB) => {
-    if (!file || !file.size) return false;
-    const fileSizeMB = file.size / (1024 * 1024);
-    return fileSizeMB <= maxSizeMB;
-  };
+const isFileSizeValid = (file, maxSizeMB) => {
+  // Return false if the file or its size is not available
+  if (!file?.size) {
+    return false;
+  }
+
+  const maxSizeInBytes = maxSizeMB * 1024 * 1024;
+  return file.size <= maxSizeInBytes;
+};
 
   /**
    * [MODIFIED] Opens the cropping modal instead of directly setting the file.
@@ -195,8 +220,31 @@ const ArtStep = ({
 
   function onImageLoad(e) {
     const { width, height } = e.currentTarget;
-    const aspect = croppingType === 'banner' ? 16 / 9 : 1;
-    setCrop(centerCrop(makeAspectCrop({ unit: '%', width: 90 }, aspect, width, height), width, height));
+    const isBanner = croppingType === 'banner';
+    
+    // --- [MODIFIED] ---
+    // Change the aspect ratio for the banner to 4:1 (from 1200 / 300).
+    // The thumbnail aspect ratio remains 1:1.
+    const aspect = isBanner ? 16/6 : 1; 
+    
+    // This sets the initial width of the crop selection. 98% is fine.
+    const cropWidth = isBanner ? 98 : 90;
+
+    setCrop(
+      centerCrop(
+        makeAspectCrop(
+          {
+            unit: '%',
+            width: cropWidth,
+          },
+          aspect, // Use the new aspect ratio here
+          width,
+          height
+        ),
+        width,
+        height
+      )
+    );
   }
 
   const handleCropComplete = () => {
@@ -228,15 +276,28 @@ const ArtStep = ({
         crop.height * scaleY
       );
 
-      canvas.toBlob((blob) => {
-        if (!blob) {
-          console.error('Canvas is empty');
-          return;
-        }
-        const croppedFile = new File([blob], originalFile.name, { type: originalFile.type });
-        handleCropFinalized(croppingType, croppedFile);
-        handleCancelCrop();
-      }, originalFile.type);
+      // Define your desired quality level (0.0 to 1.0)
+      const quality = 0.85; 
+
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) {
+            console.error('Canvas is empty');
+            return;
+          }
+          
+          // If the original was a PNG, we should update the name to reflect the new JPG format
+          const newFileName = originalFile.name.replace(/\.(png|gif)$/i, '.jpg');
+
+          const croppedFile = new File([blob], newFileName, {
+            type: 'image/jpeg', // Force the blob to be treated as a JPEG
+          });
+          handleCropFinalized(croppingType, croppedFile);
+          handleCancelCrop();
+        },
+        'image/jpeg', // Force the output format to JPEG
+        quality 
+      );
     }
   };
 
@@ -320,7 +381,7 @@ const ArtStep = ({
                   type="file"
                   id="thumbnailUpload"
                   className={styles.fileInput}
-                  accept=".jpg,.png,.webp"
+                  accept=".jpg,.jpeg,.png,.webp"
                   onChange={(e) => handleFileInputChange(e, 'thumbnail')}
                 />
               </div>
@@ -340,7 +401,7 @@ const ArtStep = ({
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 20C7.59 20 4 16.41 4 12C4 7.59 7.59 4 12 4C16.41 4 20 7.59 20 12C20 16.41 16.41 20 12 20ZM11 15H13V17H11V15ZM11 7H13V13H11V7Z" fill="#666666" />
               </svg>
-              Supported files: .jpg, .png, .webp
+              Supported files: .jpg, .jpeg, .png, .webp
             </div>
             <div className={styles.maxSize}>
               Maximum Size: {maxSizes.thumbnail} MB
@@ -407,7 +468,7 @@ const ArtStep = ({
                   type="file"
                   id="bannerUpload"
                   className={styles.fileInput}
-                  accept=".jpg,.png,.webp"
+                  accept=".jpg,.jpeg,.png,.webp"
                   onChange={(e) => handleFileInputChange(e, 'banner')}
                 />
               </div>
@@ -427,7 +488,7 @@ const ArtStep = ({
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 20C7.59 20 4 16.41 4 12C4 7.59 7.59 4 12 4C16.41 4 20 7.59 20 12C20 16.41 16.41 20 12 20ZM11 15H13V17H11V15ZM11 7H13V13H11V7Z" fill="#666666" />
               </svg>
-              Supported files: .jpg, .png, .webp
+              Supported files: .jpg, .jpeg, .png, .webp
             </div>
             <div className={styles.maxSize}>
               Maximum Size: {maxSizes.banner} MB
@@ -445,7 +506,7 @@ const ArtStep = ({
           </h3>
           <ul className={styles.recommendationsList}>
             <li>Thumbnail: Use a square image (1:1 ratio), minimum 500x500 pixels</li>
-            <li>Banner: Use a wide image (16:9 ratio), minimum 1200x675 pixels</li>
+            <li>Banner: Use a wide image (16:6 ratio), minimum 1200x450 pixels</li>
             <li>Make sure text is readable and images are clear</li>
             <li>Use high-quality images that represent your event well</li>
           </ul>
@@ -464,7 +525,7 @@ const ArtStep = ({
                   crop={crop}
                   onChange={(_, percentCrop) => setCrop(percentCrop)}
                   onComplete={(c) => setCompletedCrop(c)}
-                  aspect={croppingType === 'banner' ? 16 / 9 : 1}
+                  aspect={croppingType === 'banner' ? 16 / 6 : 1}
                   minWidth={100}
                   minHeight={100}
                 >

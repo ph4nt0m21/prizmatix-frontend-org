@@ -74,14 +74,49 @@ const PublishStep = ({
     }
   }, [localEventData.location]); // Re-run this effect if the location data changes
 
-  // Helper function to format date for display
-  const formatEventDate = () => {
-    if (!localEventData.dateTime?.startDate) return 'Date not set';
+// Helper function to create the new combined date-time string
+  const formatEventDateTimeRange = () => {
+    const { startDate, startTime, endDate, endTime } = localEventData.dateTime || {};
+    if (!startDate || !startTime) return 'Date and time not set';
+
     try {
-      const startDate = new Date(`${localEventData.dateTime.startDate}T00:00:00`);
-      return new Intl.DateTimeFormat('en-US', { weekday: 'short', day: 'numeric', month: 'short' }).format(startDate);
+      // Helper to format the date part (e.g., "Wed, 5 Mar")
+      const formatDate = (dateString, includeWeekday = true) => {
+        const options = {
+          weekday: includeWeekday ? 'short' : undefined,
+          day: 'numeric',
+          month: 'short',
+        };
+        return new Intl.DateTimeFormat('en-US', options).format(new Date(`${dateString}T00:00:00`));
+      };
+
+      // Helper to format the time part (e.g., "7:30pm")
+      const formatTime = (timeString) => {
+        const [hours, minutes] = timeString.split(':');
+        const date = new Date();
+        date.setHours(hours, minutes);
+        const options = { hour: 'numeric', minute: 'numeric', hour12: true };
+        return new Intl.DateTimeFormat('en-US', options).format(date).toLowerCase().replace(' ', '');
+      };
+
+      const formattedStartDate = formatDate(startDate);
+      const formattedStartTime = formatTime(startTime);
+
+      // Default end part is just the end time, for same-day events
+      let formattedEndPart = endTime ? formatTime(endTime) : '';
+
+      // If an end date exists and is different from the start date
+      if (endDate && endDate !== startDate) {
+        // Format the end date without the weekday and prepend it to the end time
+        const formattedEndDate = formatDate(endDate, false); // e.g., "6 Mar"
+        formattedEndPart = `${formattedEndDate}, ${formatTime(endTime)}`;
+      }
+      
+      return `${formattedStartDate}, ${formattedStartTime} - ${formattedEndPart}`;
+
     } catch (e) {
-      return 'Invalid Date';
+      console.error("Error formatting event date-time range:", e);
+      return "Invalid date or time";
     }
   };
 
@@ -179,7 +214,7 @@ const PublishStep = ({
                   <div className={styles.eventMetaIcon}>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="#7C3AED" xmlns="http://www.w3.org/2000/svg"><path d="M19 4H18V2H16V4H8V2H6V4H5C3.89 4 3.01 4.9 3.01 6L3 20C3 21.1 3.89 22 5 22H19C20.1 22 21 20.1 21 20V6C21 4.9 20.1 4 19 4ZM19 20H5V9H19V20Z" /></svg>
                   </div>
-                  <div className={styles.eventMetaText}>{formatEventDate()}, {formatEventTime()}</div>
+                  <div className={styles.eventMetaText}>{formatEventDateTimeRange()}</div>
                 </div>
                 {/* <div className={styles.eventMetaItem}>
                   <div className={styles.eventMetaIcon}>
@@ -209,6 +244,7 @@ const PublishStep = ({
                   <p className={styles.venueAddress}>{getVenueAddress()}</p>
 
                   {/* --- MODIFIED: This section now renders the dynamic map --- */}
+                  {!localEventData.location?.isToBeAnnounced && (
                   <div className={styles.venueMap}>
                     <div ref={mapRef} style={{ width: '100%', height: '100%' }}>
                       {/* If lat/lng are missing, show a placeholder message */}
@@ -221,7 +257,7 @@ const PublishStep = ({
                     {/* <div className={styles.mapOverlay}>
                       <div className={styles.mapLogo}><svg width="20" height="20" viewBox="0 0 24 24" fill="#4285F4" xmlns="http://www.w3.org/2000/svg"><path d="M12 11.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5ZM12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13C19 5.13 15.87 2 12 2Z" /></svg></div>
                     </div> */}
-                  </div>
+                  </div>)}
 
                 </div>
               </div>

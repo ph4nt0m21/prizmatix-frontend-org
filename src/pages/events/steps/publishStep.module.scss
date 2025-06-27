@@ -104,7 +104,7 @@
 // Event banner
 .eventBanner {
   position: relative;
-  height: 180px;
+  aspect-ratio: 16 / 6;
   background: linear-gradient(60deg, #67e8f9 0%, #818cf8 30%, #f87171 60%, #fbbf24 100%); // Updated to match image
   overflow: hidden;
   display: flex;
@@ -157,6 +157,7 @@
   width: 100%;
   border-bottom-left-radius: 8px; // Rounded corners as seen in image
   border-bottom-right-radius: 8px; // Rounded corners as seen in image
+  padding: 24px;
 }
 
 // Event image column - left side

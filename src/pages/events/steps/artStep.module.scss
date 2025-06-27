@@ -227,6 +227,7 @@
   display: flex;
   flex-direction: column;
   position: relative;
+  overflow: hidden;
 }
 
 .previewImage {
@@ -237,9 +238,18 @@
 }
 
 .fileInfo {
+  position: absolute; // Position it relative to .imagePreview
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  background-color: rgba(249, 250, 251, 0.9); // A semi-transparent light background
+  backdrop-filter: blur(4px); // Optional: creates a nice "glass" effect
   display: flex;
   justify-content: space-between;
-  padding: 8px 0;
+  align-items: center;
+  padding: 8px 12px; // Adjust padding for a better look
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .fileName {

@@ -35,13 +35,13 @@ const EventHeaderNav = ({ currentStep, eventName, isDraft, canPreview }) => {
           <Link to="/events/create" className={styles.breadcrumbLink}>
             {eventName}
           </Link>
-          {isDraft && (
+          {/* {isDraft && (
             <>
               <span className={styles.breadcrumbDraft}>
                 Draft
               </span>
             </>
-          )}
+          )} */}
         </div>
       </div>
     </div>
