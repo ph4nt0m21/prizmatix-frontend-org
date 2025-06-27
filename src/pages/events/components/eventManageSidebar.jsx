@@ -32,7 +32,7 @@ const EventManageSidebar = ({
         >
           <path
             d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"
-            fill="currentColor"
+            fill="#8b5cf6"
           />
         </svg>
       ),
@@ -51,7 +51,7 @@ const EventManageSidebar = ({
         >
           <path
             d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"
-            fill="currentColor"
+            fill="#8b5cf6"
           />
         </svg>
       ),
@@ -70,7 +70,7 @@ const EventManageSidebar = ({
         >
           <path
             d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.41 16.09V20h-2.67v-1.93c-1.71-.36-3.16-1.46-3.27-3.4h1.96c.1.93.82 1.62 2.45 1.62 1.79 0 2.44-.9 2.44-1.87 0-.95-.65-1.87-2.64-2.44-2.48-.74-4.04-1.76-4.04-3.85 0-1.94 1.47-3.19 3.1-3.56V2.7h2.67v1.92c1.86.45 2.79 1.86 2.85 3.39H14.3c-.05-1.11-.64-1.87-2.22-1.87-1.5 0-2.4.68-2.4 1.64 0 .84.65 1.39 2.67 2.04 2.33.74 4.01 1.73 4.01 3.88 0 2.03-1.62 3.45-3.33 3.76z"
-            fill="currentColor"
+            fill="#8b5cf6"
           />
         </svg>
       ),
@@ -89,7 +89,7 @@ const EventManageSidebar = ({
         >
           <path
             d="M16.53 11.06L15.47 10l-4.88 4.88-2.12-2.12-1.06 1.06L10.59 17l5.94-5.94zM19 3h-1V1h-2v2H8V1H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11z"
-            fill="currentColor"
+            fill="#8b5cf6"
           />
         </svg>
       ),
@@ -110,7 +110,7 @@ const EventManageSidebar = ({
         >
           <path
             d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"
-            fill="currentColor"
+            fill="#8b5cf6"
           />
         </svg>
       ),
@@ -129,7 +129,7 @@ const EventManageSidebar = ({
         >
           <path
             d="M22 10V6c0-1.11-.9-2-2-2H4c-1.1 0-1.99.89-1.99 2v4c1.1 0 1.99.9 1.99 2s-.89 2-2 2v4c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2v-4c-1.1 0-2-.9-2-2s.9-2 2-2zm-9 7.5h-2v-2h2v2zm0-4.5h-2v-2h2v2zm0-4.5h-2v-2h2v2z"
-            fill="currentColor"
+            fill="#8b5cf6"
           />
         </svg>
       ),
@@ -148,7 +148,7 @@ const EventManageSidebar = ({
         >
           <path
             d="M19.41 7.41L12 14.83L4.59 7.41L3.17 8.83L12 17.66L20.83 8.83L19.41 7.41ZM12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"
-            fill="currentColor"
+            fill="#8b5cf6"
           />
         </svg>
       ),
@@ -234,7 +234,7 @@ const EventManageSidebar = ({
                   {section.icon}
                 </div>
                 <span className={styles.sectionLabel}>{section.label}</span>
-                <div
+                {/* <div
                   className={`${styles.sectionStatusIndicator} ${
                     isActive
                       ? styles.activeIndicator
@@ -257,7 +257,7 @@ const EventManageSidebar = ({
                       />
                     </svg>
                   )}
-                </div>
+                </div> */}
               </div>
             );
           })}
@@ -299,7 +299,7 @@ const EventManageSidebar = ({
                   <span className={styles.sectionLabel}>
                     {ticketSection.label}
                   </span>
-                  <div
+                  {/* <div
                     className={`${styles.sectionStatusIndicator} ${
                       isActive
                         ? styles.activeIndicator
@@ -322,7 +322,7 @@ const EventManageSidebar = ({
                         />
                       </svg>
                     )}
-                  </div>
+                  </div> */}
                 </div>
               );
             })()}
@@ -344,7 +344,7 @@ const EventManageSidebar = ({
                   <span className={styles.sectionLabel}>
                     {discountSection.label}
                   </span>
-                  <div
+                  {/* <div
                     className={`${styles.sectionStatusIndicator} ${
                       isActive
                         ? styles.activeIndicator
@@ -367,7 +367,7 @@ const EventManageSidebar = ({
                         />
                       </svg>
                     )}
-                  </div>
+                  </div> */}
                 </div>
               );
             })()}
@@ -386,7 +386,7 @@ const EventManageSidebar = ({
           >
             <path
               d="M16 1H4C2.9 1 2 1.9 2 3V17H4V3H16V1ZM19 5H8C6.9 5 6 5.9 6 7V21C6 22.1 6.9 23 8 23H19C20.1 23 21 22.1 21 21V7C21 5.9 20.1 5 19 5ZM19 21H8V7H19V21Z"
-              fill="#6B7280"
+              fill="#8b5cf6"
             />
           </svg>
           Duplicate Event
