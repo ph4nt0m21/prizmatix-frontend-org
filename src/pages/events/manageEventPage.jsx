@@ -10,7 +10,7 @@ import styles from "./manageEventPage.module.scss";
 
 // Import manage section components
 import OverviewSection from "./sections/overviewSection";
-import OrdersAndAttendeesSection from "./sections/ordersAndAttendeesSection";
+import OrdersAndAttendeesSection from "./sections/ordersAndAttendeesSection/ordersAndAttendeesSection";
 import PayoutSection from "./sections/payoutSection";
 import PromotionsSection from "./sections/promotionsSection";
 import TicketSection from "./sections/ticketSection";

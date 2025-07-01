@@ -1,0 +1,74 @@
+// ordersAndAttendeesSection/ordersAndAttendeesSection.module.scss
+
+// NEW: A wrapper for the header to align tabs and toolbar
+.mainHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 24px;
+  border-bottom: 1px solid #E5E7EB;
+  background-color: #FFFFFF;
+}
+
+.tabs {
+  display: flex;
+  align-items: center;
+}
+
+.tabButton {
+  display: flex;
+  align-items: center;
+  gap: 8px; // Space between icon and text
+  padding: 16px 8px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  color: #6B7280; // Default color for inactive tab
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+
+  &.active {
+    color: #4F46E5; // Purple color for active tab
+    border-bottom-color: #4F46E5;
+  }
+}
+
+.content {
+  background: #FFFFFF;
+  border-radius: 8px;
+  box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.05);
+  margin-top: 24px; // Add margin to space it from the header
+}
+
+.placeholder {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 60px;
+  text-align: center;
+  color: #6B7280;
+  border-radius: 8px;
+
+  h3 {
+    margin: 0 0 8px;
+  }
+  p {
+    margin: 0;
+    font-size: 14px;
+  }
+}
+
+// NEW: Wrapper for the content below the main header
+.mainContent {
+  padding-top: 24px;
+}
+
+// RENAMED from .content to specify it's for the card layout
+.contentCard {
+  background: #FFFFFF;
+  border-radius: 8px;
+  border: 1px solid #E5E7EB;
+}

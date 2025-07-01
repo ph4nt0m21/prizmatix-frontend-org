@@ -1,0 +1,126 @@
+// ordersAndAttendeesSection/components/OrdersTable.module.scss
+
+.tableContainer {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.table th, .table td {
+  padding: 12px 24px;
+  text-align: left;
+  border-bottom: 1px solid #E5E7EB;
+  white-space: nowrap;
+}
+
+// ... (other styles like th, td, tableRow, ticketType, discountCode remain the same) ...
+.table th {
+  color: #6B7280;
+  font-weight: 500;
+  background-color: #F9FAFB;
+  font-size: 12px;
+  text-transform: uppercase;
+}
+.table td {
+  color: #374151;
+}
+.tableRow {
+  cursor: pointer;
+  &:hover {
+    background-color: #F9FAFB;
+  }
+}
+.ticketType {
+  background-color: #D1FAE5;
+  color: #065F46;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-weight: 500;
+  font-size: 12px;
+}
+.discountCode {
+  color: #2563EB;
+  font-weight: 500;
+}
+
+
+// The dropdown is no longer inside the cell, so these styles are simpler.
+.actionCell {
+  // We can remove position: relative now.
+}
+
+.downloadButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #6B7280;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  border-radius: 50%;
+  font-size: 16px;
+
+  &:hover {
+    background-color: #E5E7EB;
+    color: #111827;
+  }
+}
+
+// These styles now apply to the portal component
+.actionDropdown {
+  background: #FFFFFF;
+  border: 1px solid #E5E7EB;
+  border-radius: 6px;
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+  width: 160px;
+  display: flex;
+  flex-direction: column;
+  padding: 4px;
+}
+
+.actionLink {
+  width: 100%;
+  padding: 8px 12px;
+  font-size: 14px;
+  text-align: left;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  color: #111827;
+  border-radius: 4px;
+
+  &:hover {
+    background-color: #F3F4F6;
+  }
+}
+
+.pagination {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 16px 24px;
+  font-size: 14px;
+  color: #6B7280;
+  gap: 24px;
+
+  button {
+    background: none;
+    border: 1px solid transparent;
+    cursor: pointer;
+    font-size: 16px;
+    &:hover {
+      color: #111827;
+    }
+  }
+}
+
+.noResults {
+  text-align: center;
+  padding: 48px;
+  color: #6B7280;
+}
