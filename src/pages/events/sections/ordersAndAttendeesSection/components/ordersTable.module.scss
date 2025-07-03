@@ -17,7 +17,6 @@
   white-space: nowrap;
 }
 
-// ... (other styles like th, td, tableRow, ticketType, discountCode remain the same) ...
 .table th {
   color: #6B7280;
   font-weight: 500;
@@ -25,15 +24,18 @@
   font-size: 12px;
   text-transform: uppercase;
 }
+
 .table td {
   color: #374151;
 }
+
 .tableRow {
   cursor: pointer;
   &:hover {
     background-color: #F9FAFB;
   }
 }
+
 .ticketType {
   background-color: #D1FAE5;
   color: #065F46;
@@ -42,15 +44,14 @@
   font-weight: 500;
   font-size: 12px;
 }
+
 .discountCode {
   color: #2563EB;
   font-weight: 500;
 }
 
-
-// The dropdown is no longer inside the cell, so these styles are simpler.
 .actionCell {
-  // We can remove position: relative now.
+  // No special styles needed here now
 }
 
 .downloadButton {
@@ -70,34 +71,7 @@
   }
 }
 
-// These styles now apply to the portal component
-.actionDropdown {
-  background: #FFFFFF;
-  border: 1px solid #E5E7EB;
-  border-radius: 6px;
-  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
-  width: 160px;
-  display: flex;
-  flex-direction: column;
-  padding: 4px;
-}
-
-.actionLink {
-  width: 100%;
-  padding: 8px 12px;
-  font-size: 14px;
-  text-align: left;
-  background: none;
-  border: none;
-  cursor: pointer;
-  text-decoration: none;
-  color: #111827;
-  border-radius: 4px;
-
-  &:hover {
-    background-color: #F3F4F6;
-  }
-}
+/* REMOVED .actionDropdown and .actionLink styles as they are no longer used */
 
 .pagination {
   display: flex;

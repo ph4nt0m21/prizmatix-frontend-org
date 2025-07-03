@@ -1,5 +1,3 @@
-// ordersAndAttendeesSection/components/OrderDetailsModal.module.scss
-
 .overlay {
   position: fixed;
   top: 0;
@@ -25,79 +23,55 @@
 }
 
 @keyframes slideIn {
-  from { transform: translateX(100%); }
-  to { transform: translateX(0); }
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
 }
 
 .header {
   display: flex;
-  flex-direction: column; // Align items vertically
-  align-items: flex-start; // Align to the left
+  flex-direction: column;
+  align-items: flex-start;
   padding: 24px;
   border-bottom: 1px solid #E5E7EB;
   position: relative;
 
   h3 {
     margin: 0;
-    font-size: 24px; // Larger font for Order ID
+    font-size: 24px;
     font-weight: 600;
+    color: #111827;
   }
   p {
     margin: 4px 0 0;
     font-size: 14px;
-    color: #6B7280;
+    color: #111827;
   }
 }
 
 .closeButton {
-  position: absolute; // Position close button within header
+  position: absolute;
   top: 24px;
   right: 24px;
   background: none;
   border: none;
   cursor: pointer;
   font-size: 24px;
-  color: #6B7280;
+  color: #111827;
 }
 
 .content {
   flex-grow: 1;
   overflow-y: auto;
   padding: 24px;
-  background-color: #FFFFFF; // Changed to white background
-}
-
-.detailBlock {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 24px 16px; // Increased gap
-  padding: 0; // Removed padding from here
   background-color: #FFFFFF;
-  border-radius: 0;
-  margin-bottom: 32px; // Increased margin
-}
-
-.detailItem {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  span {
-    font-size: 14px;
-    color: #6B7280;
-  }
-  strong {
-    font-size: 14px;
-    font-weight: 500;
-    color: #111827;
-  }
 }
 
 .section {
-  background-color: #FFFFFF;
-  border-radius: 0;
-  padding: 0;
   margin-bottom: 32px;
-
   &:last-child {
     margin-bottom: 0;
   }
@@ -109,24 +83,46 @@
   align-items: center;
   margin-bottom: 8px;
   padding-bottom: 8px;
-  border-bottom: 1px solid #E5E7EB; // Add border to header
-  
+  border-bottom: 1px solid #E5E7EB;
+
   h4 {
     margin: 0;
     font-size: 16px;
     font-weight: 600;
+    color: #111827;
   }
-  
+
   button {
     background: none;
     border: none;
     cursor: pointer;
-    color: #6B7280;
+    color: #111827;
     font-size: 20px;
   }
 }
 
-// NEW: Styles for the two-column info rows
+.detailBlock {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px 16px;
+  padding-top: 12px;
+}
+
+.detailItem {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  span {
+    font-size: 14px;
+    color: #111827;
+  }
+  strong {
+    font-size: 14px;
+    font-weight: 500;
+    color: #111827;
+  }
+}
+
 .infoRow {
   display: flex;
   justify-content: space-between;
@@ -134,60 +130,57 @@
   font-size: 14px;
   padding: 12px 0;
   border-bottom: 1px solid #F3F4F6;
-
   &:last-child {
     border-bottom: none;
   }
 }
-
 .infoLabel {
-  color: #6B7280;
+  color: #111827;
 }
-
 .infoValue {
   color: #111827;
   font-weight: 500;
 }
 
-// UPDATED: Styles for the new ticket item layout
 .ticketItem {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 12px 0;
   border-bottom: 1px solid #F3F4F6;
-  &:last-child { border-bottom: none; }
+  &:last-child {
+    border-bottom: none;
+  }
 }
-
 .ticketInfo {
   display: flex;
   flex-direction: column;
 }
-
 .ticketName {
   font-size: 14px;
   font-weight: 500;
   color: #111827;
 }
-
 .ticketPrice {
   font-size: 14px;
-  color: #6B7280;
+  color: #111827;
   margin-top: 2px;
 }
-
 .ticketQuantity {
   font-size: 14px;
-  color: #6B7280;
+  color: #111827;
   font-weight: 500;
 }
 
-// UPDATED: Styles for the new attendee block layout
-.attendeeItem {
+.attendeeNameRow {
+  font-size: 14px;
+  font-weight: 500;
+  color: #111827;
   padding: 12px 0;
-  border-bottom: 1px solid #E5E7EB; // Thicker border between attendees
-  &:last-child { border-bottom: none; }
-  // It will contain multiple .infoRow elements
+  border-bottom: 1px solid #F3F4F6;
+  &:last-child {
+    border-bottom: none;
+  }
 }
 
 .footer {
@@ -209,8 +202,7 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  color: #374151;
-  
+  color: #111827;
   &:hover {
     background-color: #F3F4F6;
   }

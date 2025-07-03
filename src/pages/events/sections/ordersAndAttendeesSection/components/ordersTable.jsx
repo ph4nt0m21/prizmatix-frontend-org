@@ -1,107 +1,103 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { createPortal } from 'react-dom';
+import React from 'react';
 import styles from './ordersTable.module.scss';
 import { FiDownload } from 'react-icons/fi';
-import { CSVLink } from 'react-csv';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
-// --- A new, separate component for the Menu, rendered via a Portal ---
-const ActionMenu = ({ menuState, onCsvClick, onPdfClick }) => {
-  const menuRef = useRef(null);
-  
-  // Effect to handle clicking outside the menu to close it
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (menuRef.current && !menuRef.current.contains(event.target)) {
-        menuState.closeMenu();
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [menuState]);
-
-  const menuStyle = {
-    position: 'fixed',
-    right: `${window.innerWidth - menuState.right}px`, // Align to the right edge of the button
-    top: menuState.direction === 'down' ? `${menuState.bottom + 4}px` : undefined, // Position below button
-    bottom: menuState.direction === 'up' ? `${window.innerHeight - menuState.top + 4}px` : undefined, // Position above button
-    zIndex: 1000,
-  };
-
-  return createPortal(
-    <div ref={menuRef} style={menuStyle} className={styles.actionDropdown}>
-      <CSVLink
-        data={[menuState.order]}
-        headers={menuState.csvHeaders}
-        filename={`order-${menuState.order.id}.csv`}
-        className={styles.actionLink}
-        onClick={onCsvClick}
-      >
-        Download as CSV
-      </CSVLink>
-      <button onClick={onPdfClick} className={styles.actionLink}>
-        Download as PDF
-      </button>
-    </div>,
-    document.body // Render the menu as a direct child of the <body>
-  );
-};
-
-
 const OrdersTable = ({ orders, onOrderSelect }) => {
-  const [menuState, setMenuState] = useState({ isOpen: false, order: null, top: 0, bottom: 0, right: 0, direction: 'down' });
-  const DROPDOWN_HEIGHT = 90;
+  const tableHeaders = ['Order ID', 'Name', 'Mail', 'Order Date', 'Ticket Type', 'Amount', 'Discount'];
+  
+  const handleDownloadDetailsPDF = (order, e) => {
+    e.stopPropagation(); 
+    const doc = new jsPDF();
+    let currentY = 22;
 
-  const tableHeaders = ['Order ID', 'Name', 'Mail', 'Mobile No.', 'Order Date', 'Ticket Type', 'Amount', 'Discount'];
-  const csvHeaders = tableHeaders.map(h => {
-      const key = h.toLowerCase().replace(/ /g, '').replace('no.','phone').replace('mail','email');
-      // Manual mapping for nested customer data
-      if (['name', 'email', 'phone'].includes(key)) return { label: h, key: `customer.${key}` };
-      return { label: h, key: key.replace('id','').replace('code','') }; // Adjust keys to match data structure
-  });
+    // Helper function to draw section titles and dividers
+    const drawSection = (title, startY) => {
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(16);
+      doc.setTextColor(17, 24, 39);
+      doc.text(title, 14, startY);
+      doc.setDrawColor(229, 231, 235); // line color
+      doc.line(14, startY + 2, 196, startY + 2);
+      return startY + 12; // Return new Y position
+    };
+    
+    // Helper function to draw key-value pairs
+    const drawInfoRow = (label, value, x1, x2, y) => {
+        doc.setFontSize(14);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(107, 114, 128); // Grey color for label
+        doc.text(label, x1, y);
+        
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(17, 24, 39); // Black color for value
+        doc.text(value, x2, y, { align: 'left' });
+    };
 
 
-  const toggleMenu = (order, e) => {
-    e.stopPropagation();
+    // --- 1. PDF Header ---
+    doc.setFontSize(24);
+    doc.setFont('helvetica', 'bold');
+    doc.text(order.id, 14, currentY);
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(107, 114, 128);
+    doc.text("Order Details", 14, currentY + 7);
+    currentY += 20;
 
-    if (menuState.isOpen && menuState.order.id === order.id) {
-      closeMenu();
-      return;
+    // --- 2. Purchase Details Section ---
+    currentY = drawSection("Purchase Details", currentY);
+    drawInfoRow("Purchase Date", order.purchaseDate, 14, 80, currentY);
+    drawInfoRow("Payment Method", order.paymentMethod, 110, 150, currentY);
+    currentY += 12;
+    drawInfoRow("Discount Code", order.discountCode || 'N/A', 14, 80, currentY);
+    drawInfoRow("Amount", `$${order.amount.toFixed(2)}`, 110, 150, currentY);
+    currentY += 15;
+
+
+    // --- 3. Customer Section ---
+    currentY = drawSection("Customer", currentY);
+    drawInfoRow("Full Name", order.customer.name, 14, 80, currentY);
+    currentY += 12;
+    drawInfoRow("E-Mail", order.customer.email, 14, 80, currentY);
+    currentY += 15;
+
+
+    // --- 4. Tickets Section ---
+    currentY = drawSection("Tickets", currentY);
+    doc.setFont('helvetica', 'normal');
+    order.tickets.forEach(ticket => {
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(17, 24, 39);
+      doc.text(ticket.name, 14, currentY);
+
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(107, 114, 128);
+      doc.text(`$${ticket.price.toFixed(2)}`, 14, currentY + 6);
+      doc.text(`x ${ticket.quantity}`, 196, currentY + 3, { align: 'right' });
+      
+      currentY += 16;
+      doc.line(14, currentY - 4, 196, currentY - 4); // Divider
+    });
+    currentY += 5;
+    
+    // --- 5. Attendees Section ---
+    if(order.attendees && order.attendees.length > 0) {
+      currentY = drawSection("Attendees", currentY);
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(17, 24, 39);
+      order.attendees.forEach(attendee => {
+        doc.text(attendee.name, 14, currentY);
+        currentY += 10;
+        doc.line(14, currentY - 4, 196, currentY - 4); // Divider
+      });
     }
 
-    const rect = e.currentTarget.getBoundingClientRect();
-    const spaceBelow = window.innerHeight - rect.bottom;
-    const direction = spaceBelow < DROPDOWN_HEIGHT ? 'up' : 'down';
-    
-    setMenuState({
-      isOpen: true,
-      order: order,
-      top: rect.top,
-      bottom: rect.bottom,
-      right: rect.right,
-      direction: direction,
-      csvHeaders: csvHeaders // Pass headers to the menu state
-    });
-  };
-
-  const closeMenu = () => {
-    setMenuState({ isOpen: false, order: null, top: 0, bottom: 0, right: 0, direction: 'down' });
-  };
-  
-  const handleDownloadPDF = () => {
-    const order = menuState.order;
-    const doc = new jsPDF({ orientation: 'landscape' });
-    const tableHead = [tableHeaders];
-    const tableBody = [[
-        order.id, order.customer.name, order.customer.email, order.customer.phone,
-        order.orderDate, order.ticketType, `$${order.amount.toFixed(2)}`, order.discountCode || 'N/A'
-    ]];
-    autoTable(doc, { head: tableHead, body: tableBody });
-    doc.save(`order-${order.id}.pdf`);
-    closeMenu();
+    doc.save(`order-details-${order.id}.pdf`);
   };
 
   if (orders.length === 0) {
@@ -109,57 +105,44 @@ const OrdersTable = ({ orders, onOrderSelect }) => {
   }
 
   return (
-    <>
-      {/* The Portal for the menu will be rendered here when state is set */}
-      {menuState.isOpen && 
-        <ActionMenu 
-          menuState={{...menuState, closeMenu}} 
-          onCsvClick={closeMenu} 
-          onPdfClick={handleDownloadPDF} 
-        />
-      }
-
-      <div className={styles.tableContainer}>
-        <table className={styles.table}>
-          <thead>
-            <tr>
-              <th><input type="checkbox" /></th>
-              {tableHeaders.map(header => <th key={header}>{header}</th>)}
-              <th></th>
+    <div className={styles.tableContainer}>
+      <table className={styles.table}>
+        <thead>
+          <tr>
+            <th><input type="checkbox" /></th>
+            {tableHeaders.map(header => <th key={header}>{header}</th>)}
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {orders.map((order) => (
+            <tr key={order.id} onClick={() => onOrderSelect(order)} className={styles.tableRow}>
+              <td><input type="checkbox" onClick={(e) => e.stopPropagation()} /></td>
+              <td>{order.id}</td>
+              <td>{order.customer.name}</td>
+              <td>{order.customer.email}</td>
+              <td>{order.orderDate}</td>
+              <td><span className={styles.ticketType}>{order.ticketType}</span></td>
+              <td>$ {order.amount.toFixed(2)}</td>
+              <td><span className={styles.discountCode}>{order.discountCode || 'N/A'}</span></td>
+              <td className={styles.actionCell}>
+                <button className={styles.downloadButton} onClick={(e) => handleDownloadDetailsPDF(order, e)}>
+                  <FiDownload />
+                </button>
+              </td>
             </tr>
-          </thead>
-          <tbody>
-            {orders.map((order) => (
-              <tr key={order.id} onClick={() => onOrderSelect(order)} className={styles.tableRow}>
-                <td><input type="checkbox" onClick={(e) => e.stopPropagation()} /></td>
-                <td>{order.id}</td>
-                <td>{order.customer.name}</td>
-                <td>{order.customer.email}</td>
-                <td>{order.customer.phone}</td>
-                <td>{order.orderDate}</td>
-                <td><span className={styles.ticketType}>{order.ticketType}</span></td>
-                <td>$ {order.amount.toFixed(2)}</td>
-                <td><span className={styles.discountCode}>{order.discountCode || 'N/A'}</span></td>
-                <td className={styles.actionCell}>
-                  {/* The button now only sets state, it doesn't render the menu here */}
-                  <button className={styles.downloadButton} onClick={(e) => toggleMenu(order, e)}>
-                    <FiDownload />
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        <div className={styles.pagination}>
-          <span>Rows per page: 10</span>
-          <span>1 - {orders.length} of {orders.length}</span>
-          <div>
-            <button>&lt;</button>
-            <button>&gt;</button>
-          </div>
+          ))}
+        </tbody>
+      </table>
+      <div className={styles.pagination}>
+        <span>Rows per page: 10</span>
+        <span>1 - {orders.length} of {orders.length}</span>
+        <div>
+          <button>&lt;</button>
+          <button>&gt;</button>
         </div>
       </div>
-    </>
+    </div>
   );
 };
 
