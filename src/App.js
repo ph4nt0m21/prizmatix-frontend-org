@@ -1,75 +1,43 @@
-/*
-File: App.js
-*/
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { Route, Routes, Navigate } from "react-router-dom";
-import Cookies from 'js-cookie';
-import { LoginAPI } from "./services/allApis";
+import { AuthProvider, useAuth } from './context/authContext'; // Import AuthProvider and useAuth
 import MainLayout from "./layout/mainLayout/mainLayout";
 import "./App.css";
+
+// Import all your pages
 import HomePage from "./pages/homePage/homePage";
 import LoginPage from "./pages/auth/loginPage";
 import RegisterPage from "./pages/auth/multiStepRegisterPage";
 import ForgotPasswordPage from "./pages/auth/forgotPasswordPage";
 import ResetLinkSentPage from "./pages/auth/resetLinkSentPage";
 import ResetPasswordPage from "./pages/auth/resetPasswordPage";
-import ProtectedRoute from "./security/protectedRoute";
-import NotFoundPage from "./pages/notFound/notFoundPage";
-import LoadingSpinner from "./components/common/loadingSpinner/loadingSpinner";
 import EventsPage from "./pages/events/eventsPage";
 import CreateEventPage from "./pages/events/createEventPage";
 import EventManagePage from './pages/events/manageEventPage';
-import EventEditPage from './pages/events/eventEditPage'; // Renamed import
-import TicketEditPage from './pages/events/ticketEditPage'; // New import
+import EventEditPage from './pages/events/eventEditPage';
+import TicketEditPage from './pages/events/ticketEditPage';
+import NotFoundPage from "./pages/notFound/notFoundPage";
+
+// Import utilities and components
+import ProtectedRoute from "./security/protectedRoute";
+import LoadingSpinner from "./components/common/loadingSpinner/loadingSpinner";
 import { setupEventDataCleanup, checkAndCleanupEventData } from './utils/eventUtil';
 
 /**
- * App component defines the main routing structure and handles authentication
- * @returns {JSX.Element} The App component
+ * AppContent defines the routing structure and uses the auth context.
+ * It's a separate component to ensure it's rendered inside AuthProvider.
  */
-function App() {
-  // Authentication loading state only
-  const [isLoading, setIsLoading] = useState(true);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+const AppContent = () => {
+  // Get authentication state from the context, not local state
+  const { isAuthenticated, isLoading } = useAuth();
 
-  // Check if user is authenticated on initial load - just to handle loading state
   useEffect(() => {
-    const checkAuthStatus = async () => {
-      setIsLoading(true);
-      try {
-        const token = Cookies.get('token');
-
-        if (token) {
-          try {
-            await LoginAPI(token);
-            setIsAuthenticated(true);
-          } catch (error) {
-            console.error('Error fetching user profile:', error);
-            // Even if profile fetch fails, if token exists, consider authenticated
-            setIsAuthenticated(true);
-          }
-        } else {
-          setIsAuthenticated(false);
-        }
-      } catch (error) {
-        console.error('Auth check error:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    checkAuthStatus();
+    // This logic can remain here as it runs on app startup
+    checkAndCleanupEventData(120); // Clear stale event data after 2 hours
+    setupEventDataCleanup();
   }, []);
 
-  useEffect(() => {
-  // Check for stale event data on app startup
-  checkAndCleanupEventData(120); // Clear stale event data after 2 hours
-
-  // Setup cleanup for when user closes tab or window
-  setupEventDataCleanup();
-}, []);
-
-  // Show loading spinner while checking authentication
+  // Show a loading spinner while the auth state is being determined by the context
   if (isLoading) {
     return (
       <div className="loading-container">
@@ -79,69 +47,61 @@ function App() {
   }
 
   return (
-      <div>
-        <Routes>
-          {/* Public Routes */}
-          <Route
-            path="/login"
-            element={isAuthenticated ? <Navigate to="/" /> : <LoginPage />}
-          />
-          <Route
-            path="/register"
-            element={isAuthenticated ? <Navigate to="/" /> : <RegisterPage />}
-          />
-          <Route
-            path="/forgot-password"
-            element={isAuthenticated ? <Navigate to="/" /> : <ForgotPasswordPage />}
-          />
-          <Route
-            path="/reset-link-sent"
-            element={isAuthenticated ? <Navigate to="/" /> : <ResetLinkSentPage />}
-          />
-          <Route
-            path="/reset-password"
-            element={isAuthenticated ? <Navigate to="/" /> : <ResetPasswordPage />}
-          />
+    <Routes>
+      {/* Public Routes: Redirect if authenticated */}
+      <Route
+        path="/login"
+        element={isAuthenticated ? <Navigate to="/" /> : <LoginPage />}
+      />
+      <Route
+        path="/register"
+        element={isAuthenticated ? <Navigate to="/" /> : <RegisterPage />}
+      />
+      <Route
+        path="/forgot-password"
+        element={isAuthenticated ? <Navigate to="/" /> : <ForgotPasswordPage />}
+      />
+      <Route
+        path="/reset-link-sent"
+        element={isAuthenticated ? <Navigate to="/" /> : <ResetLinkSentPage />}
+      />
+      <Route
+        path="/reset-password"
+        element={isAuthenticated ? <Navigate to="/" /> : <ResetPasswordPage />}
+      />
 
-          {/* Protected Routes using ProtectedRoute component */}
-          <Route element={<ProtectedRoute />}>
-            <Route path="/" element={<MainLayout />}>
-              <Route index element={<HomePage />} />
-              <Route path="events" element={<EventsPage />} />
+      {/* Protected Routes Wrapper */}
+      <Route element={<ProtectedRoute />}>
+        <Route path="/" element={<MainLayout />}>
+          <Route index element={<HomePage />} />
+          <Route path="events" element={<EventsPage />} />
+          <Route path="events/manage/:eventId/:section" element={<EventManagePage />} />
+          <Route path="events/edit-page/:eventId/:step" element={<EventEditPage />} />
+          <Route path="events/edit-page/:eventId" element={<EventEditPage />} />
+          <Route path="events/edit-page" element={<EventEditPage />} />
+          <Route path="events/tickets/:eventId" element={<TicketEditPage />} />
+          <Route path="events/tickets" element={<TicketEditPage />} />
+          <Route path="events/create" element={<CreateEventPage />} />
+          <Route path="events/create/:eventId" element={<CreateEventPage />} />
+          <Route path="events/create/:eventId/:step" element={<CreateEventPage />} />
+        </Route>
+      </Route>
 
-              {/* Manage Event Routes*/}
-              <Route path="events/manage/:eventId/:section" element={<EventManagePage />} />
+      {/* 404 Not Found Route */}
+      <Route path="*" element={<NotFoundPage />} />
+    </Routes>
+  );
+};
 
-              {/* Edit Event Pages - Dedicated routes for each main edit section */}
-              {/* Event Page Edit */}
-              {/* Updated route for eventEditPage to include optional :step parameter */}
-              <Route path="events/edit-page/:eventId/:step" element={<EventEditPage/>} />
-              <Route path="events/edit-page/:eventId" element={<EventEditPage/>} /> {/* Fallback route without step */}
-              <Route path="events/edit-page" element={<EventEditPage/>} /> {/* Fallback without eventId or step */}
-
-
-              {/* Tickets Edit */}
-              <Route path="events/tickets/:eventId" element={<TicketEditPage/>} />
-              <Route path="events/tickets" element={<TicketEditPage/>} /> Fallback route without eventId
-
-
-              {/* Event Creation Routes */}
-              <Route path="events/create" element={<CreateEventPage />} />
-              <Route path="events/create/:eventId" element={<CreateEventPage />} />
-              <Route path="events/create/:eventId/:step" element={<CreateEventPage />} />
-
-              {/* Add more protected routes as needed */}
-            </Route>
-          </Route>
-
-          {/* 404 handler */}
-          <Route
-            path="*"
-            element={<NotFoundPage />}
-          />
-        </Routes>
-      </div>
-    );
+/**
+ * App component now simply wraps the main content with the AuthProvider.
+ */
+function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
+  );
 }
 
 export default App;

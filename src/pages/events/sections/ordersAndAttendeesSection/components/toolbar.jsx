@@ -16,25 +16,24 @@ const Toolbar = ({ activeTab, searchQuery, setSearchQuery, data, currentFilters,
   
   const searchPlaceholder = isOrdersTab 
     ? "Search by Order ID, Name, or Mail..." 
-    : "Search by Attendee Name or Mail...";
+    : "Search by Attendee Name...";
 
   const handleExportPDF = () => {
     const doc = new jsPDF({ orientation: 'landscape' });
     
-    // CHANGED: Removed 'Mobile No.' from headers
     const tableHead = isOrdersTab
-      ? [['Order ID', 'Name', 'Mail', 'Order Date', 'Ticket Type', 'Amount', 'Discount']]
-      : [['Name', 'Mail', 'Order Date', 'Ticket Type', 'Status']];
+      ? [['Order ID', 'Name', 'Mail', 'Order Date', 'Ticket Type']]
+      : [['Name', 'Ticket Type', 'Status']];
       
-    // CHANGED: Removed phone data from body
     const tableBody = isOrdersTab
       ? data.map(order => [
           order.id, order.customer.name, order.customer.email,
-          order.orderDate, order.ticketType, `$${order.amount.toFixed(2)}`, order.discountCode || 'N/A'
+          order.orderDate, order.ticketType
         ])
       : data.map(attendee => [
-          attendee.name, attendee.email, attendee.orderDate,
-          attendee.ticketType, attendee.isCheckedIn ? 'Checked In' : 'Not Checked In'
+          attendee.name,
+          attendee.ticketType,
+          attendee.isCheckedIn ? 'Checked In' : 'Not Checked In'
         ]);
 
     autoTable(doc, { head: tableHead, body: tableBody });
@@ -42,16 +41,17 @@ const Toolbar = ({ activeTab, searchQuery, setSearchQuery, data, currentFilters,
     setExportOpen(false);
   };
 
-  // CHANGED: Removed 'Mobile No.' from CSV headers
   const csvHeaders = isOrdersTab
     ? [
-        { label: "Order ID", key: "id" }, { label: "Name", key: "customer.name" }, { label: "Mail", key: "customer.email" },
-        { label: "Order Date", key: "orderDate" }, { label: "Ticket Type", key: "ticketType" },
-        { label: "Amount", key: "amount" }, { label: "Discount", key: "discountCode" }
+        { label: "Order ID", key: "id" },
+        { label: "Name", key: "customer.name" },
+        { label: "Mail", key: "customer.email" },
+        { label: "Order Date", key: "orderDate" },
+        { label: "Ticket Type", key: "ticketType" },
       ]
     : [
-        { label: "Name", key: "name" }, { label: "Mail", key: "email" },
-        { label: "Order Date", key: "orderDate" }, { label: "Ticket Type", key: "ticketType" },
+        { label: "Name", key: "name" },
+        { label: "Ticket Type", key: "ticketType" },
         { label: "Status", key: "isCheckedIn" }
       ];
 
@@ -76,7 +76,12 @@ const Toolbar = ({ activeTab, searchQuery, setSearchQuery, data, currentFilters,
             <button className={styles.iconButton} onClick={() => setSearchActive(true)}>
               <FiSearch />
             </button>
-            <button className={styles.actionButton} onClick={() => setFilterModalOpen(true)}>
+            <button 
+              className={styles.actionButton} 
+              onClick={() => setFilterModalOpen(true)}
+              // Disable filter button for Orders tab for now
+              disabled={isOrdersTab}
+            >
               <FiFilter /> Filter
             </button>
             <div className={styles.exportContainer}>

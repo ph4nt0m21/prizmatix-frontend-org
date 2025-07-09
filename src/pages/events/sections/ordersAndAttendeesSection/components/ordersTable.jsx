@@ -5,103 +5,87 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
 const OrdersTable = ({ orders, onOrderSelect }) => {
-  const tableHeaders = ['Order ID', 'Name', 'Mail', 'Order Date', 'Ticket Type', 'Amount', 'Discount'];
+  const tableHeaders = ['Order ID', 'Name', 'Mail', 'Order Date', 'Ticket Type'];
   
   const handleDownloadDetailsPDF = (order, e) => {
     e.stopPropagation(); 
     const doc = new jsPDF();
-    let currentY = 22;
+    let lastY = 15;
 
-    // Helper function to draw section titles and dividers
-    const drawSection = (title, startY) => {
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(16);
-      doc.setTextColor(17, 24, 39);
-      doc.text(title, 14, startY);
-      doc.setDrawColor(229, 231, 235); // line color
-      doc.line(14, startY + 2, 196, startY + 2);
-      return startY + 12; // Return new Y position
+    // --- PDF Header ---
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(24);
+    doc.text(order.id, 14, lastY + 7);
+    
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(14);
+    doc.setTextColor(107, 114, 128);
+    doc.text("Order Details", 14, lastY + 14);
+    lastY += 30;
+
+    const addSectionHeader = (title) => {
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(16);
+        doc.setTextColor(17, 24, 39);
+        doc.text(title, 14, lastY);
+        doc.setDrawColor(229, 231, 235);
+        doc.line(14, lastY + 2, 196, lastY + 2);
+        lastY += 12;
     };
     
-    // Helper function to draw key-value pairs
     const drawInfoRow = (label, value, x1, x2, y) => {
         doc.setFontSize(14);
         doc.setFont('helvetica', 'normal');
-        doc.setTextColor(107, 114, 128); // Grey color for label
+        doc.setTextColor(107, 114, 128);
         doc.text(label, x1, y);
         
         doc.setFont('helvetica', 'bold');
-        doc.setTextColor(17, 24, 39); // Black color for value
+        doc.setTextColor(17, 24, 39);
         doc.text(value, x2, y, { align: 'left' });
     };
 
+    // --- Purchase Details Section ---
+    addSectionHeader("Purchase Details");
+    drawInfoRow("Purchase Date", order.purchaseDate, 14, 80, lastY);
+    drawInfoRow("Payment Method", order.paymentMethod, 110, 150, lastY);
+    lastY += 15;
 
-    // --- 1. PDF Header ---
-    doc.setFontSize(24);
-    doc.setFont('helvetica', 'bold');
-    doc.text(order.id, 14, currentY);
-    doc.setFontSize(14);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(107, 114, 128);
-    doc.text("Order Details", 14, currentY + 7);
-    currentY += 20;
+    // --- Customer Section ---
+    addSectionHeader("Customer");
+    drawInfoRow("Full Name", order.customer.name, 14, 80, lastY);
+    lastY += 12;
+    drawInfoRow("E-Mail", order.customer.email, 14, 80, lastY);
+    lastY += 15;
 
-    // --- 2. Purchase Details Section ---
-    currentY = drawSection("Purchase Details", currentY);
-    drawInfoRow("Purchase Date", order.purchaseDate, 14, 80, currentY);
-    drawInfoRow("Payment Method", order.paymentMethod, 110, 150, currentY);
-    currentY += 12;
-    drawInfoRow("Discount Code", order.discountCode || 'N/A', 14, 80, currentY);
-    drawInfoRow("Amount", `$${order.amount.toFixed(2)}`, 110, 150, currentY);
-    currentY += 15;
-
-
-    // --- 3. Customer Section ---
-    currentY = drawSection("Customer", currentY);
-    drawInfoRow("Full Name", order.customer.name, 14, 80, currentY);
-    currentY += 12;
-    drawInfoRow("E-Mail", order.customer.email, 14, 80, currentY);
-    currentY += 15;
-
-
-    // --- 4. Tickets Section ---
-    currentY = drawSection("Tickets", currentY);
-    doc.setFont('helvetica', 'normal');
-    order.tickets.forEach(ticket => {
-      doc.setFontSize(14);
-      doc.setFont('helvetica', 'bold');
-      doc.setTextColor(17, 24, 39);
-      doc.text(ticket.name, 14, currentY);
-
-      doc.setFontSize(14);
-      doc.setFont('helvetica', 'normal');
-      doc.setTextColor(107, 114, 128);
-      doc.text(`$${ticket.price.toFixed(2)}`, 14, currentY + 6);
-      doc.text(`x ${ticket.quantity}`, 196, currentY + 3, { align: 'right' });
-      
-      currentY += 16;
-      doc.line(14, currentY - 4, 196, currentY - 4); // Divider
+    // --- Tickets Section ---
+    addSectionHeader("Tickets");
+    autoTable(doc, {
+        startY: lastY,
+        theme: 'plain',
+        body: order.tickets.map(ticket => [
+            { content: ticket.ticketType, styles: { fontStyle: 'bold' } },
+            { content: `x 1`, styles: { halign: 'right' } } // Assuming 1 ticket per entry for now
+        ]),
+        styles: { fontSize: 11, cellPadding: 2 }
     });
-    currentY += 5;
+    lastY = doc.lastAutoTable.finalY + 5;
     
-    // --- 5. Attendees Section ---
+    // --- Attendees Section ---
     if(order.attendees && order.attendees.length > 0) {
-      currentY = drawSection("Attendees", currentY);
-      doc.setFontSize(14);
-      doc.setFont('helvetica', 'bold');
-      doc.setTextColor(17, 24, 39);
-      order.attendees.forEach(attendee => {
-        doc.text(attendee.name, 14, currentY);
-        currentY += 10;
-        doc.line(14, currentY - 4, 196, currentY - 4); // Divider
+      addSectionHeader("Attendees");
+      autoTable(doc, {
+          startY: lastY,
+          theme: 'plain',
+          body: order.attendees.map(a => [a.name]),
+          styles: { fontSize: 11, cellPadding: 2, fontStyle: 'bold' },
       });
     }
 
     doc.save(`order-details-${order.id}.pdf`);
   };
 
-  if (orders.length === 0) {
-    return <div className={styles.noResults}>No results found.</div>;
+  if (!orders || orders.length === 0) {
+    return <div className={styles.noResults}>No orders found.</div>;
   }
 
   return (
@@ -123,8 +107,6 @@ const OrdersTable = ({ orders, onOrderSelect }) => {
               <td>{order.customer.email}</td>
               <td>{order.orderDate}</td>
               <td><span className={styles.ticketType}>{order.ticketType}</span></td>
-              <td>$ {order.amount.toFixed(2)}</td>
-              <td><span className={styles.discountCode}>{order.discountCode || 'N/A'}</span></td>
               <td className={styles.actionCell}>
                 <button className={styles.downloadButton} onClick={(e) => handleDownloadDetailsPDF(order, e)}>
                   <FiDownload />

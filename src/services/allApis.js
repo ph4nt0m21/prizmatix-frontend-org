@@ -154,3 +154,18 @@ export const GetEventDiscountCodesAPI = async (eventId) => {
 export const GetEventCreationStatusAPI = async (eventId) => {
   return await apiClient.get(`/events/${eventId}/status`);
 };
+
+// Get all orders for a specific event
+export const GetEventOrdersAPI = async (eventId) => {
+  return await apiClient.get(`/orgDashboard/admin/events/${eventId}/orders`);
+};
+
+// NEW: API to get all attendees for a specific event
+export const GetEventAttendeesAPI = async (eventId) => {
+  return await apiClient.get(`/orgDashboard/admin/events/${eventId}/attendees`);
+};
+
+// NEW: API to get all dashboard overview data for a specific event
+export const GetEventDashboardAPI = async (eventId) => {
+  return await apiClient.get(`/orgDashboard/events/${eventId}/dashboard`);
+};

@@ -1,15 +1,20 @@
-// ordersAndAttendeesSection/components/OrdersTable.module.scss
-
+/* This is the scrolling container */
 .tableContainer {
+  display: block;
+  width: 100%;
   overflow-x: auto;
+  /* Add a fallback for Webkit browsers for better scrollbar styling if needed */
+  -webkit-overflow-scrolling: touch;
 }
 
+/* The table itself should not have a width constraint */
 .table {
-  width: 100%;
   border-collapse: collapse;
   font-size: 14px;
+  /* REMOVED width: 100%; */
 }
 
+/* These styles force columns to take up their natural width without wrapping */
 .table th, .table td {
   padding: 12px 24px;
   text-align: left;
@@ -24,6 +29,8 @@
   font-size: 12px;
   text-transform: uppercase;
 }
+
+/* ... all other styles remain correct ... */
 
 .table td {
   color: #374151;
@@ -50,9 +57,7 @@
   font-weight: 500;
 }
 
-.actionCell {
-  // No special styles needed here now
-}
+.actionCell { }
 
 .downloadButton {
   background: none;
@@ -70,8 +75,6 @@
     color: #111827;
   }
 }
-
-/* REMOVED .actionDropdown and .actionLink styles as they are no longer used */
 
 .pagination {
   display: flex;

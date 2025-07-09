@@ -16,11 +16,9 @@ const OrderDetailsModal = ({ order, onClose }) => {
         </div>
 
         <div className={styles.content}>
-          {/* CHANGED: Added a section wrapper and header for Purchase Details */}
           <div className={styles.section}>
             <div className={styles.sectionHeader}>
               <h4>Purchase Details</h4>
-              {/* This header doesn't need an action button, so it's empty */}
               <div></div>
             </div>
             <div className={styles.detailBlock}>
@@ -31,14 +29,6 @@ const OrderDetailsModal = ({ order, onClose }) => {
               <div className={styles.detailItem}>
                 <span>Payment Method</span>
                 <strong>{order.paymentMethod}</strong>
-              </div>
-              <div className={styles.detailItem}>
-                <span>Discount Code</span>
-                <strong>{order.discountCode || 'N/A'}</strong>
-              </div>
-              <div className={styles.detailItem}>
-                <span>Amount</span>
-                <strong>$ {order.amount.toFixed(2)}</strong>
               </div>
             </div>
           </div>
@@ -63,13 +53,11 @@ const OrderDetailsModal = ({ order, onClose }) => {
               <h4>Tickets</h4>
               <button><FiMoreHorizontal /></button>
             </div>
-            {order.tickets.map((ticket, index) => (
-              <div key={index} className={styles.ticketItem}>
+            {order.tickets && order.tickets.map((ticket, index) => (
+              <div key={ticket.ticketId || index} className={styles.ticketItem}>
                 <div className={styles.ticketInfo}>
-                  <span className={styles.ticketName}>{ticket.name}</span>
-                  <span className={styles.ticketPrice}>${ticket.price.toFixed(2)}</span>
+                  <span className={styles.ticketName}>{ticket.ticketType}</span>
                 </div>
-                <span className={styles.ticketQuantity}>&times; {ticket.quantity}</span>
               </div>
             ))}
           </div>
@@ -79,7 +67,7 @@ const OrderDetailsModal = ({ order, onClose }) => {
               <h4>Attendees</h4>
               <button><FiMoreHorizontal /></button>
             </div>
-            {order.attendees.map((attendee, index) => (
+            {order.attendees && order.attendees.map((attendee, index) => (
                 <div key={index} className={styles.attendeeNameRow}>
                   {attendee.name}
                 </div>

@@ -212,6 +212,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
+
+  /* --- ADD THESE LINES --- */
+  img {
+    width: 20px;
+    height: 20px;
+  }
 }
 
 /* Options row for remember me and forgot password */

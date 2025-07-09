@@ -1,0 +1,82 @@
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.modal {
+  background: #FFFFFF;
+  border-radius: 8px;
+  width: 100%;
+  max-width: 800px; /* Increased max-width for more columns */
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  border-bottom: 1px solid #E5E7EB;
+}
+
+.title {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.closeButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 24px;
+  color: #6B7280;
+  padding: 0;
+}
+
+.content {
+  padding: 8px 24px 24px;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+/* NEW: Container to handle horizontal scrolling */
+.tableContainer {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  
+  th, td {
+    padding: 12px 16px; /* Adjusted padding */
+    text-align: left;
+    border-bottom: 1px solid #F3F4F6;
+    white-space: nowrap; /* Prevent text wrapping */
+  }
+  
+  th {
+    color: #6B7280;
+    font-weight: 500;
+  }
+  
+  td {
+    color: #111827;
+  }
+
+  tbody tr:last-child td {
+    border-bottom: none;
+  }
+}

@@ -23,9 +23,6 @@ const AttendeesTable = ({ attendees, onCheckIn }) => {
           <tr>
             <th><input type="checkbox" /></th>
             <th>Name</th>
-            <th>Mail</th>
-            {/* REMOVED Mobile No. header */}
-            <th>Order Date</th>
             <th>Ticket Type</th>
             <th></th>
           </tr>
@@ -35,9 +32,6 @@ const AttendeesTable = ({ attendees, onCheckIn }) => {
             <tr key={attendee.id}>
               <td><input type="checkbox" /></td>
               <td>{attendee.name}</td>
-              <td>{attendee.email}</td>
-              {/* REMOVED Mobile No. cell */}
-              <td>{attendee.orderDate}</td>
               <td><span className={`${styles.ticketType} ${getTicketTypeClass(attendee.ticketType)}`}>{attendee.ticketType}</span></td>
               <td>
                 {attendee.isCheckedIn ? (
