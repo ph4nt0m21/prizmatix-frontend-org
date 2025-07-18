@@ -1,87 +1,102 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import styles from './ordersAndAttendeesSection.module.scss';
 import Toolbar from './components/toolbar';
 import OrdersTable from './components/ordersTable';
 import OrderDetailsModal from './components/orderDetailsModal';
-import { dummyOrders, dummyAttendees } from './dummyData';
+import { GetEventOrdersAPI, GetEventAttendeesAPI } from '../../../../services/allApis';
 import { FiTag, FiUsers } from 'react-icons/fi';
 import StatsGrid from './components/statsGrid';
 import AttendeesTable from './components/attendeesTable';
+import { format } from 'date-fns';
 
-const OrdersAndAttendeesSection = () => {
+const OrdersAndAttendeesSection = ({ eventId }) => {
   const [activeTab, setActiveTab] = useState('Orders');
   const [searchQuery, setSearchQuery] = useState('');
   
-  // State for Orders
-  const [orders] = useState(dummyOrders);
-  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [orders, setOrders] = useState([]);
+  const [attendees, setAttendees] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
   
-  // State for Attendees
-  const [attendees, setAttendees] = useState(dummyAttendees);
-
-  // --- NEW: Separate filter states for each tab ---
-  const [orderFilters, setOrderFilters] = useState({
-    ticketType: 'All',
-    startDate: '',
-    endDate: '',
-  });
-
+  const [selectedOrder, setSelectedOrder] = useState(null);
   const [attendeeFilters, setAttendeeFilters] = useState({
     ticketType: 'All',
-    status: 'All', // 'All', 'Checked In', 'Not Checked In'
+    status: 'All',
     startDate: '',
     endDate: '',
   });
 
-  const ticketTypes = useMemo(() => ['All', ...new Set(dummyOrders.map(order => order.ticketType))], []);
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        const response = await GetEventOrdersAPI(eventId);
+        const formattedOrders = response.data.map(order => ({
+          id: `#${order.orderId}`,
+          customer: { name: `${order.buyerFirstName} ${order.buyerLastName}`, email: order.buyerEmail },
+          orderDate: format(new Date(order.orderTime), 'dd MMM yyyy hh:mm a'),
+          purchaseDate: format(new Date(order.orderTime), 'dd MMM yyyy hh:mm a'),
+          ticketType: order.tickets.length > 0 ? order.tickets[0].ticketType : 'N/A',
+          attendees: order.tickets.map(t => ({ name: t.attendeeName })),
+          paymentMethod: 'Stripe',
+          tickets: order.tickets,
+        }));
+        setOrders(formattedOrders);
+      } catch (err) {
+        setError('Failed to fetch orders. Please try again later.');
+        console.error(err);
+      }
+    };
 
-  // --- UPDATED: Filtering logic for both Orders and Attendees ---
-  const filteredOrders = useMemo(() => {
-    return orders.filter(order => {
-      const searchMatch =
-        order.customer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        order.customer.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        order.id.toLowerCase().includes(searchQuery.toLowerCase());
+    const fetchAttendees = async () => {
+      try {
+        const response = await GetEventAttendeesAPI(eventId);
+        const formattedAttendees = response.data.map((attendee, index) => ({
+          id: attendee.ticketId || `att-${index}`,
+          name: attendee.attendeeName,
+          ticketType: attendee.ticketType,
+          isCheckedIn: false,
+        }));
+        setAttendees(formattedAttendees);
+      } catch (err) {
+        setError('Failed to fetch attendees. Please try again later.');
+        console.error(err);
+      }
+    };
 
-      const ticketTypeMatch = orderFilters.ticketType === 'All' || order.ticketType === orderFilters.ticketType;
-      
-      const orderDate = new Date(order.orderDate);
-      const startDate = orderFilters.startDate ? new Date(orderFilters.startDate) : null;
-      const endDate = orderFilters.endDate ? new Date(orderFilters.endDate) : null;
-      if (startDate) startDate.setHours(0, 0, 0, 0);
-      if (endDate) endDate.setHours(23, 59, 59, 999);
-      const dateMatch = (!startDate || orderDate >= startDate) && (!endDate || orderDate <= endDate);
+    const fetchData = async () => {
+      setIsLoading(true);
+      setError(null);
+      if (activeTab === 'Orders') {
+        await fetchOrders();
+      } else {
+        await fetchAttendees();
+      }
+      setIsLoading(false);
+    };
 
-      return searchMatch && ticketTypeMatch && dateMatch;
-    });
-  }, [searchQuery, orders, orderFilters]);
+    if (eventId) {
+      fetchData();
+    } else {
+      setIsLoading(false);
+      setError("Event ID is missing.");
+    }
+  }, [activeTab, eventId]);
 
   const filteredAttendees = useMemo(() => {
     return attendees.filter(attendee => {
       const searchMatch =
-        attendee.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        attendee.email.toLowerCase().includes(searchQuery.toLowerCase());
+        (attendee.name && attendee.name.toLowerCase().includes(searchQuery.toLowerCase()));
 
       const ticketTypeMatch = attendeeFilters.ticketType === 'All' || attendee.ticketType === attendeeFilters.ticketType;
-
       const statusMatch = 
         attendeeFilters.status === 'All' ||
         (attendeeFilters.status === 'Checked In' && attendee.isCheckedIn) ||
         (attendeeFilters.status === 'Not Checked In' && !attendee.isCheckedIn);
       
-      const orderDate = new Date(attendee.orderDate);
-      const startDate = attendeeFilters.startDate ? new Date(attendeeFilters.startDate) : null;
-      const endDate = attendeeFilters.endDate ? new Date(attendeeFilters.endDate) : null;
-      if (startDate) startDate.setHours(0, 0, 0, 0);
-      if (endDate) endDate.setHours(23, 59, 59, 999);
-      const dateMatch = (!startDate || orderDate >= startDate) && (!endDate || orderDate <= endDate);
-
-      return searchMatch && ticketTypeMatch && statusMatch && dateMatch;
+      return searchMatch && ticketTypeMatch && statusMatch;
     });
   }, [searchQuery, attendees, attendeeFilters]);
-
-
-  // --- Handlers ---
+  
   const handleOrderSelect = (order) => setSelectedOrder(order);
   const handleCloseModal = () => setSelectedOrder(null);
   
@@ -93,9 +108,30 @@ const OrdersAndAttendeesSection = () => {
     );
   };
   
-  // --- Calculated values for display ---
   const totalAttendees = attendees.length;
   const checkedInCount = attendees.filter(a => a.isCheckedIn).length;
+
+  const renderContent = () => {
+    if (isLoading) return <div className={styles.loadingContainer}><p>Loading...</p></div>;
+    if (error) return <div className={styles.errorContainer}><p>{error}</p></div>;
+
+    if (activeTab === 'Orders') {
+      return (
+        <div className={styles.contentCard}>
+          <OrdersTable orders={orders} onOrderSelect={handleOrderSelect} />
+        </div>
+      );
+    }
+    
+    if (activeTab === 'Attendees') {
+      return (
+        <>
+          <StatsGrid checkedInCount={checkedInCount} totalCount={totalAttendees} />
+          <AttendeesTable attendees={filteredAttendees} onCheckIn={handleCheckIn} />
+        </>
+      );
+    }
+  };
 
   return (
     <>
@@ -119,30 +155,16 @@ const OrdersAndAttendeesSection = () => {
             activeTab={activeTab}
             searchQuery={searchQuery}
             setSearchQuery={setSearchQuery}
-            data={activeTab === 'Orders' ? filteredOrders : filteredAttendees}
-            // Pass the correct filter state and setter based on the active tab
-            currentFilters={activeTab === 'Orders' ? orderFilters : attendeeFilters}
-            onApplyFilters={activeTab === 'Orders' ? setOrderFilters : setAttendeeFilters}
-            ticketTypes={ticketTypes}
+            data={activeTab === 'Orders' ? orders : filteredAttendees}
+            currentFilters={attendeeFilters}
+            onApplyFilters={setAttendeeFilters}
           />
         </div>
         <div className={styles.mainContent}>
-          {activeTab === 'Orders' && (
-            <div className={styles.contentCard}>
-              <OrdersTable
-                orders={filteredOrders}
-                onOrderSelect={handleOrderSelect}
-              />
-            </div>
-          )}
-          {activeTab === 'Attendees' && (
-            <>
-              <StatsGrid checkedInCount={checkedInCount} totalCount={totalAttendees} />
-              <AttendeesTable attendees={filteredAttendees} onCheckIn={handleCheckIn} />
-            </>
-          )}
+          {renderContent()}
         </div>
       </div>
+      
       <OrderDetailsModal
         order={selectedOrder}
         onClose={handleCloseModal}

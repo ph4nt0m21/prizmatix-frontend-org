@@ -23,19 +23,22 @@ const PayoutSection = ({ title, description }) => {
   const [showPayoutModal, setShowPayoutModal] = useState(false);
   const [payoutType, setPayoutType] = useState('full'); // 'full' or 'custom'
   const [customPayoutAmount, setCustomPayoutAmount] = useState('');
-  const [fullPayoutAmount, setFullPayoutAmount] = useState(0); // Dummy data for full payout
-  const [customAmountStep, setCustomAmountStep] = useState('input'); // 'input' or 'display'
+  const [fullPayoutAmount, setFullPayoutAmount] = useState(0);
+  const [payoutStep, setPayoutStep] = useState('selection'); // 'selection', 'input', 'display', or 'account_details'
+  const [accountDetails, setAccountDetails] = useState({
+    accountNo: '',
+    street: '',
+    streetNo: '',
+  });
 
   useEffect(() => {
     // Simulate API call to fetch data
     const fetchPayoutData = async () => {
-      // In a real application, you would make an actual API call here.
-      // For now, using dummy data.
-      await new Promise(resolve => setTimeout(resolve, 500)); // Simulate network delay
+      await new Promise(resolve => setTimeout(resolve, 500));
       setGrossRevenue(6583.25);
       setCurrentBalance(6583.25);
-      setFullPayoutAmount(2430.44); // Dummy full payout amount based on image
-      setPayoutHistory([]); // No history yet, as per image
+      setFullPayoutAmount(2430.44);
+      setPayoutHistory([]);
     };
 
     fetchPayoutData();
@@ -43,43 +46,74 @@ const PayoutSection = ({ title, description }) => {
 
   const handleRequestPayoutClick = () => {
     setShowPayoutModal(true);
-    setPayoutType('full'); // Reset to full amount when modal opens
-    setCustomPayoutAmount(''); // Clear custom amount
-    setCustomAmountStep('input'); // Reset custom amount step to input
+    setPayoutType('full');
+    setCustomPayoutAmount('');
+    setPayoutStep('selection');
+    setAccountDetails({ accountNo: '', street: '', streetNo: '' }); // Reset account details
   };
 
   const handleCloseModal = () => {
     setShowPayoutModal(false);
   };
 
+  const handleAccountDetailsChange = (e) => {
+    const { name, value } = e.target;
+    setAccountDetails(prev => ({ ...prev, [name]: value }));
+  };
+
   const handleContinue = () => {
-    if (payoutType === 'full') {
-      console.log('Initiating full payout:', fullPayoutAmount);
-      // In a real app, send fullPayoutAmount to backend
-      setShowPayoutModal(false); // Close modal after action
-    } else { // Payout Type is 'custom'
-      if (customAmountStep === 'input') {
-        setCustomAmountStep('display'); // Move to display/confirm step
-      } else { // customAmountStep is 'display'
-        console.log('Initiating custom payout:', customPayoutAmount);
-        // In a real app, send customPayoutAmount to backend
-        setShowPayoutModal(false); // Close modal after action
-      }
+    switch (payoutStep) {
+      case 'selection':
+        if (payoutType === 'full') {
+          setPayoutStep('display');
+        } else {
+          setPayoutStep('input');
+        }
+        break;
+      case 'input':
+        setPayoutStep('display');
+        break;
+      case 'display':
+        setPayoutStep('account_details'); // Proceed to account details form
+        break;
+      case 'account_details':
+        const amount = payoutType === 'full' ? fullPayoutAmount : customPayoutAmount;
+        console.log(`Initiating ${payoutType} payout:`, amount);
+        console.log('With Account Details:', accountDetails);
+        // In a real app, send 'amount' and 'accountDetails' to the backend
+        setShowPayoutModal(false);
+        break;
+      default:
+        handleCloseModal();
     }
   };
 
   const handleBack = () => {
-    if (payoutType === 'custom' && customAmountStep === 'display') {
-      setCustomAmountStep('input'); // Go back to input screen
-    } else {
-      setPayoutType('full'); // Go back to the initial selection
-      setCustomPayoutAmount(''); // Clear custom amount
-      setCustomAmountStep('input'); // Ensure step is reset
+    switch (payoutStep) {
+      case 'account_details':
+        setPayoutStep('display');
+        break;
+      case 'display':
+        if (payoutType === 'custom') {
+          setPayoutStep('input');
+        } else {
+          setPayoutStep('selection');
+        }
+        break;
+      case 'input':
+        setPayoutStep('selection');
+        break;
+      default:
+        break;
     }
   };
 
-  // Validation for custom amount
+  // Validations
   const isCustomAmountValid = parseFloat(customPayoutAmount) > 0 && parseFloat(customPayoutAmount) <= currentBalance;
+  const isAccountDetailsValid =
+    accountDetails.accountNo.trim() !== '' &&
+    accountDetails.street.trim() !== '' &&
+    accountDetails.streetNo.trim() !== '';
 
   return (
     <div className={styles.sectionContainer}>
@@ -103,8 +137,6 @@ const PayoutSection = ({ title, description }) => {
       </div>
 
       <div className={styles.payoutHistorySection}>
-        {payoutHistory.length > 0 && <h3 className={styles.historyTitle}>Payout History</h3>}
-        
         {payoutHistory.length === 0 ? (
           <div className={styles.noHistoryPlaceholder}>
             <CardPaymentsIcon className={styles.noHistoryIcon} />
@@ -119,7 +151,7 @@ const PayoutSection = ({ title, description }) => {
         ) : (
           <div className={styles.historyList}>
             {/* Render payout history items here */}
-            </div>
+          </div>
         )}
       </div>
 
@@ -127,118 +159,179 @@ const PayoutSection = ({ title, description }) => {
         <div className={styles.modalOverlay}>
           <div className={styles.modalContent}>
             <div className={styles.modalHeader}>
-              <h3 className={styles.modalTitle}>Request Payout</h3>
+              <h3 className={styles.modalTitle}>
+                {payoutStep === 'account_details' ? 'Account Missing for Payout' : 'Request Payout'}
+              </h3>
               <button className={styles.modalCloseButton} onClick={handleCloseModal}>
                 &times;
               </button>
             </div>
-            <p className={styles.modalDescription}>
-              Choose how you'd like to receive your funds in advance.
-            </p>
-
-            {payoutType !== 'custom' || customAmountStep === 'input' ? (
-              // Show selection or custom amount input
-              <div className={styles.payoutModalBody}>
-                {payoutType !== 'custom' ? ( // Show selection if not on custom amount input step
-                  <div className={styles.payoutOptions}>
-                    <div 
-                      className={`${styles.optionCard} ${payoutType === 'full' ? styles.selected : ''}`}
-                      onClick={() => setPayoutType('full')}
-                    >
-                      <label className={styles.radioButton}>
-                        <input
-                          type="radio"
-                          name="payoutOption"
-                          value="full"
-                          checked={payoutType === 'full'}
-                          onChange={() => setPayoutType('full')}
-                          className={styles.radioInput}
-                        />
-                        <span className={styles.radioCustom}></span>
-                        <div className={styles.optionDetails}>
-                          <span className={styles.optionLabel}>Full Amount</span>
-                          <span className={styles.optionDescription}>
-                            Receive the entire available amount now.
-                          </span>
-                        </div>
-                      </label>
-                      <span className={styles.amountDisplay}>${fullPayoutAmount.toFixed(2)}</span>
-                    </div>
-
-                    <div 
-                      className={`${styles.optionCard} ${payoutType === 'custom' ? styles.selected : ''}`}
-                      onClick={() => setPayoutType('custom')}
-                    >
-                      <label className={styles.radioButton}>
-                        <input
-                          type="radio"
-                          name="payoutOption"
-                          value="custom"
-                          checked={payoutType === 'custom'}
-                          onChange={() => setPayoutType('custom')}
-                          className={styles.radioInput}
-                        />
-                        <span className={styles.radioCustom}></span>
-                        <div className={styles.optionDetails}>
-                          <span className={styles.optionLabel}>Custom Amount</span>
-                          <span className={styles.optionDescription}>
-                            Request a portion of your available balance.
-                          </span>
-                        </div>
-                      </label>
-                    </div>
-                  </div>
-                ) : ( // Show custom amount input
-                  <div className={styles.customAmountInputSection}>
-                    <h4 className={styles.customAmountPrompt}>Custom Amount</h4>
-                    <div className={styles.inputCard}>
-                      <p className={styles.inputCardTitle}>Enter Amount</p>
-                      <div className={styles.amountInputContainer}>
-                        <span className={styles.currencySymbol}>$</span>
-                        <input
-                          type="number"
-                          value={customPayoutAmount}
-                          onChange={(e) => setCustomPayoutAmount(parseFloat(e.target.value) || '')}
-                          placeholder="0.00"
-                          className={styles.amountInput}
-                          min="0"
-                          max={currentBalance}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            ) : ( // customAmountStep is 'display'
-              <div className={styles.customAmountDisplaySection}>
-                 <h4 className={styles.customAmountPrompt}>Custom Amount</h4>
-                <div className={styles.displayCard}>
-                  <p className={styles.displayCardTitle}>Amount</p>
-                  <div className={styles.displayAmountContainer}>
-                    <span className={styles.finalAmount}>${parseFloat(customPayoutAmount).toFixed(2)}</span>
-                    <EditIcon className={styles.editIcon} onClick={() => setCustomAmountStep('input')} />
-                  </div>
-                  <p className={styles.deliveryTime}>credited within 2 business days</p>
-                </div>
-              </div>
+            {payoutStep !== 'account_details' && (
+                <p className={styles.modalDescription}>
+                    Choose how you'd like to receive your funds in advance.
+                </p>
             )}
 
+            <div className={styles.payoutModalBody}>
+              {/* Step 1: Selection */}
+              {payoutStep === 'selection' && (
+                <div className={styles.payoutOptions}>
+                  <div 
+                    className={`${styles.optionCard} ${payoutType === 'full' ? styles.selected : ''}`}
+                    onClick={() => setPayoutType('full')}
+                  >
+                    <label className={styles.radioButton}>
+                      <input
+                        type="radio"
+                        name="payoutOption"
+                        value="full"
+                        checked={payoutType === 'full'}
+                        onChange={() => setPayoutType('full')}
+                        className={styles.radioInput}
+                      />
+                      <span className={styles.radioCustom}></span>
+                      <div className={styles.optionDetails}>
+                        <span className={styles.optionLabel}>Full Amount</span>
+                        <span className={styles.optionDescription}>
+                          Receive the entire available amount now.
+                        </span>
+                      </div>
+                    </label>
+                    <span className={styles.amountDisplay}>${fullPayoutAmount.toFixed(2)}</span>
+                  </div>
+                  <div 
+                    className={`${styles.optionCard} ${payoutType === 'custom' ? styles.selected : ''}`}
+                    onClick={() => setPayoutType('custom')}
+                  >
+                    <label className={styles.radioButton}>
+                      <input
+                        type="radio"
+                        name="payoutOption"
+                        value="custom"
+                        checked={payoutType === 'custom'}
+                        onChange={() => setPayoutType('custom')}
+                        className={styles.radioInput}
+                      />
+                      <span className={styles.radioCustom}></span>
+                      <div className={styles.optionDetails}>
+                        <span className={styles.optionLabel}>Custom Amount</span>
+                        <span className={styles.optionDescription}>
+                          Request a portion of your available balance.
+                        </span>
+                      </div>
+                    </label>
+                  </div>
+                </div>
+              )}
+
+              {/* Step 2: Custom Amount Input */}
+              {payoutStep === 'input' && (
+                <div className={styles.customAmountInputSection}>
+                  <h4 className={styles.customAmountPrompt}>Custom Amount</h4>
+                  <div className={styles.inputCard}>
+                    <p className={styles.inputCardTitle}>Enter Amount</p>
+                    <div className={styles.amountInputContainer}>
+                      <span className={styles.currencySymbol}>$</span>
+                      <input
+                        type="number"
+                        value={customPayoutAmount}
+                        onChange={(e) => setCustomPayoutAmount(parseFloat(e.target.value) || '')}
+                        placeholder="0.00"
+                        className={styles.amountInput}
+                        min="0"
+                        max={currentBalance}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Step 3: Confirmation Display */}
+              {payoutStep === 'display' && (
+                <div className={styles.customAmountDisplaySection}>
+                  <h4 className={styles.customAmountPrompt}>
+                    {payoutType === 'full' ? 'Full Amount' : 'Custom Amount'}
+                  </h4>
+                  <div className={styles.displayCard}>
+                    <p className={styles.displayCardTitle}>Amount</p>
+                    <div className={styles.displayAmountContainer}>
+                      <span className={styles.finalAmount}>
+                        ${(payoutType === 'full' ? fullPayoutAmount : parseFloat(customPayoutAmount)).toFixed(2)}
+                      </span>
+                      {payoutType === 'custom' && (
+                         <EditIcon className={styles.editIcon} onClick={() => setPayoutStep('input')} />
+                      )}
+                    </div>
+                    <p className={styles.deliveryTime}>credited within 2 business days</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Step 4: Account Details */}
+              {payoutStep === 'account_details' && (
+                <div className={styles.customAmountInputSection}>
+                    <p className={styles.modalDescription} style={{textAlign: 'left', width: '100%', marginBottom: '24px'}}>Add an Account for this and future payouts</p>
+                    <div style={{ marginBottom: '16px', width: '100%' }}>
+                        <p className={styles.cardTitle} style={{ marginBottom: '8px', textAlign: 'left' }}>Account No.</p>
+                        <div className={styles.amountInputContainer}>
+                        <input
+                            type="text"
+                            name="accountNo"
+                            value={accountDetails.accountNo}
+                            onChange={handleAccountDetailsChange}
+                            placeholder="e.g., 1234567890"
+                            className={styles.amountInput}
+                        />
+                        </div>
+                    </div>
+                    <div style={{ display: 'flex', gap: '16px', width: '100%' }}>
+                        <div style={{ flex: 1 }}>
+                        <p className={styles.cardTitle} style={{ marginBottom: '8px', textAlign: 'left' }}>Street</p>
+                        <div className={styles.amountInputContainer}>
+                            <input
+                            type="text"
+                            name="street"
+                            value={accountDetails.street}
+                            onChange={handleAccountDetailsChange}
+                            placeholder="e.g., Festival Ave"
+                            className={styles.amountInput}
+                            />
+                        </div>
+                        </div>
+                        <div style={{ flex: 1 }}>
+                        <p className={styles.cardTitle} style={{ marginBottom: '8px', textAlign: 'left' }}>Street No.</p>
+                        <div className={styles.amountInputContainer}>
+                            <input
+                            type="text"
+                            name="streetNo"
+                            value={accountDetails.streetNo}
+                            onChange={handleAccountDetailsChange}
+                            placeholder="e.g., 123"
+                            className={styles.amountInput}
+                            />
+                        </div>
+                        </div>
+                    </div>
+                </div>
+              )}
+            </div>
+
             <div className={styles.modalActions}>
-              {payoutType === 'custom' && ( // Show Back button for custom amount steps
+              {payoutStep !== 'selection' && (
                  <button className={styles.backButton} onClick={handleBack}>
                    Back
                  </button>
               )}
-              <button 
-                className={styles.cancelButton} 
-                onClick={handleCloseModal}
-              >
+              <button className={styles.cancelButton} onClick={handleCloseModal}>
                 Cancel
               </button>
-              <button 
-                className={styles.continueButton} 
+              <button
+                className={styles.continueButton}
                 onClick={handleContinue}
-                disabled={payoutType === 'custom' && customAmountStep === 'input' && !isCustomAmountValid}
+                disabled={
+                  (payoutStep === 'input' && !isCustomAmountValid) ||
+                  (payoutStep === 'account_details' && !isAccountDetailsValid)
+                }
               >
                 Continue
               </button>

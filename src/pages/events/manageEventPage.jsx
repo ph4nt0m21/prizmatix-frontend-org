@@ -1,6 +1,3 @@
-/*
-File: manageEventPage.jsx
-*/
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import EventHeaderNav from "./components/eventHeaderNav";
@@ -8,7 +5,8 @@ import EventManageSidebar from "./components/eventManageSidebar";
 import LoadingSpinner from "../../components/common/loadingSpinner/loadingSpinner";
 import styles from "./manageEventPage.module.scss";
 
-// Import manage section components
+// Import API and section components
+import { GetEventDashboardAPI } from "../../services/allApis"; // NOTE: Adjust path to your allApis file if needed
 import OverviewSection from "./sections/overviewSection";
 import OrdersAndAttendeesSection from "./sections/ordersAndAttendeesSection/ordersAndAttendeesSection";
 import PayoutSection from "./sections/payoutSection";
@@ -16,69 +14,25 @@ import PromotionsSection from "./sections/promotionsSection";
 import TicketSection from "./sections/ticketSection";
 import DiscountSection from "./sections/discountSection";
 
-/**
- * EventManagePage component for managing existing events
- * Provides a dashboard view with metrics and management options
- */
 const EventManagePage = () => {
   const navigate = useNavigate();
   const { eventId, section } = useParams();
 
-  // Loading state
   const [isLoading, setIsLoading] = useState(true);
-
-  // Error state
   const [error, setError] = useState(null);
-
-  // Success message state
   const [successMessage, setSuccessMessage] = useState(null);
 
-  // Event data state with dummy values
-  const [eventData, setEventData] = useState({
-    id: eventId || "12345",
-    name: "NORR Festival 2022",
-    status: "Live",
-    location: {
-      city: "Queenstown",
-      country: "New Zealand",
-    },
-    dateTime: {
-      startDate: "2025-05-12",
-      startTime: "10:00",
-      endDate: "2025-05-12",
-      endTime: "22:00",
-    },
-    earnings: {
-      total: 6583.25,
-      percentageChange: 15.8,
-    },
-    tickets: {
-      issued: 250,
-      total: 1050,
-      percentageChange: 15.8,
-    },
-    orders: {
-      count: 189,
-      percentageChange: 15.8,
-    },
-    views: {
-      count: 1,
-      percentageChange: 15.8,
-    },
-    ticketTypes: [
-      { name: "Early Bird", sales: 3200.0 },
-      { name: "VIP", sales: 3300.0 },
-    ],
-    salesData: {
-      dailyRevenue: 1220.0,
-      timeframe: "10 days",
-    },
-  });
+  // State specifically for dashboard data from the new API
+  const [dashboardData, setDashboardData] = useState(null);
 
-  // Current section state (default to 'overview' if not specified)
+  // This can hold other general event details if needed
+  const [eventData, setEventData] = useState({
+    name: "Event Dashboard",
+    status: "Live",
+  });
+  
   const [currentSection, setCurrentSection] = useState("overview");
 
-  // Track completion status for each manage section (dummy data)
   const [sectionStatus, setSectionStatus] = useState({
     overview: { completed: true, valid: true, visited: true },
     ordersAndAttendees: { completed: true, valid: true, visited: false },
@@ -88,83 +42,42 @@ const EventManagePage = () => {
     discounts: { completed: false, valid: true, visited: false },
   });
 
-  // Simulate data fetching on mount
+  // useEffect to fetch real dashboard data
   useEffect(() => {
     const fetchEventData = async () => {
       try {
         setIsLoading(true);
-        // Simulate API call delay
-        await new Promise((resolve) => setTimeout(resolve, 800));
-
-        // In a real app, you would fetch event data here
-        // For now, we're using the dummy data from state
-
-        // Set loading to false after "fetching" data
-        setIsLoading(false);
+        const response = await GetEventDashboardAPI(eventId);
+        setDashboardData(response.data);
+        setError(null);
       } catch (error) {
-        console.error("Error fetching event data:", error);
+        console.error("Error fetching event dashboard data:", error);
         setError("Failed to load event data. Please try again.");
+      } finally {
         setIsLoading(false);
       }
     };
 
-    fetchEventData();
-  }, [eventId]);
-
-  // Parse section parameter and update current section for manage sections
-  useEffect(() => {
-    if (section && sectionStatus[section]) {
-      // Only update if the section is one of the "manage" sections
-      setCurrentSection(section);
-      setSectionStatus((prevStatus) => ({
-        ...prevStatus,
-        [section]: {
-          ...prevStatus[section],
-          visited: true,
-        },
-      }));
-    } else {
-      setCurrentSection("overview"); // Default to overview if no valid section or section is external
+    if (eventId) {
+      fetchEventData();
     }
-  }, [section, sectionStatus]);
+  }, [eventId]);
+  
+  // useEffect to handle section navigation from URL
+  useEffect(() => {
+    if (section) {
+      setCurrentSection(section);
+    } else {
+      setCurrentSection("overview");
+    }
+  }, [section]);
 
-  /**
-   * Navigate to a specific section within manageEventPage
-   * @param {string} sectionName - Section to navigate to
-   */
   const navigateToManageSection = (sectionName) => {
     navigate(`/events/manage/${eventId}/${sectionName}`);
     setCurrentSection(sectionName);
   };
 
-  /**
-   * Render placeholders for sections not yet implemented
-   * @param {string} sectionName - Name of the section
-   * @returns {JSX.Element} Placeholder component
-   */
-  const renderPlaceholder = (sectionName) => {
-    return (
-      <div className={styles.placeholderContainer}>
-        <h2 className={styles.placeholderTitle}>{sectionName} Section</h2>
-        <p className={styles.placeholderMessage}>
-          This section is coming soon.
-        </p>
-        <button
-          className={styles.placeholderButton}
-          onClick={() => navigateToManageSection("overview")}
-        >
-          Back to Overview
-        </button>
-      </div>
-    );
-  };
-
-  /**
-   * Render the current section
-   * @returns {JSX.Element} Current section component
-   */
   const renderCurrentSection = () => {
-    // Show loading spinner while loading
     if (isLoading) {
       return (
         <div className={styles.loadingContainer}>
@@ -174,56 +87,46 @@ const EventManagePage = () => {
       );
     }
 
-    // Handle different sections
+    if (error) {
+       return <div className={styles.errorMessage}>{error}</div>
+    }
+
     switch (currentSection) {
       case "overview":
-        return <OverviewSection eventData={eventData} />;
+        return <OverviewSection dashboardData={dashboardData} />;
       case "ordersAndAttendees":
-        return <OrdersAndAttendeesSection eventData={eventData} />;
+        return <OrdersAndAttendeesSection eventId={eventId} />;
       case "payout":
-        return <PayoutSection eventData={eventData} />;
+        return <PayoutSection />; // Assuming these don't need data yet
       case "promotions":
-        return <PromotionsSection eventData={eventData} />;
+        return <PromotionsSection />;
       case "tickets":
-        return <TicketSection eventData={eventData} />;
+        return <TicketSection />;
       case "discounts":
-        return <DiscountSection eventData={eventData} />;
+        return <DiscountSection />;
       default:
-        return <OverviewSection eventData={eventData} />;
+        return <OverviewSection dashboardData={dashboardData} />;
     }
   };
 
-  // Check if the current event is live
-  const isEventLive = eventData.status === "Live";
-
-  // Determine if preview is available
-  const canPreview = true; // In management view, preview should always be available
-
   return (
     <>
-      {/* Event-specific sub-header with breadcrumbs and actions */}
       <EventHeaderNav
-        currentStep={
-          currentSection === "overview" ? "Overview" : currentSection
-        }
+        currentStep={currentSection === "overview" ? "Overview" : currentSection}
         eventName={eventData.name}
-        isDraft={!isEventLive}
-        canPreview={canPreview}
+        isDraft={eventData.status !== "Live"}
       />
-
       <div className={styles.content}>
         <EventManageSidebar
           currentSection={currentSection}
           sectionStatus={sectionStatus}
-          navigateToSection={navigateToManageSection} // For 'manage' sections
+          navigateToSection={navigateToManageSection}
           navigateToEventEditPage={() =>
             navigate(`/events/edit-page/${eventId}`)
-          } // For 'Event Page'
+          }
           eventId={eventId}
         />
-
         <div className={styles.mainContent}>
-          {/* Success message (if any) */}
           {successMessage && (
             <div className={styles.successMessage}>
               {successMessage}
@@ -235,9 +138,7 @@ const EventManagePage = () => {
               </button>
             </div>
           )}
-
-          {/* Error message (if any) */}
-          {error && (
+          {error && !isLoading && ( // Only show error if not loading
             <div className={styles.errorMessage}>
               {error}
               <button
@@ -248,13 +149,9 @@ const EventManagePage = () => {
               </button>
             </div>
           )}
-
-          {/* Section content */}
           <div className={styles.sectionContent}>{renderCurrentSection()}</div>
         </div>
       </div>
-
-      {/* Footer */}
       <div className={styles.footer}>© 2025 Event Tickets Platform</div>
     </>
   );

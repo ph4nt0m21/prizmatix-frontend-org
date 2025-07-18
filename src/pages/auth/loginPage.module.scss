@@ -9,6 +9,13 @@
   padding: 4px;
   margin: 0;
   background-color: #ffffff;
+
+  @media (max-width: 768px) {
+    flex-direction: column; // Stack panels vertically
+    padding: 0; // Remove overall padding on mobile
+    height: auto; // Allow height to adjust based on content
+    min-height: 100vh; // Ensure it still takes full viewport height if content is short
+  }
 }
 
 /* Left panel with purple gradient background */
@@ -18,10 +25,11 @@
   background-color: #1d1c3a;
   overflow: hidden;
   border-radius: 16px; /* Added rounded corners to all sides */
-  
+
   @media (max-width: 768px) {
     width: 100%;
-    height: 30%;
+    height: 30vh; // Use viewport height for better responsiveness
+    border-radius: 0 0 16px 16px; // Adjust border-radius for top panel on mobile
   }
 }
 
@@ -42,7 +50,16 @@
   border-radius: 16px;
   box-sizing: border-box;
   margin-left: 4px;
-  
+
+  @media (max-width: 768px) {
+    margin-left: 0; // Remove margin on mobile
+    flex: none; // Remove flex grow on mobile
+    width: 100%;
+    min-height: 70vh; // Take remaining viewport height
+    border-radius: 16px 16px 0 0; // Adjust border-radius for bottom panel on mobile
+    padding-bottom: 80px; /* Add some padding for the footer to not overlap content */
+  }
+
   /* Vector background overlay */
   &::after {
     content: '';
@@ -57,6 +74,11 @@
     background-size: 100% auto;
     z-index: 0;
     opacity: 0.8;
+
+    @media (max-width: 768px) {
+      height: 30%; // Reduce height of wave background on mobile
+      background-size: cover; // Ensure it covers the area
+    }
   }
 }
 
@@ -70,10 +92,15 @@
   border-bottom: 1px solid #f3f3f3;
   position: relative;
   z-index: 1;
+
+  @media (max-width: 768px) {
+    padding: 16px 20px; // Reduce padding on mobile
+    border-bottom: none; // Remove border on mobile if it doesn't look good
+  }
 }
 
 .backButton {
-  width: 36px;
+  width: auto; /* Allow width to adjust for text */
   height: 36px;
   display: flex;
   justify-content: center;
@@ -82,11 +109,24 @@
   border-radius: 50%;
   border: grey;
   cursor: pointer;
-  
+  text-decoration: none; /* Remove underline for link */
+  color: #333; /* Default text color */
+  font-size: 14px; /* Adjust font size */
+  font-weight: 500;
+  padding: 0 10px; /* Add some padding */
+
   &:hover {
     background-color: rgba(230, 230, 235, 1);
   }
 }
+
+.backButtonText {
+  margin-left: 5px; /* Space between icon and text */
+  @media (max-width: 768px) {
+    display: none; /* Hide text on smaller screens if desired, or adjust as needed */
+  }
+}
+
 
 .backIcon {
   width: 16px;
@@ -111,17 +151,27 @@
   justify-content: center;
   align-items: center;
   padding: 24px 48px;
-  max-width: 440px;
+  max-width: 500px;
   margin: 0 auto;
   width: 100%;
   box-sizing: border-box;
   position: relative;
   z-index: 1;
+
+  @media (max-width: 768px) {
+    padding: 20px; // Reduce padding on mobile
+    justify-content: flex-start; // Align content to top on mobile
+    margin-top: 20px; // Add some top margin
+  }
 }
 
 .welcomeSection {
   text-align: center;
   margin-bottom: 30px;
+
+  @media (max-width: 768px) {
+    margin-bottom: 20px; // Slightly reduce margin
+  }
 }
 
 .welcomeTitle {
@@ -133,6 +183,10 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
+
+  @media (max-width: 768px) {
+    font-size: 24px; // Slightly smaller font on mobile
+  }
 }
 
 /* Styling for the emoji sparkles image */
@@ -146,6 +200,10 @@
   font-size: 16px;
   color: #6b7280;
   margin: 0;
+
+  @media (max-width: 768px) {
+    font-size: 14px; // Slightly smaller font on mobile
+  }
 }
 
 /* Form styles */
@@ -169,7 +227,7 @@
   border: 1px solid #e5e7eb;
   border-radius: 8px;
   transition: border-color 0.2s;
-  
+
   &:focus-within {
     border-color: #7c3aed;
     box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.1);
@@ -193,11 +251,11 @@
   color: #333;
   font-family: inherit;
   padding: 0;
-  
+
   &::placeholder {
     color: #a0aec0;
   }
-  
+
   &:disabled {
     color: #9ca3af;
   }
@@ -212,6 +270,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
+
+  img {
+    width: 20px;
+    height: 20px;
+  }
 }
 
 /* Options row for remember me and forgot password */
@@ -222,6 +285,13 @@
   width: 100%;
   margin-top: 0;
   margin-bottom: 20px;
+
+  @media (max-width: 768px) {
+    flex-direction: column; // Stack remember me and forgot password vertically
+    align-items: flex-start; // Align items to the start
+    gap: 10px; // Add some space between them
+    margin-bottom: 15px; // Slightly reduce margin
+  }
 }
 
 .rememberLabel {
@@ -244,7 +314,7 @@
   font-size: 14px;
   color: #7c3aed;
   text-decoration: none;
-  
+
   &:hover {
     text-decoration: underline;
   }
@@ -265,11 +335,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  
+
   &:hover {
     background-color: #6d28d9;
   }
-  
+
   &:disabled {
     background-color: #a78bfa;
     cursor: not-allowed;
@@ -303,7 +373,7 @@
   color: #7c3aed;
   text-decoration: none;
   font-weight: 500;
-  
+
   &:hover {
     text-decoration: underline;
   }
@@ -316,6 +386,14 @@
   background: transparent;
   position: relative;
   z-index: 1;
+
+  @media (max-width: 768px) {
+    padding: 16px 20px; // Reduce padding on mobile
+    position: absolute; // Position footer absolutely at the bottom
+    bottom: 0;
+    width: 100%;
+    background-color: #EEEEF9; // Ensure background for footer
+  }
 }
 
 .copyright {

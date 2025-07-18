@@ -11,6 +11,11 @@
   /* Prevent the whole page from scrolling */
   background-color: #F1F1F1;
   /* Match the content background */
+
+  @media (max-width: 768px) {
+    height: auto; // Allow height to adjust on mobile
+    min-height: 100vh; // Ensure it still takes full viewport height if content is short
+  }
 }
 
 // Main container for the create event page
@@ -30,6 +35,11 @@
   width: calc(100% - 70px);
   margin-left: 70px; // Sidebar width
   flex: 1;
+
+  @media (max-width: 768px) {
+    width: 100%; // Take full width on mobile
+    margin-left: 0; // Remove sidebar margin
+  }
 }
 
 // Flex container for sidebar and main content
@@ -43,6 +53,25 @@
   /* This makes the content area fill the available space */
   overflow: hidden;
   /* Prevent this container from showing scrollbars */
+
+  @media (max-width: 1280px) {
+    padding: 12px;
+  }
+
+  @media (max-width: 1024px) {
+    padding: 12px;
+  }
+
+  @media (max-width: 768px) {
+    flex-direction: column; // Stack sidebar and main content vertically
+    overflow-y: auto; // Allow content to scroll on smaller screens
+    padding: 16px; // Adjust padding for mobile
+  }
+
+  @media (max-width: 480px) {
+    padding: 8px;
+    gap: 8px;
+  }
 }
 
 // Main content area that contains the form
@@ -55,6 +84,11 @@
   background-color: #FFFFFF;
   border-radius: 8px;
   box-shadow: 0px 2px 4px 0px rgba(0, 0, 0, 0.05);
+
+  @media (max-width: 768px) {
+    min-height: 500px; // Ensure a minimum height for the main content area
+    overflow-y: auto; // Allow scrolling within the main content
+  }
 }
 
 // Container for the step content
@@ -139,6 +173,17 @@
   gap: 32px;
   padding: 16px 80px;
   align-self: stretch;
+  flex-shrink: 0; // Prevent shrinking
+
+  @media (max-width: 768px) {
+    padding: 12px 20px; // Adjust padding for mobile
+    gap: 16px; // Reduce gap
+    justify-content: space-between; // Distribute buttons
+  }
+
+  @media (max-width: 480px) {
+    padding: 12px 16px;
+  }
 }
 
 // Back button styling
@@ -162,6 +207,11 @@
     opacity: 0.5;
     cursor: not-allowed;
   }
+
+  @media (max-width: 480px) {
+    padding: 8px 16px;
+    font-size: 13px;
+  }
 }
 
 // Next button styling
@@ -184,6 +234,11 @@
     opacity: 0.7;
     cursor: not-allowed;
   }
+
+  @media (max-width: 480px) {
+    padding: 8px 16px;
+    font-size: 13px;
+  }
 }
 
 // Form container
@@ -201,6 +256,10 @@
   padding: 24px;
   height: 100%;
   overflow-y: auto;
+
+  @media (max-width: 768px) {
+    padding: 16px; // Reduce padding on mobile
+  }
 }
 
 // Step progress indicator
@@ -208,6 +267,10 @@
   display: flex;
   align-items: center;
   margin-bottom: 24px;
+
+  @media (max-width: 768px) {
+    margin-bottom: 16px; // Reduce margin on mobile
+  }
 }
 
 .stepIndicator {
@@ -250,6 +313,10 @@
   &.completed {
     color: #7C3AED;
   }
+
+  @media (max-width: 768px) {
+    font-size: 13px; // Smaller font on mobile
+  }
 }
 
 // Section containers
@@ -259,6 +326,10 @@
   &:last-child {
     margin-bottom: 0;
   }
+
+  @media (max-width: 768px) {
+    margin-bottom: 24px; // Reduce margin on mobile
+  }
 }
 
 .sectionTitle {
@@ -266,12 +337,21 @@
   font-weight: 600;
   color: #111827;
   margin: 0 0 8px 0;
+
+  @media (max-width: 768px) {
+    font-size: 15px; // Smaller font on mobile
+  }
 }
 
 .sectionDescription {
   font-size: 14px;
   color: #6b7280;
   margin: 0 0 16px 0;
+
+  @media (max-width: 768px) {
+    font-size: 13px; // Smaller font on mobile
+    margin-bottom: 12px;
+  }
 }
 
 .disabled {
@@ -309,46 +389,9 @@
   box-shadow: 0px -1px 3px rgba(0, 0, 0, 0.05);
   flex-shrink: 0;
   /* Prevent footer from shrinking */
-}
 
-// Responsive adjustments
-@media (max-width: 1280px) {
-  .content {
-    padding: 12px;
-  }
-}
-
-@media (max-width: 1024px) {
-  .content {
-    padding: 12px;
-  }
-}
-
-@media (max-width: 768px) {
-  .content {
-    flex-direction: column;
-    overflow-y: auto;
-    /* Allow content to scroll on smaller screens */
-  }
-
-  .mainContent {
-    min-height: 500px;
-  }
-}
-
-@media (max-width: 480px) {
-  .content {
-    padding: 8px;
-    gap: 8px;
-  }
-
-  .navigation {
-    padding: 12px 16px;
-  }
-
-  .backButton,
-  .nextButton {
-    padding: 8px 16px;
-    font-size: 13px;
+  @media (max-width: 768px) {
+    padding: 0 16px; // Reduce padding on mobile
+    font-size: 12px; // Smaller font
   }
 }
