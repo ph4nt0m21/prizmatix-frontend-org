@@ -11,7 +11,39 @@
   background: #FFF;
   box-shadow: 0px 2px 4px 0px rgba(0, 0, 0, 0.00);
   align-self: stretch;
+
+  @media (max-width: 768px) {
+    padding: 8px 16px; // Adjust padding for mobile
+    justify-content: flex-start; // Align items to start
+    gap: 12px; // Add a gap between hamburger and breadcrumb
+  }
 }
+
+// Hamburger menu button for mobile
+.hamburgerButton {
+  display: none; // Hidden by default on desktop
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  width: 24px; // Size of the icon
+  height: 24px;
+  color: #333; // Icon color
+
+  svg {
+    width: 24px;
+    height: 24px;
+  }
+
+  &:hover {
+    opacity: 0.8;
+  }
+
+  @media (max-width: 768px) {
+    display: block; // Show on mobile
+  }
+}
+
 
 .breadcrumbContainer {
   display: flex;
@@ -22,18 +54,22 @@
   display: flex;
   align-items: center;
   font-size: 14px;
+
+  @media (max-width: 768px) {
+    font-size: 13px; // Smaller font on mobile
+  }
 }
 
 .breadcrumbLink {
   color: #6b7280;
   text-decoration: none;
   transition: color 0.2s;
-  
+
   &:hover {
     color: #8b5cf6;
     text-decoration: underline;
   }
-  
+
   /* Special styling for the event name link - make it bold and purple */
   &:nth-of-type(2) {
     color: #8b5cf6;
@@ -62,6 +98,10 @@
   display: flex;
   align-items: center;
   gap: 12px;
+
+  @media (max-width: 768px) {
+    display: none; // Hide action buttons on mobile, or adjust as needed
+  }
 }
 
 .previewButton {
@@ -77,33 +117,18 @@
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
-  
+
   svg {
     color: #6b7280;
   }
-  
+
   &:hover:not(:disabled) {
     background-color: #f9fafb;
     border-color: #d1d5db;
   }
-  
+
   &:disabled {
     opacity: 0.5;
     cursor: not-allowed;
-  }
-}
-
-// Responsive styles
-@media (max-width: 768px) {
-  .eventNav {
-    padding: 8px 16px;
-    flex-direction: column;
-    gap: 12px;
-    align-items: flex-start;
-  }
-  
-  .actionButtons {
-    width: 100%;
-    justify-content: flex-end;
   }
 }

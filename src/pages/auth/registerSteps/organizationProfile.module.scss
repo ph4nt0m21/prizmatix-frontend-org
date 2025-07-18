@@ -9,6 +9,13 @@
   padding: 4px;
   margin: 0;
   background-color: #ffffff;
+
+  @media (max-width: 768px) {
+    flex-direction: column; // Stack panels vertically
+    padding: 0; // Remove overall padding on mobile
+    height: auto; // Allow height to adjust based on content
+    min-height: 100vh; // Ensure it still takes full viewport height if content is short
+  }
 }
 
 /* Left panel with purple gradient background */
@@ -18,10 +25,11 @@
   background-color: #1d1c3a;
   overflow: hidden;
   border-radius: 16px;
-  
+
   @media (max-width: 768px) {
     width: 100%;
-    height: 30%;
+    height: 30vh; // Use viewport height for better responsiveness
+    border-radius: 0 0 16px 16px; // Adjust border-radius for top panel on mobile
   }
 }
 
@@ -51,6 +59,10 @@
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
+
+  @media (max-width: 768px) {
+    height: 36px; // Smaller logo on mobile
+  }
 }
 
 /* Right panel with the form - with vector background */
@@ -64,7 +76,16 @@
   border-radius: 16px;
   box-sizing: border-box;
   margin-left: 4px;
-  
+
+  @media (max-width: 768px) {
+    margin-left: 0; // Remove margin on mobile
+    flex: none; // Remove flex grow on mobile
+    width: 100%;
+    min-height: 70vh; // Take remaining viewport height
+    border-radius: 16px 16px 0 0; // Adjust border-radius for bottom panel on mobile
+    padding-bottom: 80px; /* Add some padding for the footer to not overlap content */
+  }
+
   /* Vector background overlay */
   &::after {
     content: '';
@@ -79,6 +100,11 @@
     background-size: 100% auto;
     z-index: 0;
     opacity: 0.8;
+
+    @media (max-width: 768px) {
+      height: 30%; // Reduce height of wave background on mobile
+      background-size: cover; // Ensure it covers the area
+    }
   }
 }
 
@@ -92,6 +118,11 @@
   border-bottom: 1px solid #f3f3f3;
   position: relative;
   z-index: 1;
+
+  @media (max-width: 768px) {
+    padding: 16px 20px; // Reduce padding on mobile
+    border-bottom: none; // Remove border on mobile if it doesn't look good
+  }
 }
 
 .backButton {
@@ -104,7 +135,7 @@
   border-radius: 50%;
   border: none;
   cursor: pointer;
-  
+
   &:hover {
     background-color: rgba(230, 230, 235, 1);
   }
@@ -125,6 +156,10 @@
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
+
+  @media (max-width: 768px) {
+    gap: 4px; // Smaller gap on mobile
+  }
 }
 
 .step {
@@ -132,13 +167,17 @@
   height: 4px;
   background-color: #e5e7eb;
   border-radius: 2px;
-  
+
   &.active {
     background-color: #7c3aed;
   }
-  
+
   &.completed {
     background-color: #7c3aed;
+  }
+
+  @media (max-width: 768px) {
+    width: 25px; // Smaller width on mobile
   }
 }
 
@@ -161,20 +200,29 @@
   position: relative;
   z-index: 1;
   overflow-y: auto;
-  
+
   /* Hide scrollbar for Chrome, Safari and Opera */
   &::-webkit-scrollbar {
     display: none;
   }
-  
+
   /* Hide scrollbar for IE, Edge and Firefox */
   -ms-overflow-style: none;  /* IE and Edge */
   scrollbar-width: none;  /* Firefox */
+
+  @media (max-width: 768px) {
+    padding: 20px; // Reduce padding on mobile
+    margin-top: 20px; // Add some top margin
+  }
 }
 
 .welcomeSection {
   text-align: center;
   margin-bottom: 30px;
+
+  @media (max-width: 768px) {
+    margin-bottom: 20px; // Slightly reduce margin
+  }
 }
 
 .welcomeTitle {
@@ -182,12 +230,20 @@
   font-weight: 600;
   color: #333;
   margin-bottom: 8px;
+
+  @media (max-width: 768px) {
+    font-size: 24px; // Smaller font on mobile
+  }
 }
 
 .welcomeSubtitle {
   font-size: 16px;
   color: #6b7280;
   margin: 0;
+
+  @media (max-width: 768px) {
+    font-size: 14px; // Smaller font on mobile
+  }
 }
 
 /* Form styles */
@@ -217,6 +273,10 @@
   font-size: 13px;
   color: #6b7280;
   margin: 0 0 12px 0;
+
+  @media (max-width: 768px) {
+    font-size: 12px; // Smaller font on mobile
+  }
 }
 
 .input {
@@ -229,17 +289,17 @@
   font-size: 15px;
   color: #333;
   transition: border-color 0.2s, box-shadow 0.2s;
-  
+
   &:focus {
     outline: none;
     border-color: #7c3aed;
     box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.1);
   }
-  
+
   &::placeholder {
     color: #a0aec0;
   }
-  
+
   &:disabled {
     background-color: #f9fafb;
     color: #9ca3af;
@@ -258,17 +318,17 @@
   color: #333;
   transition: border-color 0.2s, box-shadow 0.2s;
   resize: vertical;
-  
+
   &:focus {
     outline: none;
     border-color: #7c3aed;
     box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.1);
   }
-  
+
   &::placeholder {
     color: #a0aec0;
   }
-  
+
   &:disabled {
     background-color: #f9fafb;
     color: #9ca3af;
@@ -294,7 +354,7 @@
   align-items: center;
   cursor: pointer;
   transition: all 0.2s;
-  
+
   &:hover {
     background-color: rgba(124, 58, 237, 0.1);
   }
@@ -371,7 +431,7 @@
   color: #6b7280;
   cursor: pointer;
   transition: all 0.2s;
-  
+
   &:hover {
     background-color: #e5e7eb;
     color: #4b5563;
@@ -384,6 +444,11 @@
   grid-template-columns: 1fr 1fr;
   gap: 12px;
   width: 100%;
+
+  @media (max-width: 640px) {
+    grid-template-columns: 1fr; // Stack social items vertically on small screens
+    gap: 8px; // Smaller gap
+  }
 }
 
 .socialGridItem {
@@ -395,7 +460,7 @@
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s;
-  
+
   &:hover {
     border-color: #7c3aed;
     background-color: rgba(124, 58, 237, 0.05);
@@ -468,7 +533,7 @@
   color: #6b7280;
   cursor: pointer;
   transition: all 0.2s;
-  
+
   &:hover {
     background-color: #e5e7eb;
     color: #4b5563;
@@ -498,11 +563,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  
+
   &:hover {
     background-color: #6d28d9;
   }
-  
+
   &:disabled {
     background-color: #a78bfa;
     cursor: not-allowed;
@@ -518,7 +583,7 @@
   cursor: pointer;
   text-align: center;
   padding: 8px;
-  
+
   &:hover {
     text-decoration: underline;
   }
@@ -546,6 +611,14 @@
   background: transparent;
   position: relative;
   z-index: 1;
+
+  @media (max-width: 768px) {
+    padding: 16px 20px; // Reduce padding on mobile
+    position: absolute; // Position footer absolutely at the bottom
+    bottom: 0;
+    width: 100%;
+    background-color: #EEEEF9; // Ensure background for footer
+  }
 }
 
 .copyright {
@@ -593,6 +666,10 @@
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+
+  @media (max-width: 640px) {
+    width: 95%; // Take more width on very small screens
+  }
 }
 
 .cropModalHeader {
@@ -601,6 +678,10 @@
   align-items: center;
   padding: 16px 24px;
   border-bottom: 1px solid #e5e7eb;
+
+  @media (max-width: 640px) {
+    padding: 12px 16px; // Smaller padding
+  }
 }
 
 .cropModalTitle {
@@ -608,6 +689,10 @@
   font-weight: 600;
   color: #333;
   margin: 0;
+
+  @media (max-width: 640px) {
+    font-size: 16px; // Smaller font
+  }
 }
 
 .closeModalButton {
@@ -622,7 +707,7 @@
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  
+
   &:hover {
     background-color: #f3f4f6;
   }
@@ -637,6 +722,10 @@
   align-items: center;
   background-color: #000000;
   overflow: hidden;
+
+  @media (max-width: 640px) {
+    height: 300px; // Smaller height for crop area
+  }
 }
 
 .cropImageWrapper {
@@ -664,6 +753,11 @@
   border: 2px solid #ffffff;
   box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5);
   box-sizing: content-box;
+
+  @media (max-width: 640px) {
+    width: 150px; // Smaller selection box
+    height: 150px;
+  }
 }
 
 .cropCorner {
@@ -679,6 +773,10 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
+
+  @media (max-width: 640px) {
+    padding: 12px 16px; // Smaller padding
+  }
 }
 
 .cropTools {
@@ -698,11 +796,11 @@
   justify-content: center;
   cursor: pointer;
   color: #6b7280;
-  
+
   &:hover {
     background-color: #e5e7eb;
   }
-  
+
   &.active {
     background-color: #7c3aed;
     color: #ffffff;
@@ -723,7 +821,7 @@
   outline: none;
   appearance: none;
   -webkit-appearance: none;
-  
+
   &::-webkit-slider-thumb {
     appearance: none;
     -webkit-appearance: none;
@@ -733,7 +831,7 @@
     background: #7c3aed;
     cursor: pointer;
   }
-  
+
   &::-moz-range-thumb {
     width: 16px;
     height: 16px;
@@ -761,7 +859,7 @@
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  
+
   &:hover {
     background-color: #e5e7eb;
   }
@@ -777,7 +875,7 @@
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  
+
   &:hover {
     background-color: #6d28d9;
   }
@@ -791,6 +889,10 @@
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+
+  @media (max-width: 640px) {
+    width: 95%; // Take more width on very small screens
+  }
 }
 
 .socialModalHeader {
@@ -799,6 +901,10 @@
   align-items: center;
   padding: 16px 24px;
   border-bottom: 1px solid #e5e7eb;
+
+  @media (max-width: 640px) {
+    padding: 12px 16px; // Smaller padding
+  }
 }
 
 .socialModalTitle {
@@ -806,10 +912,18 @@
   font-weight: 600;
   color: #333;
   margin: 0;
+
+  @media (max-width: 640px) {
+    font-size: 16px; // Smaller font
+  }
 }
 
 .socialModalContent {
   padding: 24px;
+
+  @media (max-width: 640px) {
+    padding: 16px; // Smaller padding
+  }
 }
 
 .socialModalActions {
@@ -817,6 +931,10 @@
   justify-content: flex-end;
   gap: 12px;
   margin-top: 24px;
+
+  @media (max-width: 640px) {
+    margin-top: 16px; // Smaller margin
+  }
 }
 
 .cancelSocialButton {
@@ -829,7 +947,7 @@
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  
+
   &:hover {
     background-color: #e5e7eb;
   }
@@ -845,11 +963,11 @@
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  
+
   &:hover {
     background-color: #6d28d9;
   }
-  
+
   &:disabled {
     background-color: #a78bfa;
     cursor: not-allowed;

@@ -1,86 +1,83 @@
-// src/pages/auth/resetLinkSentPage.jsx
 import React from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import styles from "./authPages.module.scss";
+import { useNavigate, Link, useLocation } from "react-router-dom";
+
+// Import styling from the login page for consistent design
+import styles from "./loginPage.module.scss";
+
+// Import SVG components
+import { ReactComponent as MailIcon } from "../../assets/icons/mail-icon.svg";
+import { ReactComponent as ArrowIcon } from "../../assets/icons/arrow-icon.svg";
+
+// Import images
+import wallpaperBg from "../../assets/images/auth-bg.jpg"; // Re-using login page background
+import logoImage from "../../assets/images/logo.svg";
 
 /**
  * ResetLinkSentPage component
  * Shown after a user requests a password reset link
  * Confirms that reset instructions have been sent to their email
- * 
+ *
  * @returns {JSX.Element} The ResetLinkSentPage component
  */
 const ResetLinkSentPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Get email from state passed by the ForgotPasswordPage
+  // Get email from state passed by the ForgotPasswordPage (not used in current UI but good to keep)
   const email = location.state?.email || "your email";
-  
+
   // Handle return to login
   const handleReturnToLogin = () => {
     navigate("/login");
   };
-  
+
   return (
-    <div className={styles.modernAuthContainer}>
-      {/* Left side - background image */}
-      <div className={styles.leftPanel}>
-        <img 
-          src="/images/auth-bg.png" 
-          alt="Background" 
-          className={styles.backgroundImage} 
-        />
+    <div className={styles.loginPanel}> {/* Re-using loginPanel class */}
+      {/* Left Panel with background */}
+      <div className={styles.leftPanel}> {/* Re-using leftPanel class */}
+        <img className={styles.wallpaper} alt="Background" src={wallpaperBg} /> {/* Re-using wallpaper class */}
       </div>
-      
-      {/* Right side - success message */}
-      <div className={styles.rightPanel}>
-        <div className={styles.topBar}>
-          <button 
-            type="button" 
-            className={styles.goBackButton}
-            onClick={handleReturnToLogin}
-          >
-            ‹
-          </button>
-          <div className={styles.logoContainer}>
-            <img 
-              src="/images/logo.svg" 
-              alt="PRIZMATIX" 
-              className={styles.logo} 
-            />
+
+      {/* Right Panel with content */}
+      <div className={styles.rightPanel}> {/* Re-using rightPanel class */}
+        <div className={styles.header}> {/* Re-using header class */}
+          {/* Back button/link as seen in the image */}
+          <Link to="/login" className={styles.backButton} aria-label="Return to Login">
+            <ArrowIcon className={styles.backIcon} />
+            <span className={styles.backButtonText}>Return to Login</span> {/* New span for text */}
+          </Link>
+          <div className={styles.logoContainer}> {/* Re-using logoContainer class */}
+            <img src={logoImage} alt="Prizmatix Logo" className={styles.logo} /> {/* Re-using logo class */}
           </div>
         </div>
-        
-        <div className={styles.loginFormContainer}>
-          <div className={styles.emailSentContainer}>
-            {/* Email Icon */}
-            <div className={styles.emailIconContainer}>
-              <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-                <polyline points="22,6 12,13 2,6"></polyline>
-              </svg>
+
+        <div className={styles.formContainer}> {/* Re-using formContainer class for centering content */}
+          <div className={styles.welcomeSection}> {/* Re-using welcomeSection for consistent spacing */}
+            {/* Email Icon - centered and styled */}
+            <div className={styles.emailIconContainer} style={{ marginBottom: '20px' }}>
+              <MailIcon style={{ width: '48px', height: '48px', color: '#7c3aed' }} />
             </div>
 
-            {/* Message */}
             <h1 className={styles.welcomeTitle}>Email on the way!</h1>
-            <p className={styles.resetInstructions}>
-              We sent you password reset instructions. If it doesn't show up soon, please check your spam folder or email <span className={styles.emailHighlight}>no-reply@prizmatix.com</span>
+            <p className={styles.welcomeSubtitle}>
+              We sent you password reset instructions. If it doesn't show up soon, please check your spam folder. We sent it from the email <span className={styles.companyName}>no-reply@prizmatix.com</span>
             </p>
-            
-            {/* Return to Login Button */}
-            <button
-              type="button"
-              className={styles.signInButton}
-              onClick={handleReturnToLogin}
-            >
-              Return to Login
-            </button>
           </div>
+
+          {/* Return to Login Button */}
+          <button
+            type="button"
+            className={styles.signInButton}
+            onClick={handleReturnToLogin}
+          >
+            Return to Login
+          </button>
         </div>
-        
-        <div className={styles.footerContainer}>
-          <p className={styles.copyrightText}>Copyright© 2025 Prizmatix</p>
+
+        <div className={styles.footer}> {/* Re-using footer class */}
+          <p className={styles.copyright}> {/* Re-using copyright class */}
+            Copyright © 2025 <span className={styles.companyName}>Prizmatix</span> {/* Re-using companyName class */}
+          </p>
         </div>
       </div>
     </div>
