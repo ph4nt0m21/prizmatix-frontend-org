@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useOutletContext } from "react-router-dom"; // Import useOutletContext
 import Cookies from "js-cookie";
 import { LoginAPI } from "../../services/allApis";
-import Header from "../../layout/header/header";
+// Removed direct Header import as it's handled in MainLayout: import Header from "../../layout/header/header";
 import EventHeaderNav from "./components/eventHeaderNav";
 import EventCreationSidebar from "./components/eventCreationSidebar";
 import BasicInfoStep from "./steps/basicInfoStep";
@@ -48,6 +48,8 @@ import {
 const CreateEventPage = () => {
   const navigate = useNavigate();
   const { eventId, step } = useParams();
+  // Get toggleMobileSidebar and isMobileSidebarOpen from Outlet context provided by MainLayout
+  const { toggleMobileSidebar, isMobileSidebarOpen } = useOutletContext();
 
   // Loading state
   const [isLoading, setIsLoading] = useState({
@@ -314,6 +316,11 @@ const CreateEventPage = () => {
           }
         } catch (error) {
           console.error("Error fetching event status:", error);
+        } finally {
+          // Ensure step status is always updated even on error to prevent infinite loops
+          // if (Object.keys(stepStatus).length === 0) { // Only if initial status is empty
+          //   setStepStatus(prev => ({...prev})); // Trigger re-render with initial status
+          // }
         }
       }
     };
@@ -364,7 +371,7 @@ const CreateEventPage = () => {
     } else {
       setCurrentStep(1); // Default to step 1 if no step parameter
     }
-  }, [step, stepStatus]);
+  }, [step, stepStatus, eventId, navigate]); // Added navigate to dependency array
 
   // Fetch event data if eventId is provided
   useEffect(() => {
@@ -752,7 +759,7 @@ const validateTickets = () => {
     if (ticket.quantity === null || ticket.quantity === '' || isNaN(ticket.quantity) || !Number.isInteger(Number(ticket.quantity)) || parseInt(ticket.quantity, 10) <= 0) {
         return true; // Invalid: Quantity is missing or invalid.
     }
-    
+
     // Validate Max Purchase Amount (Optional): If a value is entered, it must be a whole number greater than 0.
     if (ticket.maxPurchaseAmount && (isNaN(ticket.maxPurchaseAmount) || !Number.isInteger(Number(ticket.maxPurchaseAmount)) || parseInt(ticket.maxPurchaseAmount, 10) <= 0)) {
         return true; // Invalid: Max purchase amount is present but invalid.
@@ -767,7 +774,7 @@ const validateTickets = () => {
   if (!isValid) {
       console.error("Validation Failed: One or more tickets have invalid data.");
   }
-  
+
   return isValid;
 };
 
@@ -840,7 +847,7 @@ const validateTickets = () => {
 
     // Basic Info validation
     if (!eventData.name)
-    //  || !eventData.category 
+    //  || !eventData.category
     {
       return false;
     }
@@ -1554,15 +1561,13 @@ const validateTickets = () => {
 
   return (
     <div className={styles.pageContainer}>
-      {/* Main Header - reused from the main layout */}
-      <Header />
-
       {/* Event-specific sub-header with breadcrumbs and actions */}
       <EventHeaderNav
         currentStep={getCurrentStepName()}
         eventName={eventData.name || "new event"}
         isDraft={true}
         canPreview={canPreview}
+        toggleMobileSidebar={toggleMobileSidebar} // Pass toggle to EventHeaderNav
       />
 
       <div className={styles.content}>
@@ -1582,6 +1587,8 @@ const validateTickets = () => {
               setStepStatus(updatedStatus);
             }
           }}
+          isMobileSidebarOpen={isMobileSidebarOpen} // Pass mobile sidebar state
+          toggleMobileSidebar={toggleMobileSidebar} // Pass toggle to sidebar
         />
 
         <div className={styles.mainContent}>

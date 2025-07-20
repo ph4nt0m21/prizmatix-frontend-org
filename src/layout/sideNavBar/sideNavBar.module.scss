@@ -12,14 +12,14 @@
   position: fixed;
   left: 0;
   top: 0;
-  z-index: 1000; // Ensure it's above main content
+  z-index: 100; // Lower z-index for the main side nav
 
   @media (max-width: 768px) {
     width: 250px; // Wider when open on mobile
     left: -250px; // Hidden by default on mobile
     transition: transform 0.3s ease-in-out; // Smooth slide animation
     box-shadow: 2px 0 5px rgba(0, 0, 0, 0.5); // Add shadow for depth
-    z-index: 1001; // Higher z-index than overlay
+    z-index: 100; // Still lower than EventCreationSidebar
     padding-top: 20px; // Add some top padding for mobile
     padding-bottom: 20px; // Add some bottom padding
     justify-content: space-between; // Distribute content vertically
