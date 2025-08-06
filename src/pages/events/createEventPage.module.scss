@@ -18,9 +18,8 @@
   }
 }
 
-// Main container for the create event page
+// Main container for the create event page (this class is not directly used in the current JSX structure, can be removed if not needed elsewhere)
 .pageWrapper {
-  /* This class appears to be unused and can be removed */
   display: flex;
   flex-direction: column;
   min-height: 100vh;
@@ -28,8 +27,8 @@
 }
 
 // Container for the content area that accounts for the sidebar
+// (This class is not directly used in the current JSX structure, can be removed if not needed elsewhere)
 .createEventContainer {
-  /* This class appears to be unused and can be removed */
   display: flex;
   flex-direction: column;
   width: calc(100% - 70px);
@@ -48,11 +47,8 @@
   background: #F1F1F1;
   gap: 16px;
   padding: 16px 24px;
-  /* Adjusted padding */
   flex: 1;
-  /* This makes the content area fill the available space */
-  overflow: hidden;
-  /* Prevent this container from showing scrollbars */
+  overflow: hidden; // Prevent this container from showing scrollbars
 
   @media (max-width: 1280px) {
     padding: 12px;
@@ -74,13 +70,12 @@
   }
 }
 
-// Main content area that contains the form
+// Main content area that contains the form (the step content and navigation)
 .mainContent {
   flex: 1;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
-  /* Important: this keeps the main content from scrolling */
+  overflow: hidden; // Important: this keeps the main content from scrolling
   background-color: #FFFFFF;
   border-radius: 8px;
   box-shadow: 0px 2px 4px 0px rgba(0, 0, 0, 0.05);
@@ -91,13 +86,11 @@
   }
 }
 
-// Container for the step content
+// Container for the step content (the actual form for each step)
 .stepContent {
   flex: 1;
-  /* This makes the step content fill the space between the header/footer of the card */
   display: flex;
-  overflow-y: auto;
-  /* Allow ONLY this container to scroll vertically */
+  overflow-y: auto; // Allow ONLY this container to scroll vertically
   overflow-x: hidden;
 }
 
@@ -241,7 +234,7 @@
   }
 }
 
-// Form container
+// Form container (this class is not directly used in the current JSX structure, can be removed if not needed elsewhere)
 .formContainer {
   background-color: #FFFFFF;
   border-radius: 8px;
@@ -251,7 +244,7 @@
   height: 100%;
 }
 
-// Tab content
+// Tab content (this class is not directly used in the current JSX structure, can be removed if not needed elsewhere)
 .tabContent {
   padding: 24px;
   height: 100%;
@@ -262,7 +255,7 @@
   }
 }
 
-// Step progress indicator
+// Step progress indicator (this class is not directly used in the current JSX structure, can be removed if not needed elsewhere)
 .stepProgress {
   display: flex;
   align-items: center;

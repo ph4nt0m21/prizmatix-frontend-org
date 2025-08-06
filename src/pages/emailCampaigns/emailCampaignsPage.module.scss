@@ -1,0 +1,450 @@
+@import '../../styles/variables';
+@import '../../styles/mixins';
+
+.emailCampaignsPageContainer {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 24px;
+  background-color: #f8f8f8;
+  width: 100%; // Ensure it takes full width of its parent
+  overflow-y: auto; // Allow page content to scroll if it exceeds viewport height
+}
+
+.header {
+  margin-bottom: 24px;
+
+  .breadcrumbs {
+    font-size: 13px;
+    color: #6b7280;
+    margin-bottom: 8px;
+
+    span:last-child {
+      font-weight: 500;
+      color: #374151;
+    }
+  }
+
+  .pageTitle {
+    font-size: 24px;
+    font-weight: 600;
+    color: #111827;
+    margin: 0;
+  }
+}
+
+.formSection {
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  padding: 24px;
+  margin-bottom: 24px;
+
+  .sectionTitle {
+    font-size: 18px;
+    font-weight: 500;
+    color: #111827;
+    margin: 0 0 20px 0;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #f3f4f6;
+  }
+}
+
+.formGroup {
+  margin-bottom: 20px;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+
+  .label {
+    display: block;
+    font-size: 14px;
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 8px;
+  }
+
+  .input, .select, .textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 14px;
+    color: #111827;
+    background-color: #ffffff;
+    box-sizing: border-box; // Ensures padding and border are included in the element's total width and height
+
+    &:focus {
+      outline: none;
+      border-color: #7c3aed;
+      box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+    }
+
+    &::placeholder {
+      color: #9ca3af;
+    }
+  }
+
+  .textarea {
+    resize: vertical;
+    min-height: 100px;
+  }
+
+  .fieldHint {
+    font-size: 13px;
+    color: #6b7280;
+    margin-top: 8px;
+  }
+}
+
+.radioGroup, .checkboxGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+
+  .radioLabel, .checkboxLabel {
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+    color: #374151;
+    cursor: pointer;
+
+    .radioInput, .checkboxInput {
+      margin-right: 8px;
+      appearance: none; // Hide default checkbox/radio
+      width: 18px;
+      height: 18px;
+      border: 1px solid #d1d5db;
+      border-radius: 4px; // Square for checkbox, rounded for radio
+      display: inline-block;
+      position: relative;
+      cursor: pointer;
+      flex-shrink: 0; // Prevent shrinking on mobile
+
+      &:checked {
+        background-color: #7c3aed;
+        border-color: #7c3aed;
+        
+        &::after {
+          content: '';
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          width: 8px;
+          height: 8px;
+          background-color: #ffffff;
+          border-radius: 2px;
+        }
+      }
+    }
+
+    .radioInput {
+        border-radius: 50%;
+        &:checked::after {
+            border-radius: 50%;
+        }
+    }
+  }
+}
+
+.richTextEditorPlaceholder {
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  overflow: hidden;
+  margin-top: 8px;
+
+  .toolbar {
+    display: flex;
+    gap: 8px;
+    padding: 8px 12px;
+    background-color: #f9fafb;
+    border-bottom: 1px solid #e5e7eb;
+
+    button {
+      padding: 6px 10px;
+      border: 1px solid #e5e7eb;
+      border-radius: 4px;
+      background-color: #ffffff;
+      color: #4b5563;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+
+      &:hover {
+        background-color: #f3f4f6;
+      }
+    }
+  }
+
+  .textarea {
+    border: none;
+    border-radius: 0;
+    min-height: 180px;
+    padding: 12px;
+  }
+}
+
+.sendTimeGroup {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-top: 16px;
+
+  .dateInput, .timeInput {
+    flex: 1;
+    padding: 10px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 14px;
+    color: #111827;
+    background-color: #ffffff;
+
+    &:focus {
+      outline: none;
+      border-color: #7c3aed;
+      box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+    }
+  }
+
+  .afterButton {
+    padding: 10px 16px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    background-color: #f9fafb;
+    color: #4b5563;
+    font-weight: 500;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+
+    &:hover {
+      background-color: #f3f4f6;
+    }
+  }
+}
+
+.footerActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 16px;
+  padding: 20px 0;
+  border-top: 1px solid #f3f4f6;
+  margin-top: 24px;
+  position: sticky; // Make it sticky at the bottom
+  bottom: 0;
+  background-color: #f8f8f8; // Match page background
+  z-index: 100; // Ensure it stays above other content
+}
+
+.backButton, .saveDraftButton, .sendButton {
+  padding: 10px 24px;
+  border-radius: 6px;
+  font-weight: 500;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.backButton {
+  background-color: white;
+  border: 1px solid #d1d5db;
+  color: #6b7280;
+
+  &:hover {
+    background-color: #f9fafb;
+    border-color: #9ca3af;
+  }
+}
+
+.saveDraftButton {
+  background-color: #f0fdf4;
+  border: 1px solid #a7f3d0;
+  color: #059669;
+
+  &:hover {
+    background-color: #dcfce7;
+    border-color: #34d399;
+  }
+}
+
+.sendButton {
+  background-color: #7c3aed;
+  border: none;
+  color: white;
+
+  &:hover {
+    background-color: #6d28d9;
+  }
+}
+
+/* --- Responsive Styles --- */
+@media (max-width: 768px) {
+  .emailCampaignsPageContainer {
+    padding: 16px;
+  }
+
+  .header {
+    margin-bottom: 16px;
+
+    .pageTitle {
+      font-size: 20px;
+    }
+  }
+
+  .formSection {
+    padding: 16px;
+    margin-bottom: 16px;
+
+    .sectionTitle {
+      font-size: 16px;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+    }
+  }
+
+  .formGroup {
+    margin-bottom: 16px;
+
+    .label {
+      font-size: 13px;
+      margin-bottom: 6px;
+    }
+
+    .input, .select, .textarea {
+      padding: 8px 10px;
+      font-size: 13px;
+    }
+
+    .fieldHint {
+      font-size: 12px;
+    }
+  }
+
+  .radioGroup, .checkboxGroup {
+    gap: 10px;
+    margin-bottom: 16px;
+
+    .radioLabel, .checkboxLabel {
+      font-size: 13px;
+
+      .radioInput, .checkboxInput {
+        width: 16px;
+        height: 16px;
+      }
+    }
+  }
+
+  .richTextEditorPlaceholder {
+    .toolbar {
+      gap: 6px;
+      padding: 6px 10px;
+    }
+
+    .toolbar button {
+      padding: 4px 8px;
+      font-size: 12px;
+    }
+
+    .textarea {
+      min-height: 150px;
+      padding: 10px;
+    }
+  }
+
+  .sendTimeGroup {
+    flex-wrap: wrap; // Allow items to wrap on smaller screens
+    gap: 8px;
+
+    .dateInput, .timeInput {
+      flex: 1 1 calc(50% - 4px); // Allow date and time to take roughly half width
+    }
+
+    .afterButton {
+        flex-basis: 100%; // Make "After" button take full width
+        text-align: center;
+    }
+  }
+
+  .footerActions {
+    flex-direction: column; // Stack buttons vertically
+    gap: 10px;
+    padding: 16px;
+  }
+
+  .backButton, .saveDraftButton, .sendButton {
+    width: 100%; // Full width buttons
+    padding: 12px 16px;
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .emailCampaignsPageContainer {
+    padding: 10px;
+  }
+
+  .header {
+    margin-bottom: 12px;
+
+    .pageTitle {
+      font-size: 18px;
+    }
+  }
+
+  .formSection {
+    padding: 12px;
+    margin-bottom: 12px;
+
+    .sectionTitle {
+      font-size: 15px;
+      margin-bottom: 12px;
+      padding-bottom: 10px;
+    }
+  }
+
+  .formGroup {
+    margin-bottom: 12px;
+
+    .label {
+      font-size: 12px;
+    }
+
+    .input, .select, .textarea {
+      font-size: 12px;
+    }
+
+    .fieldHint {
+      font-size: 11px;
+    }
+  }
+
+  .radioGroup, .checkboxGroup {
+    gap: 8px;
+    margin-bottom: 12px;
+
+    .radioLabel, .checkboxLabel {
+      font-size: 12px;
+    }
+  }
+
+  .richTextEditorPlaceholder {
+    .textarea {
+      min-height: 120px;
+    }
+  }
+
+  .sendTimeGroup {
+    flex-direction: column; // Stack date, time, and button
+    .dateInput, .timeInput, .afterButton {
+        flex: none; // Reset flex-basis
+        width: 100%; // Take full width
+    }
+  }
+
+  .footerActions {
+    padding: 12px;
+  }
+}

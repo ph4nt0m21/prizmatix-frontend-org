@@ -1,4 +1,3 @@
-// Import variables and mixins from main style files
 @import '../../../styles/variables';
 @import '../../../styles/mixins';
 
@@ -7,9 +6,16 @@
   width: 100%;
   background-color: white;
   border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   padding: 120px;
   padding-top: 48px;
   padding-bottom: 48px;
+
+  @media (max-width: 768px) {
+    padding: 24px 16px; // Adjust padding for mobile screens
+    border-radius: 0; // Remove border-radius for full-width look on mobile
+    box-shadow: none; // Remove box-shadow on mobile if it's full screen
+  }
 }
 
 .stepHeader {
@@ -19,18 +25,23 @@
   padding-bottom: 16px;
   border-bottom: 1px solid #f0f0f0;
   gap: 12px;
-}
 
-.stepTitle {
-  font-size: 18px;
-  font-weight: 600;
-  color: #333;
-  margin: 0;
+  @media (max-width: 768px) {
+    margin-bottom: 16px; // Adjust margin for mobile
+    padding-bottom: 12px; // Adjust padding for mobile
+  }
 }
 
 .stepIcon {
   flex-shrink: 0;
   color: #7C3AED;
+
+  @media (max-width: 768px) {
+    svg {
+      width: 20px; // Slightly smaller icon for mobile
+      height: 20px;
+    }
+  }
 }
 
 .stepTitle {
@@ -38,6 +49,10 @@
   font-weight: 600;
   color: #333;
   margin: 0;
+
+  @media (max-width: 768px) {
+    font-size: 16px; // Adjust font size for mobile
+  }
 }
 
 // Form section styling
@@ -48,6 +63,10 @@
 .formGroup {
   margin-bottom: 40px;
   width: 100%;
+
+  @media (max-width: 768px) {
+    margin-bottom: 24px; // Adjust margin for mobile
+  }
 }
 
 // Label and description styling
@@ -57,6 +76,10 @@
   font-weight: 600;
   color: #333;
   margin-bottom: 4px;
+
+  @media (max-width: 768px) {
+    font-size: 14px; // Adjust font size for mobile
+  }
 }
 
 .formDescription {
@@ -64,19 +87,32 @@
   color: #6b7280;
   margin-top: 0;
   margin-bottom: 16px;
+
+  @media (max-width: 768px) {
+    font-size: 12px; // Adjust font size for mobile
+    margin-bottom: 12px; // Adjust margin for mobile
+  }
 }
 
-.recommendationsBox{
+.recommendationsBox {
   font-size: 12px;
   font-weight: 600;
   color: #333;
   margin: 0;
+
+  @media (max-width: 768px) {
+    font-size: 11px; // Adjust font size for mobile
+  }
 }
 
-.recommendationsTitle{
+.recommendationsTitle {
   display: flex;
   align-items: center;
   gap: 12px;
+
+  @media (max-width: 768px) {
+    gap: 8px; // Adjust gap for mobile
+  }
 }
 
 // Upload dropzone - square for thumbnail, rectangle for banner
@@ -103,6 +139,12 @@
     border-color: #e5e7eb;
     background-color: white;
   }
+
+  @media (max-width: 768px) {
+    width: 180px; // Smaller thumbnail for mobile
+    height: 180px;
+    margin: 0 auto 8px auto; // Center it
+  }
 }
 
 .uploadDropzoneBanner {
@@ -128,6 +170,15 @@
     border-color: #e5e7eb;
     background-color: white;
   }
+
+  @media (max-width: 768px) {
+    width: 100%; // Full width banner for mobile
+    height: 180px; // Adjust height to maintain aspect ratio or fit
+    margin-bottom: 8px;
+  }
+  @media (max-width: 480px) {
+    height: 150px; // Even shorter on very small phones
+  }
 }
 
 // Upload interface with centered text
@@ -140,17 +191,25 @@
   height: 100%;
   text-align: center;
   padding: 16px;
+
+  @media (max-width: 768px) {
+    padding: 12px; // Adjust padding for mobile
+  }
 }
 
-.uploadInterfaceBanner{
+.uploadInterfaceBanner {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: 596px;
+  width: 100%; /* Make it 100% of its parent, which is already responsive */
   height: 100%;
   text-align: center;
   padding: 16px;
+
+  @media (max-width: 768px) {
+    padding: 12px; // Adjust padding for mobile
+  }
 }
 
 // Hidden in current design
@@ -165,6 +224,10 @@
   margin: 0;
   text-align: center;
   line-height: 1.5;
+
+  @media (max-width: 768px) {
+    font-size: 12px; // Adjust font size for mobile
+  }
 }
 
 // Purple "click to browse" button
@@ -179,6 +242,10 @@
   
   &:hover {
     text-decoration: underline;
+  }
+
+  @media (max-width: 768px) {
+    font-size: 12px; // Adjust font size for mobile
   }
 }
 
@@ -197,6 +264,10 @@
   justify-content: space-between;
   margin-top: 4px;
   padding: 0 4px;
+
+  @media (max-width: 768px) {
+    font-size: 11px; // Adjust font size for mobile
+  }
 }
 
 // Supported file types text
@@ -208,6 +279,10 @@
   svg {
     display: none; // Hidden in the design
   }
+
+  @media (max-width: 768px) {
+    font-size: 10px; // Adjust font size for mobile
+  }
 }
 
 // Maximum file size text
@@ -217,6 +292,10 @@
   
   svg {
     display: none; // Hidden in the design
+  }
+
+  @media (max-width: 768px) {
+    font-size: 10px; // Adjust font size for mobile
   }
 }
 
@@ -250,6 +329,10 @@
   align-items: center;
   padding: 8px 12px; // Adjust padding for a better look
   border-top: 1px solid rgba(0, 0, 0, 0.05);
+
+  @media (max-width: 768px) {
+    padding: 6px 10px; // Adjust padding for mobile
+  }
 }
 
 .fileName {
@@ -261,13 +344,22 @@
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 70%;
-    flex-shrink: 1;
+  flex-shrink: 1;
   min-width: 0;
+
+  @media (max-width: 768px) {
+    font-size: 11px; // Adjust font size for mobile
+    max-width: 60%; // Give more space if needed
+  }
 }
 
 .fileSize {
   font-size: 12px;
   color: #6b7280;
+
+  @media (max-width: 768px) {
+    font-size: 11px; // Adjust font size for mobile
+  }
 }
 
 // Remove button styling
@@ -294,6 +386,17 @@
     width: 14px;
     height: 14px;
   }
+
+  @media (max-width: 768px) {
+    width: 20px; // Smaller button for mobile
+    height: 20px;
+    top: 6px;
+    right: 6px;
+    svg {
+      width: 12px; // Smaller icon for mobile
+      height: 12px;
+    }
+  }
 }
 
 // Error message styling
@@ -309,6 +412,12 @@
   justify-content: flex-end;
   gap: 12px;
   margin-top: 32px;
+
+  @media (max-width: 768px) {
+    flex-direction: column-reverse; // Stack buttons vertically, "Next" usually on top
+    gap: 12px; // Space between buttons
+    margin-top: 24px; // Adjust top margin
+  }
 }
 
 .backButton {
@@ -323,6 +432,12 @@
   
   &:hover {
     background-color: #f9fafb;
+  }
+
+  @media (max-width: 768px) {
+    width: 100%; // Full width on mobile
+    padding: 10px 16px; // Adjust padding for mobile
+    font-size: 14px; // Consistent font size
   }
 }
 
@@ -343,6 +458,12 @@
   &:disabled {
     opacity: 0.6;
     cursor: not-allowed;
+  }
+
+  @media (max-width: 768px) {
+    width: 100%; // Full width on mobile
+    padding: 10px 24px; // Adjust padding for mobile
+    font-size: 14px; // Consistent font size
   }
 }
 
@@ -380,6 +501,17 @@
     font-weight: 600;
     color: #333;
   }
+
+  @media (max-width: 768px) {
+    padding: 1.5rem; // Adjust padding for mobile
+    margin: 1rem; // Add some margin to prevent it from touching screen edges
+    max-width: 90%; // Make it take up more width on smaller screens
+
+    h2 {
+      font-size: 18px; // Adjust font size for mobile
+      margin-bottom: 1rem;
+    }
+  }
 }
 
 .cropContainer {
@@ -389,7 +521,12 @@
 
   // This targets the image inside the react-crop component
   img {
-    max-height: 70vh;
+    max-width: 100%; // Ensure image doesn't overflow
+    max-height: 60vh; // Reduce max height for mobile
+  }
+
+  @media (max-width: 768px) {
+    margin-bottom: 1rem; // Adjust margin for mobile
   }
 }
 
@@ -397,6 +534,11 @@
   display: flex;
   justify-content: flex-end;
   gap: 12px;
+
+  @media (max-width: 768px) {
+    flex-direction: column-reverse; // Stack buttons
+    gap: 8px; // Adjust gap
+  }
 }
 
 // Re-use button styles for consistency
@@ -407,6 +549,11 @@
   font-weight: 500;
   cursor: pointer;
   border: none;
+
+  @media (max-width: 768px) {
+    width: 100%; // Full width on mobile
+    padding: 10px 16px; // Adjust padding
+  }
 }
 
 .cancelButton {
@@ -425,5 +572,34 @@
 
   &:hover {
     background-color: #6D28D9; // Darker shade from your nextButton
+  }
+}
+
+// Existing media queries from your file, adjusted or kept
+@media (max-width: 768px) {
+  .formRow { // This was likely from another component, keeping as a general media query
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .formInput { // This was likely from another component, keeping as a general media query
+    width: 100%;
+  }
+
+  .buttonGroup { // This class isn't explicitly used in your provided JSX, but keeping the styling for buttons if it's applied via a parent div
+    flex-direction: column;
+    gap: 8px;
+
+    button {
+      width: 100%;
+    }
+  }
+
+  .stepHeading { // These classes don't seem to be in your provided JSX, but keeping the media queries
+    font-size: 16px;
+  }
+
+  .stepSubheading { // These classes don't seem to be in your provided JSX, but keeping the media queries
+    font-size: 14px;
   }
 }

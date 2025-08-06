@@ -8,148 +8,154 @@ import { getUserData } from '../../utils/authUtil';
 
 const EventsPage = () => {
   const navigate = useNavigate();
-  
+
   const [events, setEvents] = useState([]);
   const [filteredEvents, setFilteredEvents] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  
-  // MODIFIED: Default filter is 'All Events' to match the new design
-  const [currentFilter, setCurrentFilter] = useState('All Events', 'Live', 'Draft');
+
+  const [currentFilter, setCurrentFilter] = useState('All Events'); // Default filter
   const [searchQuery, setSearchQuery] = useState('');
-  
+
   const [openMenuId, setOpenMenuId] = useState(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [eventToDelete, setEventToDelete] = useState(null);
 
-  // MODIFIED: Filter options for the new sidebar
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // State for mobile sidebar visibility
+
   const filterOptions = ['All Events', 'Live', 'Draft'];
   const userId = Cookies.get('userId');
 
-    const liveCount = events.filter(event => event.isLive).length;
+  const liveCount = events.filter(event => event.isLive).length;
   const draftCount = events.filter(event => !event.isLive).length;
-  
+
   useEffect(() => {
     fetchEvents();
   }, []);
-  
+
   useEffect(() => {
     applyFilters();
   }, [events, currentFilter, searchQuery]);
-  
-const fetchEvents = async () => {
-  try {
-    setIsLoading(true);
-    const userData = getUserData();
-    const organizationId = userData?.organizationId;
-    
-    if (!organizationId) {
-      setError('Organization ID not found. Please login again.');
-      setIsLoading(false);
-      return;
-    }
-    
-    const params = { page: 0, size: 100, sort: 'startDate,desc' };
-    const response = await GetAllOrganizationEventsAPI(organizationId, params);
-    const initialEvents = response.data || [];
 
-    // --- NEW: Fetch status for each event ---
-    const eventsWithStatus = await Promise.all(
-      initialEvents.map(async (event) => {
-        try {
-          const statusResponse = await GetEventStatusAPI(event.id);
-          // Check if the 'publish' step (step 8) is completed.
-          const isPublished = statusResponse.data?.step8Completed || false;
-          return { ...event, isLive: isPublished }; // Add the 'isLive' property
-        } catch (statusError) {
-          console.error(`Failed to get status for event ${event.id}:`, statusError);
-          return { ...event, isLive: false }; // Default to Draft if status check fails
-        }
-      })
-    );
-    
-    setEvents(eventsWithStatus);
-    setError(null);
-  } catch (error) {
-    console.error('Error fetching events:', error);
-    setError('Failed to load events. Please try again.');
-  } finally {
-    setIsLoading(false);
-  }
-};
-  
-const applyFilters = () => {
-  let filtered = [...events];
-  
-  // Apply status filters
-  if (currentFilter === 'Live') {
-    filtered = filtered.filter(event => event.isLive);
-  } else if (currentFilter === 'Draft') {
-    filtered = filtered.filter(event => !event.isLive);
-  }
-  // No action needed for 'All Events' as it starts with the full list.
-  
-  // Apply search query filter
-  if (searchQuery.trim()) {
-    const query = searchQuery.toLowerCase().trim();
-    filtered = filtered.filter(event => 
-      event.name?.toLowerCase().includes(query)
-    );
-  }
-  
-  setFilteredEvents(filtered);
-};
-  
+  // Close action menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (openMenuId && !event.target.closest(`.${styles.actionsMenuContainer}`)) {
+        setOpenMenuId(null);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [openMenuId]);
+
+  const fetchEvents = async () => {
+    try {
+      setIsLoading(true);
+      const userData = getUserData();
+      const organizationId = userData?.organizationId;
+
+      if (!organizationId) {
+        setError('Organization ID not found. Please login again.');
+        setIsLoading(false);
+        return;
+      }
+
+      const params = { page: 0, size: 100, sort: 'startDate,desc' };
+      const response = await GetAllOrganizationEventsAPI(organizationId, params);
+      const initialEvents = response.data || [];
+
+      const eventsWithStatus = await Promise.all(
+        initialEvents.map(async (event) => {
+          try {
+            const statusResponse = await GetEventStatusAPI(event.id);
+            const isPublished = statusResponse.data?.step8Completed || false;
+            return { ...event, isLive: isPublished };
+          } catch (statusError) {
+            console.error(`Failed to get status for event ${event.id}:`, statusError);
+            return { ...event, isLive: false }; // Default to Draft if status check fails
+          }
+        })
+      );
+
+      setEvents(eventsWithStatus);
+      setError(null);
+    } catch (error) {
+      console.error('Error fetching events:', error);
+      setError('Failed to load events. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const applyFilters = () => {
+    let filtered = [...events];
+
+    if (currentFilter === 'Live') {
+      filtered = filtered.filter(event => event.isLive);
+    } else if (currentFilter === 'Draft') {
+      filtered = filtered.filter(event => !event.isLive);
+    }
+
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      filtered = filtered.filter(event =>
+        event.name?.toLowerCase().includes(query)
+      );
+    }
+
+    setFilteredEvents(filtered);
+  };
+
   const handleFilterClick = (filter) => {
     setCurrentFilter(filter);
+    setIsSidebarOpen(false); // Close sidebar on filter selection for mobile
   };
-  
+
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
   };
-  
+
   const handleCreateEvent = () => {
     navigate('/events/create/');
   };
-  
+
   const handleViewEvent = (eventId) => {
     navigate(`/events/manage/${eventId}/overview`);
   };
 
-    const handleToggleMenu = (e, eventId) => {
-    e.stopPropagation(); // Prevent the row's onClick from firing
+  const handleToggleMenu = (e, eventId) => {
+    e.stopPropagation();
     setOpenMenuId(openMenuId === eventId ? null : eventId);
   };
 
-    const handleEditEvent = (e, eventId) => {
+  const handleEditEvent = (e, eventId) => {
     e.stopPropagation();
     navigate(`/events/edit-page/${eventId}/1`);
   };
 
-    const handleDeleteClick = (e, event) => {
+  const handleDeleteClick = (e, event) => {
     e.stopPropagation();
     setEventToDelete(event);
     setShowDeleteConfirm(true);
-    setOpenMenuId(null); // Close the actions menu
+    setOpenMenuId(null);
   };
 
-    const confirmDeleteEvent = async () => {
+  const confirmDeleteEvent = async () => {
     if (!eventToDelete) return;
     try {
-      // The API requires userId, ensure you have it.
-      // We're getting it from cookies, but you can get it from your auth context if preferred.
-      const currentUserId = getUserData()?.id || userId; 
+      const currentUserId = getUserData()?.id || userId;
       if (!currentUserId) {
-          setError("User ID not found. Cannot delete event.");
-          setShowDeleteConfirm(false);
-          return;
+        setError("User ID not found. Cannot delete event.");
+        setShowDeleteConfirm(false);
+        return;
       }
-      
+
       await DeleteEventAPI(eventToDelete.id, currentUserId);
-      
-      // Remove the event from the state to update the UI instantly
+
       setEvents(prevEvents => prevEvents.filter(e => e.id !== eventToDelete.id));
-      
+
       setShowDeleteConfirm(false);
       setEventToDelete(null);
 
@@ -160,29 +166,22 @@ const applyFilters = () => {
     }
   };
 
-  // --- HELPER FUNCTIONS MODIFIED FOR NEW DESIGN ---
+  const getStatusText = (event) => {
+    return event.isLive ? 'Live' : 'Draft';
+  };
 
-const getStatusText = (event) => {
-  // MODIFIED: Dynamically return status based on the isLive property
-  return event.isLive ? 'Live' : 'Draft';
-};
+  const getStatusBadgeClass = (event) => {
+    return event.isLive ? styles.liveBadge : styles.draftBadge;
+  };
 
-const getStatusBadgeClass = (event) => {
-  // MODIFIED: Use a different CSS class for the 'Live' status
-  // Make sure you have a 'liveBadge' style defined in your eventsPage.module.scss
-  return event.isLive ? styles.liveBadge : styles.draftBadge;
-};
-  
   const formatTicketSales = (event) => {
-    // Per request, show a nil value.
-    return '00/100';
+    return '00/100'; // Per request, show a nil value.
   };
 
   const calculateGrossRevenue = (event) => {
-    // Per request, show a nil value.
-    return '$00.0';
+    return '$00.0'; // Per request, show a nil value.
   };
-  
+
   const formatEventDate = (event) => {
     if (!event.dateTime?.startDate) {
       return { month: 'TBD', day: '??' };
@@ -192,7 +191,7 @@ const getStatusBadgeClass = (event) => {
     const day = date.getDate();
     return { month, day };
   };
-  
+
   if (isLoading && events.length === 0) {
     return (
       <div className={styles.loadingContainer}>
@@ -200,13 +199,18 @@ const getStatusBadgeClass = (event) => {
       </div>
     );
   }
-  
+
   return (
     <div className={styles.pageWrapper}>
-      {/* NEW: Sidebar for event management */}
-      <aside className={styles.sidebar}>
+      {/* Mobile Overlay for sidebar */}
+      {isSidebarOpen && (
+        <div className={styles.mobileOverlay} onClick={() => setIsSidebarOpen(false)}></div>
+      )}
+
+      {/* Sidebar for event management */}
+      <aside className={`${styles.sidebar} ${isSidebarOpen ? styles.open : ''}`}>
         <h2 className={styles.sidebarTitle}>Manage Event</h2>
-         <nav className={styles.filterNav}>
+        <nav className={styles.filterNav}>
           {filterOptions.map(filter => {
             let count;
             switch (filter) {
@@ -239,6 +243,14 @@ const getStatusBadgeClass = (event) => {
       {/* Main Content Area */}
       <main className={styles.mainContent}>
         <div className={styles.header}>
+          {/* Mobile sidebar toggle button (now a dropdown icon) */}
+          <button className={styles.mobileSidebarToggleButton} onClick={() => setIsSidebarOpen(true)} aria-label="Open sidebar menu">
+            {/* Three vertical dots icon for dropdown behavior */}
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 8C13.1 8 14 7.1 14 6C14 4.9 13.1 4 12 4C10.9 4 10 4.9 10 6C10 7.1 10.9 8 12 8ZM12 10C10.9 10 10 10.9 10 12C10 13.1 10.9 14 12 14C13.1 14 14 13.1 14 12C14 10.9 13.1 10 12 10ZM12 16C10.9 16 10 16.9 10 18C10 19.1 10.9 20 12 20C13.1 20 14 19.1 14 18C14 16.9 13.1 16 12 16Z" fill="currentColor"/>
+            </svg>
+          </button>
+
           <h1 className={styles.pageTitle}>Your Events</h1>
           <div className={styles.headerActions}>
             <div className={styles.searchContainer}>
@@ -258,7 +270,7 @@ const getStatusBadgeClass = (event) => {
         </div>
 
         {error && <div className={styles.errorMessage}>{error}</div>}
-        
+
         <div className={styles.eventsTable}>
           <div className={styles.tableHeader}>
             <div className={styles.eventColumn}>Event</div>
@@ -267,7 +279,7 @@ const getStatusBadgeClass = (event) => {
             <div className={styles.grossColumn}>Gross</div>
             <div className={styles.actionsColumn}></div>
           </div>
-          
+
           {filteredEvents.length > 0 ? (
             filteredEvents.map(event => {
               const date = formatEventDate(event);
@@ -279,7 +291,7 @@ const getStatusBadgeClass = (event) => {
                       <span className={styles.dateDay}>{date.day}</span>
                     </div>
                     <div className={styles.eventThumbnail}>
-                      <img src={event.art?.thumbnailUrl || '/images/placeholder-event.jpg'} alt={event.name} />
+                      <img src={event.art?.thumbnailUrl || 'https://placehold.co/64x48/e5e7eb/6b7280?text=Event'} alt={event.name} />
                     </div>
                     <div className={styles.eventDetails}>
                       <h3 className={styles.eventName}>{event.name}</h3>
@@ -288,13 +300,13 @@ const getStatusBadgeClass = (event) => {
                       </p>
                     </div>
                   </div>
-                  
+
                   <div className={styles.statusCell}>
                     <span className={`${styles.statusBadge} ${getStatusBadgeClass(event)}`}>
                       {getStatusText(event)}
                     </span>
                   </div>
-                  
+
                   <div className={styles.soldCell}>
                     <span>{formatTicketSales(event)}</span>
                     <div className={styles.salesProgress}>
@@ -307,21 +319,20 @@ const getStatusBadgeClass = (event) => {
                   </div>
 
                   <div className={styles.actionsCell}>
-                      <div className={styles.actionsMenuContainer}>
-                        <button className={styles.actionsButton} onClick={(e) => handleToggleMenu(e, event.id)}>
-                          <svg width="20" height="20" viewBox="0 0 24 24"><path d="M12 8C13.1 8 14 7.1 14 6C14 4.9 13.1 4 12 4C10.9 4 10 4.9 10 6C10 7.1 10.9 8 12 8ZM12 10C10.9 10 10 10.9 10 12C10 13.1 10.9 14 12 14C13.1 14 14 13.1 14 12C14 10.9 13.1 10 12 10ZM12 16C10.9 16 10 16.9 10 18C10 19.1 10.9 20 12 20C13.1 20 14 19.1 14 18C14 16.9 13.1 16 12 16Z" fill="#6B7280"/></svg>
-                        </button>
-                        
-                        {/* --- NEW: Conditionally rendered actions menu --- */}
-                        {openMenuId === event.id && (
-                          <div className={styles.actionsMenu}>
-                            <button onClick={(e) => handleEditEvent(e, event.id)}>Edit</button>
-                            <button onClick={(e) => handleDeleteClick(e, event)} className={styles.deleteAction}>Delete</button>
-                          </div>
-                        )}
-                      </div>
+                    <div className={styles.actionsMenuContainer}>
+                      <button className={styles.actionsButton} onClick={(e) => handleToggleMenu(e, event.id)}>
+                        <svg width="20" height="20" viewBox="0 0 24 24"><path d="M12 8C13.1 8 14 7.1 14 6C14 4.9 13.1 4 12 4C10.9 4 10 4.9 10 6C10 7.1 10.9 8 12 8ZM12 10C10.9 10 10 10.9 10 12C10 13.1 10.9 14 12 14C13.1 14 14 13.1 14 12C14 10.9 13.1 10 12 10ZM12 16C10.9 16 10 16.9 10 18C10 19.1 10.9 20 12 20C13.1 20 14 19.1 14 18C14 16.9 13.1 16 12 16Z" fill="#6B7280"/></svg>
+                      </button>
+
+                      {openMenuId === event.id && (
+                        <div className={styles.actionsMenu}>
+                          <button onClick={(e) => handleEditEvent(e, event.id)}>Edit</button>
+                          <button onClick={(e) => handleDeleteClick(e, event)} className={styles.deleteAction}>Delete</button>
+                        </div>
+                      )}
                     </div>
                   </div>
+                </div>
               );
             })
           ) : (
@@ -332,17 +343,17 @@ const getStatusBadgeClass = (event) => {
         </div>
       </main>
       {showDeleteConfirm && (
-  <div className={styles.deleteModalOverlay}>
-    <div className={styles.deleteModal}>
-      <h3>Confirm Deletion</h3>
-      <p>Are you sure you want to delete the event "{eventToDelete?.name}"? This action cannot be undone.</p>
-      <div className={styles.deleteModalActions}>
-        <button onClick={() => setShowDeleteConfirm(false)} className={styles.cancelButton}>Cancel</button>
-        <button onClick={confirmDeleteEvent} className={styles.confirmDeleteButton}>Delete</button>
-      </div>
-    </div>
-  </div>
-)}
+        <div className={styles.deleteModalOverlay}>
+          <div className={styles.deleteModal}>
+            <h3>Confirm Deletion</h3>
+            <p>Are you sure you want to delete the event "{eventToDelete?.name}"? This action cannot be undone.</p>
+            <div className={styles.deleteModalActions}>
+              <button onClick={() => setShowDeleteConfirm(false)} className={styles.cancelButton}>Cancel</button>
+              <button onClick={confirmDeleteEvent} className={styles.confirmDeleteButton}>Delete</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

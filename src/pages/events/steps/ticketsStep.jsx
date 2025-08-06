@@ -166,10 +166,11 @@ const TicketsStep = ({
 ) : (
   // ============== TICKETS TABLE ==============
   // Shown when at least one ticket exists.
+  // The .ticketsContainer now also acts as the scrollable wrapper
   <div className={styles.ticketsContainer}>
     {/* Tickets table header */}
     <div className={styles.ticketTableHeader}>
-      <div className={styles.ticketDrag}/>
+      <div className={styles.ticketDrag}/> {/* Empty div for alignment */}
       <div className={styles.ticketName}>Name</div>
       <div className={styles.ticketCount}>Quantity</div>
       <div className={styles.ticketPrice}>Price</div>
@@ -179,7 +180,7 @@ const TicketsStep = ({
 
     {/* Tickets list */}
     {tickets.map((ticket, index) => (
-      <div key={index} className={styles.ticketRow}>
+      <div key={index} className={styles.ticketItem}>
         <div className={styles.ticketDrag}>
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-grip-vertical" viewBox="0 0 16 16">
             <path d="M7 2a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 5a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 8a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm-3 3a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm-3 3a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0z" />
@@ -206,7 +207,6 @@ const TicketsStep = ({
           />
         </div>
         <div className={styles.ticketPrice}>
-          {/* ADDED: Wrapper for the '$' sign */}
           <div className={styles.inputWithPrefix}>
             <span className={styles.prefix}>$</span>
             <input 

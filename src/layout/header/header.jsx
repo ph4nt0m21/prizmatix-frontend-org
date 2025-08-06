@@ -1,4 +1,3 @@
-// src/layout/header/header.jsx
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
@@ -63,7 +62,7 @@ const Header = ({ toggleMobileSidebar }) => {
 
   return (
     <header className={styles.header}>
-      {/* Hamburger menu icon for mobile */}
+      {/* Hamburger menu icon for mobile (always present in main header) */}
       <button className={styles.hamburgerButton} onClick={toggleMobileSidebar} aria-label="Open menu">
         <HamburgerIcon />
       </button>

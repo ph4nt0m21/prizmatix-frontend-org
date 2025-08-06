@@ -1,13 +1,10 @@
-/*
-File: src/pages/events/components/editEventSidebar.module.scss
-*/
 @import '../../../styles/variables';
 @import '../../../styles/mixins';
 
 .sidebar {
   display: flex;
-  width: 292px;
-  min-width: 292px;
+  width: 292px; /* Fixed width for desktop */
+  min-width: 292px; /* Ensure it doesn't shrink on desktop */
   flex-direction: column;
   justify-content: center;
   align-items: flex-start;
@@ -16,7 +13,31 @@ File: src/pages/events/components/editEventSidebar.module.scss
   border-radius: 8px;
   background: #FFF;
   box-shadow: 0px 2px 4px 0px rgba(0, 0, 0, 0.05);
-  margin: 20px 0 20px 20px;
+  margin: 20px 0 20px 20px; /* Margin for desktop positioning */
+  position: relative; /* Default to relative for desktop flow */
+  z-index: 1; /* Default z-index for desktop */
+
+  @media (max-width: 768px) {
+    position: fixed; /* Make it an overlay on mobile */
+    top: 0;
+    left: -292px; /* Hidden by default (starts off-screen) */
+    transform: translateX(0); /* Reset transform initially */
+    width: 292px; /* Fixed width for mobile overlay */
+    height: 100vh; /* Full viewport height */
+    z-index: 1001; /* Higher z-index than main SideNavBar (1000) and overlay (999) */
+    transition: transform 0.3s ease-in-out; /* Smooth slide animation */
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.5); /* Add shadow for depth */
+    padding-top: 20px; /* Adjust padding for mobile */
+    padding-bottom: 20px; /* Adjust padding for mobile */
+    justify-content: space-between; /* Distribute content vertically */
+    margin: 0; /* Remove desktop margins on mobile */
+  }
+
+  &.open {
+    @media (max-width: 768px) {
+      transform: translateX(292px); /* Slides into view by its own width */
+    }
+  }
 }
 
 .sidebarHeader {
@@ -147,5 +168,3 @@ File: src/pages/events/components/editEventSidebar.module.scss
     font-weight: 500;
   }
 }
-
-/* Removed the progressInfoContainer and related styles from here */

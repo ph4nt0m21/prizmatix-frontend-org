@@ -13,12 +13,23 @@ import { ReactComponent as ArtIcon } from '../../../assets/icons/art-icon.svg';
  * EditEventSidebar component displays the steps for event editing
  * and tracks the progress of completion. It is a simplified version of
  * EventCreationSidebar.
+ *
+ * @param {Object} props Component props
+ * @param {number} props.currentStep - The currently active step number.
+ * @param {Object} props.stepStatus - Object containing completion/visited status for each step.
+ * @param {Function} props.navigateToStep - Function to navigate to a specific step.
+ * @param {string} props.eventId - The ID of the event being edited.
+ * @param {boolean} props.isMobileSidebarOpen - Controls if the sidebar is open on mobile.
+ * @param {Function} props.toggleMobileSidebar - Function to toggle mobile sidebar visibility.
+ * @returns {JSX.Element} EditEventSidebar component
  */
 const EditEventSidebar = ({
   currentStep,
   stepStatus,
   navigateToStep,
-  eventId
+  eventId,
+  isMobileSidebarOpen, // Prop for mobile sidebar state
+  toggleMobileSidebar // Prop for mobile sidebar toggle function
 }) => {
 
   // Steps configuration (modified from eventCreationSidebar)
@@ -37,17 +48,18 @@ const EditEventSidebar = ({
    * @returns {string} CSS class
    */
   const getStepClass = (step) => {
-    const status = stepStatus[step.key];
+    const status = stepStatus[step.key] || {}; // Provide default empty object
     const isActive = currentStep === step.number;
 
     if (isActive) return `${styles.step} ${styles.active}`;
-    if (status && status.completed) return `${styles.step} ${styles.completed}`;
-    if (status && status.visited) return `${styles.step} ${styles.visited}`;
+    if (status.completed) return `${styles.step} ${styles.completed}`;
+    if (status.visited) return `${styles.step} ${styles.visited}`;
     return styles.step;
   };
 
   /**
-   * Handle click on a step
+   * Handle click on a step.
+   * Also closes the mobile sidebar if it's open.
    * @param {Object} step Step object
    */
   const handleStepClick = (step) => {
@@ -57,10 +69,14 @@ const EditEventSidebar = ({
       return;
     }
     navigateToStep(step.number);
+    // Close the mobile sidebar after navigation
+    if (window.innerWidth <= 768 && isMobileSidebarOpen) {
+      toggleMobileSidebar();
+    }
   };
 
   return (
-    <div className={styles.sidebar}>
+    <div className={`${styles.sidebar} ${isMobileSidebarOpen ? styles.open : ''}`}>
       <div className={styles.sidebarHeader}>
         <h2 className={styles.sidebarTitle}>Edit Event</h2>
         <p className={styles.sidebarSubtitle}>Update your event details</p>
@@ -69,9 +85,9 @@ const EditEventSidebar = ({
       <div className={styles.stepsList}>
         {steps.map((step) => {
           const IconComponent = step.icon; // Get the SVG component
-          const status = stepStatus[step.key];
+          const status = stepStatus[step.key] || {}; // Provide default empty object
           const isActive = currentStep === step.number;
-          const isCompleted = status ? status.completed : false;
+          const isCompleted = status.completed;
 
           return (
             <div
@@ -83,24 +99,17 @@ const EditEventSidebar = ({
                 <IconComponent className={styles.stepIcon} />
               </div>
               <span className={styles.stepLabel}>{step.label}</span>
-              <div
-                className={`${styles.stepStatusIndicator} ${
-                  isActive ? styles.activeIndicator :
-                  isCompleted ? styles.completedIndicator : ''
-                }`}
-              >
-                {isCompleted && (
+              {isCompleted && (
+                <div className={styles.stepStatusIndicator}>
                   <svg width="8" height="8" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" fill="#FFFFFF"/>
                   </svg>
-                )}
-              </div>
+                </div>
+              )}
             </div>
           );
         })}
       </div>
-
-      {/* Removed the progressInfoContainer from here */}
     </div>
   );
 };
@@ -109,7 +118,9 @@ EditEventSidebar.propTypes = {
   currentStep: PropTypes.number.isRequired,
   stepStatus: PropTypes.object.isRequired,
   navigateToStep: PropTypes.func.isRequired,
-  eventId: PropTypes.string
+  eventId: PropTypes.string.isRequired,
+  isMobileSidebarOpen: PropTypes.bool.isRequired, // Added propType
+  toggleMobileSidebar: PropTypes.func.isRequired, // Added propType
 };
 
 export default EditEventSidebar;

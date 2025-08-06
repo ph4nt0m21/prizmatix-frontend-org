@@ -17,6 +17,8 @@ import EventManagePage from './pages/events/manageEventPage';
 import EventEditPage from './pages/events/eventEditPage';
 import TicketEditPage from './pages/events/ticketEditPage';
 import NotFoundPage from "./pages/notFound/notFoundPage";
+// NEW: Import EmailCampaignsPage
+import EmailCampaignsPage from './pages/emailCampaigns/emailCampaignsPage';
 
 // Import utilities and components
 import ProtectedRoute from "./security/protectedRoute";
@@ -84,6 +86,8 @@ const AppContent = () => {
           <Route path="events/create" element={<CreateEventPage />} />
           <Route path="events/create/:eventId" element={<CreateEventPage />} />
           <Route path="events/create/:eventId/:step" element={<CreateEventPage />} />
+          {/* NEW: Add Route for Email Campaigns Page */}
+          <Route path="campaigns" element={<EmailCampaignsPage />} />
         </Route>
       </Route>
 

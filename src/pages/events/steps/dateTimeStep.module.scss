@@ -1,4 +1,3 @@
-// Import variables and mixins from main style files
 @import '../../../styles/variables';
 @import '../../../styles/mixins';
 
@@ -11,6 +10,12 @@
   padding: 120px;
   padding-top: 48px;
   padding-bottom: 48px;
+
+  @media (max-width: 768px) {
+    padding: 24px 16px; // Adjust padding for mobile screens
+    border-radius: 0; // Remove border-radius for full-width look on mobile
+    box-shadow: none; // Remove box-shadow on mobile if it's full screen
+  }
 }
 
 // Header styling
@@ -21,6 +26,24 @@
   padding-bottom: 16px;
   border-bottom: 1px solid #f0f0f0;
   gap: 12px;
+
+  @media (max-width: 768px) {
+    margin-bottom: 16px; // Adjust margin for mobile
+    padding-bottom: 12px; // Adjust padding for mobile
+  }
+}
+
+.stepIcon {
+  flex-shrink: 0;
+  color: #7C3AED;
+
+  @media (max-width: 768px) {
+    // Optionally resize icon if needed for mobile, but 24px is often fine
+    svg {
+      width: 20px;
+      height: 20px;
+    }
+  }
 }
 
 .stepTitle {
@@ -28,6 +51,10 @@
   font-weight: 600;
   color: #333;
   margin: 0;
+
+  @media (max-width: 768px) {
+    font-size: 16px; // Adjust font size for mobile
+  }
 }
 
 // Form section styling
@@ -38,6 +65,10 @@
 .formGroup {
   margin-bottom: 24px;
   width: 100%;
+
+  @media (max-width: 768px) {
+    margin-bottom: 16px; // Adjust margin for mobile
+  }
 }
 
 .formLabel {
@@ -53,27 +84,13 @@
   color: #666;
   margin-top: 0;
   margin-bottom: 12px;
+
+  @media (max-width: 768px) {
+    font-size: 12px; // Adjust font size for mobile
+    margin-bottom: 8px; // Adjust margin for mobile
+  }
 }
 
-// Event details sections styling
-.stepHeader {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 24px;
-}
-
-.stepIcon {
-  flex-shrink: 0;
-  color: #7C3AED;
-}
-
-.stepTitle {
-  font-size: 18px;
-  font-weight: 600;
-  color: #333;
-  margin: 0;
-}
 
 // Form row for multi-column layout
 .formRow {
@@ -82,13 +99,13 @@
   margin-bottom: 16px;
   
   @media (max-width: 640px) {
-    flex-direction: column;
-    gap: 20px;
+    flex-direction: column; // Stack columns vertically on smaller screens
+    gap: 16px; // Adjust gap for mobile
   }
   
   .formGroup {
     flex: 1;
-    margin-bottom: 0;
+    margin-bottom: 0; // Reset margin for formGroup within a row
   }
 }
 
@@ -113,6 +130,12 @@
   &::placeholder {
     color: #9ca3af;
   }
+
+  @media (max-width: 768px) {
+    height: 40px; // Slightly smaller input height for mobile
+    font-size: 13px; // Adjust font size for mobile
+    padding: 0 14px; // Adjust padding for mobile
+  }
 }
 
 // Input with icon styling
@@ -132,6 +155,14 @@
     svg {
       color: #7C3AED;
     }
+
+    @media (max-width: 768px) {
+      right: 10px; // Adjust icon position for mobile
+      svg {
+        width: 18px; // Slightly smaller icon for mobile
+        height: 18px;
+      }
+    }
   }
 }
 
@@ -140,7 +171,12 @@ input[type="date"].formInput,
 input[type="time"].formInput {
   padding-right: 40px; // Extra padding for the icon
   cursor: pointer;
-  color: #9ca3af;
+  color: #9ca3af; // Placeholder color initially
+
+  // Style to make text black after selection (common issue with date/time inputs)
+  &:not([value=""]) {
+    color: #333;
+  }
   
   // Remove default calendar icon in Chrome
   &::-webkit-calendar-picker-indicator {
@@ -186,6 +222,12 @@ input[type="time"].formInput {
   display: flex;
   align-items: center;
   justify-content: space-between;
+
+  @media (max-width: 768px) {
+    margin-bottom: 12px; // Adjust margin for mobile
+    padding: 10px 12px; // Adjust padding for mobile
+    font-size: 13px; // Adjust font size for mobile
+  }
 }
 
 .dismissButton {
@@ -213,6 +255,14 @@ input[type="time"].formInput {
     margin-right: 8px;
     flex-shrink: 0;
   }
+
+  @media (max-width: 768px) {
+    font-size: 12px; // Adjust font size for mobile
+    svg {
+      width: 16px; // Smaller icon for mobile
+      height: 16px;
+    }
+  }
 }
 
 // Action buttons at bottom
@@ -220,6 +270,12 @@ input[type="time"].formInput {
   display: flex;
   justify-content: space-between;
   margin-top: 32px;
+
+  @media (max-width: 768px) {
+    flex-direction: column-reverse; // Stack buttons vertically, "Next" usually on top
+    gap: 12px; // Space between buttons
+    margin-top: 24px; // Adjust top margin
+  }
 }
 
 .backButton {
@@ -234,6 +290,12 @@ input[type="time"].formInput {
   
   &:hover {
     background-color: #f9fafb;
+  }
+
+  @media (max-width: 768px) {
+    width: 100%; // Full width on mobile
+    padding: 10px 16px; // Adjust padding for mobile
+    font-size: 14px; // Consistent font size
   }
 }
 
@@ -254,5 +316,34 @@ input[type="time"].formInput {
   &:disabled {
     opacity: 0.6;
     cursor: not-allowed;
+  }
+
+  @media (max-width: 768px) {
+    width: 100%; // Full width on mobile
+    padding: 10px 24px; // Adjust padding for mobile
+    font-size: 14px; // Consistent font size
+  }
+}
+
+// Existing media queries from your file, adjusted or kept
+@media (max-width: 768px) {
+  // .formRow is already handled above within its own block
+  // .formInput is already handled above within its own block
+
+  .buttonGroup { // This class isn't explicitly used in your JSX, but keeping the styling for buttons if it's applied via a parent div
+    flex-direction: column;
+    gap: 8px;
+
+    button {
+      width: 100%;
+    }
+  }
+
+  .stepHeading { // These classes don't seem to be in your provided JSX, but keeping the media queries
+    font-size: 16px;
+  }
+
+  .stepSubheading { // These classes don't seem to be in your provided JSX, but keeping the media queries
+    font-size: 14px;
   }
 }

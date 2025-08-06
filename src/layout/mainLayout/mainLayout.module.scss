@@ -77,10 +77,14 @@
   width: 100%;
   height: 100%;
   background-color: rgba(0, 0, 0, 0.5); // Semi-transparent black overlay
-  z-index: 999; // Below sidebar, above main content
-  display: none; // Hidden by default
+  z-index: 999; // Below any open sidebar, above main content
+  display: block; // Always present, but hidden/shown by JS
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease-in-out;
 
-  @media (max-width: 768px) {
-    display: block; // Show on mobile when active (controlled by JS)
+  &.active {
+    opacity: 1;
+    pointer-events: auto;
   }
 }
