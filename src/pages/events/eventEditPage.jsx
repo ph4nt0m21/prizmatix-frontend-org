@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useOutletContext } from 'react-router-dom'; // Import useOutletContext
 import Cookies from 'js-cookie';
 
 // Import Page Components
@@ -33,14 +33,26 @@ import {
 
 /**
  * EventEditPage component for editing existing event details in a multi-step flow.
+ * Now includes local state and logic for its own mobile sidebar.
  */
 const EventEditPage = () => {
   const { eventId: paramEventId, step: paramStep } = useParams();
   const navigate = useNavigate();
+  // We don't directly use toggleGlobalSideNavBar here, as this page manages its own sidebar
+  const { } = useOutletContext(); // Destructure to avoid unused variable warning if nothing else is needed
+
 
   // State for current step
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = 5; // Basic Info, Location, Date & Time, Description, Art
+
+  // NEW: Local state for this page's sidebar visibility
+  const [isEditSidebarOpen, setIsEditSidebarOpen] = useState(false);
+
+  // NEW: Local toggle function for this page's sidebar
+  const toggleEditSidebar = () => {
+    setIsEditSidebarOpen(!isEditSidebarOpen);
+  };
 
   // Main state for all event data being edited
   const [eventData, setEventData] = useState({
@@ -309,13 +321,22 @@ const EventEditPage = () => {
         eventName={eventData.name || 'Loading Event...'}
         context="edit"
         eventId={paramEventId}
+        toggleMobileSidebar={toggleEditSidebar} // Pass the local toggle function to EventHeaderNav
       />
       <div className={styles.content}>
+        {/* EditEventSidebar now uses local state */}
         <EditEventSidebar
           currentStep={currentStep}
           stepStatus={stepStatus}
-          navigateToStep={(step) => navigate(`/events/edit-page/${paramEventId}/${step}`)}
+          navigateToStep={(step) => {
+            navigate(`/events/edit-page/${paramEventId}/${step}`);
+            if (window.innerWidth <= 768 && isEditSidebarOpen) { // Close sidebar on navigation
+              toggleEditSidebar();
+            }
+          }}
           eventId={paramEventId}
+          isMobileSidebarOpen={isEditSidebarOpen} // Pass local state
+          toggleMobileSidebar={toggleEditSidebar} // Pass local toggle for closing
         />
         <main className={styles.mainContent}>
           {successMessage && <div className={styles.successMessage}>{successMessage}<button onClick={() => setSuccessMessage(null)}>✕</button></div>}

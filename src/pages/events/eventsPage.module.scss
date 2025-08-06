@@ -1,11 +1,16 @@
 @import '../../styles/variables';
 @import '../../styles/mixins';
 
-// NEW: Two-column page layout
+// NEW: Two-column page layout for desktop, single column for mobile
 .pageWrapper {
   display: flex;
   background-color: #F9FAFB;
   min-height: 100vh;
+
+  @media (max-width: 768px) {
+    flex-direction: column; // Stack sidebar and main content vertically
+    position: relative; // Needed for fixed sidebar positioning
+  }
 }
 
 // NEW: Sidebar styles
@@ -17,6 +22,24 @@
   padding: 32px 16px;
   display: flex;
   flex-direction: column;
+
+  @media (max-width: 768px) {
+    position: fixed; // Make it an overlay on mobile
+    top: 0;
+    left: -256px; // Hidden by default (starts off-screen)
+    height: 100vh; // Full viewport height
+    z-index: 100; // Higher than main content, lower than modal overlays
+    transition: transform 0.3s ease-in-out;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.5);
+    padding-top: 20px; // Adjust padding for mobile
+    padding-bottom: 20px;
+  }
+
+  &.open {
+    @media (max-width: 768px) {
+      transform: translateX(100%); // Slides into view
+    }
+  }
 }
 
 .sidebarTitle {
@@ -73,6 +96,11 @@
   display: flex;
   flex-direction: column;
   padding: 32px;
+
+  @media (max-width: 768px) {
+    padding: 16px; // Adjust padding for mobile
+    width: 100%; // Take full width
+  }
 }
 
 .header {
@@ -80,28 +108,87 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 24px;
+
+  @media (max-width: 768px) {
+    flex-wrap: wrap; // Allow items to wrap
+    margin-bottom: 16px; // Reduce margin
+    gap: 10px; // Add some gap between wrapped items
+  }
 }
+
+/* Mobile sidebar toggle button */
+.mobileSidebarToggleButton {
+  display: none; // Hidden by default on desktop
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  width: 24px; // Size of the icon
+  height: 24px;
+  color: #333; // Icon color
+  margin-right: 10px; // Space between button and title
+
+  svg {
+    width: 24px;
+    height: 24px;
+  }
+
+  &:hover {
+    opacity: 0.8;
+  }
+
+  @media (max-width: 768px) {
+    display: block; // Show on mobile
+  }
+}
+
 
 .pageTitle {
   font-size: 24px;
   font-weight: 600;
   color: #111827;
   margin: 0;
+
+  @media (max-width: 768px) {
+    font-size: 20px; // Smaller font on mobile
+    flex-basis: 100%; // Take full width on mobile if needed
+  }
 }
 
 .headerActions {
   display: flex;
   align-items: center;
   gap: 16px;
+
+  @media (max-width: 768px) {
+    flex-grow: 1; // Allow actions to take available space
+    justify-content: flex-end; // Push items to the right
+  }
+
+  @media (max-width: 480px) {
+    width: 100%; // Take full width on very small screens
+    justify-content: space-between; // Distribute search and button
+    margin-top: 10px; // Add some top margin
+  }
 }
 
 .searchContainer {
   position: relative;
+  width: 280px;
+
+  @media (max-width: 768px) {
+    width: 180px; // Smaller search input on mobile
+  }
+
+  @media (max-width: 480px) {
+    width: 100%; // Full width on very small screens
+    max-width: 140px; // Max width to prevent it from being too large
+  }
 }
 
 .searchInput {
   height: 40px;
-  width: 280px;
+  width: 100%; // Ensure it takes full width of its container
   padding-left: 16px;
   padding-right: 40px;
   border-radius: 6px;
@@ -110,8 +197,13 @@
   font-size: 14px;
   &:focus {
     outline: none;
-    // Using a hardcoded color as the variable wasn't provided in context
-    border-color: #8B5CF6; 
+    border-color: #8B5CF6;
+  }
+
+  @media (max-width: 480px) {
+    font-size: 13px; // Smaller font
+    padding: 6px 10px; // Smaller padding
+    padding-right: 30px; // Adjust for smaller icon
   }
 }
 
@@ -121,10 +213,15 @@
   right: 12px;
   transform: translateY(-50%);
   color: #6B7280;
+
+  @media (max-width: 480px) {
+    right: 8px; // Adjust position
+    width: 16px; // Smaller icon
+    height: 16px;
+  }
 }
 
 .createEventButton {
-  // FIXED: Replaced the undefined mixin with direct styles
   display: flex;
   align-items: center;
   justify-content: center;
@@ -141,6 +238,12 @@
 
   &:hover {
     background-color: #7C3AED;
+  }
+
+  @media (max-width: 768px) {
+    height: 36px; // Smaller height
+    padding: 0 12px; // Smaller padding
+    font-size: 13px; // Smaller font
   }
 }
 
@@ -162,6 +265,10 @@
   text-transform: uppercase;
   letter-spacing: 0.05em;
   border-bottom: 1px solid #E5E7EB;
+
+  @media (max-width: 768px) {
+    display: none; // Hide table header on mobile
+  }
 }
 
 .eventColumn, .eventInfoCell {
@@ -183,7 +290,7 @@
 
 .eventRow {
   display: grid;
-  grid-template-columns: 1fr 120px 120px 120px 60px;
+  grid-template-columns: 1fr 120px 120px 120px 60px; // Desktop grid
   align-items: center;
   padding: 12px 24px;
   border-bottom: 1px solid #E5E7EB;
@@ -195,12 +302,25 @@
   &:last-child {
     border-bottom: none;
   }
+
+  @media (max-width: 768px) {
+    display: flex; // Change to flexbox for mobile
+    flex-wrap: wrap; // Allow content to wrap
+    padding: 16px; // Adjust padding for mobile
+    justify-content: space-between; // Distribute content
+    align-items: flex-start; // Align items to the top
+    gap: 10px; // Add gap between stacked items
+  }
 }
 
 .eventInfoCell {
   display: flex;
   align-items: center;
   gap: 16px;
+  @media (max-width: 768px) {
+    flex-basis: 100%; // Take full width on mobile
+    margin-bottom: 10px; // Add space below
+  }
 }
 
 .dateBlock {
@@ -253,6 +373,19 @@
   }
 }
 
+.statusCell {
+  @media (max-width: 768px) {
+    flex-basis: 48%; // Take half width on mobile
+    text-align: left;
+    padding-left: 0; // Remove padding
+    &::before {
+      content: "Status: "; // Add label
+      font-weight: 600;
+      color: #6B7280;
+    }
+  }
+}
+
 .statusBadge {
   display: inline-block;
   padding: 4px 12px;
@@ -266,7 +399,7 @@
   color: #92400E;
 }
 
-.liveBadge { // Example style
+.liveBadge {
   background-color: #D1FAE5;
   color: #065F46;
 }
@@ -274,6 +407,15 @@
 .soldCell {
   font-size: 14px;
   color: #374151;
+  @media (max-width: 768px) {
+    flex-basis: 48%; // Take half width on mobile
+    text-align: left;
+    &::before {
+      content: "Sold: "; // Add label
+      font-weight: 600;
+      color: #6B7280;
+    }
+  }
   .salesProgress {
     height: 4px;
     background-color: #E5E7EB;
@@ -293,6 +435,24 @@
   font-size: 14px;
   font-weight: 500;
   color: #111827;
+  @media (max-width: 768px) {
+    flex-basis: 48%; // Take half width on mobile
+    text-align: left;
+    &::before {
+      content: "Gross: "; // Add label
+      font-weight: 600;
+      color: #6B7280;
+    }
+  }
+}
+
+.actionsCell {
+  text-align: center;
+  @media (max-width: 768px) {
+    flex-basis: 4%; // Keep small, push to right
+    text-align: right;
+    padding-right: 0;
+  }
 }
 
 .actionsButton {
@@ -324,11 +484,6 @@
 }
 
 /* Add these styles to eventsPage.module.scss */
-
-.actionsCell {
-  position: relative; /* This is important for positioning the menu */
-  text-align: center;
-}
 
 .actionsMenuContainer {
   position: relative;

@@ -1562,6 +1562,7 @@ const validateTickets = () => {
   return (
     <div className={styles.pageContainer}>
       {/* Event-specific sub-header with breadcrumbs and actions */}
+      {/* This header will have its own hamburger button for mobile */}
       <EventHeaderNav
         currentStep={getCurrentStepName()}
         eventName={eventData.name || "new event"}
@@ -1571,6 +1572,7 @@ const validateTickets = () => {
       />
 
       <div className={styles.content}>
+        {/* Event Creation Sidebar - now receives mobile state and toggle from context */}
         <EventCreationSidebar
           currentStep={currentStep}
           stepStatus={stepStatus}

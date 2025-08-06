@@ -14,15 +14,37 @@
 
   @media (max-width: 768px) {
     padding: 8px 16px; // Adjust padding for mobile
-    justify-content: flex-start; // Align items to start (no hamburger here)
-    gap: 0; // No gap needed if hamburger is removed
+    justify-content: flex-start; // Align items to start
+    gap: 12px; // Add a gap between button and breadcrumb
   }
 }
 
-// Hamburger menu button styles removed from here, now only in header.module.scss
-.hamburgerButton {
-  display: none;
+// Mobile sidebar toggle button (for Manage Event Page)
+.mobileSidebarToggleButton {
+  display: none; // Hidden by default on desktop
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  width: 24px; // Size of the icon
+  height: 24px;
+  color: #333; // Icon color
+  margin-right: 10px; // Space between button and breadcrumb
+
+  svg {
+    width: 24px;
+    height: 24px;
+  }
+
+  &:hover {
+    opacity: 0.8;
+  }
+
+  @media (max-width: 768px) {
+    display: block; // Show on mobile
+  }
 }
+
 
 .breadcrumbContainer {
   display: flex;

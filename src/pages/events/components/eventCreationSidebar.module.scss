@@ -12,23 +12,29 @@
   border-radius: 8px;
   background: #FFF;
   box-shadow: 0px 2px 4px 0px rgba(0, 0, 0, 0.05);
+  // Default desktop position
+  position: relative; // Ensures it takes up space in the flex layout
+  z-index: 1; // Default z-index for desktop
 
   @media (max-width: 768px) {
-    position: fixed; // Make it an overlay
+    position: fixed; // Make it an overlay on mobile
     top: 0;
-    left: -292px; // Hidden by default
+    left: -292px; // Hidden by default (starts off-screen)
+    transform: translateX(0); // Reset transform initially
     width: 292px; // Fixed width
     height: 100vh; // Full viewport height
-    z-index: 101; // Higher z-index than main SideNavBar
-    transition: transform 0.3s ease-in-out;
-    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.5);
-    padding-top: 20px; // Add some top padding
+    z-index: 1001; // Higher z-index than main SideNavBar (1000) and overlay (999)
+    transition: transform 0.3s ease-in-out; // Smooth slide animation
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.5); // Add shadow for depth
+    padding-top: 20px; // Add some top padding for mobile
     padding-bottom: 20px; // Add some bottom padding
     justify-content: space-between; // Distribute content vertically
   }
 
   &.open {
-    transform: translateX(100%); // Slide in from left
+    @media (max-width: 768px) {
+      transform: translateX(100%); // Slide in from left (covers 292px from left edge)
+    }
   }
 }
 

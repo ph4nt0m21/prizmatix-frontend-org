@@ -741,3 +741,43 @@ input[type="time"].formInput {
   }
 }
 
+@media (max-width: 768px) {
+  .formRow {
+    flex-direction: column;
+    gap: 12px;
+  }
+}
+
+@media (max-width: 768px) {
+  .formInput {
+    width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .buttonGroup {
+    flex-direction: column;
+    gap: 8px;
+
+    button {
+      width: 100%;
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .stepHeading {
+    font-size: 16px;
+  }
+
+  .stepSubheading {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 768px) {
+  .tableWrapper {
+    overflow-x: auto;
+  }
+}
+

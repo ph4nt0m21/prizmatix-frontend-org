@@ -1,6 +1,3 @@
-/*
-File: eventEditPage.module.scss
-*/
 @import '../../styles/variables';
 @import '../../styles/mixins';
 
@@ -16,6 +13,12 @@ File: eventEditPage.module.scss
   background: #f9fafb;
   min-height: calc(100vh - 112px); // Adjusted to account for event header nav and main layout header
   width: 100%;
+
+  @media (max-width: 768px) {
+    flex-direction: column; // Stack sidebar and main content vertically
+    padding: 16px; // Add padding for mobile content area
+    overflow-y: auto; // Allow scrolling on mobile
+  }
 }
 
 .mainContent {
@@ -24,18 +27,13 @@ File: eventEditPage.module.scss
   display: flex;
   flex-direction: column;
   overflow-y: auto; // Allows scrolling if content is too long
+  background-color: #FFFFFF; /* Ensure background for the main content card */
+  border-radius: 8px; /* Consistent border-radius */
+  box-shadow: 0px 2px 4px 0px rgba(0, 0, 0, 0.05); /* Consistent shadow */
 
-  h2 {
-    font-size: 24px;
-    font-weight: 600;
-    color: #111827;
-    margin-bottom: 8px;
-  }
-
-  .sectionDescription {
-    font-size: 14px;
-    color: #6B7280;
-    margin-bottom: 24px;
+  @media (max-width: 768px) {
+    padding: 0; /* Remove padding here, it's handled by .content */
+    min-height: 500px; /* Ensure a minimum height for the main content area */
   }
 }
 
@@ -49,7 +47,7 @@ File: eventEditPage.module.scss
 .contentCard {
   background: #FFFFFF;
   border-radius: 8px;
-  box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.05);
+  box-shadow: 0px 2px 4px 0px rgba(0, 0, 0, 0.05);
   padding: 24px;
   display: flex;
   flex-direction: column;
@@ -105,6 +103,12 @@ File: eventEditPage.module.scss
   padding: 20px 0; // Add padding around buttons
   border-top: 1px solid #E9EAEC; // Separator from content
   margin-top: auto; // Push to bottom
+
+  @media (max-width: 768px) {
+    flex-direction: column; // Stack buttons vertically
+    gap: 10px; // Add space between stacked buttons
+    padding: 16px 0; // Adjust padding
+  }
 }
 
 .backButton, .nextButton {
@@ -118,6 +122,10 @@ File: eventEditPage.module.scss
   &:disabled {
     opacity: 0.6;
     cursor: not-allowed;
+  }
+
+  @media (max-width: 768px) {
+    width: 100%; // Full width on mobile
   }
 }
 
@@ -161,6 +169,11 @@ File: eventEditPage.module.scss
   display: flex;
   justify-content: space-between;
   align-items: center;
+
+  @media (max-width: 768px) {
+    font-size: 13px; // Smaller font
+    padding: 10px 16px; // Adjust padding
+  }
 }
 
 .errorMessage {
@@ -228,18 +241,31 @@ File: eventEditPage.module.scss
   border-radius: 8px;
   padding: 32px;
   box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.05);
+
+  @media (max-width: 768px) {
+    height: 300px; /* Smaller height */
+    padding: 24px; /* Adjust padding */
+  }
 }
 
 .placeholderTitle {
   font-size: 24px;
   margin-bottom: 16px;
   color: #111827;
+
+  @media (max-width: 768px) {
+    font-size: 20px; /* Smaller font */
+  }
 }
 
 .placeholderMessage {
   font-size: 16px;
   color: #6B7280;
   margin-bottom: 24px;
+
+  @media (max-width: 768px) {
+    font-size: 14px; /* Smaller font */
+  }
 }
 
 // Footer
@@ -256,4 +282,10 @@ File: eventEditPage.module.scss
   color: #6B7280;
   font-size: 12px;
   width: 100%;
+
+  @media (max-width: 768px) {
+    padding: 0 16px; // Reduce padding on mobile
+    font-size: 11px; // Smaller font
+    height: 40px; // Slightly smaller height
+  }
 }

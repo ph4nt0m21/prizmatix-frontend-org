@@ -6,13 +6,26 @@
   display: flex;
   background: #f9fafb;
   width: 100%;
+  flex: 1; /* Allow content to grow and fill available space */
+  overflow: hidden; /* Prevent horizontal scrollbars */
+
+  @media (max-width: 768px) {
+    flex-direction: column; /* Stack sidebar and main content vertically */
+    padding: 16px; /* Adjust padding for mobile */
+    overflow-y: auto; /* Allow vertical scrolling on mobile */
+  }
 }
 
 // Main content container
 .mainContent {
   flex: 1;
   padding: 20px;
-  overflow-y: auto;
+  overflow-y: auto; /* Allow internal scrolling for the main content */
+
+  @media (max-width: 768px) {
+    padding: 0; /* Remove padding on mobile, as it's added to .content */
+    width: 100%; /* Take full width on mobile */
+  }
 }
 
 // Section content container
@@ -25,16 +38,19 @@
 // Footer
 .footer {
   display: flex;
-  // height: 48px;
-  // padding: 0 24px;
   justify-content: center;
-  // align-items: center;
   gap: 10px;
-  // align-self: stretch;
   border-top: 1px solid #E9EAEC;
   background: #FFF;
   color: #6B7280;
   font-size: 12px;
+  padding: 12px 24px; /* Add padding to footer */
+  flex-shrink: 0; /* Prevent footer from shrinking */
+
+  @media (max-width: 768px) {
+    padding: 10px 16px; /* Adjust padding for mobile */
+    font-size: 11px; /* Smaller font on mobile */
+  }
 }
 
 // Loading container
@@ -45,7 +61,7 @@
   justify-content: center;
   height: 400px;
   width: 100%;
-  
+
   p {
     margin-top: 16px;
     color: #6B7280;
@@ -61,6 +77,11 @@
   align-items: center;
   justify-content: space-between;
   width: 100%;
+
+  @media (max-width: 768px) {
+    font-size: 13px; /* Smaller font on mobile */
+    padding: 10px 12px; /* Adjust padding */
+  }
 }
 
 .errorMessage {
@@ -91,6 +112,16 @@
   grid-template-columns: repeat(4, 1fr);
   gap: 20px;
   margin-bottom: 24px;
+
+  @media (max-width: 1024px) {
+    grid-template-columns: repeat(2, 1fr); /* 2 columns on tablets */
+    gap: 16px;
+  }
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr; /* Single column on mobile */
+    gap: 12px;
+  }
 }
 
 // Metric card styles
@@ -101,6 +132,10 @@
   box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.05);
   display: flex;
   flex-direction: column;
+
+  @media (max-width: 768px) {
+    padding: 12px; /* Adjust padding for mobile */
+  }
 }
 
 .metricTitle {
@@ -108,6 +143,10 @@
   color: #6B7280;
   margin: 0 0 8px 0;
   font-weight: normal;
+
+  @media (max-width: 768px) {
+    font-size: 13px; /* Smaller font on mobile */
+  }
 }
 
 .metricValue {
@@ -117,6 +156,10 @@
   margin-bottom: 8px;
   display: flex;
   align-items: baseline;
+
+  @media (max-width: 768px) {
+    font-size: 20px; /* Smaller font on mobile */
+  }
 }
 
 .dollarSign {
@@ -146,7 +189,7 @@
   font-weight: 500;
   display: inline-flex;
   align-items: center;
-  
+
   &::before {
     content: "↑";
     margin-right: 2px;
@@ -158,7 +201,7 @@
   color: #6B7280;
   text-decoration: none;
   cursor: pointer;
-  
+
   &:hover {
     text-decoration: underline;
     color: #7C3AED;
@@ -189,6 +232,10 @@
   padding: 20px;
   box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.05);
   margin-bottom: 24px;
+
+  @media (max-width: 768px) {
+    padding: 16px; /* Adjust padding for mobile */
+  }
 }
 
 .sectionHeader {
@@ -196,6 +243,12 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 16px;
+
+  @media (max-width: 768px) {
+    flex-direction: column; /* Stack header items */
+    align-items: flex-start; /* Align to start */
+    gap: 10px; /* Add gap */
+  }
 }
 
 .sectionTitle {
@@ -203,6 +256,10 @@
   font-weight: 600;
   color: #111827;
   margin: 0;
+
+  @media (max-width: 768px) {
+    font-size: 15px; /* Smaller font */
+  }
 }
 
 .sectionControls {
@@ -218,10 +275,15 @@
   color: #374151;
   background-color: #FFFFFF;
   cursor: pointer;
-  
+
   &:focus {
     outline: none;
     border-color: #7C3AED;
+  }
+
+  @media (max-width: 768px) {
+    font-size: 13px; /* Smaller font */
+    padding: 5px 10px; /* Adjust padding */
   }
 }
 
@@ -234,6 +296,10 @@
   font-size: 14px;
   color: #4B5563;
   margin-bottom: 16px;
+
+  @media (max-width: 768px) {
+    font-size: 13px; /* Smaller font */
+  }
 }
 
 .ticketTypesList {
@@ -249,6 +315,11 @@
   background: #F9FAFB;
   border-radius: 4px;
   border-left: 4px solid #7C3AED;
+
+  @media (max-width: 768px) {
+    padding: 10px 12px; /* Adjust padding */
+    font-size: 13px; /* Smaller font */
+  }
 }
 
 .ticketTypeName {
@@ -274,10 +345,15 @@
   font-weight: 500;
   text-decoration: none;
   transition: all 0.2s ease;
-  
+
   &:hover {
     background: #F3F4F6;
     border-color: #D1D5DB;
+  }
+
+  @media (max-width: 768px) {
+    font-size: 13px; /* Smaller font */
+    padding: 7px 14px; /* Adjust padding */
   }
 }
 
@@ -287,6 +363,12 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 24px;
+
+  @media (max-width: 768px) {
+    flex-direction: column; /* Stack header items */
+    align-items: flex-start; /* Align to start */
+    gap: 16px; /* Add gap */
+  }
 }
 
 .totalEarnings {
@@ -295,17 +377,30 @@
   color: #111827;
   display: flex;
   align-items: baseline;
+
+  @media (max-width: 768px) {
+    font-size: 24px; /* Smaller font */
+  }
 }
 
 .salesMetrics {
   display: flex;
   gap: 16px;
+
+  @media (max-width: 768px) {
+    flex-wrap: wrap; /* Allow metrics to wrap */
+    gap: 10px; /* Adjust gap */
+  }
 }
 
 .salesMetric {
   display: flex;
   align-items: center;
   gap: 8px;
+
+  @media (max-width: 768px) {
+    font-size: 13px; /* Smaller font */
+  }
 }
 
 .metricLabel {
@@ -336,7 +431,7 @@
   border-radius: 4px 4px 0 0;
   opacity: 0.8;
   transition: opacity 0.2s;
-  
+
   &:hover {
     opacity: 1;
   }
@@ -354,18 +449,31 @@
   border-radius: 8px;
   padding: 32px;
   box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.05);
+
+  @media (max-width: 768px) {
+    height: 300px; /* Smaller height */
+    padding: 24px; /* Adjust padding */
+  }
 }
 
 .placeholderTitle {
   font-size: 24px;
   margin-bottom: 16px;
   color: #111827;
+
+  @media (max-width: 768px) {
+    font-size: 20px; /* Smaller font */
+  }
 }
 
 .placeholderMessage {
   font-size: 16px;
   color: #6B7280;
   margin-bottom: 24px;
+
+  @media (max-width: 768px) {
+    font-size: 14px; /* Smaller font */
+  }
 }
 
 .placeholderButton {
@@ -378,31 +486,13 @@
   font-weight: 500;
   cursor: pointer;
   transition: background 0.2s;
-  
+
   &:hover {
     background: #6D28D9;
   }
-}
 
-// Responsive styles
-@media (max-width: 1024px) {
-  .metricsRow {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 768px) {
-  .content {
-    flex-direction: column;
-  }
-  
-  .metricsRow {
-    grid-template-columns: 1fr;
-  }
-  
-  .salesInfoHeader {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 16px;
+  @media (max-width: 768px) {
+    font-size: 13px; /* Smaller font */
+    padding: 7px 14px; /* Adjust padding */
   }
 }

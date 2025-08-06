@@ -27,9 +27,7 @@
   border-radius: 16px;
 
   @media (max-width: 768px) {
-    width: 100%;
-    height: 30vh; // Use viewport height for better responsiveness
-    border-radius: 0 0 16px 16px; // Adjust border-radius for top panel on mobile
+    display: none; // HIDE THE LEFT PANEL (IMAGE) ON MOBILE
   }
 }
 
@@ -81,8 +79,8 @@
     margin-left: 0; // Remove margin on mobile
     flex: none; // Remove flex grow on mobile
     width: 100%;
-    min-height: 70vh; // Take remaining viewport height
-    border-radius: 16px 16px 0 0; // Adjust border-radius for bottom panel on mobile
+    min-height: 100vh; // Take full viewport height on mobile
+    border-radius: 0; // Remove border-radius on top for full mobile screen
     padding-bottom: 80px; /* Add some padding for the footer to not overlap content */
   }
 
@@ -122,6 +120,7 @@
   @media (max-width: 768px) {
     padding: 16px 20px; // Reduce padding on mobile
     border-bottom: none; // Remove border on mobile if it doesn't look good
+    justify-content: center; // CENTER LOGO ON MOBILE
   }
 }
 
@@ -138,6 +137,13 @@
 
   &:hover {
     background-color: rgba(230, 230, 235, 1);
+  }
+
+  @media (max-width: 768px) {
+    position: absolute; // Position absolutely on mobile
+    left: 20px; // Align to the left padding
+    top: 50%;
+    transform: translateY(-50%);
   }
 }
 
