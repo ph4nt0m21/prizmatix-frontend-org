@@ -169,3 +169,20 @@ export const GetEventAttendeesAPI = async (eventId) => {
 export const GetEventDashboardAPI = async (eventId) => {
   return await apiClient.get(`/orgDashboard/events/${eventId}/dashboard`);
 };
+
+export const GetEventTicketStructuresAPI = async (eventId) => {
+  return await apiClient.get(`/api/events/${eventId}/ticket-structures`);
+};
+
+// NEW: API to update a ticket structure by its ID
+export const UpdateTicketStructureAPI = async (ticketStructureId, data) => {
+  return await apiClient.put(`/api/events/ticket-structures/${ticketStructureId}`, data);
+};
+
+export const DeleteTicketStructureAPI = async (ticketStructureId) => {
+  return await apiClient.delete(`/api/events/ticket-structures/${ticketStructureId}`);
+};
+
+export const CreateTicketStructureAPI = async (eventId, data) => {
+  return await apiClient.post(`/api/events/${eventId}/ticket-structures`, data);
+};

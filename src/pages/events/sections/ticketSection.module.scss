@@ -82,16 +82,17 @@
   padding: 0 12px;
   font-size: 14px;
   color: #374151;
-
+  // New flex-basis values to distribute space evenly across 5 columns
   &.cellId { flex-basis: 5%; }
-  &.cellTicket { flex-basis: 35%; font-weight: 500; }
+  &.cellTicket { flex-basis: 30%; font-weight: 500; }
   &.cellQuantity { flex-basis: 15%; }
-  &.cellSold { flex-basis: 15%; }
-  &.cellPrice { flex-basis: 20%; }
+  &.cellMaxPurchase { flex-basis: 15%; }
+  &.cellPrice { flex-basis: 25%; }
   &.cellActions { flex-basis: 10%; justify-content: flex-end; }
 }
 
-.editButton {
+.editButton,
+.deleteButton {
   background: none;
   border: none;
   cursor: pointer;
@@ -106,5 +107,11 @@
   &:hover {
     color: #4B5563;
     background-color: #E5E7EB;
+  }
+}
+.deleteButton {
+  &:hover {
+    color: #EF4444; /* Red color for delete on hover */
+    background-color: #FEE2E2;
   }
 }

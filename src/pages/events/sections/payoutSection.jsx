@@ -35,9 +35,9 @@ const PayoutSection = ({ title, description }) => {
     // Simulate API call to fetch data
     const fetchPayoutData = async () => {
       await new Promise(resolve => setTimeout(resolve, 500));
-      setGrossRevenue(6583.25);
-      setCurrentBalance(6583.25);
-      setFullPayoutAmount(2430.44);
+      setGrossRevenue(10669.64);
+      setCurrentBalance(2667.41);
+      setFullPayoutAmount(2667.41);
       setPayoutHistory([]);
     };
 
@@ -131,7 +131,7 @@ const PayoutSection = ({ title, description }) => {
           <p className={styles.cardValue}>${grossRevenue.toFixed(2)}</p>
         </div>
         <div className={styles.infoCard}>
-          <h3 className={styles.cardTitle}>Current Balance</h3>
+          <h3 className={styles.cardTitle}>Payout Balance</h3>
           <p className={styles.cardValue}>${currentBalance.toFixed(2)}</p>
         </div>
       </div>

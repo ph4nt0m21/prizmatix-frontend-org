@@ -29,7 +29,8 @@ const OverviewSection = ({ dashboardData }) => {
             <h3 className={styles.metricTitle}>Revenue</h3>
             <div className={styles.metricValue}>
               <span className={styles.dollarSign}>$</span>
-              {(dashboardData.revenue ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              {/* {(dashboardData.revenue ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} */}
+              {10669.64.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
           </div>
           
@@ -95,7 +96,8 @@ const OverviewSection = ({ dashboardData }) => {
             <div className={styles.salesInfoHeader}>
               <div className={styles.totalEarnings}>
                 <span className={styles.dollarSign}>$</span>
-                {(dashboardData.revenue ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                {/* {(dashboardData.revenue ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} */}
+                {10669.64.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </div>
             </div>
             

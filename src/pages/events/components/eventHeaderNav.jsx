@@ -74,3 +74,4 @@ EventHeaderNav.defaultProps = {
 };
 
 export default EventHeaderNav;
+

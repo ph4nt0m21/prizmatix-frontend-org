@@ -3,43 +3,38 @@
 
 .sidebar {
   display: flex;
-  width: 280px; /* Fixed width for desktop */
-  min-width: 280px; /* Ensure it doesn't shrink on desktop */
+  width: 280px;
+  min-width: 280px;
   flex-direction: column;
   align-items: flex-start;
   background: #FFF;
   box-shadow: 0px 2px 4px 0px rgba(0, 0, 0, 0.05);
   border-radius: 8px;
-  /* On Desktop, this sidebar should be part of the normal document flow */
-  /* It relies on the 'gap' property of its parent '.content' for spacing from main content */
-  position: relative; /* Keeps z-index context for modals/overlays within it, but doesn't affect flow */
-  z-index: 1; /* Default z-index for desktop, ensuring it's above main content but below global overlays */
-  padding-top: 20px; /* Consistent top padding */
-  padding-bottom: 20px; /* Consistent bottom padding */
-  flex-shrink: 0; /* Ensures it doesn't shrink on desktop */
+  position: relative;
+  z-index: 1;
+  padding-top: 20px;
+  padding-bottom: 20px;
+  flex-shrink: 0;
 
-  /* Mobile styles (max-width: 768px) */
   @media (max-width: 768px) {
-    position: fixed; /* Becomes an overlay on mobile */
+    position: fixed;
     top: 0;
-    left: -280px; /* Hidden by default (starts off-screen to its left) */
-    transform: translateX(0); /* Reset transform initially for transition */
-    width: 280px; /* Fixed width for mobile overlay */
-    height: 100vh; /* Full viewport height */
-    z-index: 1001; /* Higher z-index than main SideNavBar (1000) and global overlay (999) */
-    transition: transform 0.3s ease-in-out; /* Smooth slide animation */
-    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.5); /* Add shadow for depth */
-    padding-top: 20px; /* Adjust padding for mobile */
-    padding-bottom: 20px; /* Adjust padding for mobile */
-    justify-content: space-between; /* Distribute content vertically */
-    margin: 0; /* Remove any desktop margins on mobile */
+    left: -280px;
+    transform: translateX(0);
+    width: 280px;
+    height: 100vh;
+    z-index: 1001;
+    transition: transform 0.3s ease-in-out;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.5);
+    padding-top: 20px;
+    padding-bottom: 20px;
+    justify-content: space-between;
+    margin: 0;
   }
 
-  /* When the sidebar is 'open' on mobile */
   &.open {
     @media (max-width: 768px) {
-      // CRITICAL FIX: Slide in by its own width from the left edge
-      transform: translateX(280px); /* Slides into view by its own width (from -280px to 0px) */
+      transform: translateX(280px);
     }
   }
 }
@@ -50,8 +45,8 @@
   width: 100%;
 
   @media (max-width: 768px) {
-    padding: 10px 15px; /* Adjust padding for mobile */
-    margin-bottom: 15px; /* Adjust margin for mobile */
+    padding: 10px 15px;
+    margin-bottom: 15px;
   }
 }
 
@@ -74,7 +69,7 @@
   flex-direction: column;
   width: 100%;
   padding: 16px 0;
-  overflow-y: auto; /* Add scroll if many sections */
+  overflow-y: auto;
 }
 
 .sectionGroup {
@@ -92,7 +87,7 @@
   margin: 0 0 8px 0;
 }
 
-.sectionItem { /* Changed from .section to .sectionItem for clarity */
+.sectionItem {
   display: flex;
   align-items: center;
   padding: 10px 24px;
@@ -101,17 +96,13 @@
   position: relative;
 
   &:hover:not(.active) {
-    background-color: rgba(124, 58, 237, 0.05);
+    // UPDATED: Use the new purple color with 5% opacity
+    background-color: rgba(139, 92, 246, 0.05);
   }
 
   &.active {
-    background-color: rgba(124, 58, 237, 0.1);
-  }
-
-  &.completed {
-    .sectionLabel {
-      color: #7C3AED;
-    }
+    // UPDATED: Use the new purple color with 10% opacity
+    background-color: rgba(139, 92, 246, 0.1);
   }
 }
 
@@ -123,6 +114,8 @@
   height: 24px;
   margin-right: 12px;
   position: relative;
+  // NEW: Set the color for all section icons
+  color: #8b5cf6;
 }
 
 .sectionIcon {
@@ -145,14 +138,16 @@
   border-radius: 50%;
   border: 1px solid #E9EAEC;
   background-color: #FFF;
-  margin-left: auto; /* This pushes it to the right */
+  margin-left: auto;
   display: flex;
   align-items: center;
   justify-content: center;
 
   &.activeIndicator {
-    background-color: #7C3AED;
-    border-color: #7C3AED;
+    // UPDATED: Use the new purple color
+    background-color: #8b5cf6;
+    // UPDATED: Use the new purple color
+    border-color: #8b5cf6;
   }
 
   &.completedIndicator {
@@ -169,20 +164,15 @@
 .sectionLabel {
   font-size: 14px;
   color: #6b7280;
-  flex: 1; /* This ensures the label takes up available space */
+  flex: 1;
 
   .active & {
-    color: #7C3AED;
-    font-weight: 500;
-  }
-
-  .completed & {
-    color: #7C3AED;
+    // UPDATED: Use the new purple color
+    color: #8b5cf6;
     font-weight: 500;
   }
 }
 
-// Event actions section
 .eventActions {
   border-top: 1px solid #f0f0f0;
   padding: 16px 24px;
@@ -194,9 +184,9 @@
 
 .editEventButtonContainer {
   width: 100%;
-  padding: 16px 12px 0; /* Adjust padding */
-  border-top: 1px solid #E9EAEC; /* Add top border */
-  margin-top: auto; /* Push to bottom */
+  padding: 16px 12px 0;
+  border-top: 1px solid #E9EAEC;
+  margin-top: auto;
 }
 
 .editEventButton {
