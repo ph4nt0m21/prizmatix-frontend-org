@@ -158,7 +158,6 @@ const SideNavBar = ({ isMobileSidebarOpen, toggleMobileSidebar }) => {
                   <div className={styles.iconWrapper}>
                     <IconComponent className={styles.icon} />
                   </div>
-                  <span className={styles.navLabel}>{item.label}</span>
                 </NavLink>
               </li>
             );
@@ -178,7 +177,7 @@ const SideNavBar = ({ isMobileSidebarOpen, toggleMobileSidebar }) => {
                 <div className={styles.iconWrapper}>
                   <IconComponent className={styles.icon} />
                 </div>
-                <span className={styles.navLabel}>{item.label}</span>
+                
               </NavLink>
             );
           })}

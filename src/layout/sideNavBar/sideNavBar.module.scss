@@ -5,9 +5,10 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 70px;
+  width: 64px;
   height: 100vh;
   background: var(--gradient, linear-gradient(180deg, #31204B 0%, #1E202C 100%));
+  padding: 8px 8px;
   color: #fff;
   position: fixed;
   left: 0;
@@ -56,7 +57,7 @@
 
 .navList {
   list-style: none;
-  padding: 0;
+  padding: 8px 0px;
   margin: 0;
   width: 100%;
   display: flex;
@@ -79,33 +80,52 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 12px 0;
+  padding: 16px 0;
   width: 100%;
   text-decoration: none;
   color: rgba(255, 255, 255, 0.6);
   position: relative;
   transition: all 0.3s ease;
 
-  &:hover {
-    color: #fff;
-    background-color: rgba(255, 255, 255, 0.1);
-  }
+   &:hover {
+
+    .iconWrapper{
+      color: #fff;
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+  } 
 
   &.active {
-    color: #fff;
+    border-radius: 12px;
 
     &::before {
-      content: '';
-      position: absolute;
-      left: 0;
-      top: 0;
-      width: 3px;
-      height: 100%;
-      background-color: #7C3AED;
+      // content: '';
+      // position: absolute;
+      // left: 0;
+      // top: 0;
+      // width: 3px;
+      // height: 100%;
+      // background-color: #7C3AED;
+      border-radius: 12px 0 0 12px;
     }
 
     .iconWrapper {
-      color: #7C3AED;
+      background-color: #413653; /* New icon color */
+      position: relative; /* This is crucial for positioning the new pseudo-element */
+
+     
+      
+      // The new pseudo-element for the horizontal bar
+      &::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 3px;
+        height: 100%;
+        background-color: #9A6AFF; /* Violet color for the bar */
+        border-radius: 2px 0 0 2px;
+      }
     }
   }
 
@@ -129,18 +149,19 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  width: 48px;
+  height: 48px;
   margin-bottom: 6px;
 }
 
 .icon {
-  width: 28px;
-  height: 28px;
+  width: 48px;
+  height: 48px;
   opacity: 0.8;
 
   .active & {
     opacity: 1;
+    color: #7C3AED;
   }
 }
 
@@ -149,7 +170,7 @@
   font-weight: 500;
   text-align: center;
   opacity: 0;  
-  transition: opacity 0.3s ease;
+  transition: opacity 0.1s ease;
 
   @media (max-width: 768px) {
     display: block; // Ensure label is visible on mobile
@@ -171,7 +192,7 @@
   }
 
   .navLink {
-    margin-bottom: 8px;
+    // margin-bottom: 8px;
 
     &:last-child {
       margin-bottom: 0;

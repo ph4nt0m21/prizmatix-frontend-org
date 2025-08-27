@@ -35,12 +35,12 @@ const PayoutSection = ({ title, description }) => {
     // Simulate API call to fetch data
     const fetchPayoutData = async () => {
       await new Promise(resolve => setTimeout(resolve, 500));
-      setGrossRevenue(10669.64);
-      setCurrentBalance(2667.41);
-      setFullPayoutAmount(2667.41);
+      setGrossRevenue(11863.64);
+      setCurrentBalance(2965.91);
+      setFullPayoutAmount(2965.91);
       setPayoutHistory([]);
     };
-
+    
     fetchPayoutData();
   }, []);
 
