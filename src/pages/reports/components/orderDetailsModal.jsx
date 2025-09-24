@@ -1,6 +1,6 @@
 import React from 'react';
 import styles from './orderDetailsModal.module.scss';
-import { FiX, FiDownload } from 'react-icons/fi';
+import { FiX, FiMoreHorizontal, FiDownload } from 'react-icons/fi';
 
 const OrderDetailsModal = ({ order, onClose }) => {
   if (!order) return null;
@@ -12,16 +12,14 @@ const OrderDetailsModal = ({ order, onClose }) => {
         <div className={styles.header}>
           <h3>{order.id}</h3>
           <p>Order Details</p>
-          <button onClick={onClose} className={styles.closeButton}>
-            <FiX />
-          </button>
+          <button onClick={onClose} className={styles.closeButton}><FiX /></button>
         </div>
 
         <div className={styles.content}>
-          {/* Purchase Details */}
           <div className={styles.section}>
             <div className={styles.sectionHeader}>
               <h4>Purchase Details</h4>
+              <div></div>
             </div>
             <div className={styles.detailBlock}>
               <div className={styles.detailItem}>
@@ -35,10 +33,10 @@ const OrderDetailsModal = ({ order, onClose }) => {
             </div>
           </div>
 
-          {/* Customer */}
           <div className={styles.section}>
             <div className={styles.sectionHeader}>
               <h4>Customer</h4>
+              <button><FiMoreHorizontal /></button>
             </div>
             <div className={styles.infoRow}>
               <span className={styles.infoLabel}>Full Name</span>
@@ -50,37 +48,30 @@ const OrderDetailsModal = ({ order, onClose }) => {
             </div>
           </div>
 
-          {/* Tickets */}
           <div className={styles.section}>
             <div className={styles.sectionHeader}>
               <h4>Tickets</h4>
+              <button><FiMoreHorizontal /></button>
             </div>
-            {order.tickets &&
-              order.tickets.map((ticket, index) => (
-                <div
-                  key={ticket.ticketId || index}
-                  className={styles.ticketItem}
-                >
-                  <div className={styles.ticketInfo}>
-                    <span className={styles.ticketName}>
-                      {ticket.ticketType}
-                    </span>
-                  </div>
+            {order.tickets && order.tickets.map((ticket, index) => (
+              <div key={ticket.ticketId || index} className={styles.ticketItem}>
+                <div className={styles.ticketInfo}>
+                  <span className={styles.ticketName}>{ticket.ticketType}</span>
                 </div>
-              ))}
+              </div>
+            ))}
           </div>
 
-          {/* Attendees */}
-          <div className={styles.section}>
+           <div className={styles.section}>
             <div className={styles.sectionHeader}>
               <h4>Attendees</h4>
+              <button><FiMoreHorizontal /></button>
             </div>
-            {order.attendees &&
-              order.attendees.map((attendee, index) => (
+            {order.attendees && order.attendees.map((attendee, index) => (
                 <div key={index} className={styles.attendeeNameRow}>
                   {attendee.name}
                 </div>
-              ))}
+            ))}
           </div>
         </div>
 

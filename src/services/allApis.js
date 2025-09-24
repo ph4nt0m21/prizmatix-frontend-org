@@ -147,7 +147,7 @@ export const GetEventTicketsAPI = async (eventId) => {
 
 // Get event discount codes
 export const GetEventDiscountCodesAPI = async (eventId) => {
-  return await apiClient.get(`/events/${eventId}/discount-codes`);
+  return await apiClient.get(`/api/events/${eventId}/discount-codes`);
 };
 
 // Get event creation status
@@ -168,4 +168,43 @@ export const GetEventAttendeesAPI = async (eventId) => {
 // NEW: API to get all dashboard overview data for a specific event
 export const GetEventDashboardAPI = async (eventId) => {
   return await apiClient.get(`/orgDashboard/events/${eventId}/dashboard`);
+};
+
+export const GetEventTicketStructuresAPI = async (eventId) => {
+  return await apiClient.get(`/api/events/${eventId}/ticket-structures`);
+};
+
+// NEW: API to update a ticket structure by its ID
+export const UpdateTicketStructureAPI = async (ticketStructureId, data) => {
+  return await apiClient.put(`/api/events/ticket-structures/${ticketStructureId}`, data);
+};
+
+export const DeleteTicketStructureAPI = async (ticketStructureId) => {
+  return await apiClient.delete(`/api/events/ticket-structures/${ticketStructureId}`);
+};
+
+export const CreateTicketStructureAPI = async (eventId, data) => {
+  return await apiClient.post(`/api/events/${eventId}/ticket-structures`, data);
+};
+
+// =============== EMAIL CAMPAIGN APIs ===============
+
+// Create a new campaign
+export const CreateEmailCampaignAPI = async (data) => {
+  return await apiClient.post("/admin/email-campaigns", data);
+};
+
+// Send a campaign by ID
+export const SendEmailCampaignAPI = async (campaignId) => {
+  return await apiClient.post(`/admin/email-campaigns/${campaignId}/send`);
+};
+
+// Get all campaigns (optional, for listing/history)
+export const GetAllEmailCampaignsAPI = async () => {
+  return await apiClient.get("/admin/email-campaigns");
+};
+
+// Get campaign by ID (optional, for preview/edit)
+export const GetEmailCampaignByIdAPI = async (id) => {
+  return await apiClient.get(`/admin/email-campaigns/${id}`);
 };

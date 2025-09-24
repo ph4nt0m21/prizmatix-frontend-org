@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, useParams, useOutletContext } from "react-router-dom"; // Import useOutletContext
+import { useNavigate, useParams, useOutletContext } from "react-router-dom";
 import Cookies from "js-cookie";
 import { LoginAPI } from "../../services/allApis";
-// Removed direct Header import as it's handled in MainLayout: import Header from "../../layout/header/header";
 import EventHeaderNav from "./components/eventHeaderNav";
 import EventCreationSidebar from "./components/eventCreationSidebar";
 import BasicInfoStep from "./steps/basicInfoStep";
@@ -25,6 +24,7 @@ import {
   UpdateEventDiscountCodesAPI,
   PublishEventAPI,
   GetEventStatusAPI,
+  GetEventTicketStructuresAPI, // IMPORTED
 } from "../../services/allApis";
 import styles from "./createEventPage.module.scss";
 import { getUserData, setUserData } from "../../utils/authUtil";
@@ -48,7 +48,6 @@ import {
 const CreateEventPage = () => {
   const navigate = useNavigate();
   const { eventId, step } = useParams();
-  // Get toggleMobileSidebar and isMobileSidebarOpen from Outlet context provided by MainLayout
   const { toggleMobileSidebar, isMobileSidebarOpen } = useOutletContext();
 
   // Loading state
@@ -69,12 +68,12 @@ const CreateEventPage = () => {
   const [eventData, setEventData] = useState({
     // Basic Info (Step 1)
     name: "",
-    eventType: "public", // Default to public
+    eventType: "public",
     showHostProfile: true,
-    organizationId: null, // Will be set from user context
-    createdBy: null, // Will be set from user context
-    // category: "", // Category field
-    // searchTags: [], // Search tags array
+    organizationId: null,
+    createdBy: null,
+    // category: "",
+    // searchTags: [],
 
     // Location (Step 2)
     location: {
@@ -121,7 +120,7 @@ const CreateEventPage = () => {
     discountCodes: [],
 
     // Publish (Step 8)
-    publishStatus: "draft", // 'draft', 'published', 'archived'
+    publishStatus: "draft",
     publishedAt: null,
 
     // Additional organizer info for publish preview
@@ -142,14 +141,14 @@ const CreateEventPage = () => {
   });
 
   const areAllPreviousStepsCompleted = () => {
-    // Check if all previous steps (1-7) are completed
     return (
       stepStatus.basicInfo.completed &&
       stepStatus.location.completed &&
       stepStatus.dateTime.completed &&
       stepStatus.description.completed &&
       stepStatus.art.completed &&
-      stepStatus.tickets.completed
+      stepStatus.tickets.completed &&
+      stepStatus.discountCodes.completed 
     );
   };
 
@@ -162,30 +161,26 @@ const CreateEventPage = () => {
   // Constants for file validations
   const supportedImageTypes = [".jpg", ".jpeg", ".png", ".webp"];
   const maxFileSizes = {
-    thumbnail: 100, // 100MB
-    banner: 100, // 100MB
+    thumbnail: 100,
+    banner: 100,
   };
 
-  // Fetch user data on component mount
   useEffect(() => {
     const fetchUserData = async () => {
       setUserLoading(true);
       try {
-        // First try to get user data from localStorage
         const storedUserData = getUserData();
 
         if (storedUserData) {
           console.log("User data from localStorage:", storedUserData);
           setCurrentUser(storedUserData);
         } else {
-          // If not in localStorage, fetch from API
           const token = Cookies.get("token");
           if (token) {
             const response = await LoginAPI(token);
             console.log("User data from API:", response.data);
             setCurrentUser(response.data);
 
-            // Also update localStorage for future use
             const userData = {
               id: response.data.id || response.data.userId,
               organizationId: response.data.organizationId,
@@ -196,7 +191,6 @@ const CreateEventPage = () => {
               role: response.data.role,
             };
 
-            // Use the utility to store the data
             setUserData(userData);
           }
         }
@@ -210,10 +204,8 @@ const CreateEventPage = () => {
     fetchUserData();
   }, []);
 
-  // Set user info when user data is loaded
   useEffect(() => {
     if (currentUser) {
-      // Extract the correct fields, checking multiple possible locations
       const organizationId =
         currentUser.organizationId ||
         currentUser.organization?.id ||
@@ -227,11 +219,9 @@ const CreateEventPage = () => {
         createdBy: userId,
       });
 
-      // Only update if we have actual values
       if (organizationId || userId) {
         setEventData((prevData) => ({
           ...prevData,
-          // Only update fields that have values
           ...(organizationId !== undefined && { organizationId }),
           ...(userId !== undefined && { createdBy: userId }),
         }));
@@ -243,9 +233,7 @@ const CreateEventPage = () => {
     }
   }, [currentUser]);
 
-  // Add this function to handle fetching event data
   useEffect(() => {
-    // Check for event data in localStorage on initial load
     const storedEventData = getEventData();
     if (storedEventData && !eventId) {
       setEventData((prevData) => ({
@@ -253,10 +241,8 @@ const CreateEventPage = () => {
         ...storedEventData,
       }));
 
-      // Update step status based on stored data
       updateStepStatusFromData(storedEventData);
 
-      // Navigate to the event if ID is available
       if (storedEventData.eventId) {
         navigate(`/events/create/${storedEventData.eventId}/${currentStep}`);
       }
@@ -264,7 +250,6 @@ const CreateEventPage = () => {
   }, []);
 
   useEffect(() => {
-    // Fetch event status after successful API calls
     const fetchEventStatus = async () => {
       if (eventId) {
         try {
@@ -273,7 +258,6 @@ const CreateEventPage = () => {
           if (response.data) {
             const step8Completed = response.data.step8Completed || false;
 
-            // Create a new step status object based on API response
             const apiStepStatus = {
               basicInfo: {
                 ...stepStatus.basicInfo,
@@ -306,36 +290,27 @@ const CreateEventPage = () => {
               publish: {
                 ...stepStatus.publish,
                 completed: step8Completed,
-                // Mark as visited if viewed or if it's already completed.
                 visited: response.data.step8Viewed || step8Completed,
               },
             };
 
-            // Update step status based on API response
             setStepStatus(apiStepStatus);
           }
         } catch (error) {
           console.error("Error fetching event status:", error);
         } finally {
-          // Ensure step status is always updated even on error to prevent infinite loops
-          // if (Object.keys(stepStatus).length === 0) { // Only if initial status is empty
-          //   setStepStatus(prev => ({...prev})); // Trigger re-render with initial status
-          // }
         }
       }
     };
 
     fetchEventStatus();
-  }, [eventId, currentStep]); // Fetch status when eventId or currentStep changes
+  }, [eventId, currentStep]);
 
-  // Parse step parameter and update current step
   useEffect(() => {
     if (step) {
       const stepNumber = parseInt(step);
       if (!isNaN(stepNumber) && stepNumber >= 1 && stepNumber <= 8) {
-        // Special case for step 8 (publish)
         if (stepNumber === 8 && !areAllPreviousStepsCompleted()) {
-          // Redirect to the first incomplete step
           let firstIncompleteStep = 1;
           if (!stepStatus.basicInfo.completed) firstIncompleteStep = 1;
           else if (!stepStatus.location.completed) firstIncompleteStep = 2;
@@ -345,10 +320,8 @@ const CreateEventPage = () => {
           else if (!stepStatus.tickets.completed) firstIncompleteStep = 6;
           else if (!stepStatus.discountCodes.completed) firstIncompleteStep = 7;
 
-          // Alert the user
           alert("Please complete all previous steps before publishing.");
 
-          // Redirect to the first incomplete step
           navigate(`/events/create/${eventId}/${firstIncompleteStep}`);
           setCurrentStep(firstIncompleteStep);
           return;
@@ -356,7 +329,6 @@ const CreateEventPage = () => {
 
         setCurrentStep(stepNumber);
 
-        // Mark the current step as visited
         const stepKey = getStepKeyByNumber(stepNumber);
         setStepStatus((prevStatus) => ({
           ...prevStatus,
@@ -366,14 +338,13 @@ const CreateEventPage = () => {
           },
         }));
       } else {
-        setCurrentStep(1); // Default to step 1 if invalid step parameter
+        setCurrentStep(1);
       }
     } else {
-      setCurrentStep(1); // Default to step 1 if no step parameter
+      setCurrentStep(1);
     }
-  }, [step, stepStatus, eventId, navigate]); // Added navigate to dependency array
+  }, [step, stepStatus, eventId, navigate]);
 
-  // Fetch event data if eventId is provided
   useEffect(() => {
     const fetchEventData = async () => {
       if (eventId) {
@@ -381,15 +352,12 @@ const CreateEventPage = () => {
           setIsLoading((prev) => ({ ...prev, fetchEvent: true }));
           const response = await GetEventAPI(eventId);
 
-          // Update event data
           setEventData((prevData) => ({
             ...prevData,
             ...response.data,
-            // Convert private boolean back to eventType string
             eventType: response.data.private ? "private" : "public",
           }));
 
-          // Update step status based on fetched data
           updateStepStatusFromData(response.data);
         } catch (error) {
           console.error("Error fetching event data:", error);
@@ -404,52 +372,34 @@ const CreateEventPage = () => {
   }, [eventId]);
 
   useEffect(() => {
-    // Run this only once when the component mounts
     const handlePageRefresh = () => {
-      // Check if this is a fresh page load rather than a navigation within the app
       const isPageRefresh = !sessionStorage.getItem("eventCreationInProgress");
 
       if (isPageRefresh) {
-        // This is a page refresh, not an in-app navigation
-
-        // For a brand new event creation (no eventId in URL)
         if (!eventId) {
-          // Clear any existing draft data to start fresh
           clearEventData();
           console.log("Starting fresh event creation - cleared old data");
         }
-
-        // Mark that we're now in an event creation process
         sessionStorage.setItem("eventCreationInProgress", "true");
       }
     };
 
     handlePageRefresh();
 
-    // Clean up on component unmount
     return () => {
-      // If we're navigating away from the event creation process entirely,
-      // clear the session marker
       if (window.location.pathname.indexOf("/events/create") === -1) {
         sessionStorage.removeItem("eventCreationInProgress");
       }
     };
-  }, [eventId]); // Only run on initial mount and when eventId changes
+  }, [eventId]);
 
-  /**
-   * Update step status based on event data
-   * @param {Object} data - Event data
-   */
   const updateStepStatusFromData = (data) => {
-    // This is a simplified implementation
     const newStepStatus = { ...stepStatus };
 
-    // Check if basic info is complete
     if (data.name) {
       newStepStatus.basicInfo = { completed: true, valid: true, visited: true };
     }
 
-    // Check if location is complete
     if (data.location) {
       const locationComplete =
         data.location.isToBeAnnounced ||
@@ -467,7 +417,6 @@ const CreateEventPage = () => {
       }
     }
 
-    // Check if date/time is complete
     if (data.dateTime) {
       const dateTimeComplete =
         data.dateTime.startDate &&
@@ -484,7 +433,6 @@ const CreateEventPage = () => {
       }
     }
 
-    // Check if description is complete
     if (data.description) {
       newStepStatus.description = {
         completed: true,
@@ -493,20 +441,16 @@ const CreateEventPage = () => {
       };
     }
 
-    // Check if art is complete
     if (data.art) {
-      // Art step is optional, so mark as complete if visited
       if (data.art.thumbnailFile || data.art.bannerFile) {
         newStepStatus.art = { completed: true, valid: true, visited: true };
       }
     }
 
-    // Check if tickets are complete
     if (data.tickets && data.tickets.length > 0) {
       newStepStatus.tickets = { completed: true, valid: true, visited: true };
     }
 
-    // Check if discount codes are complete
     if (data.discountCodes && data.discountCodes.length > 0) {
       newStepStatus.discountCodes = {
         completed: true,
@@ -518,24 +462,17 @@ const CreateEventPage = () => {
     setStepStatus(newStepStatus);
   };
 
-  /**
-   * Handle input changes for the current step
-   * @param {Object} e - Event object or direct value object
-   * @param {string} fieldName - Optional field name if not from event
-   */
   const handleInputChange = (e, fieldName = null) => {
     const field = fieldName || e.target?.name;
     const value =
       e.target?.type === "checkbox" ? e.target.checked : e.target?.value ?? e;
 
-    // Special case handlers
     if (
       field === "location" ||
       field === "dateTime" ||
       field === "art" ||
       field === "tickets" ||
       field === "discountCodes"
-      // field === "searchTags"
     ) {
       setEventData((prevData) => ({
         ...prevData,
@@ -544,7 +481,6 @@ const CreateEventPage = () => {
       return;
     }
 
-    // Handle validation flags for steps
     if (
       field === "locationValid" ||
       field === "dateTimeValid" ||
@@ -564,7 +500,6 @@ const CreateEventPage = () => {
       return;
     }
 
-    // Standard field handling
     setEventData((prevData) => ({
       ...prevData,
       [field]: value,
@@ -575,57 +510,38 @@ const CreateEventPage = () => {
     setStepStatus(updatedStepStatus);
   };
 
-  /**
-   * Validate the current step
-   * @returns {boolean} Is the current step valid
-   */
   const validateCurrentStep = () => {
     switch (currentStep) {
-      case 1: // Basic Info
+      case 1:
         return validateBasicInfo();
-      case 2: // Location
+      case 2:
         return validateLocation();
-      case 3: // Date & Time
+      case 3:
         return validateDateTime();
-      case 4: // Description
+      case 4:
         return validateDescription();
-      case 5: // Art
+      case 5:
         return validateArt();
-      case 6: // Tickets
+      case 6:
         return validateTickets();
-      case 7: // Discount Codes
+      case 7:
         return validateDiscountCodes();
-      case 8: // Publish
+      case 8:
         return validatePublish();
       default:
         return false;
     }
   };
 
-  /**
-   * Validate the Basic Info step
-   * @returns {boolean} Is the Basic Info step valid
-   */
   const validateBasicInfo = () => {
-    // Check if name is filled and category is selected
     return eventData.name.trim() !== "";
-    // && eventData.category.trim() !== ""
   };
 
-  /**
-   * Validate the Location step
-   * @returns {boolean} Is the Location step valid
-   */
   const validateLocation = () => {
-    // If location is to be announced, it's always valid
     if (eventData.location?.isToBeAnnounced) {
       return true;
     }
-
-    // Check required fields
     const location = eventData.location || {};
-
-    // These fields are required if location is not TBA
     if (
       !location.venue ||
       !location.street ||
@@ -634,18 +550,11 @@ const CreateEventPage = () => {
     ) {
       return false;
     }
-
     return true;
   };
 
-  /**
-   * Validate the Date & Time step
-   * @returns {boolean} Is the Date & Time step valid
-   */
   const validateDateTime = () => {
     const dateTime = eventData.dateTime || {};
-
-    // Check if required fields are filled
     if (
       !dateTime.startDate ||
       !dateTime.startTime ||
@@ -654,64 +563,38 @@ const CreateEventPage = () => {
     ) {
       return false;
     }
-
-    // Check if end date/time is after start date/time
     const startDateTime = new Date(
       `${dateTime.startDate}T${dateTime.startTime}`
     );
     const endDateTime = new Date(`${dateTime.endDate}T${dateTime.endTime}`);
-
     if (endDateTime <= startDateTime) {
       return false;
     }
-
     return true;
   };
 
-  /**
-   * Validate the Description step
-   * @returns {boolean} Is the Description step valid
-   */
   const validateDescription = () => {
-    // Check if description is filled
     return eventData.description?.trim() !== "";
   };
 
-  /**
-   * Validate the Art step
-   * @returns {boolean} Is the Art step valid
-   */
   const validateArt = () => {
-    // Art uploads are optional but if files are uploaded, they must be valid
     const artData = eventData.art || {};
-
-    // Helper function to validate a file
     const isFileValid = (file, supportedTypes, maxSizeMB) => {
-      // Return true if file is empty (no validation needed)
       if (!file) return true;
-
-      // Make sure the file has a name property before trying to use split()
       if (!file.name) {
         console.warn("File object does not have a name property:", file);
         return false;
       }
-
-      // Check file type
       const fileExtension = "." + file.name.split(".").pop().toLowerCase();
       if (!supportedTypes.includes(fileExtension)) {
         return false;
       }
-
-      // Check file size
       const fileSizeMB = file.size / (1024 * 1024);
       if (fileSizeMB > maxSizeMB) {
         return false;
       }
-
       return true;
     };
-
-    // Check for validation errors in uploaded files
     const hasThumbnailError =
       artData.thumbnailFile &&
       !isFileValid(
@@ -726,163 +609,100 @@ const CreateEventPage = () => {
         supportedImageTypes,
         maxFileSizes.banner
       );
-
-    // Return true if there are no errors
     return !hasThumbnailError && !hasBannerError;
   };
 
-/**
- * Validates the data in the Tickets step.
- * This function is designed to be used in the parent CreateEventPage.
- * @returns {boolean} - True if the tickets data is valid, false otherwise.
- */
-const validateTickets = () => {
-  // Rule 1: Check if there is at least one ticket.
-  if (!eventData.tickets || eventData.tickets.length === 0) {
-    console.error("Validation Failed: No tickets have been added.");
-    return false;
+  const validateTickets = () => {
+    if (!eventData.tickets || eventData.tickets.length === 0) {
+      console.error("Validation Failed: No tickets have been added.");
+      return false;
+    }
+    const invalidTickets = eventData.tickets.filter((ticket) => {
+      if (!ticket.name || ticket.name.trim() === "") {
+        return true;
+      }
+      if (ticket.price === null || ticket.price === '' || isNaN(ticket.price) || parseFloat(ticket.price) < 0) {
+        return true;
+      }
+      if (ticket.quantity === null || ticket.quantity === '' || isNaN(ticket.quantity) || !Number.isInteger(Number(ticket.quantity)) || parseInt(ticket.quantity, 10) <= 0) {
+          return true;
+      }
+      if (ticket.maxPurchaseAmount && (isNaN(ticket.maxPurchaseAmount) || !Number.isInteger(Number(ticket.maxPurchaseAmount)) || parseInt(ticket.maxPurchaseAmount, 10) <= 0)) {
+          return true;
+      }
+      return false;
+    });
+    const isValid = invalidTickets.length === 0;
+    if (!isValid) {
+        console.error("Validation Failed: One or more tickets have invalid data.");
+    }
+    return isValid;
+  };
+
+  // src/pages/createEventPage.jsx
+
+// src/pages/createEventPage.jsx
+
+// src/pages/createEventPage.jsx
+
+const validateDiscountCodes = () => {
+  if (!eventData.discountCodes || eventData.discountCodes.length === 0) {
+    return true;
   }
 
-  // Rule 2: Check if every ticket has all its required fields filled correctly.
-  const invalidTickets = eventData.tickets.filter((ticket) => {
-    // Validate Ticket Name: Must not be empty.
-    if (!ticket.name || ticket.name.trim() === "") {
-      return true; // Invalid: Name is missing.
+  console.log("--- Running Discount Code Validation ---");
+
+  const invalidDiscountCodes = eventData.discountCodes.filter((code, index) => {
+    console.log(`[${index}] Validating code object:`, code);
+
+    if (!code.code || code.code.trim() === "") {
+      console.log(`[${index}] FAILED: Code name is missing.`);
+      return true;
     }
-
-    // Validate Price: Must be a number equal to or greater than 0.
-    if (ticket.price === null || ticket.price === '' || isNaN(ticket.price) || parseFloat(ticket.price) < 0) {
-      return true; // Invalid: Price is missing or invalid.
+    if (!code.type || (code.type !== 'fixed' && code.type !== 'percentage')) {
+      console.log(`[${index}] FAILED: Type is invalid.`);
+      return true;
     }
-
-    // Validate Quantity: Must be a whole number greater than 0.
-    if (ticket.quantity === null || ticket.quantity === '' || isNaN(ticket.quantity) || !Number.isInteger(Number(ticket.quantity)) || parseInt(ticket.quantity, 10) <= 0) {
-        return true; // Invalid: Quantity is missing or invalid.
+    if (code.value === null || code.value === '' || isNaN(parseFloat(code.value)) || parseFloat(code.value) < 0) {
+      console.log(`[${index}] FAILED: Value is invalid.`);
+      return true;
     }
-
-    // Validate Max Purchase Amount (Optional): If a value is entered, it must be a whole number greater than 0.
-    if (ticket.maxPurchaseAmount && (isNaN(ticket.maxPurchaseAmount) || !Number.isInteger(Number(ticket.maxPurchaseAmount)) || parseInt(ticket.maxPurchaseAmount, 10) <= 0)) {
-        return true; // Invalid: Max purchase amount is present but invalid.
-    }
-
-    // If all checks pass for this ticket, it's valid.
-    return false;
-  });
-
-  // If the invalidTickets array is empty, it means all tickets are valid.
-  const isValid = invalidTickets.length === 0;
-  if (!isValid) {
-      console.error("Validation Failed: One or more tickets have invalid data.");
-  }
-
-  return isValid;
-};
-
-  /**
-   * Validate the Discount Codes step
-   * @returns {boolean} Is the Discount Codes step valid
-   */
-  const validateDiscountCodes = () => {
-    // Discount codes are optional, so it's always valid if empty
-    if (!eventData.discountCodes || eventData.discountCodes.length === 0) {
+    if (code.usageLimit && (isNaN(parseInt(code.usageLimit, 10)) || parseInt(code.usageLimit, 10) < 0)) {
+      console.log(`[${index}] FAILED: Usage Limit is invalid.`);
       return true;
     }
 
-    // Check if all discount codes have required fields
-    const invalidDiscountCodes = eventData.discountCodes.filter((code) => {
-      // Basic required fields validation
-      if (!code.code || code.code.trim() === "") {
-        return true; // Invalid
-      }
+    console.log(`[${index}] PASSED: All checks for this code are valid.`);
+    return false;
+  });
 
-      // Discount percentage validation
-      if (
-        !code.discountPercentage ||
-        isNaN(code.discountPercentage) ||
-        parseFloat(code.discountPercentage) < 0 ||
-        parseFloat(code.discountPercentage) > 100
-      ) {
-        return true; // Invalid
-      }
+  const isStepValid = invalidDiscountCodes.length === 0;
+  console.log(`--- Validation Result: ${isStepValid ? 'VALID' : 'INVALID'} ---`);
 
-      // Max discount amount validation
-      if (
-        !code.maxDiscountAmount ||
-        isNaN(code.maxDiscountAmount) ||
-        parseFloat(code.maxDiscountAmount) < 0
-      ) {
-        return true; // Invalid
-      }
+  return isStepValid;
+};
 
-      // Min discount amount validation
-      if (
-        !code.minDiscountAmount ||
-        isNaN(code.minDiscountAmount) ||
-        parseFloat(code.minDiscountAmount) < 0
-      ) {
-        return true; // Invalid
-      }
-
-      // Quantity validation
-      if (
-        !code.quantity ||
-        isNaN(code.quantity) ||
-        parseInt(code.quantity) <= 0
-      ) {
-        return true; // Invalid
-      }
-
-      return false; // Valid discount code
-    });
-
-    return invalidDiscountCodes.length === 0;
-  };
-
-  /**
-   * Validate the Publish step
-   * @returns {boolean} Is the Publish step valid
-   */
   const validatePublish = () => {
-    // Check if all required event information is available
-
-    // Basic Info validation
-    if (!eventData.name)
-    //  || !eventData.category
-    {
+    if (!eventData.name) {
       return false;
     }
-
-    // Location validation - either TBA or has location details
     if (!eventData.location.isToBeAnnounced &&
       (!eventData.location.venue || !eventData.location.city || !eventData.location.country)) {
       return false;
     }
-
-    // Date/Time validation
     if (!eventData.dateTime.startDate || !eventData.dateTime.startTime ||
       !eventData.dateTime.endDate || !eventData.dateTime.endTime) {
       return false;
     }
-
-    // Description validation
     if (!eventData.description) {
       return false;
     }
-
-    // Tickets validation - at least one ticket is required
     if (!eventData.tickets || eventData.tickets.length === 0) {
       return false;
     }
-
-    // All required steps are valid
     return true;
   };
 
-  /**
-   * Get the step key by step number
-   * @param {number} stepNumber - Step number
-   * @returns {string} Step key
-   */
   const getStepKeyByNumber = (stepNumber) => {
     switch (stepNumber) {
       case 1:
@@ -906,39 +726,23 @@ const validateTickets = () => {
     }
   };
 
-  /**
-   * Handle publishing the event
-   */
   const handlePublishEvent = async () => {
     try {
-      // Set loading state
       setIsLoading((prev) => ({ ...prev, publishEvent: true }));
-
-      // Prepare the publish data for API using the utility function
       const publishData = preparePublishEventDataForAPI(eventId);
-
       console.log("Publishing event with data:", publishData);
-
-      // Make API call to publish the event
       const response = await PublishEventAPI(eventId, publishData);
       console.log("Event published successfully:", response);
-
-      // Update saved event data
       const currentEventData = getEventData();
       saveEventData({
         ...currentEventData,
         publishStatus: "published",
         publishedAt: new Date().toISOString(),
       });
-
-      // Set success message (optional)
       setSuccessMessage("Event published successfully!");
-
       clearEventData();
-
-      // Redirect to the events page after a short delay
       setTimeout(() => {
-        navigate("/events"); // Changed from /events/${eventId} to /events
+        navigate("/events");
       }, 1500);
     } catch (error) {
       console.error("Error publishing event:", error);
@@ -951,42 +755,25 @@ const validateTickets = () => {
     }
   };
 
-  /**
-   * Handle next step navigation
-   */
   const handleNextStep = async () => {
-    // Validate current step
     const isValid = validateCurrentStep();
-
-    // Special case for the first step (BasicInfo) - Must be completed to proceed
     if (currentStep === 1 && !isValid) {
       alert("Please complete the Basic Info step first to create your event.");
       return;
     }
-
-    // Special case for the last step (publish)
     if (currentStep === 8) {
       await handlePublishEvent();
       return;
     }
-
-    // Set loading state if the step is valid
     if (isValid) {
       setIsLoading((prev) => ({ ...prev, saveEvent: true }));
     }
-
     try {
-      // Default eventId value
       let updatedEventId = eventId;
-
-      // Special case for BasicInfo step - create new event
       if (currentStep === 1 && !eventId) {
         if (isValid) {
           try {
-            // Get user data for organization and user IDs
             const userData = getUserData();
-
-            // Prepare data according to the required schema
             const basicInfoData = {
               name: eventData.name,
               organizationId:
@@ -994,21 +781,12 @@ const validateTickets = () => {
               createdBy: eventData.createdBy || userData?.userId || 1,
               private: eventData.eventType === "private",
             };
-
             console.log("Creating new event with data:", basicInfoData);
-
-            // Make the actual API call
             const response = await CreateEventAPI(basicInfoData);
             console.log("Event creation successful:", response);
-
-            // Save the event data to localStorage
             saveEventData(response.data);
             console.log("Event data saved to localStorage:", response.data);
-
-            // Get the new event ID from the response
             updatedEventId = response.data.eventId;
-
-            // Mark this step as completed
             const stepKey = getStepKeyByNumber(currentStep);
             setStepStatus((prevStatus) => ({
               ...prevStatus,
@@ -1018,12 +796,8 @@ const validateTickets = () => {
                 visited: true,
               },
             }));
-
-            // Navigate to the next step with the actual event ID
             navigate(`/events/create/${updatedEventId}/${currentStep + 1}`);
             setCurrentStep((prevStep) => prevStep + 1);
-
-            // Return early since we've already navigated
             return;
           } catch (error) {
             console.error(
@@ -1031,13 +805,10 @@ const validateTickets = () => {
               error.response?.data || error.message
             );
             alert("Failed to create event. Please try again.");
-
-            // Reset loading state in case of error
             setIsLoading((prev) => ({ ...prev, saveEvent: false }));
             return;
           }
         } else {
-          // If step is not valid, show alert and return
           alert(
             "Please complete the Basic Info step first to create your event."
           );
@@ -1045,25 +816,18 @@ const validateTickets = () => {
         }
       }
 
-      // For steps after BasicInfo that require an eventId
       if (eventId) {
         if (isValid) {
-          // Handle location step submission
           if (currentStep === 2) {
             try {
-              // Prepare location data for API submission
               const locationData = prepareLocationDataForAPI(
                 eventData.location
               );
-
-              // Make API call to update location
               const response = await UpdateEventLocationAPI(
                 eventId,
                 locationData
               );
               console.log("Location update successful:", response);
-
-              // Update the saved event data with the new location info
               const currentEventData = getEventData();
               saveEventData({
                 ...currentEventData,
@@ -1075,36 +839,23 @@ const validateTickets = () => {
                 error.response?.data?.message ||
                 "Failed to update location. Please try again."
               );
-
-              // Reset loading state in case of error
               setIsLoading((prev) => ({ ...prev, saveEvent: false }));
               return;
             }
-          }
-
-          // Handle date/time step submission
-          else if (currentStep === 3) {
+          } else if (currentStep === 3) {
             try {
-              // Determine if the event is private based on event type
               const isPrivate = eventData.eventType === "private";
-
-              // Prepare date/time data for API submission
               const dateTimeData = prepareDateTimeDataForAPI(
                 eventData.dateTime,
                 eventId,
                 isPrivate
               );
-
               console.log("Submitting date/time data:", dateTimeData);
-
-              // Make API call to update date/time
               const response = await UpdateEventDateTimeAPI(
                 eventId,
                 dateTimeData
               );
               console.log("Date/time update successful:", response);
-
-              // Update the saved event data with the new date/time info
               const currentEventData = getEventData();
               saveEventData({
                 ...currentEventData,
@@ -1116,36 +867,23 @@ const validateTickets = () => {
                 error.response?.data?.message ||
                 "Failed to update date/time information. Please try again."
               );
-
-              // Reset loading state in case of error
               setIsLoading((prev) => ({ ...prev, saveEvent: false }));
               return;
             }
-          }
-
-          // Handle description step submission
-          else if (currentStep === 4) {
+          } else if (currentStep === 4) {
             try {
-              // Determine if the event is private based on event type
               const isPrivate = eventData.eventType === "private";
-
-              // Prepare description data for API submission
               const descriptionData = prepareDescriptionDataForAPI(
                 eventData.description,
                 eventId,
                 isPrivate
               );
-
               console.log("Submitting description data:", descriptionData);
-
-              // Make API call to update description
               const response = await UpdateEventDescriptionAPI(
                 eventId,
                 descriptionData
               );
               console.log("Description update successful:", response);
-
-              // Update the saved event data with the new description info
               const currentEventData = getEventData();
               saveEventData({
                 ...currentEventData,
@@ -1158,52 +896,35 @@ const validateTickets = () => {
                 error.response?.data?.message ||
                 "Failed to update description. Please try again."
               );
-
-              // Reset loading state in case of error
               setIsLoading((prev) => ({ ...prev, saveEvent: false }));
               return;
             }
-          }
-
-          // Handle art step submission
-          else if (currentStep === 5) {
+          } else if (currentStep === 5) {
             try {
               const hasThumbnail = !!eventData.art?.thumbnailFile;
               const hasBanner = !!eventData.art?.bannerFile;
-
               console.log("Art data to be uploaded:", {
                 hasThumbnail,
                 hasBanner,
                 thumbnailName: eventData.art?.thumbnailName,
                 bannerName: eventData.art?.bannerName,
               });
-
               if (hasThumbnail || hasBanner) {
-                // ✅ Extract metadata only (id, updatedBy)
                 const metadata = prepareArtDataForAPI(eventData.art, eventId, "banner");
-
-                // ✅ Create FormData manually
                 const formData = new FormData();
                 formData.append("id", metadata.id);
                 formData.append("updatedBy", metadata.updatedBy);
-
                 if (hasBanner) {
                   formData.append("bannerFile", eventData.art.bannerFile);
                 }
                 if (hasThumbnail) {
                   formData.append("thumbnailFile", eventData.art.thumbnailFile);
                 }
-
-                // ✅ Log for debugging
                 for (let [key, val] of formData.entries()) {
                   console.log(`${key}:`, val instanceof File ? val.name : val);
                 }
-
-                // ✅ Single API call for both files
                 const response = await UploadEventBannerAPI(eventId, formData);
                 console.log("Art upload successful:", response);
-
-                // ✅ Save updated art info locally
                 const currentEventData = getEventData();
                 saveEventData({
                   ...currentEventData,
@@ -1224,27 +945,18 @@ const validateTickets = () => {
               setIsLoading((prev) => ({ ...prev, saveEvent: false }));
               return;
             }
-          }
-
-          // Handle tickets step submission
-          else if (currentStep === 6) {
+          } else if (currentStep === 6) {
             try {
-              // Prepare tickets data for API submission
               const ticketsData = prepareTicketsDataForAPI(
                 eventData.tickets,
                 eventId
               );
-
               console.log("Submitting tickets data:", ticketsData);
-
-              // Make API call to update tickets
               const response = await UpdateEventTicketsAPI(
                 eventId,
                 ticketsData
               );
               console.log("Tickets update successful:", response);
-
-              // Update the saved event data with the new tickets info
               const currentEventData = getEventData();
               saveEventData({
                 ...currentEventData,
@@ -1256,44 +968,21 @@ const validateTickets = () => {
                 error.response?.data?.message ||
                 "Failed to update ticket information. Please try again."
               );
-
-              // Reset loading state in case of error
               setIsLoading((prev) => ({ ...prev, saveEvent: false }));
               return;
             }
-          }
-
-          // Handle discount codes step submission
-          else if (currentStep === 7) {
-            // Check if all previous steps are completed
-            if (!areAllPreviousStepsCompleted()) {
-              // This is the step before publish (step 7 is discount codes)
-              alert(
-                "Please complete all previous steps before proceeding to publish."
-              );
-
-              // Reset loading state
-              setIsLoading((prev) => ({ ...prev, saveEvent: false }));
-              return;
-            }
-
+          } else if (currentStep === 7) {
             try {
-              // Prepare discount codes data for API submission
               const discountCodesData = prepareDiscountCodesDataForAPI(
                 eventData.discountCodes,
                 eventId
               );
-
               console.log("Submitting discount codes data:", discountCodesData);
-
-              // Make API call to update discount codes
               const response = await UpdateEventDiscountCodesAPI(
                 eventId,
                 discountCodesData
               );
               console.log("Discount codes update successful:", response);
-
-              // Update the saved event data with the new discount codes info
               const currentEventData = getEventData();
               saveEventData({
                 ...currentEventData,
@@ -1305,14 +994,10 @@ const validateTickets = () => {
                 error.response?.data?.message ||
                 "Failed to update discount codes information. Please try again."
               );
-
-              // Reset loading state in case of error
               setIsLoading((prev) => ({ ...prev, saveEvent: false }));
               return;
             }
           }
-
-          // Mark current step as completed
           const stepKey = getStepKeyByNumber(currentStep);
           setStepStatus((prevStatus) => ({
             ...prevStatus,
@@ -1322,8 +1007,6 @@ const validateTickets = () => {
               visited: true,
             },
           }));
-
-          // Fetch updated event status after successful API call
           try {
             const response = await GetEventStatusAPI(eventId);
             if (response.data) {
@@ -1333,69 +1016,58 @@ const validateTickets = () => {
             console.error("Error fetching updated event status:", statusError);
           }
         }
-
-        // For steps after BasicInfo, always navigate to next step
         navigate(`/events/create/${eventId}/${currentStep + 1}`);
         setCurrentStep((prevStep) => prevStep + 1);
       } else {
-        // No eventId and not on step 1 - should not happen, but handle anyway
         alert(
           "Please complete the Basic Info step first to create your event."
         );
       }
     } catch (error) {
-      // General error handler
       console.error("Error in handleNextStep:", error);
       setError("An unexpected error occurred. Please try again.");
     } finally {
-      // Always reset loading state
       setIsLoading((prev) => ({ ...prev, saveEvent: false }));
     }
   };
 
-  /**
-   * Get data for the current step to update
-   * @param {number} step - Current step
-   * @returns {Object} Data for update
-   */
   const getStepDataForUpdate = (step) => {
     switch (step) {
-      case 1: // Basic Info
+      case 1:
         return {
           name: eventData.name,
           private: eventData.eventType === "private",
           organizationId: eventData.organizationId || 0,
           createdBy: eventData.createdBy || 0,
         };
-      case 2: // Location
+      case 2:
         return {
           location: eventData.location,
         };
-      case 3: // Date & Time
+      case 3:
         return {
           dateTime: eventData.dateTime,
         };
-      case 4: // Description
+      case 4:
         return {
           description: eventData.description,
         };
-      case 5: // Art
-        // Handle file uploads separately
+      case 5:
         return {
           art: {
             thumbnailName: eventData.art?.thumbnailName,
             bannerName: eventData.art?.bannerName,
           },
         };
-      case 6: // Tickets
+      case 6:
         return {
           tickets: eventData.tickets,
         };
-      case 7: // Discount Codes
+      case 7:
         return {
           discountCodes: eventData.discountCodes,
         };
-      case 8: // Publish
+      case 8:
         return {
           publishStatus: eventData.publishStatus,
         };
@@ -1404,9 +1076,6 @@ const validateTickets = () => {
     }
   };
 
-  /**
-   * Navigate to the previous step
-   */
   const handlePrevStep = () => {
     if (currentStep > 1) {
       const prevStep = currentStep - 1;
@@ -1415,32 +1084,18 @@ const validateTickets = () => {
     }
   };
 
-  /**
-   * Navigate to a specific step directly
-   * @param {number} stepNumber - Step to navigate to
-   */
   const navigateToStep = (stepNumber) => {
-    // Special case for the publish step (step 8)
     if (stepNumber === 8) {
-      // Check if all previous steps are completed
       if (!areAllPreviousStepsCompleted()) {
-        // Show alert to user
         alert("Please complete all previous steps before publishing.");
         return;
       }
     }
-
-    // Navigate to the selected step
     navigate(`/events/create/${eventId}/${stepNumber}`);
     setCurrentStep(stepNumber);
   };
 
-  /**
-   * Render the current step
-   * @returns {JSX.Element} Current step component
-   */
   const renderCurrentStep = () => {
-    // Check if event data is loading
     if (isLoading.fetchEvent || userLoading) {
       return (
         <div className={styles.loadingContainer}>
@@ -1512,6 +1167,8 @@ const validateTickets = () => {
             handleInputChange={handleInputChange}
             isValid={validateDiscountCodes()}
             stepStatus={stepStatus.discountCodes}
+            // Pass the API call to fetch tickets as a prop
+            fetchAvailableTickets={() => GetEventTicketStructuresAPI(eventId)}
           />
         );
       case 8:
@@ -1529,7 +1186,6 @@ const validateTickets = () => {
     }
   };
 
-  // Get current step name for header
   const getCurrentStepName = () => {
     switch (currentStep) {
       case 1:
@@ -1553,46 +1209,36 @@ const validateTickets = () => {
     }
   };
 
-  // Determine if the Next button should be disabled
   const isNextDisabled = !validateCurrentStep() || isLoading.saveEvent;
-
-  // Determine if the Preview button should be available
   const canPreview = Object.values(stepStatus).some((step) => step.completed);
 
   return (
     <div className={styles.pageContainer}>
-      {/* Event-specific sub-header with breadcrumbs and actions */}
-      {/* This header will have its own hamburger button for mobile */}
       <EventHeaderNav
         currentStep={getCurrentStepName()}
         eventName={eventData.name || "new event"}
         isDraft={true}
         canPreview={canPreview}
-        toggleMobileSidebar={toggleMobileSidebar} // Pass toggle to EventHeaderNav
+        toggleMobileSidebar={toggleMobileSidebar}
       />
-
       <div className={styles.content}>
-        {/* Event Creation Sidebar - now receives mobile state and toggle from context */}
         <EventCreationSidebar
           currentStep={currentStep}
           stepStatus={stepStatus}
           navigateToStep={navigateToStep}
           eventId={eventId}
           onStatusUpdate={(updatedStatus) => {
-            // Only update if there are actual changes to prevent unnecessary re-renders
             const hasChanges = Object.keys(updatedStatus).some(
               (key) =>
                 updatedStatus[key].completed !== stepStatus[key].completed
             );
-
             if (hasChanges) {
               setStepStatus(updatedStatus);
             }
           }}
-          isMobileSidebarOpen={isMobileSidebarOpen} // Pass mobile sidebar state
-          toggleMobileSidebar={toggleMobileSidebar} // Pass toggle to sidebar
+          isMobileSidebarOpen={isMobileSidebarOpen}
+          toggleMobileSidebar={toggleMobileSidebar}
         />
-
         <div className={styles.mainContent}>
           {successMessage && (
             <div className={styles.successMessage}>
@@ -1605,9 +1251,7 @@ const validateTickets = () => {
               </button>
             </div>
           )}
-
           <div className={styles.stepContent}>{renderCurrentStep()}</div>
-
           <div className={styles.navigation}>
             <button
               type="button"
@@ -1617,13 +1261,10 @@ const validateTickets = () => {
             >
               Back
             </button>
-
             {currentStep < 8 ? (
               <button
                 type="button"
                 onClick={handleNextStep}
-                // Remove the disabled attribute to make it always clickable
-                // disabled={isNextDisabled}
                 className={styles.nextButton}
               >
                 {isLoading.saveEvent ? "Saving..." : "Next"}
@@ -1641,8 +1282,6 @@ const validateTickets = () => {
           </div>
         </div>
       </div>
-
-      {/* Footer div with specific styling */}
       <div className={styles.footer}>© 2025 Event Tickets Platform</div>
     </div>
   );

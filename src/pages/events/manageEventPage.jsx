@@ -127,6 +127,7 @@ const EventManagePage = () => {
         eventName={eventData.name}
         isDraft={eventData.status !== "Live"}
         toggleMobileSidebar={toggleManageSidebar} // Pass the local toggle function
+        eventId={eventId}
       />
       <div className={styles.content}>
         {/* EventManageSidebar will use the local isManageSidebarOpen and toggleManageSidebar */}

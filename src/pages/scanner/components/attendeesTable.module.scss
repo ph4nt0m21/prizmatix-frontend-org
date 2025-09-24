@@ -1,0 +1,89 @@
+/* This is the scrolling container */
+.tableContainer {
+  display: block;
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  background: #FFFFFF;
+  border-radius: 8px;
+  border: 1px solid #E5E7EB;
+}
+
+/* The table itself should not have a width constraint */
+.table {
+  border-collapse: collapse;
+  font-size: 14px;
+  /* REMOVED width: 100%; */
+}
+
+/* These styles force columns to take up their natural width without wrapping */
+.table th, .table td {
+  padding: 16px 24px;
+  text-align: left;
+  border-bottom: 1px solid #E5E7EB;
+  white-space: nowrap;
+}
+
+.table th {
+  color: #6B7280;
+  font-weight: 500;
+  background-color: #F9FAFB;
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* ... all other styles remain correct ... */
+
+.table td {
+  color: #374151;
+}
+
+.ticketType {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-weight: 500;
+  font-size: 12px;
+  
+  &.earlyBird { background-color: #D1FAE5; color: #065F46; }
+  &.vip { background-color: #E0E7FF; color: #3730A3; }
+  &.standard { background-color: #FEF3C7; color: #92400E; }
+}
+
+.checkInButton {
+  padding: 6px 16px;
+  background-color: #FFFFFF;
+  border: 1px solid #D1D5DB;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    background-color: #F9FAFB;
+    border-color: #9CA3AF;
+  }
+}
+
+.checkedInStatus {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 16px;
+  background-color: #F5F3FF;
+  color: #7C3AED;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.noResults {
+  text-align: center;
+  padding: 48px;
+  color: #6B7280;
+}

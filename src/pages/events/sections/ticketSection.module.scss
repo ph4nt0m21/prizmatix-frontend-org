@@ -42,6 +42,13 @@
   }
 }
 
+// New wrapper for horizontal scrolling on mobile
+.tableWrapper {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch; // For smooth scrolling on iOS
+}
+
 .ticketsList {
   display: flex;
   flex-direction: column;
@@ -82,16 +89,18 @@
   padding: 0 12px;
   font-size: 14px;
   color: #374151;
-
+  
+  // Flex-basis for desktop view
   &.cellId { flex-basis: 5%; }
-  &.cellTicket { flex-basis: 35%; font-weight: 500; }
+  &.cellTicket { flex-basis: 30%; font-weight: 500; }
   &.cellQuantity { flex-basis: 15%; }
-  &.cellSold { flex-basis: 15%; }
-  &.cellPrice { flex-basis: 20%; }
+  &.cellMaxPurchase { flex-basis: 15%; }
+  &.cellPrice { flex-basis: 25%; }
   &.cellActions { flex-basis: 10%; justify-content: flex-end; }
 }
 
-.editButton {
+.editButton,
+.deleteButton {
   background: none;
   border: none;
   cursor: pointer;
@@ -106,5 +115,49 @@
   &:hover {
     color: #4B5563;
     background-color: #E5E7EB;
+  }
+}
+
+.deleteButton {
+  &:hover {
+    color: #EF4444; /* Red color for delete on hover */
+    background-color: #FEE2E2;
+  }
+}
+
+// ===================================
+// ===== Mobile Responsive Styles ====
+// ===================================
+@media (max-width: 768px) {
+  .ticketSectionContainer {
+    padding: 16px;
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .createTicketButton {
+    width: 100%;
+    justify-content: center;
+  }
+
+  // Force the list to be wide enough to scroll
+  .ticketsList {
+    min-width: 650px; 
+  }
+
+  .ticketCell {
+    padding: 0 8px; // Reduce padding on mobile
+
+    // Give columns minimum widths to prevent squishing
+    &.cellId { min-width: 40px; }
+    &.cellTicket { min-width: 200px; }
+    &.cellQuantity { min-width: 100px; }
+    &.cellMaxPurchase { min-width: 120px; }
+    &.cellPrice { min-width: 90px; }
+    &.cellActions { min-width: 80px; justify-content: center; }
   }
 }

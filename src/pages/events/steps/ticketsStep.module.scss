@@ -1,5 +1,3 @@
-// ticketStep.module.scss
-// Import core variables and mixins from your main styles
 @import '../../../styles/variables';
 @import '../../../styles/mixins';
 
@@ -46,19 +44,7 @@
   padding: 0;
 }
 
-// Error alert styles
-.errorAlert {
-  padding: 12px 16px;
-  background-color: #FEE2E2;
-  border-radius: 6px;
-  margin-bottom: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  color: #B91C1C;
-  font-size: 14px;
-}
-
+// Action menu for each ticket row
 .actionMenuContainer {
   position: relative;
   display: flex;
@@ -68,15 +54,15 @@
 
 .actionMenu {
   position: absolute;
-  top: 100%; // Positions the menu directly below the three-dots button.
-  right: 0; // Aligns the menu to the right of the container.
+  top: 100%;
+  right: 0;
   background-color: white;
   border: 1px solid #e0e0e0;
   border-radius: 6px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   min-width: 120px;
   padding: 4px 0;
-  z-index: 10; // This is crucial. It ensures the menu appears above other table rows.
+  z-index: 10;
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -94,21 +80,30 @@
     &:hover {
       background-color: #f5f5f5;
     }
-
-    // Optional: specific styling for the delete button text
-    &.deleteAction {
-      color: #d93025; // A standard red for delete actions
-    }
   }
 }
 
 .deleteAction {
-  color: #ef4444; // Red for delete actions
+  color: #ef4444;
 
   &:hover {
     color: #ef4444 !important;
     background-color: #fee2e2 !important;
   }
+}
+
+// Empty state (no tickets created yet)
+.emptyTicketsContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 240px;
+  background-color: #f9fafb;
+  border-radius: 8px;
+  padding: 32px;
+  text-align: center;
+  border: 1px solid #f3f4f6;
 }
 
 .emptyStateTitle {
@@ -131,7 +126,7 @@
   height: 44px;
   padding: 0 24px;
   background-color: #ffffff;
-  color: #4f46e5; // Using a purple shade
+  color: #4f46e5;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
   font-size: 14px;
@@ -151,74 +146,15 @@
   }
 }
 
-.dismissButton {
-  background: none;
-  border: none;
-  font-size: 18px;
-  line-height: 1;
-  color: #B91C1C;
-  cursor: pointer;
-}
-
-// Field error styles
-.fieldError {
-  margin-top: 5px;
-  font-size: 12px;
-  color: #e53e3e;
-}
-
-// Tickets container styles
-.emptyTicketsContainer {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 240px;
-  background-color: #f9fafb;
-  border-radius: 8px;
-  padding: 32px;
-  text-align: center;
-  border: 1px solid #f3f4f6; // A softer border
-}
-
-.addTicketButton {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 40px;
-  padding: 0 16px;
-  background-color: #7C3AED;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  
-  svg {
-    margin-right: 8px;
-  }
-  
-  &:hover {
-    background-color: #6d28d9;
-  }
-}
-
-.addTicketContainer {
-  padding: 16px;
-  display: flex;
-  justify-content: flex-end;
-  background-color: #f9fafb;
-  border-top: 1px solid #e5e7eb;
-}
-
+// Main container for the tickets table
 .ticketsContainer {
   border: 1px solid #e5e7eb;
   border-radius: 8px;
   margin-bottom: 20px;
+  // This container is now a layout component for the scrolling wrapper and the add button
 }
 
+// Header row of the table
 .ticketTableHeader {
   display: flex;
   padding: 12px 16px;
@@ -226,48 +162,45 @@
   border-bottom: 1px solid #e5e7eb;
 }
 
+// A single ticket row item
 .ticketItem {
   display: flex;
   align-items: center;
   padding: 12px 16px;
   border-bottom: 1px solid #e5e7eb;
   transition: background-color 0.2s ease;
-  
+
   &:hover {
     background-color: #f9fafb;
   }
-  
+
   &:last-child {
     border-bottom: none;
   }
 }
 
-.ticketHandle {
+// Drag handle icon
+.ticketDrag {
   width: 24px;
-  height: 24px;
   display: flex;
   align-items: center;
-  justify-content: center;
   color: #9ca3af;
   cursor: move;
   margin-right: 8px;
 }
 
-.ticketType {
+// Column styles
+.ticketName {
   flex: 3;
-  font-weight: 500;
   color: #333;
-  cursor: pointer;
-  
-  &:hover {
-    color: #7C3AED;
-  }
+  padding: 0 8px;
 }
 
-.ticketQuantity {
+.ticketCount {
   flex: 1;
+  color: #333;
+  padding: 0 8px;
   text-align: center;
-  color: #4b5563;
 }
 
 .ticketPrice {
@@ -275,12 +208,6 @@
   color: #333;
   padding: 0 20px;
   text-align: center;
-}
-
-.ticketAdvance {
-  flex: 1;
-  text-align: center;
-  color: #4b5563;
 }
 
 .ticketActions {
@@ -291,6 +218,7 @@
   padding: 0 8px;
 }
 
+// Action buttons (Settings, More)
 .ticketActionButton {
   width: 28px;
   height: 28px;
@@ -302,18 +230,51 @@
   border-radius: 4px;
   color: #6b7280;
   cursor: pointer;
-  
+
   &:hover {
     background-color: #f3f4f6;
     color: #333;
   }
+}
 
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+// Inline input fields within the table
+.ticketInput {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background-color: transparent;
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: #e5e7eb;
+  }
+
+  &:focus {
+    outline: none;
+    border-color: #7C3AED;
+    background-color: white;
   }
 }
 
+.inputWithPrefix {
+  position: relative;
+  display: flex;
+  align-items: center;
+
+  .prefix {
+    position: absolute;
+    left: 12px;
+    pointer-events: none;
+    color: #6b7280;
+  }
+
+  .ticketInput {
+    padding-left: 24px;
+  }
+}
+
+// "Add Ticket" row at the bottom
 .addTicketRow {
   display: flex;
   align-items: center;
@@ -337,447 +298,36 @@
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
-  
+
   svg {
     margin-right: 8px;
   }
-  
+
   &:hover {
     background-color: rgba(124, 58, 237, 0.05);
   }
-
-  &:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-    border-color: #d1d5db;
-    color: #9ca3af;
-  }
 }
 
-// Information box styles
-.infoBox {
-  display: flex;
-  background-color: #F5F3FF;
-  border-radius: 8px;
-  padding: 16px;
-  margin-top: 20px;
-}
-
-.infoIcon {
-  flex-shrink: 0;
-  margin-right: 16px;
-  width: 24px;
-  height: 24px;
-  display: flex;
-  align-items: flex-start;
-  
-  svg {
-    width: 20px;
-    height: 20px;
-  }
-}
-
-.infoContent {
-  flex: 1;
-}
-
-.infoTitle {
-  font-size: 14px;
-  font-weight: 600;
-  color: #333;
-  margin: 0 0 4px 0;
-}
-
-.infoText {
-  font-size: 14px;
-  line-height: 1.5;
-  color: #4b5563;
-  margin: 0;
-}
-
-// Form input styles for modal
-.formGroup {
-  margin-bottom: 20px;
-}
-
-.formLabel {
-  display: block;
-  font-size: 14px;
-  font-weight: 600;
-  color: #333;
-  margin-bottom: 6px;
-}
-
-.formDescription {
-  font-size: 13px;
-  color: #666;
-  margin-top: 0;
-  margin-bottom: 8px;
-}
-
-.formInput {
-  width: 100%;
-  height: 44px;
-  padding: 0 16px;
-  background-color: #fff;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  color: #333;
-  font-size: 14px;
-  transition: all 0.2s ease;
-  
-  &:focus {
-    outline: none;
-    border-color: #7C3AED;
-    box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.2);
-  }
-  
-  &::placeholder {
-    color: #999;
+// ===================================
+// ===== Mobile Responsive Styles ====
+// ===================================
+@media (max-width: 768px) {
+  .stepContainer {
+    padding: 24px 16px;
   }
 
-  &.inputError {
-    border-color: #e53e3e;
-    
-    &:focus {
-      box-shadow: 0 0 0 2px rgba(229, 62, 62, 0.2);
-    }
+  // This wrapper will contain the table and allow it to scroll horizontally
+  .tableWrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch; // Smooth scrolling on iOS
   }
-}
 
-// Form row for the modal
-.formRow {
-  display: flex;
-  gap: 16px;
-  
-  @media (max-width: 640px) {
-    flex-direction: column;
-    gap: 20px;
-  }
-  
-  .formGroup {
-    flex: 1;
-  }
-}
-
-// Styles for input with icon
-.inputWithIcon {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
-// In ticketsStep.module.scss
-.inputWithPrefix {
-  position: relative;
-  display: flex;
-  align-items: center;
-
-  .prefix {
-    position: absolute;
-    left: 12px; // Adjust as needed
-    pointer-events: none;
-    color: #6b7280; // Or your preferred color
+  // This inner container will have a minimum width to force the scrollbar to appear
+  .tableContent {
+    min-width: 650px;
   }
 
   .ticketInput {
-    padding-left: 16px; // Make space for the prefix
+    text-align: left; // Align text to the left on mobile for easier reading
   }
 }
-
-.inputIcon {
-  position: absolute;
-  right: 16px;
-  top: 50%;
-  transform: translateY(-50%);
-  pointer-events: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-// Style for date and time inputs
-input[type="date"].formInput,
-input[type="time"].formInput {
-  padding-right: 44px; // Extra padding for the icon
-  
-  // Remove default calendar icon in Chrome
-  &::-webkit-calendar-picker-indicator {
-    opacity: 0;
-    position: absolute;
-    right: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    cursor: pointer;
-  }
-  
-  // Remove default calendar icon in Firefox
-  &::-webkit-clear-button,
-  &::-webkit-inner-spin-button {
-    display: none;
-  }
-}
-
-// Checkbox styles for ticket options
-.checkboxContainer {
-  display: flex;
-  align-items: center;
-  margin-bottom: 16px;
-}
-
-.checkboxInput {
-  width: 18px;
-  height: 18px;
-  margin-right: 10px;
-  accent-color: #7C3AED;
-  cursor: pointer;
-}
-
-.checkboxLabel {
-  font-size: 14px;
-  color: #333;
-  cursor: pointer;
-}
-
-// Modal step navigation
-.modalStepNav {
-  display: flex;
-  margin-bottom: 24px;
-  border-bottom: 1px solid #e5e7eb;
-}
-
-.modalStepButton {
-  padding: 12px 16px;
-  font-size: 14px;
-  font-weight: 500;
-  color: #6b7280;
-  background: none;
-  border: none;
-  border-bottom: 2px solid transparent;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  
-  &.active {
-    color: #7C3AED;
-    border-bottom-color: #7C3AED;
-  }
-  
-  &:hover:not(.active) {
-    color: #4b5563;
-    border-bottom-color: #e5e7eb;
-  }
-}
-
-// Modal action buttons
-.modalActions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  margin-top: 32px;
-  padding-top: 16px;
-  border-top: 1px solid #e5e7eb;
-}
-
-.cancelButton {
-  height: 40px;
-  padding: 0 16px;
-  background-color: white;
-  border: 1px solid #d1d5db;
-  color: #4b5563;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  
-  &:hover {
-    background-color: #f9fafb;
-    border-color: #9ca3af;
-  }
-}
-
-.saveButton {
-  height: 40px;
-  padding: 0 16px;
-  background-color: #7C3AED;
-  border: none;
-  color: white;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  
-  &:hover {
-    background-color: #6d28d9;
-  }
-  
-  &:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-}
-
-// Dropdown styles
-.dropdownInput {
-  position: relative;
-}
-
-.dropdownArrow {
-  position: absolute;
-  right: 16px;
-  top: 50%;
-  transform: translateY(-50%);
-  pointer-events: none;
-}
-
-// Media queries for responsive design
-@media (max-width: 768px) {
-  .stepContainer {
-    padding: 16px;
-  }
-  
-  .ticketTableHeader {
-    display: none;
-  }
-  
-  .ticketItem {
-    flex-wrap: wrap;
-    padding: 16px;
-  }
-  
-  .ticketType {
-    flex: 0 0 100%;
-    margin-bottom: 8px;
-  }
-  
-  .ticketQuantity, 
-  .ticketPrice, 
-  .ticketAdvance {
-    flex: 1;
-    text-align: left;
-    font-size: 12px;
-    
-    &::before {
-      content: attr(data-label);
-      font-weight: 600;
-      margin-right: 4px;
-    }
-  }
-  
-  .ticketActions {
-    flex: 0 0 100%;
-    margin-left: 0;
-    margin-top: 12px;
-    justify-content: flex-end;
-  }
-}
-
-.ticketsTableContainer {
-  width: 100%;
-  border-radius: 8px;
-  overflow: hidden;
-  background-color: #f9fafb;
-  margin-bottom: 24px;
-}
-
-.ticketsTable {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.ticketRow {
-  display: flex;
-  padding: 12px 16px;
-  border-bottom: 1px solid #e5e7eb;
-  align-items: center;
-  background-color: white;
-  
-  &:last-child {
-    border-bottom: none;
-  }
-}
-
-.ticketDrag {
-  width: 24px;
-  display: flex;
-  align-items: center;
-  color: #9ca3af;
-  cursor: move;
-  margin-right: 8px;
-}
-
-.ticketName {
-  flex: 3;
-  color: #333;
-  padding: 0 8px;
-  text-align: center;
-}
-
-.ticketCount {
-  flex: 1;
-  color: #333;
-  padding: 0 8px;
-  text-align: center;
-}
-
-.ticketInput {
-  width: 100%;
-  padding: 8px 8px;
-  border: 1px solid transparent;
-  border-radius: 4px;
-  background-color: white;
-  cursor: pointer;
-  text-align: center;
-  
-  &:hover {
-    border-color: #e5e7eb;
-  }
-  
-  &:focus {
-    outline: none;
-    border-color: #7C3AED;
-  }
-}
-
-@media (max-width: 768px) {
-  .formRow {
-    flex-direction: column;
-    gap: 12px;
-  }
-}
-
-@media (max-width: 768px) {
-  .formInput {
-    width: 100%;
-  }
-}
-
-@media (max-width: 768px) {
-  .buttonGroup {
-    flex-direction: column;
-    gap: 8px;
-
-    button {
-      width: 100%;
-    }
-  }
-}
-
-@media (max-width: 768px) {
-  .stepHeading {
-    font-size: 16px;
-  }
-
-  .stepSubheading {
-    font-size: 14px;
-  }
-}
-
-@media (max-width: 768px) {
-  .tableWrapper {
-    overflow-x: auto;
-  }
-}
-

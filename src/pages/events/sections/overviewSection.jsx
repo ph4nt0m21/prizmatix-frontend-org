@@ -30,6 +30,7 @@ const OverviewSection = ({ dashboardData }) => {
             <div className={styles.metricValue}>
               <span className={styles.dollarSign}>$</span>
               {(dashboardData.revenue ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              {/* {11863.64.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} */}
             </div>
           </div>
           
@@ -96,6 +97,7 @@ const OverviewSection = ({ dashboardData }) => {
               <div className={styles.totalEarnings}>
                 <span className={styles.dollarSign}>$</span>
                 {(dashboardData.revenue ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                {/* {11863.64.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} */}
               </div>
             </div>
             

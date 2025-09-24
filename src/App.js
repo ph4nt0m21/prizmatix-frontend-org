@@ -19,27 +19,29 @@ import TicketEditPage from './pages/events/ticketEditPage';
 import NotFoundPage from "./pages/notFound/notFoundPage";
 // NEW: Import EmailCampaignsPage
 import EmailCampaignsPage from './pages/emailCampaigns/emailCampaignsPage';
+import ReportsPage from './pages/reports/reportsPage';
+import ScannerPage from './pages/scanner/scannerPage';
 
 // Import utilities and components
 import ProtectedRoute from "./security/protectedRoute";
 import LoadingSpinner from "./components/common/loadingSpinner/loadingSpinner";
 import { setupEventDataCleanup, checkAndCleanupEventData } from './utils/eventUtil';
 
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
 /**
  * AppContent defines the routing structure and uses the auth context.
  * It's a separate component to ensure it's rendered inside AuthProvider.
  */
 const AppContent = () => {
-  // Get authentication state from the context, not local state
   const { isAuthenticated, isLoading } = useAuth();
 
   useEffect(() => {
-    // This logic can remain here as it runs on app startup
-    checkAndCleanupEventData(120); // Clear stale event data after 2 hours
+    checkAndCleanupEventData(120); 
     setupEventDataCleanup();
   }, []);
 
-  // Show a loading spinner while the auth state is being determined by the context
   if (isLoading) {
     return (
       <div className="loading-container">
@@ -49,53 +51,73 @@ const AppContent = () => {
   }
 
   return (
-    <Routes>
-      {/* Public Routes: Redirect if authenticated */}
-      <Route
-        path="/login"
-        element={isAuthenticated ? <Navigate to="/" /> : <LoginPage />}
-      />
-      <Route
-        path="/register"
-        element={isAuthenticated ? <Navigate to="/" /> : <RegisterPage />}
-      />
-      <Route
-        path="/forgot-password"
-        element={isAuthenticated ? <Navigate to="/" /> : <ForgotPasswordPage />}
-      />
-      <Route
-        path="/reset-link-sent"
-        element={isAuthenticated ? <Navigate to="/" /> : <ResetLinkSentPage />}
-      />
-      <Route
-        path="/reset-password"
-        element={isAuthenticated ? <Navigate to="/" /> : <ResetPasswordPage />}
-      />
+    <>
+      <Routes>
+        {/* Public Routes */}
+        <Route
+          path="/login"
+          element={isAuthenticated ? <Navigate to="/" /> : <LoginPage />}
+        />
+        <Route
+          path="/register"
+          element={isAuthenticated ? <Navigate to="/" /> : <RegisterPage />}
+        />
+        <Route
+          path="/forgot-password"
+          element={isAuthenticated ? <Navigate to="/" /> : <ForgotPasswordPage />}
+        />
+        <Route
+          path="/reset-link-sent"
+          element={isAuthenticated ? <Navigate to="/" /> : <ResetLinkSentPage />}
+        />
+        <Route
+          path="/reset-password"
+          element={isAuthenticated ? <Navigate to="/" /> : <ResetPasswordPage />}
+        />
 
-      {/* Protected Routes Wrapper */}
-      <Route element={<ProtectedRoute />}>
-        <Route path="/" element={<MainLayout />}>
-          <Route index element={<HomePage />} />
-          <Route path="events" element={<EventsPage />} />
-          <Route path="events/manage/:eventId/:section" element={<EventManagePage />} />
-          <Route path="events/edit-page/:eventId/:step" element={<EventEditPage />} />
-          <Route path="events/edit-page/:eventId" element={<EventEditPage />} />
-          <Route path="events/edit-page" element={<EventEditPage />} />
-          <Route path="events/tickets/:eventId" element={<TicketEditPage />} />
-          <Route path="events/tickets" element={<TicketEditPage />} />
-          <Route path="events/create" element={<CreateEventPage />} />
-          <Route path="events/create/:eventId" element={<CreateEventPage />} />
-          <Route path="events/create/:eventId/:step" element={<CreateEventPage />} />
-          {/* NEW: Add Route for Email Campaigns Page */}
-          <Route path="campaigns" element={<EmailCampaignsPage />} />
+        {/* Protected Routes */}
+        <Route element={<ProtectedRoute />}>
+          <Route path="/" element={<MainLayout />}>
+            <Route index element={<HomePage />} />
+            <Route path="events" element={<EventsPage />} />
+            <Route path="events/manage/:eventId/:section" element={<EventManagePage />} />
+            <Route path="events/edit-page/:eventId/:step" element={<EventEditPage />} />
+            <Route path="events/edit-page/:eventId" element={<EventEditPage />} />
+            <Route path="events/edit-page" element={<EventEditPage />} />
+            <Route path="events/tickets/:eventId" element={<TicketEditPage />} />
+            <Route path="events/tickets" element={<TicketEditPage />} />
+            <Route path="events/create" element={<CreateEventPage />} />
+            <Route path="events/create/:eventId" element={<CreateEventPage />} />
+            <Route path="events/create/:eventId/:step" element={<CreateEventPage />} />
+            <Route path="campaigns" element={<EmailCampaignsPage />} />
+            <Route path="reports" element={<ReportsPage />} />
+            <Route path="reports/:eventId" element={<ReportsPage />} />
+            <Route path="scanner" element={<ScannerPage />} />
+            <Route path="scanner/:eventId" element={<ScannerPage />} />
+          </Route>
         </Route>
-      </Route>
 
-      {/* 404 Not Found Route */}
-      <Route path="*" element={<NotFoundPage />} />
-    </Routes>
+        {/* 404 */}
+        <Route path="*" element={<NotFoundPage />} />
+      </Routes>
+
+      {/* ✅ ToastContainer is outside Routes */}
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={true}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
+    </>
   );
 };
+
 
 /**
  * App component now simply wraps the main content with the AuthProvider.

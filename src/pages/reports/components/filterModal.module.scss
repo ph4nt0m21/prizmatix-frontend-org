@@ -1,0 +1,126 @@
+// ordersAndAttendeesSection/components/FilterModal.module.scss
+
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+}
+
+.modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: #FFFFFF;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+  z-index: 1001;
+  width: 100%;
+  max-width: 500px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  border-bottom: 1px solid #E5E7EB;
+
+  h4 {
+    margin: 0;
+    font-size: 18px;
+  }
+}
+
+.closeButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 24px;
+  color: #6B7280;
+}
+
+.content {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.filterGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  label {
+    font-size: 14px;
+    font-weight: 500;
+    color: #374151;
+  }
+
+  select, input[type="date"] {
+    padding: 8px 12px;
+    border: 1px solid #D1D5DB;
+    border-radius: 6px;
+    font-size: 14px;
+    background-color: #FFFFFF;
+    &:focus {
+      outline: none;
+      border-color: #4F46E5;
+      box-shadow: 0 0 0 1px #4F46E5;
+    }
+  }
+}
+
+.dateRange {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  
+  span {
+    color: #6B7280;
+  }
+}
+
+.footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 24px;
+  border-top: 1px solid #E5E7EB;
+  background-color: #F9FAFB;
+  border-radius: 0 0 8px 8px;
+}
+
+.clearButton {
+  padding: 8px 16px;
+  background-color: #FFFFFF;
+  border: 1px solid #D1D5DB;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+
+  &:hover {
+    background-color: #F9FAFB;
+  }
+}
+
+.applyButton {
+  padding: 8px 16px;
+  background-color: #4F46E5;
+  color: #FFFFFF;
+  border: 1px solid #4F46E5;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+
+  &:hover {
+    background-color: #4338CA;
+  }
+}

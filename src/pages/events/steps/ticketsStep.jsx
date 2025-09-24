@@ -147,123 +147,124 @@ const TicketsStep = ({
 
       <div className={styles.formSection}>
         {tickets.length === 0 ? (
-  // ============== EMPTY STATE ==============
-  // Shown only when there are no tickets.
-  <div className={styles.emptyTicketsContainer}>
-    <h3 className={styles.emptyStateTitle}>Create Your First Ticket</h3>
-    <p className={styles.emptyStateDescription}>Add your first ticket category.</p>
-    <button
-      type="button"
-      className={styles.createTicketButton}
-      onClick={handleAddTicketRow} // This will create the first row and show the table
-    >
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M19 13H13V19H11V13H5V11H11V5H13V11H19V13Z" fill="currentColor" />
-      </svg>
-      Create a Ticket
-    </button>
-  </div>
-) : (
-  // ============== TICKETS TABLE ==============
-  // Shown when at least one ticket exists.
-  // The .ticketsContainer now also acts as the scrollable wrapper
-  <div className={styles.ticketsContainer}>
-    {/* Tickets table header */}
-    <div className={styles.ticketTableHeader}>
-      <div className={styles.ticketDrag}/> {/* Empty div for alignment */}
-      <div className={styles.ticketName}>Name</div>
-      <div className={styles.ticketCount}>Quantity</div>
-      <div className={styles.ticketPrice}>Price</div>
-      <div className={styles.ticketCount}>Max Purchase</div>
-      <div className={styles.ticketActions}>Action</div>
-    </div>
-
-    {/* Tickets list */}
-    {tickets.map((ticket, index) => (
-      <div key={index} className={styles.ticketItem}>
-        <div className={styles.ticketDrag}>
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-grip-vertical" viewBox="0 0 16 16">
-            <path d="M7 2a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 5a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 8a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm-3 3a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm-3 3a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0z" />
-          </svg>
-        </div>
-        <div className={styles.ticketName}>
-          <input 
-            name="name" 
-            type="text" 
-            className={styles.ticketInput} 
-            placeholder="e.g. General Admission" 
-            value={ticket.name || ''} 
-            onChange={(e) => handleTicketRowChange(e, index)} 
-          />
-        </div>
-        <div className={styles.ticketCount}>
-          <input 
-            name="quantity" 
-            type="number" 
-            className={styles.ticketInput} 
-            placeholder="100" 
-            value={ticket.quantity === 'No Limit' ? '' : ticket.quantity || ''} 
-            onChange={(e) => handleTicketRowChange(e, index)} 
-          />
-        </div>
-        <div className={styles.ticketPrice}>
-          <div className={styles.inputWithPrefix}>
-            <span className={styles.prefix}>$</span>
-            <input 
-              name="price" 
-              type="number" 
-              step="0.01" 
-              className={styles.ticketInput} 
-              placeholder="25.00" 
-              value={ticket.price || ''} 
-              onChange={(e) => handleTicketRowChange(e, index)} 
-            />
+          // ============== EMPTY STATE ==============
+          <div className={styles.emptyTicketsContainer}>
+            <h3 className={styles.emptyStateTitle}>Create Your First Ticket</h3>
+            <p className={styles.emptyStateDescription}>Add your first ticket category.</p>
+            <button
+              type="button"
+              className={styles.createTicketButton}
+              onClick={handleAddTicketRow}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M19 13H13V19H11V13H5V11H11V5H13V11H19V13Z" fill="currentColor" />
+              </svg>
+              Create a Ticket
+            </button>
           </div>
-        </div>
-        <div className={styles.ticketCount}>
-          <input
-            name="maxPurchaseAmount"
-            type="number"
-            className={styles.ticketInput}
-            placeholder="10"
-            value={ticket.maxPurchaseAmount === 'No Limit' ? '' : ticket.maxPurchaseAmount || ''}
-            onChange={(e) => handleTicketRowChange(e, index)}
-          />
-        </div>
-        <div className={styles.ticketActions}>
-          <div className={styles.actionMenuContainer}>
-            <button type="button" className={styles.ticketActionButton} onClick={() => handleEditTicket(index)} aria-label="Advanced settings">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="#6B7280" xmlns="http://www.w3.org/2000/svg"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.69-1.62-.92L14.4 2.25C14.34 2.02 14.12 1.87 13.88 1.87H10.12c-.25 0-.47.15-.53.38L9.2 4.87c-.58.23-1.12.54-1.62.92L5.19 4.81c-.22-.08-.47 0-.59.22L2.69 8.35c-.11.2-.06.47.12.61l2.03 1.58c-.05.32-.07.64-.07.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.69 1.62.92l.39 2.62c.06.23.28.38.53.38h3.75c.25 0 .47-.15.53-.38l.39-2.62c.58.23 1.12.54 1.62-.92l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.11-.2-.06-.47-.12-.61l-2.03-1.58zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z" /></svg>
-            </button>
-            <button type="button" className={styles.ticketActionButton} onClick={() => setOpenMenuIndex(openMenuIndex === index ? null : index)} aria-label="More actions">
-              <svg width="4" height="16" viewBox="0 0 4 16" fill="#6B7280" xmlns="http://www.w3.org/2000/svg"><path d="M2 4C3.1 4 4 3.1 4 2s-.9-2-2-2-2 .9-2 2 .9 4 2 4zm0 6c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 6c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z" /></svg>
-            </button>
-            {openMenuIndex === index && (
-              <div className={styles.actionMenu}>
-                <button onClick={() => { handleDuplicateTicket(index); }}>Duplicate</button>
-                <button onClick={() => { handleEditTicket(index); setOpenMenuIndex(null); }}>Edit</button>
-                <button onClick={() => { handleDeleteTicket(index); setOpenMenuIndex(null); }} className={styles.deleteAction}>Delete</button>
+        ) : (
+          // ============== TICKETS TABLE ==============
+          <div className={styles.ticketsContainer}>
+            <div className={styles.tableWrapper}>
+              <div className={styles.tableContent}>
+                {/* Tickets table header */}
+                <div className={styles.ticketTableHeader}>
+                  <div className={styles.ticketDrag} /> {/* Empty div for alignment */}
+                  <div className={styles.ticketName}>Name</div>
+                  <div className={styles.ticketCount}>Quantity</div>
+                  <div className={styles.ticketPrice}>Price</div>
+                  <div className={styles.ticketCount}>Max Purchase</div>
+                  <div className={styles.ticketActions}>Action</div>
+                </div>
+
+                {/* Tickets list */}
+                {tickets.map((ticket, index) => (
+                  <div key={index} className={styles.ticketItem}>
+                    <div className={styles.ticketDrag}>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-grip-vertical" viewBox="0 0 16 16">
+                        <path d="M7 2a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 5a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 8a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm-3 3a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm-3 3a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0z" />
+                      </svg>
+                    </div>
+                    <div className={styles.ticketName}>
+                      <input
+                        name="name"
+                        type="text"
+                        className={styles.ticketInput}
+                        placeholder="e.g. General Admission"
+                        value={ticket.name || ''}
+                        onChange={(e) => handleTicketRowChange(e, index)}
+                      />
+                    </div>
+                    <div className={styles.ticketCount}>
+                      <input
+                        name="quantity"
+                        type="number"
+                        className={styles.ticketInput}
+                        placeholder="100"
+                        value={ticket.quantity === 'No Limit' ? '' : ticket.quantity || ''}
+                        onChange={(e) => handleTicketRowChange(e, index)}
+                      />
+                    </div>
+                    <div className={styles.ticketPrice}>
+                      <div className={styles.inputWithPrefix}>
+                        <span className={styles.prefix}>$</span>
+                        <input
+                          name="price"
+                          type="number"
+                          step="0.01"
+                          className={styles.ticketInput}
+                          placeholder="25.00"
+                          value={ticket.price || ''}
+                          onChange={(e) => handleTicketRowChange(e, index)}
+                        />
+                      </div>
+                    </div>
+                    <div className={styles.ticketCount}>
+                      <input
+                        name="maxPurchaseAmount"
+                        type="number"
+                        className={styles.ticketInput}
+                        placeholder="10"
+                        value={ticket.maxPurchaseAmount === 'No Limit' ? '' : ticket.maxPurchaseAmount || ''}
+                        onChange={(e) => handleTicketRowChange(e, index)}
+                      />
+                    </div>
+                    <div className={styles.ticketActions}>
+                      <div className={styles.actionMenuContainer}>
+                        <button type="button" className={styles.ticketActionButton} onClick={() => handleEditTicket(index)} aria-label="Advanced settings">
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="#6B7280" xmlns="http://www.w3.org/2000/svg"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.69-1.62-.92L14.4 2.25C14.34 2.02 14.12 1.87 13.88 1.87H10.12c-.25 0-.47.15-.53.38L9.2 4.87c-.58.23-1.12.54-1.62.92L5.19 4.81c-.22-.08-.47 0-.59.22L2.69 8.35c-.11.2-.06.47.12.61l2.03 1.58c-.05.32-.07.64-.07.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.69 1.62.92l.39 2.62c.06.23.28.38.53.38h3.75c.25 0 .47-.15.53-.38l.39-2.62c.58.23 1.12.54 1.62-.92l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.11-.2-.06-.47-.12-.61l-2.03-1.58zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z" /></svg>
+                        </button>
+                        <button type="button" className={styles.ticketActionButton} onClick={() => setOpenMenuIndex(openMenuIndex === index ? null : index)} aria-label="More actions">
+                          <svg width="4" height="16" viewBox="0 0 4 16" fill="#6B7280" xmlns="http://www.w3.org/2000/svg"><path d="M2 4C3.1 4 4 3.1 4 2s-.9-2-2-2-2 .9-2 2 .9 4 2 4zm0 6c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 6c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z" /></svg>
+                        </button>
+                        {openMenuIndex === index && (
+                          <div className={styles.actionMenu}>
+                            <button onClick={() => { handleDuplicateTicket(index); }}>Duplicate</button>
+                            <button onClick={() => { handleEditTicket(index); setOpenMenuIndex(null); }}>Edit</button>
+                            <button onClick={() => { handleDeleteTicket(index); setOpenMenuIndex(null); }} className={styles.deleteAction}>Delete</button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
-            )}
-          </div>
-        </div>
-      </div>
-    ))}
+            </div>
 
-    <div className={styles.addTicketRow}>
-      <button
-        type="button"
-        className={styles.addTicketInlineButton}
-        onClick={handleAddTicketRow}
-      >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M19 13H13V19H11V13H5V11H11V5H13V11H19V13Z" fill="currentColor" />
-        </svg>
-        Add Ticket
-      </button>
-    </div>
-  </div>
-)}
+            <div className={styles.addTicketRow}>
+              <button
+                type="button"
+                className={styles.addTicketInlineButton}
+                onClick={handleAddTicketRow}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M19 13H13V19H11V13H5V11H11V5H13V11H19V13Z" fill="currentColor" />
+                </svg>
+                Add Ticket
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Ticket details modal */}

@@ -1,0 +1,100 @@
+.reportsContainer {
+  padding: 1.5rem; // Adjusted padding for mobile
+  background-color: #F9FAFB;
+  min-height: 100vh;
+}
+
+.mainHeader {
+  display: flex;
+  flex-wrap: wrap; // Allows items to wrap on small screens
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem; // Adds space between title and toolbar when they wrap
+  padding: 1rem;
+  background-color: #FFFFFF;
+  border-radius: 8px;
+  border: 1px solid #E5E7EB;
+
+  h1 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 0;
+  }
+}
+
+// NEW: Container for the tabs to enable horizontal scrolling
+.tabsContainer {
+  display: flex;
+  overflow-x: auto;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #E5E7EB;
+  margin-top: 1.5rem;
+
+  // Hide the scrollbar for a cleaner look
+  &::-webkit-scrollbar {
+    display: none;
+  }
+  -ms-overflow-style: none;  // IE and Edge
+  scrollbar-width: none;  // Firefox
+}
+
+.tabButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0.75rem 1rem;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  color: #6B7280;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  white-space: nowrap; // Prevents button text from wrapping
+
+  &.active {
+    color: #4F46E5;
+    border-bottom-color: #4F46E5;
+  }
+}
+
+.mainContent {
+  padding-top: 1.5rem;
+}
+
+.contentCard {
+  background: #FFFFFF;
+  border-radius: 8px;
+  border: 1px solid #E5E7EB;
+  overflow: hidden;
+}
+
+.placeholder {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 60px;
+  text-align: center;
+  color: #6B7280;
+  background: #FFFFFF;
+  border-radius: 8px;
+  border: 1px solid #E5E7EB;
+}
+
+// Media query for larger screens to restore original layout if needed
+@media (min-width: 768px) {
+  .reportsContainer {
+    padding: 24px;
+  }
+
+  .mainHeader {
+    padding: 0 24px;
+    height: 80px; // A fixed height for consistency
+    flex-wrap: nowrap; // Prevent wrapping on desktop
+  }
+
+  .tabsContainer {
+    justify-content: center; // Center the tabs on desktop
+  }
+}

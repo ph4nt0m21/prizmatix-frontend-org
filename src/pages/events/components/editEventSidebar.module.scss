@@ -85,25 +85,6 @@
 
   &.active {
     background-color: #F3EBFE;
-    .stepIconContainer {
-      background-color: #7C3AED;
-      svg {
-        color: #FFFFFF;
-      }
-    }
-  }
-
-  &.completed {
-    .stepIconContainer {
-      background-color: #22C55E;
-      svg {
-        color: #FFFFFF;
-      }
-    }
-  }
-
-  &.visited {
-    // Styles for visited steps (can be same as default or slightly different)
   }
 }
 
@@ -142,11 +123,6 @@
     border-color: #7C3AED;
   }
 
-  &.completedIndicator {
-    background-color: #22C55E;
-    border-color: #22C55E;
-  }
-
   svg {
     width: 10px;
     height: 10px;
@@ -161,10 +137,5 @@
   .active & {
     color: #7C3AED;
     font-weight: 500;
-  }
-
-  .completed & {
-    color: #7C3AED;
-    font-weight: 500;
-  }
+  } 
 }

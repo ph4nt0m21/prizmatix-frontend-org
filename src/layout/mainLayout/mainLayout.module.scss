@@ -21,8 +21,8 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  margin-left: 70px; // Match sidebar width on desktop
-  width: calc(100% - 70px);
+  margin-left: 64px; // Match sidebar width on desktop
+  width: 100%;
   min-height: 100%;
 
   @media (max-width: 768px) {

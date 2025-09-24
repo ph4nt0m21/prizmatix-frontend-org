@@ -148,7 +148,8 @@ const EventCreationSidebar = ({
         (stepStatus.dateTime?.completed || false) &&
         (stepStatus.description?.completed || false) &&
         (stepStatus.art?.completed || false) &&
-        (stepStatus.tickets?.completed || false);
+        (stepStatus.tickets?.completed || false) &&
+        (stepStatus.discountCodes?.completed || false);
 
       if (!areAllPreviousCompleted) {
         alert("Please complete all previous steps before publishing.");

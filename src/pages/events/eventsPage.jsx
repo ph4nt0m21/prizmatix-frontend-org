@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
-import { GetAllOrganizationEventsAPI, DeleteEventAPI, GetEventStatusAPI } from '../../services/allApis';
+import { GetAllOrganizationEventsAPI, DeleteEventAPI, GetEventStatusAPI, GetEventDashboardAPI } from '../../services/allApis';
 import LoadingSpinner from '../../components/common/loadingSpinner/loadingSpinner';
 import styles from './eventsPage.module.scss';
 import { getUserData } from '../../utils/authUtil';
@@ -50,44 +50,57 @@ const EventsPage = () => {
     };
   }, [openMenuId]);
 
-  const fetchEvents = async () => {
-    try {
-      setIsLoading(true);
-      const userData = getUserData();
-      const organizationId = userData?.organizationId;
+const fetchEvents = async () => {
+  try {
+    setIsLoading(true);
+    const userData = getUserData();
+    const organizationId = userData?.organizationId;
 
-      if (!organizationId) {
-        setError('Organization ID not found. Please login again.');
-        setIsLoading(false);
-        return;
-      }
-
-      const params = { page: 0, size: 100, sort: 'startDate,desc' };
-      const response = await GetAllOrganizationEventsAPI(organizationId, params);
-      const initialEvents = response.data || [];
-
-      const eventsWithStatus = await Promise.all(
-        initialEvents.map(async (event) => {
-          try {
-            const statusResponse = await GetEventStatusAPI(event.id);
-            const isPublished = statusResponse.data?.step8Completed || false;
-            return { ...event, isLive: isPublished };
-          } catch (statusError) {
-            console.error(`Failed to get status for event ${event.id}:`, statusError);
-            return { ...event, isLive: false }; // Default to Draft if status check fails
-          }
-        })
-      );
-
-      setEvents(eventsWithStatus);
-      setError(null);
-    } catch (error) {
-      console.error('Error fetching events:', error);
-      setError('Failed to load events. Please try again.');
-    } finally {
+    if (!organizationId) {
+      setError('Organization ID not found. Please login again.');
       setIsLoading(false);
+      return;
     }
-  };
+
+    const params = { page: 0, size: 100, sort: 'startDate,desc' };
+    const response = await GetAllOrganizationEventsAPI(organizationId, params);
+    const initialEvents = response.data || [];
+
+    const eventsWithStatusAndSales = await Promise.all(
+      initialEvents.map(async (event) => {
+        try {
+          const statusResponse = await GetEventStatusAPI(event.id);
+          const isPublished = statusResponse.data?.step8Completed || false;
+
+          // NEW: Fetch dashboard data for each event
+          const dashboardResponse = await GetEventDashboardAPI(event.id);
+          const totalTicketsIssued = dashboardResponse.data?.totalTicketsIssued || 0;
+          const totalTicketCapacity = dashboardResponse.data?.totalTicketCapacity || 0;
+          const revenue = dashboardResponse.data?.revenue || 0;
+
+          return {
+            ...event,
+            isLive: isPublished,
+            totalTicketsIssued,
+            totalTicketCapacity,
+            revenue,
+          };
+        } catch (statusError) {
+          console.error(`Failed to get status or dashboard for event ${event.id}:`, statusError);
+          return { ...event, isLive: false, totalTicketsIssued: 0, totalTicketCapacity: 0 };
+        }
+      })
+    );
+
+    setEvents(eventsWithStatusAndSales);
+    setError(null);
+  } catch (error) {
+    console.error('Error fetching events:', error);
+    setError('Failed to load events. Please try again.');
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   const applyFilters = () => {
     let filtered = [...events];
@@ -174,23 +187,32 @@ const EventsPage = () => {
     return event.isLive ? styles.liveBadge : styles.draftBadge;
   };
 
-  const formatTicketSales = (event) => {
-    return '00/100'; // Per request, show a nil value.
-  };
+// Function to format ticket sales
+const formatTicketSales = (event) => {
+  const sold = event.totalTicketsIssued;
+  const total = event.totalTicketCapacity;
 
-  const calculateGrossRevenue = (event) => {
-    return '$00.0'; // Per request, show a nil value.
-  };
+  if (total === 0) {
+    return `${sold}/-`; // or "0/0"
+  }
+  return `${sold}/${total}`;
+};
 
-  const formatEventDate = (event) => {
-    if (!event.dateTime?.startDate) {
-      return { month: 'TBD', day: '??' };
-    }
-    const date = new Date(event.dateTime.startDate);
-    const month = date.toLocaleString('en-US', { month: 'short' }).toUpperCase();
-    const day = date.getDate();
-    return { month, day };
-  };
+// Function to calculate gross revenue
+const calculateGrossRevenue = (event) => {
+  const revenue = event.revenue;
+  return `$${revenue.toFixed(2)}`;
+};
+
+const formatEventDate = (event) => {
+  if (!event.startDate) {
+    return { month: 'TBD', day: '??' };
+  }
+  const date = new Date(event.startDate);
+  const month = date.toLocaleString('en-US', { month: 'short' }).toUpperCase();
+  const day = date.getDate();
+  return { month, day };
+};
 
   if (isLoading && events.length === 0) {
     return (
@@ -276,7 +298,7 @@ const EventsPage = () => {
             <div className={styles.eventColumn}>Event</div>
             <div className={styles.statusColumn}>Status</div>
             <div className={styles.soldColumn}>Sold</div>
-            <div className={styles.grossColumn}>Gross</div>
+            <div className={styles.grossColumn}>Revenue</div>
             <div className={styles.actionsColumn}></div>
           </div>
 
@@ -290,9 +312,12 @@ const EventsPage = () => {
                       <span className={styles.dateMonth}>{date.month}</span>
                       <span className={styles.dateDay}>{date.day}</span>
                     </div>
-                    <div className={styles.eventThumbnail}>
-                      <img src={event.art?.thumbnailUrl || 'https://placehold.co/64x48/e5e7eb/6b7280?text=Event'} alt={event.name} />
-                    </div>
+<div className={styles.eventThumbnail}>
+  <img 
+    src={event.bannerImage || 'https://placehold.co/64x48/e5e7eb/6b7280?text=Event'} 
+    alt={event.name} 
+  />
+</div>
                     <div className={styles.eventDetails}>
                       <h3 className={styles.eventName}>{event.name}</h3>
                       <p className={styles.eventLocation}>
@@ -307,15 +332,28 @@ const EventsPage = () => {
                     </span>
                   </div>
 
-                  <div className={styles.soldCell}>
-                    <span>{formatTicketSales(event)}</span>
-                    <div className={styles.salesProgress}>
-                      <div className={styles.progressBar}></div>
-                    </div>
-                  </div>
+<div className={styles.soldCell}>
+  <span>{formatTicketSales(event)}</span>
+  <div className={styles.salesProgress}>
+    <div
+      className={styles.progressBar}
+      style={{
+        width: `${
+          event.totalTicketCapacity > 0
+            ? (event.totalTicketsIssued / event.totalTicketCapacity) * 100
+            : 0
+        }%`,
+      }}
+    ></div>
+  </div>
+</div>
 
                   <div className={styles.grossCell}>
                     <span>{calculateGrossRevenue(event)}</span>
+                    {/* <span className={styles.dollarSign}>$</span> */}
+                {(calculateGrossRevenue.revenue)}
+                {/* {16038.00.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} */}
+                    
                   </div>
 
                   <div className={styles.actionsCell}>

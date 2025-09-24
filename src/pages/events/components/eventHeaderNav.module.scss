@@ -1,6 +1,3 @@
-@import '../../../styles/variables';
-@import '../../../styles/mixins';
-
 .eventNav {
   display: flex;
   justify-content: space-between;
@@ -9,27 +6,26 @@
   padding: 8px 64px;
   border-bottom: 1px solid #E9EAEC;
   background: #FFF;
-  box-shadow: 0px 2px 4px 0px rgba(0, 0, 0, 0.00);
+  box-shadow: 0px 2px 4px 0px rgba(0, 0, 0, 0.05);
   align-self: stretch;
 
   @media (max-width: 768px) {
-    padding: 8px 16px; // Adjust padding for mobile
-    justify-content: flex-start; // Align items to start
-    gap: 12px; // Add a gap between button and breadcrumb
+    padding: 8px 16px;
+    justify-content: flex-start;
+    gap: 12px;
   }
 }
 
-// Mobile sidebar toggle button (for Manage Event Page)
 .mobileSidebarToggleButton {
-  display: none; // Hidden by default on desktop
+  display: none;
   background: none;
   border: none;
   cursor: pointer;
   padding: 0;
-  width: 24px; // Size of the icon
+  width: 24px;
   height: 24px;
-  color: #333; // Icon color
-  margin-right: 10px; // Space between button and breadcrumb
+  color: #333;
+  margin-right: 10px;
 
   svg {
     width: 24px;
@@ -41,10 +37,9 @@
   }
 
   @media (max-width: 768px) {
-    display: block; // Show on mobile
+    display: block;
   }
 }
-
 
 .breadcrumbContainer {
   display: flex;
@@ -55,9 +50,9 @@
   display: flex;
   align-items: center;
   font-size: 14px;
-
-  @media (max-width: 768px) {
-    font-size: 13px; // Smaller font on mobile
+  a.breadcrumbLink:nth-of-type(2) {
+    color: #8b5cf6;
+    font-weight: 700;
   }
 }
 
@@ -65,16 +60,9 @@
   color: #6b7280;
   text-decoration: none;
   transition: color 0.2s;
-
   &:hover {
     color: #8b5cf6;
     text-decoration: underline;
-  }
-
-  /* Special styling for the event name link - make it bold and purple */
-  &:nth-of-type(2) {
-    color: #8b5cf6;
-    font-weight: 700;
   }
 }
 
@@ -88,11 +76,39 @@
 .breadcrumbDraft {
   margin-left: 8px;
   padding: 2px 8px;
-  background-color: #fef3c7; /* Yellow background */
-  color: #d97706; /* Yellow/amber text */
+  background-color: #fef3c7;
+  color: #d97706;
   font-size: 12px;
   font-weight: 500;
   border-radius: 4px;
+}
+
+.actionButtonsContainer {
+  position: relative;
+  margin-left: auto;
+
+  @media (max-width: 768px) {
+    margin-left: 0;
+  }
+}
+
+.mobileActionsButton {
+  display: none;
+  background: none;
+  border: 1px solid #D1D5DB;
+  border-radius: 6px;
+  cursor: pointer;
+  padding: 8px;
+
+  svg {
+    color: #6B7280;
+  }
+
+  @media (max-width: 768px) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 }
 
 .actionButtons {
@@ -101,35 +117,220 @@
   gap: 12px;
 
   @media (max-width: 768px) {
-    display: none; // Hide action buttons on mobile, or adjust as needed
+    display: none;
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    flex-direction: column;
+    align-items: stretch;
+    background-color: #fff;
+    border: 1px solid #E9EAEC;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    padding: 8px;
+    z-index: 100;
+    width: 220px;
+
+    &.active {
+      display: flex;
+    }
   }
 }
 
-.previewButton {
+.generateButton {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 16px;
-  background-color: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 4px;
-  color: #4b5563;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  border: 1px solid #8B5CF6;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  white-space: nowrap;
+  background-color: #8B5CF6;
+  color: #FFFFFF;
+
+  svg {
+    stroke: #FFFFFF;
+  }
+
+  &:hover {
+    background-color: #7C3AED;
+    border-color: #7C3AED;
+  }
+}
+
+.copyLinkButton {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #D1D5DB;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  background-color: #FFFFFF;
+
+  svg {
+    color: #6B7280;
+  }
+
+  &:hover {
+    background-color: #F9FAFB;
+    border-color: #a9afb6;
+  }
+
+  &::after {
+    content: attr(data-copied-tooltip);
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #374151;
+    color: #FFFFFF;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+    pointer-events: none;
+    z-index: 10;
+  }
+
+  &:hover::after,
+  &[data-copied-tooltip="Copied!"]::after {
+    opacity: 1;
+    visibility: visible;
+  }
+}
+
+/* --- Modal Styles --- */
+.modalBackdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(17, 24, 39, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+}
+
+.modalContent {
+  background: #FFF;
+  padding: 24px;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 450px;
+  box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+  animation: modal-fade-in 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modal-fade-in {
+  from { opacity: 0; transform: translateY(20px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #E5E7EB;
+  padding-bottom: 16px;
+  margin-bottom: 16px;
+
+  h2 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #111827;
+    margin: 0;
+  }
+}
+
+.closeButton {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: #F3F4F6;
+  }
+}
+
+.modalBody {
+  p {
+    font-size: 14px;
+    color: #6B7280;
+    margin-top: 0;
+    margin-bottom: 20px;
+    line-height: 1.5;
+  }
+}
+
+.formGroup {
+  margin-bottom: 16px;
+}
+
+.formLabel {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 6px;
+}
+
+.formInput {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #D1D5DB;
+  border-radius: 6px;
+  font-size: 14px;
+  box-sizing: border-box;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  background-color: #fff;
+
+  &:focus {
+    outline: none;
+    border-color: #8B5CF6;
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.25);
+  }
+}
+
+.modalFooter {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid #E5E7EB;
+}
+
+.addUserButton {
+  background-color: #8B5CF6;
+  color: #FFFFFF;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background-color 0.2s;
 
-  svg {
-    color: #6b7280;
-  }
-
-  &:hover:not(:disabled) {
-    background-color: #f9fafb;
-    border-color: #d1d5db;
-  }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+  &:hover {
+    background-color: #7C3AED;
   }
 }

@@ -1,4 +1,3 @@
-// src/pages/events/steps/components/TicketDetailsModal.jsx
 import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import styles from "./ticketDetailsModal.module.scss";
@@ -19,6 +18,7 @@ const TicketDetailsModal = ({
   onClose = () => {},
   onSave = () => {},
   saveButtonText = "Create Ticket", // Add this line
+  editingTicket, // ADD THIS PROP
 }) => {
   // State for active panel (Basic or Advance)
   const [activePanel, setActivePanel] = useState("basic");
@@ -34,7 +34,7 @@ const TicketDetailsModal = ({
     name: "",
     price: "",
     quantity: "",
-    maxPurchaseAmount: "No Limit",
+    maxPurchaseAmount: "",
     enableMaxPurchase: false,
     purchaseLimit: "",
     salesStartDate: "",
@@ -42,7 +42,6 @@ const TicketDetailsModal = ({
     salesEndDate: "",
     salesEndTime: "",
     isAdvance: false,
-    advanceAmount: "",
     description: "",
     saleAfterTicket: "",
     ...ticket,
@@ -54,7 +53,7 @@ const TicketDetailsModal = ({
       name: "",
       price: "",
       quantity: "",
-      maxPurchaseAmount: "No Limit",
+      maxPurchaseAmount: "",
       enableMaxPurchase: false,
       purchaseLimit: "",
       salesStartDate: "",
@@ -69,10 +68,23 @@ const TicketDetailsModal = ({
     });
 
     // Set quantity type based on ticket data
-    if (ticket.quantity === "No Limit") {
+    if (ticket.quantity === "No Limit" || !ticket.quantity) {
       setQuantityType("unlimited");
     } else {
       setQuantityType("limited");
+    }
+
+    // Set max purchase checkbox based on ticket data
+    if (ticket.purchaseLimit) {
+      setLocalTicket((prev) => ({
+        ...prev,
+        enableMaxPurchase: true,
+      }));
+    } else {
+      setLocalTicket((prev) => ({
+        ...prev,
+        enableMaxPurchase: false,
+      }));
     }
   }, [ticket]);
 
@@ -135,7 +147,9 @@ const TicketDetailsModal = ({
               />
             </svg>
           </div>
-          <h3 className={styles.sidePanelTitle}>New Ticket</h3>
+          <h3 className={styles.sidePanelTitle}>
+            {editingTicket ? "Edit Ticket" : "New Ticket"}
+          </h3>
           <p className={styles.sidePanelSubtitle}>Ticket Advance Options</p>
 
           <div className={styles.navigationMenu}>
@@ -317,18 +331,18 @@ const TicketDetailsModal = ({
                   {localTicket.enableMaxPurchase && (
                     <div className={styles.formGroup}>
                       <label
-                        htmlFor="purchaseLimit"
+                        htmlFor="maxPurchaseAmount"
                         className={styles.formLabel}
                       >
                         Purchase Limit
                       </label>
                       <input
                         type="text"
-                        id="purchaseLimit"
-                        name="purchaseLimit"
+                        id="maxPurchaseAmount"
+                        name="maxPurchaseAmount" // CORRECTED: Renamed from "purchaseLimit"
                         className={styles.formInput}
                         placeholder="Maximum tickets per order"
-                        value={localTicket.purchaseLimit || ""}
+                        value={localTicket.maxPurchaseAmount || ""}
                         onChange={handleInputChange}
                       />
                     </div>
@@ -536,6 +550,7 @@ TicketDetailsModal.propTypes = {
   onClose: PropTypes.func,
   onSave: PropTypes.func,
   saveButtonText: PropTypes.string, // Add this line
+  editingTicket: PropTypes.object, // ADD THIS PROP TYPE
 };
 
 export default TicketDetailsModal;
