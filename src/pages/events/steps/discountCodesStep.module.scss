@@ -1,4 +1,3 @@
-
 @import '../../../styles/variables';
 @import '../../../styles/mixins';
 
@@ -33,12 +32,6 @@
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-.stepDescription {
-  font-size: 14px;
-  color: #666;
-  margin-top: 0;
 }
 
 .emptyStateTitle {
@@ -81,212 +74,8 @@
   }
 }
 
-.inlineInput {
-  width: 100%;
-  padding: 8px 4px;
-  border: 1px solid transparent;
-  border-radius: 4px;
-  background-color: transparent;
-  font-size: 14px;
-  text-align: center;
-  -moz-appearance: textfield; // Hides arrows from number inputs in Firefox
-
-  &::placeholder {
-    color: #9ca3af;
-  }
-
-  // Hide arrows from number inputs in Chrome, Safari, etc.
-  &::-webkit-outer-spin-button,
-  &::-webkit-inner-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-  }
-  
-  &:hover {
-    border-color: #e5e7eb;
-  }
-  
-  &:focus {
-    outline: none;
-    border-color: #7C3AED;
-    background-color: white;
-  }
-}
-
-// Adjust column alignment for inputs
-.discountPercentage,
-.maxDiscountAmount,
-.minDiscountAmount,
-.discountQuantity {
-  flex: 1;
-  text-align: center;
-  color: #4b5563;
-  // Remove padding if it exists, as the input has its own
-  padding: 0 4px;
-}
-
-.discountCode {
-    padding: 0 4px;
-    .inlineInput {
-        text-align: left;
-        background-color: #f3f4f6; // Makes the code stand out a bit
-        padding: 8px 12px;
-        &:focus {
-            background-color: white;
-        }
-    }
-}
-
-.actionMenuContainer {
-  position: relative;
-}
-
-.actionMenu {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  background-color: white;
-  border-radius: 8px;
-  border: 1px solid #e5e7eb;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  z-index: 10;
-  width: 120px;
-  padding: 8px;
-  display: flex;
-  flex-direction: column;
-
-  button {
-    background: none;
-    border: none;
-    padding: 8px 12px;
-    text-align: left;
-    cursor: pointer;
-    border-radius: 4px;
-    font-size: 14px;
-    color: #333;
-    &:hover {
-      background-color: #f3f4f6;
-    }
-  }
-}
-
-.deleteAction {
-  color: #ef4444;
-  &:hover {
-    color: #ef4444 !important;
-    background-color: #fee2e2 !important;
-  }
-}
-
-.codePill {
-  background-color: #eef2ff;
-  color: #4338ca;
-  padding: 4px 10px;
-  border-radius: 16px;
-  font-weight: 500;
-  font-size: 12px;
-}
-
-.ticketType {
-  flex: 2; // Give it more space
-  text-align: left;
-  padding: 0 8px;
-}
-
-.ticketTypeSelect {
-  width: 100%;
-  padding: 6px 8px;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  background-color: #fff;
-  font-size: 13px;
-  cursor: pointer;
-
-  &:focus {
-    outline: none;
-    border-color: #7C3AED;
-    box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.1);
-  }
-}
-
-// UPDATE existing styles to make space for the new column
-.discountCode {
-  flex: 2;
-  font-weight: 500;
-  color: #333;
-  cursor: pointer;
-  
-  &:hover {
-    color: #7C3AED;
-  }
-}
-
-.discountActions {
-  flex: 1;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
 .formSection {
   padding: 0;
-}
-
-.formGroup {
-  margin-bottom: 24px;
-  width: 100%;
-}
-
-.formLabel {
-  display: block;
-  font-size: 14px;
-  font-weight: 600;
-  color: #333;
-  margin-bottom: 4px;
-}
-
-.formDescription {
-  font-size: 13px;
-  color: #666;
-  margin-top: 0;
-  margin-bottom: 12px;
-}
-
-.formInput {
-  width: 100%;
-  height: 44px;
-  padding: 0 16px;
-  background-color: #fff;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  color: #333;
-  font-size: 14px;
-  transition: all 0.2s ease;
-  
-  &:focus {
-    outline: none;
-    border-color: #7C3AED;
-    box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.2);
-  }
-  
-  &::placeholder {
-    color: #999;
-  }
-}
-
-.fieldError {
-  margin-top: 5px;
-  font-size: 12px;
-  color: #e53e3e;
-}
-
-// Error styling for inputs
-.inputError {
-  border-color: #e53e3e;
-  
-  &:focus {
-    box-shadow: 0 0 0 2px rgba(229, 62, 62, 0.2);
-  }
 }
 
 // Discount Codes container styles
@@ -303,34 +92,9 @@
   text-align: center;
 }
 
-.addDiscountCodeButton {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 40px;
-  padding: 0 16px;
-  background-color: #7C3AED;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  
-  svg {
-    margin-right: 8px;
-  }
-  
-  &:hover {
-    background-color: #6d28d9;
-  }
-}
-
 .discountCodesContainer {
   border: 1px solid #e5e7eb;
   border-radius: 8px;
-  overflow: hidden;
 }
 
 .discountCodeTableHeader {
@@ -342,6 +106,7 @@
   font-size: 12px;
   font-weight: 600;
   color: #4b5563;
+  text-transform: uppercase;
 }
 
 .discountCodeItem {
@@ -351,47 +116,91 @@
   padding: 12px 16px;
   border-bottom: 1px solid #e5e7eb;
   transition: background-color 0.2s ease;
-  
+
   &:hover {
     background-color: #f9fafb;
   }
-  
+
   &:last-child {
     border-bottom: none;
   }
 }
 
-.discountCode {
-  flex: 0 0 150px;
-  font-weight: 500;
-  color: #333;
-  cursor: pointer;
+.discountCode { flex: 2; min-width: 150px; }
+.discountType { flex: 1; min-width: 120px; }
+.discountValue { flex: 1; min-width: 100px; }
+.discountUsageLimit { flex: 1; min-width: 100px; }
+.ticketsApplicable { flex: 2; min-width: 200px; }
+.discountActions { flex: 0 0 50px; justify-content: center; }
+
+.inlineInput, .inlineSelect {
+  width: 100%;
+  padding: 8px 4px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background-color: transparent;
+  font-size: 14px;
+  -moz-appearance: textfield;
+
+  &::placeholder { color: #9ca3af; }
+
+  &::-webkit-outer-spin-button,
+  &::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
   
-  &:hover {
-    color: #7C3AED;
+  &:hover { border-color: #e5e7eb; }
+  
+  &:focus {
+    outline: none;
+    border-color: #7C3AED;
+    background-color: white;
   }
 }
 
-.discountType,
-.discountValue,
-.discountUsageLimit {
-  flex: 0 0 100px;
+.inlineSelect {
+  padding: 8px 4px;
   text-align: left;
-  color: #4b5563;
 }
 
-.ticketsApplicable {
-  flex: 1;
-  padding: 0 8px;
-  font-size: 14px;
-  color: #4b5563;
+.actionMenuContainer {
+  position: relative;
 }
 
-.discountActions {
-  flex: 0 0 40px;
+.actionMenu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background-color: white;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+  min-width: 120px;
+  padding: 4px;
   display: flex;
-  justify-content: center;
-  align-items: center;
+  flex-direction: column;
+
+  button {
+    background: none;
+    border: none;
+    padding: 8px;
+    text-align: left;
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: 14px;
+    color: #333;
+    &:hover { background-color: #f3f4f6; }
+  }
+}
+
+.deleteAction {
+  color: #ef4444;
+  &:hover {
+    color: #ef4444 !important;
+    background-color: #fee2e2 !important;
+  }
 }
 
 .discountActionButton {
@@ -436,217 +245,154 @@
   cursor: pointer;
   transition: all 0.2s ease;
   
-  svg {
-    margin-right: 8px;
-  }
+  svg { margin-right: 8px; }
   
-  &:hover {
-    background-color: rgba(124, 58, 237, 0.05);
-  }
+  &:hover { background-color: rgba(124, 58, 237, 0.05); }
 }
 
-// Form row
-.formRow {
-  display: flex;
-  gap: 16px;
-  
-  @media (max-width: 640px) {
-    flex-direction: column;
-    gap: 20px;
-  }
-  
-  .formGroup {
-    flex: 1;
-  }
-}
-
-// Modal styles
-.modalOverlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 50;
-}
-
-.modalContent {
+.customDropdown {
+  position: relative;
   width: 100%;
-  max-width: 500px;
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
-  padding: 24px;
-  max-height: 90vh;
-  overflow-y: auto;
 }
 
-.modalHeader {
+.dropdownButton {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
-}
-
-.modalTitle {
-  font-size: 18px;
-  font-weight: 600;
+  width: 100%;
+  min-height: 40px;
+  padding: 0 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background-color: white;
+  font-size: 14px;
+  text-align: left;
   color: #333;
-  margin: 0;
-}
-
-.modalCloseButton {
-  background: none;
-  border: none;
-  font-size: 24px;
-  line-height: 1;
-  color: #6b7280;
   cursor: pointer;
-  padding: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 4px;
-  
-  &:hover {
-    background-color: #f3f4f6;
-    color: #333;
+
+  span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 }
 
-// Modal action buttons
-.modalActions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  margin-top: 32px;
-  padding-top: 16px;
-  border-top: 1px solid #e5e7eb;
-}
-
-.cancelButton {
-  height: 40px;
-  padding: 0 16px;
+.dropdownMenu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 10;
+  width: 100%;
+  max-height: 200px;
+  overflow-y: auto;
+  margin-top: 4px;
+  padding: 8px;
   background-color: white;
   border: 1px solid #d1d5db;
-  color: #4b5563;
   border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.checkboxLabel {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   font-size: 14px;
-  font-weight: 500;
+  color: #333;
   cursor: pointer;
-  transition: all 0.2s ease;
-  
-  &:hover {
-    background-color: #f9fafb;
-    border-color: #9ca3af;
+  padding: 8px;
+  border-radius: 4px;
+
+  &:hover { background-color: #f3f4f6; }
+}
+
+.checkboxInput {
+  accent-color: #7c3aed;
+  width: 16px;
+  height: 16px;
+}
+
+/* Add these new column widths */
+.discountStatus { flex: 0 0 80px; text-align: center; }
+.discountActions { 
+  flex: 0 0 100px; 
+  display: flex;
+  gap: 8px;
+  justify-content: center; 
+}
+
+
+/* Add these styles for the toggle switch */
+.toggleSwitch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+
+  input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+
+    &:checked + .slider {
+      background-color: #7C3AED;
+    }
+
+    &:checked + .slider:before {
+      transform: translateX(20px);
+    }
+
+    &:disabled + .slider {
+      background-color: #e5e7eb;
+      cursor: not-allowed;
+    }
+  }
+
+  .slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+    border-radius: 24px;
+
+    &:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
   }
 }
 
-.saveButton {
-  height: 40px;
-  padding: 0 16px;
-  background-color: #7C3AED;
-  border: none;
-  color: white;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  
-  &:hover {
-    background-color: #6d28d9;
-  }
-  
-  &:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-}
-
-// Media queries for responsive design
+// ===================================
+// ===== Mobile Responsive Styles ====
+// ===================================
 @media (max-width: 768px) {
   .stepContainer {
-    padding: 16px;
-  }
-  
-  .discountCodeTableHeader {
-    display: none;
-  }
-  
-  .discountCodeItem {
-    flex-wrap: wrap;
-    padding: 16px;
-  }
-  
-  .discountCode {
-    flex: 0 0 100%;
-    margin-bottom: 8px;
-  }
-  
-  .discountPercentage, 
-  .maxDiscountAmount, 
-  .minDiscountAmount, 
-  .discountQuantity {
-    flex: 1;
-    text-align: left;
-    font-size: 12px;
-    
-    &::before {
-      content: attr(data-label);
-      font-weight: 600;
-      margin-right: 4px;
-    }
-  }
-  
-  .discountActions {
-    flex: 0 0 100%;
-    margin-left: 0;
-    margin-top: 12px;
-    justify-content: flex-end;
-  }
-}
-
-@media (max-width: 768px) {
-  .formRow {
-    flex-direction: column;
-    gap: 12px;
-  }
-}
-
-@media (max-width: 768px) {
-  .formInput {
-    width: 100%;
-  }
-}
-
-@media (max-width: 768px) {
-  .buttonGroup {
-    flex-direction: column;
-    gap: 8px;
-
-    button {
-      width: 100%;
-    }
-  }
-}
-
-@media (max-width: 768px) {
-  .stepHeading {
-    font-size: 16px;
+    padding: 24px 16px;
   }
 
-  .stepSubheading {
-    font-size: 14px;
-  }
-}
-
-@media (max-width: 768px) {
+  // This wrapper will contain the table and allow it to scroll horizontally
   .tableWrapper {
     overflow-x: auto;
+    -webkit-overflow-scrolling: touch; // Smooth scrolling on iOS
+  }
+
+  // This inner container will have a minimum width to force the scrollbar to appear
+  .tableContent {
+    min-width: 800px;
+  }
+
+  .inlineInput, .inlineSelect, .dropdownButton {
+    text-align: left; // Align text to the left on mobile for easier reading
   }
 }

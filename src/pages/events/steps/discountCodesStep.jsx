@@ -44,8 +44,8 @@ const DiscountCodesStep = ({
       setIsLoadingTickets(true);
       try {
         const response = await fetchAvailableTickets();
-        if (response.data && Array.isArray(response.data.ticketStructures)) {
-          setAvailableTickets(response.data.ticketStructures);
+        if (response.data && Array.isArray(response.data)) {
+          setAvailableTickets(response.data);
           ticketsFetched.current = true;
         } else {
           setAvailableTickets([]);
@@ -71,6 +71,7 @@ const DiscountCodesStep = ({
       validUntilTime: '',
       usageLimit: '',
       ticketsApplicable: [],
+      isActive: true,
     };
     setDiscountCodes(prevCodes => [...prevCodes, newDiscountCode]);
   };
@@ -119,6 +120,12 @@ const DiscountCodesStep = ({
     setDiscountCodes(updatedDiscountCodes);
   };
 
+  const isExpired = (code) => {
+  if (!code.validUntilDate || !code.validUntilTime) return false;
+  const expiry = new Date(`${code.validUntilDate}T${code.validUntilTime}:00Z`);
+  return new Date() > expiry;
+  };
+
   const getSelectedTicketNames = (selectedIds) => {
     if (!selectedIds || selectedIds.length === 0) {
       return "All Tickets";
@@ -158,104 +165,110 @@ const DiscountCodesStep = ({
           </div>
         ) : (
           <div className={styles.discountCodesContainer}>
-            <div className={styles.discountCodeTableHeader}>
-              <div className={styles.discountCode}>Code</div>
-              <div className={styles.discountType}>Type</div>
-              <div className={styles.discountValue}>Value</div>
-              <div className={styles.discountUsageLimit}>Usage Limit</div>
-              <div className={styles.ticketsApplicable}>Applicable Tickets</div>
-              <div className={styles.discountActions}>Action</div>
-            </div>
+            <div className={styles.tableWrapper}>
+              <div className={styles.tableContent}>
+                <div className={styles.discountCodeTableHeader}>
+                  <div className={styles.discountCode}>Code</div>
+                  <div className={styles.discountType}>Type</div>
+                  <div className={styles.discountValue}>Value</div>
+                  <div className={styles.discountUsageLimit}>Usage Limit</div>
+                  <div className={styles.ticketsApplicable}>Applicable Tickets</div>
+                  <div className={styles.discountStatus}>Status</div>
 
-            {discountCodes.map((code, index) => (
-              <div key={index} className={styles.discountCodeItem}>
-                <div className={styles.discountCode}>
-                  <input
-                    type="text"
-                    name="code"
-                    placeholder="e.g. BUZZ25"
-                    value={code.code || ''}
-                    onChange={(e) => handleDiscountCodeRowChange(e, index)}
-                    className={styles.inlineInput}
-                  />
+                  <div className={styles.discountActions}>Action</div>
                 </div>
-                <div className={styles.discountType}>
-                  <select
-                    name="type"
-                    value={code.type || 'percentage'}
-                    onChange={(e) => handleDiscountCodeRowChange(e, index)}
-                    className={styles.inlineSelect}
-                  >
-                    <option value="percentage">Percentage (%)</option>
-                    <option value="fixed">Fixed ($)</option>
-                  </select>
-                </div>
-                <div className={styles.discountValue}>
-                  <input
-                    type="number"
-                    name="value"
-                    placeholder="25"
-                    step="0.01"
-                    value={code.value || ''}
-                    onChange={(e) => handleDiscountCodeRowChange(e, index)}
-                    className={styles.inlineInput}
-                  />
-                </div>
-                <div className={styles.discountUsageLimit}>
-                  <input
-                    type="number"
-                    name="usageLimit"
-                    placeholder="100"
-                    value={code.usageLimit || ''}
-                    onChange={(e) => handleDiscountCodeRowChange(e, index)}
-                    className={styles.inlineInput}
-                  />
-                </div>
-                <div className={styles.ticketsApplicable}>
-                  <div className={styles.customDropdown}>
-                    <button
-                      type="button"
-                      className={styles.dropdownButton}
-                      onClick={(e) => handleTicketDropdownClick(e, index)}
-                    >
-                      <span>{isLoadingTickets ? 'Loading...' : getSelectedTicketNames(code.ticketsApplicable)}</span>
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M7 10L12 15L17 10H7Z" fill="currentColor" />
-                      </svg>
-                    </button>
-                    {openDropdownIndex === index && (
-                      <div className={styles.dropdownMenu}>
-                        {availableTickets.map((ticket) => (
-                          <label key={ticket.id} className={styles.checkboxLabel}>
-                            <input
-                              type="checkbox"
-                              value={ticket.id}
-                              checked={code.ticketsApplicable.includes(ticket.id)}
-                              onChange={(e) => handleTicketCheckChange(e, index)}
-                              className={styles.checkboxInput}
-                            />
-                            {ticket.name}
-                          </label>
-                        ))}
+
+                {discountCodes.map((code, index) => (
+                  <div key={index} className={styles.discountCodeItem}>
+                    <div className={styles.discountCode}>
+                      <input
+                        type="text"
+                        name="code"
+                        placeholder="e.g. BUZZ25"
+                        value={code.code || ''}
+                        onChange={(e) => handleDiscountCodeRowChange(e, index)}
+                        className={styles.inlineInput}
+                      />
+                    </div>
+                    <div className={styles.discountType}>
+                      <select
+                        name="type"
+                        value={code.type || 'percentage'}
+                        onChange={(e) => handleDiscountCodeRowChange(e, index)}
+                        className={styles.inlineSelect}
+                      >
+                        <option value="percentage">Percentage (%)</option>
+                        <option value="fixed">Fixed ($)</option>
+                      </select>
+                    </div>
+                    <div className={styles.discountValue}>
+                      <input
+                        type="number"
+                        name="value"
+                        placeholder="25"
+                        step="0.01"
+                        value={code.value || ''}
+                        onChange={(e) => handleDiscountCodeRowChange(e, index)}
+                        className={styles.inlineInput}
+                      />
+                    </div>
+                    <div className={styles.discountUsageLimit}>
+                      <input
+                        type="number"
+                        name="usageLimit"
+                        placeholder="100"
+                        value={code.usageLimit || ''}
+                        onChange={(e) => handleDiscountCodeRowChange(e, index)}
+                        className={styles.inlineInput}
+                      />
+                    </div>
+                    <div className={styles.ticketsApplicable}>
+                      <div className={styles.customDropdown}>
+                        <button
+                          type="button"
+                          className={styles.dropdownButton}
+                          onClick={(e) => handleTicketDropdownClick(e, index)}
+                        >
+                          <span>{isLoadingTickets ? 'Loading...' : getSelectedTicketNames(code.ticketsApplicable)}</span>
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M7 10L12 15L17 10H7Z" fill="currentColor" />
+                          </svg>
+                        </button>
+                        {openDropdownIndex === index && (
+                          <div className={styles.dropdownMenu}>
+                            {availableTickets.map((ticket) => (
+                              <label key={ticket.id} className={styles.checkboxLabel}>
+                                <input
+                                  type="checkbox"
+                                  value={ticket.id}
+                                  checked={code.ticketsApplicable.includes(ticket.id)}
+                                  onChange={(e) => handleTicketCheckChange(e, index)}
+                                  className={styles.checkboxInput}
+                                />
+                                {ticket.name}
+                              </label>
+                            ))}
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
-                </div>
-                <div className={styles.discountActions}>
-                  <div className={styles.actionMenuContainer}>
-                    <button type="button" className={styles.discountActionButton} onClick={(e) => { e.stopPropagation(); setOpenMenuIndex(openMenuIndex === index ? null : index); }} aria-label="Actions">
-                      <svg width="4" height="16" viewBox="0 0 4 16" fill="#6B7280" xmlns="http://www.w3.org/2000/svg"><path d="M2 4C3.1 4 4 3.1 4 2s-.9-2-2-2-2 .9-2 2 .9 4 2 4zm0 6c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 6c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z" /></svg>
-                    </button>
-                    {openMenuIndex === index && (
-                      <div className={styles.actionMenu}>
-                        <button onClick={(e) => { e.stopPropagation(); handleEditDiscountCode(index); setOpenMenuIndex(null); }}>Edit in Modal</button>
-                        <button onClick={(e) => { e.stopPropagation(); handleDeleteDiscountCode(index); setOpenMenuIndex(null); }} className={styles.deleteAction}>Delete</button>
+                    </div>
+                    <div className={styles.discountActions}>
+                      <div className={styles.actionMenuContainer}>
+                        <button type="button" className={styles.discountActionButton} onClick={(e) => { e.stopPropagation(); setOpenMenuIndex(openMenuIndex === index ? null : index); }} aria-label="Actions">
+                          <svg width="4" height="16" viewBox="0 0 4 16" fill="#6B7280" xmlns="http://www.w3.org/2000/svg"><path d="M2 4C3.1 4 4 3.1 4 2s-.9-2-2-2-2 .9-2 2 .9 4 2 4zm0 6c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 6c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z" /></svg>
+                        </button>
+                        {openMenuIndex === index && (
+                          <div className={styles.actionMenu}>
+                            <button onClick={(e) => { e.stopPropagation(); handleEditDiscountCode(index); setOpenMenuIndex(null); }}>Edit in Modal</button>
+                            <button onClick={(e) => { e.stopPropagation(); handleDeleteDiscountCode(index); setOpenMenuIndex(null); }} className={styles.deleteAction}>Delete</button>
+                          </div>
+                        )}
                       </div>
-                    )}
+                    </div>
                   </div>
-                </div>
+                ))}
               </div>
-            ))}
+            </div>
 
             <div className={styles.addDiscountCodeRow}>
               <button type="button" className={styles.addDiscountCodeInlineButton} onClick={handleAddDiscountCodeRow}>

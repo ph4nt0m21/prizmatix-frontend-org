@@ -147,7 +147,8 @@ const CreateEventPage = () => {
       stepStatus.dateTime.completed &&
       stepStatus.description.completed &&
       stepStatus.art.completed &&
-      stepStatus.tickets.completed
+      stepStatus.tickets.completed &&
+      stepStatus.discountCodes.completed 
     );
   };
 
@@ -638,41 +639,48 @@ const CreateEventPage = () => {
     return isValid;
   };
 
-  const validateDiscountCodes = () => {
-    // Discount codes are optional, so it's always valid if empty
-    if (!eventData.discountCodes || eventData.discountCodes.length === 0) {
+  // src/pages/createEventPage.jsx
+
+// src/pages/createEventPage.jsx
+
+// src/pages/createEventPage.jsx
+
+const validateDiscountCodes = () => {
+  if (!eventData.discountCodes || eventData.discountCodes.length === 0) {
+    return true;
+  }
+
+  console.log("--- Running Discount Code Validation ---");
+
+  const invalidDiscountCodes = eventData.discountCodes.filter((code, index) => {
+    console.log(`[${index}] Validating code object:`, code);
+
+    if (!code.code || code.code.trim() === "") {
+      console.log(`[${index}] FAILED: Code name is missing.`);
       return true;
     }
-    
-    // Check if all discount codes have required fields
-    const invalidDiscountCodes = eventData.discountCodes.filter((code) => {
-      // Basic required fields validation
-      if (!code.code || code.code.trim() === "") {
-        return true;
-      }
-      if (!code.type || (code.type !== 'fixed' && code.type !== 'percentage')) {
-        return true;
-      }
-      if (code.value === null || isNaN(parseFloat(code.value)) || parseFloat(code.value) < 0) {
-        return true;
-      }
-      if (!code.validFromDate || !code.validFromTime) {
-        return true;
-      }
-      if (!code.validUntilDate || !code.validUntilTime) {
-        return true;
-      }
-      if (code.usageLimit === null || isNaN(parseInt(code.usageLimit, 10)) || parseInt(code.usageLimit, 10) < 0) {
-        return true;
-      }
-      if (!Array.isArray(code.ticketsApplicable) || code.ticketsApplicable.length === 0) {
-        return true;
-      }
-      return false;
-    });
+    if (!code.type || (code.type !== 'fixed' && code.type !== 'percentage')) {
+      console.log(`[${index}] FAILED: Type is invalid.`);
+      return true;
+    }
+    if (code.value === null || code.value === '' || isNaN(parseFloat(code.value)) || parseFloat(code.value) < 0) {
+      console.log(`[${index}] FAILED: Value is invalid.`);
+      return true;
+    }
+    if (code.usageLimit && (isNaN(parseInt(code.usageLimit, 10)) || parseInt(code.usageLimit, 10) < 0)) {
+      console.log(`[${index}] FAILED: Usage Limit is invalid.`);
+      return true;
+    }
 
-    return invalidDiscountCodes.length === 0;
-  };
+    console.log(`[${index}] PASSED: All checks for this code are valid.`);
+    return false;
+  });
+
+  const isStepValid = invalidDiscountCodes.length === 0;
+  console.log(`--- Validation Result: ${isStepValid ? 'VALID' : 'INVALID'} ---`);
+
+  return isStepValid;
+};
 
   const validatePublish = () => {
     if (!eventData.name) {
@@ -964,13 +972,6 @@ const CreateEventPage = () => {
               return;
             }
           } else if (currentStep === 7) {
-            if (!areAllPreviousStepsCompleted()) {
-              alert(
-                "Please complete all previous steps before proceeding to publish."
-              );
-              setIsLoading((prev) => ({ ...prev, saveEvent: false }));
-              return;
-            }
             try {
               const discountCodesData = prepareDiscountCodesDataForAPI(
                 eventData.discountCodes,

@@ -14,7 +14,7 @@ import { ReactComponent as ReportsIcon } from '../../assets/icons/reports-icon.s
 import { ReactComponent as HelpIcon } from '../../assets/icons/help-icon.svg';
 import { ReactComponent as SettingsIcon } from '../../assets/icons/settings-icon.svg';
 import { ReactComponent as LogoutIcon } from '../../assets/icons/logout-icon.svg';
-import { ReactComponent as CampaignsIcon } from '../../assets/icons/campaigns-icon.svg'; // Campaigns icon
+import { ReactComponent as CampaignsIcon } from '../../assets/icons/campaigns-icon.svg';
 
 // Import logo
 import logoImage from '../../assets/images/small-logo.svg';
@@ -22,21 +22,32 @@ import logoImage from '../../assets/images/small-logo.svg';
 // Import the new SettingsOverlay component
 import SettingsOverlay from '../../../src/components/settingsOverlay/settingsOverlay';
 
-/**
- * SideNavBar component provides the main navigation for the application.
- * It is now responsive, hiding on mobile by default and appearing as an overlay.
- *
- * @param {Object} props - Component props
- * @param {boolean} props.isMobileSidebarOpen - State to control sidebar visibility on mobile
- * @param {Function} props.toggleMobileSidebar - Function to toggle sidebar visibility
- * @returns {JSX.Element} SideNavBar component
- */
+
+// NEW: Inline SVG component for the Scanner Icon
+const ScannerIcon = (props) => (
+  <svg 
+    width="24" 
+    height="24" 
+    viewBox="0 0 48 48" 
+    fill="none" 
+    xmlns="http://www.w3.org/2000/svg"
+    {...props}
+  >
+    <path fillRule="evenodd" clipRule="evenodd" d="M29.0022 33.0037H18.998C16.7881 33.0037 14.9963 31.212 14.9963 29.002V18.9979C14.9963 16.788 16.7881 14.9962 18.998 14.9962H29.0022C31.2121 14.9962 33.0038 16.788 33.0038 18.9979V29.002C33.0038 31.212 31.2121 33.0037 29.0022 33.0037Z" 
+      stroke="currentColor" fill="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"
+    />
+    <path fillRule="evenodd" clipRule="evenodd" d="M22.4584 28.1347L23.5258 27.5735C23.8229 27.4174 24.1781 27.4174 24.4752 27.5735L25.5427 28.1347C25.8868 28.3158 26.303 28.2858 26.6171 28.0567L27.0153 27.7676C27.3294 27.5395 27.4865 27.1523 27.4214 26.7702L27.2174 25.5817C27.1603 25.2505 27.2704 24.9134 27.5105 24.6783L28.3738 23.837C28.652 23.5658 28.752 23.1607 28.6319 22.7915L28.4799 22.3233C28.3598 21.9542 28.0407 21.6851 27.6565 21.629L26.463 21.456C26.1309 21.4079 25.8438 21.1989 25.6947 20.8977L25.1605 19.8163C24.9894 19.4681 24.6343 19.248 24.2461 19.248H23.7539C23.3658 19.248 23.0106 19.4681 22.8395 19.8163L22.3063 20.8977C22.1573 21.1989 21.8701 21.4079 21.538 21.456L20.3445 21.629C19.9603 21.6851 19.6412 21.9542 19.5212 22.3233L19.3691 22.7915C19.249 23.1607 19.3491 23.5658 19.6272 23.837L20.4906 24.6783C20.7307 24.9124 20.8407 25.2505 20.7837 25.5817L20.5796 26.7702C20.5136 27.1533 20.6716 27.5395 20.9858 27.7676L21.3839 28.0567C21.6981 28.2848 22.1142 28.3148 22.4584 28.1347Z" 
+      stroke="#36353B" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"
+    />
+  </svg>
+);
+
+
 const SideNavBar = ({ isMobileSidebarOpen, toggleMobileSidebar }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [currentUser, setCurrentUser] = useState(null);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  // NEW: State for Settings Overlay
   const [isSettingsOverlayOpen, setIsSettingsOverlayOpen] = useState(false);
   const profileDropdownRef = useRef(null);
   const sideNavRef = useRef(null);
@@ -83,7 +94,7 @@ const SideNavBar = ({ isMobileSidebarOpen, toggleMobileSidebar }) => {
     if (isMobileSidebarOpen && window.innerWidth <= 768) {
       toggleMobileSidebar();
     }
-  }, [location.pathname]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [location.pathname]);
 
   const handleLogout = () => {
     Cookies.remove('token');
@@ -98,18 +109,19 @@ const SideNavBar = ({ isMobileSidebarOpen, toggleMobileSidebar }) => {
     setIsProfileOpen(!isProfileOpen);
   };
 
-  // NEW: Handle opening the settings overlay
   const handleOpenSettings = () => {
     setIsSettingsOverlayOpen(true);
-    setIsProfileOpen(false); // Close profile dropdown when settings opens
+    setIsProfileOpen(false);
   };
 
   // Navigation items
   const navItems = [
     { id: 'overview', path: '/', icon: OverviewIcon, label: 'Overview' },
     { id: 'events', path: '/events', icon: EventsIcon, label: 'Events' },
-    { id: 'reports', path: '/reports', icon: ReportsIcon, label: 'Reports' },
-    { id: 'campaigns', path: '/campaigns', icon: CampaignsIcon, label: 'Campaigns' }
+    { id: 'reports', path: '/reports/87', icon: ReportsIcon, label: 'Reports' },
+    { id: 'campaigns', path: '/campaigns', icon: CampaignsIcon, label: 'Campaigns' },
+    // The ScannerIcon component is now used here
+    { id: 'scanner', path: '/scanner/87', icon: ScannerIcon, label: 'Scanner' }
   ];
 
   // Bottom navigation items
@@ -208,7 +220,6 @@ const SideNavBar = ({ isMobileSidebarOpen, toggleMobileSidebar }) => {
 
                   <div className={styles.dropdownDivider}></div>
 
-                  {/* Changed NavLink to button/div with onClick */}
                   <button className={styles.dropdownItem} onClick={handleOpenSettings}>
                     <SettingsIcon className={styles.dropdownIcon} />
                     <span>Settings</span>
@@ -225,7 +236,6 @@ const SideNavBar = ({ isMobileSidebarOpen, toggleMobileSidebar }) => {
         </div>
       </nav>
 
-      {/* NEW: Render Settings Overlay */}
       <SettingsOverlay
         isOpen={isSettingsOverlayOpen}
         onClose={() => setIsSettingsOverlayOpen(false)}

@@ -315,12 +315,49 @@ export const prepareDiscountCodesDataForAPI = (
   const userData = getUserData();
   const eventData = getEventData();
 
-  // Use provided eventId first, or fall back to stored eventId
   const eventDataId = eventId || eventData?.eventId || 0;
+
+  // Helper to format provided date & time into ISO string
+  const formatToISO = (date, time) => {
+    if (!date || !time) return null;
+    const paddedTime = time.includes(':') ? time : `${time}:00`;
+    return `${date}T${paddedTime}:00.000Z`;
+  };
+
+  // Fallback to 12 hours ago from now (current system time)
+  const fallbackValidFrom = new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString();
+
+  // Get the main event's date and time for fallback logic
+  const eventDateTime = eventData?.dateTime || {};
 
   return {
     id: parseInt(eventDataId, 10),
-    usesDiscountCodes: Array.isArray(discountCodes) && discountCodes.length > 0,
+    discountCodes: discountCodes.map((code) => {
+      // Create a list of ticket IDs applicable to this discount code
+      const ticketsApplicable = code.ticketsApplicable.map((ticketId) =>
+        parseInt(ticketId, 10)
+      );
+
+      const validFrom =
+        formatToISO(code.validFromDate, code.validFromTime) || fallbackValidFrom;
+      
+      const validUntil =
+        formatToISO(code.validUntilDate, code.validUntilTime) ||
+        formatToISO(eventDateTime.startDate, eventDateTime.startTime);
+
+      return {
+        id: code.id || null, 
+        code: code.code,
+        type: code.type, 
+        value: parseFloat(code.value),
+        validFrom: validFrom,
+        validUntil: validUntil,
+        usageLimit: parseInt(code.usageLimit, 10) || 0,
+        isActive: true, 
+        isDeleted: false,
+        ticketsApplicable: ticketsApplicable,
+      };
+    }),
     updatedBy: userData?.id || eventData?.createdBy || 0,
   };
 };

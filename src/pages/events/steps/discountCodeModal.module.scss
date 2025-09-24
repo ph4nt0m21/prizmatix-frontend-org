@@ -138,6 +138,7 @@
   flex-grow: 1;
   display: flex;
   flex-direction: column;
+  overflow-y: hidden; /* Add this line */
 }
 
 .modalHeader {
@@ -363,5 +364,57 @@
 
   &:hover {
     background-color: #6d28d9;
+  }
+}
+
+/* Add these styles for the toggle in the modal */
+.toggleContainer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.toggleLabel {
+  font-size: 14px;
+  color: #4b5563;
+}
+
+/* You can reuse the toggleSwitch and slider styles from the other file, 
+   or define them here if they are not in a global/shared stylesheet */
+.toggleSwitch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+  input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+    &:checked + .slider { background-color: #7C3AED; }
+    &:checked + .slider:before { transform: translateX(20px); }
+    &:disabled + .slider { background-color: #e5e7eb; cursor: not-allowed; }
+  }
+  .slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+    border-radius: 24px;
+    &:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
   }
 }

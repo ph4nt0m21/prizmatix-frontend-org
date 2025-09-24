@@ -1,0 +1,103 @@
+/* This is the scrolling container */
+.tableContainer {
+  display: block;
+  width: 100%;
+  overflow-x: auto;
+  /* Add a fallback for Webkit browsers for better scrollbar styling if needed */
+  -webkit-overflow-scrolling: touch;
+}
+
+/* The table itself should not have a width constraint */
+.table {
+  border-collapse: collapse;
+  font-size: 14px;
+  /* REMOVED width: 100%; */
+}
+
+/* These styles force columns to take up their natural width without wrapping */
+.table th, .table td {
+  padding: 12px 24px;
+  text-align: left;
+  border-bottom: 1px solid #E5E7EB;
+  white-space: nowrap;
+}
+
+.table th {
+  color: #6B7280;
+  font-weight: 500;
+  background-color: #F9FAFB;
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+/* ... all other styles remain correct ... */
+
+.table td {
+  color: #374151;
+}
+
+.tableRow {
+  cursor: pointer;
+  &:hover {
+    background-color: #F9FAFB;
+  }
+}
+
+.ticketType {
+  background-color: #D1FAE5;
+  color: #065F46;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-weight: 500;
+  font-size: 12px;
+}
+
+.discountCode {
+  color: #2563EB;
+  font-weight: 500;
+}
+
+.actionCell { }
+
+.downloadButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #6B7280;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  border-radius: 50%;
+  font-size: 16px;
+
+  &:hover {
+    background-color: #E5E7EB;
+    color: #111827;
+  }
+}
+
+.pagination {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 16px 24px;
+  font-size: 14px;
+  color: #6B7280;
+  gap: 24px;
+
+  button {
+    background: none;
+    border: 1px solid transparent;
+    cursor: pointer;
+    font-size: 16px;
+    &:hover {
+      color: #111827;
+    }
+  }
+}
+
+.noResults {
+  text-align: center;
+  padding: 48px;
+  color: #6B7280;
+}

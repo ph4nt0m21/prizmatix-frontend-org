@@ -92,7 +92,8 @@ const TicketSection = () => {
         await DeleteTicketStructureAPI(ticketId);
         console.log(`Ticket with ID ${ticketId} deleted successfully.`);
         fetchTickets(); // Re-fetch the data to update the table
-      } catch (err) {
+      } catch (err)
+        {
         console.error("Failed to delete ticket:", err);
         setError("Failed to delete the ticket. Please try again.");
       }
@@ -216,72 +217,74 @@ const TicketSection = () => {
         ) : error ? (
           <div className={styles.errorMessage}>{error}</div>
         ) : tickets.length > 0 ? (
-          <div className={styles.ticketsList}>
-            {/* Table Header */}
-            <div className={`${styles.ticketRow} ${styles.ticketsHeader}`}>
-              <div className={`${styles.ticketCell} ${styles.cellId}`}>#</div>
-              <div className={`${styles.ticketCell} ${styles.cellTicket}`}>
-                Ticket
-              </div>
-              <div className={`${styles.ticketCell} ${styles.cellQuantity}`}>
-                Quantity
-              </div>
-              <div className={`${styles.ticketCell} ${styles.cellMaxPurchase}`}>
-                Max Per Order
-              </div>
-              <div className={`${styles.ticketCell} ${styles.cellPrice}`}>
-                Price
-              </div>
-              <div className={`${styles.ticketCell} ${styles.cellActions}`}></div>
-            </div>
-
-            {/* Table Body */}
-            {tickets.map((ticket) => (
-              <div key={ticket.id} className={styles.ticketRow}>
-                <div className={`${styles.ticketCell} ${styles.cellId}`}>
-                  {ticket.id}
-                </div>
+          <div className={styles.tableWrapper}>
+            <div className={styles.ticketsList}>
+              {/* Table Header */}
+              <div className={`${styles.ticketRow} ${styles.ticketsHeader}`}>
+                {/* <div className={`${styles.ticketCell} ${styles.cellId}`}>#</div> */}
                 <div className={`${styles.ticketCell} ${styles.cellTicket}`}>
-                  {ticket.name}
+                  Ticket
                 </div>
                 <div className={`${styles.ticketCell} ${styles.cellQuantity}`}>
-                  {formatQuantity(ticket)}
+                  Quantity
                 </div>
                 <div className={`${styles.ticketCell} ${styles.cellMaxPurchase}`}>
-                  {formatMaxPurchase(ticket)}
+                  Max Per Order
                 </div>
                 <div className={`${styles.ticketCell} ${styles.cellPrice}`}>
-                  ${ticket.price.toFixed(2)}
+                  Price
                 </div>
-                <div className={`${styles.ticketCell} ${styles.cellActions}`}>
-                  <button
-                    className={styles.editButton}
-                    onClick={() => handleEditClick(ticket)}
-                  >
-                    <svg
-                      width="20"
-                      height="20"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"
-                        fill="currentColor"
-                      />
-                    </svg>
-                  </button>
-                  <button
-                    className={styles.deleteButton}
-                    onClick={() => handleDeleteClick(ticket.id)}
-                  >
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" fill="currentColor"/>
-                    </svg>
-                  </button>
-                </div>
+                <div className={`${styles.ticketCell} ${styles.cellActions}`}></div>
               </div>
-            ))}
+
+              {/* Table Body */}
+              {tickets.map((ticket) => (
+                <div key={ticket.id} className={styles.ticketRow}>
+                  {/* <div className={`${styles.ticketCell} ${styles.cellId}`}>
+                    {ticket.id}
+                  </div> */}
+                  <div className={`${styles.ticketCell} ${styles.cellTicket}`}>
+                    {ticket.name}
+                  </div>
+                  <div className={`${styles.ticketCell} ${styles.cellQuantity}`}>
+                    {formatQuantity(ticket)}
+                  </div>
+                  <div className={`${styles.ticketCell} ${styles.cellMaxPurchase}`}>
+                    {formatMaxPurchase(ticket)}
+                  </div>
+                  <div className={`${styles.ticketCell} ${styles.cellPrice}`}>
+                    ${ticket.price.toFixed(2)}
+                  </div>
+                  <div className={`${styles.ticketCell} ${styles.cellActions}`}>
+                    <button
+                      className={styles.editButton}
+                      onClick={() => handleEditClick(ticket)}
+                    >
+                      <svg
+                        width="20"
+                        height="20"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"
+                          fill="currentColor"
+                        />
+                      </svg>
+                    </button>
+                    <button
+                      className={styles.deleteButton}
+                      onClick={() => handleDeleteClick(ticket.id)}
+                    >
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" fill="currentColor"/>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         ) : (
           <div className={styles.noTicketsMessage}>No tickets have been created for this event.</div>

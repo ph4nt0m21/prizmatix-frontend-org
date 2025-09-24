@@ -42,6 +42,12 @@
   }
 }
 
+.tableWrapper {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
 .discountsList {
   display: flex;
   flex-direction: column;
@@ -73,21 +79,24 @@
     font-size: 12px;
     font-weight: 500;
     text-transform: uppercase;
+    padding: 0 8px;
   }
 }
 
 .discountCell {
   display: flex;
   align-items: center;
-  padding: 0 12px;
+  padding: 0 8px;
   font-size: 14px;
   color: #374151;
-
-  &.cellId { flex-basis: 5%; }
-  &.cellCode { flex-basis: 35%; font-weight: 500; }
-  &.cellDiscount { flex-basis: 20%; }
-  &.cellStatus { flex-basis: 20%; }
-  &.cellActions { flex-basis: 20%; justify-content: flex-end; }
+  
+  &.cellCode { flex-basis: 15%; font-weight: 500; }
+  &.cellType { flex-basis: 10%; text-transform: capitalize; }
+  &.cellValue { flex-basis: 10%; }
+  &.cellUsage { flex-basis: 15%; }
+  &.cellTickets { flex-basis: 25%; }
+  &.cellStatus { flex-basis: 15%; }
+  &.cellActions { flex-basis: 10%; justify-content: flex-end; }
 }
 
 .editButton {
@@ -122,5 +131,39 @@
   &.expired {
     background-color: #FEF2F2;
     color: #991B1B;
+  }
+}
+
+// ===================================
+// ===== Mobile Responsive Styles ====
+// ===================================
+@media (max-width: 768px) {
+  .discountSectionContainer {
+    padding: 16px;
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .createDiscountButton {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .discountsList {
+    min-width: 900px;
+  }
+
+  .discountCell {
+    &.cellCode { min-width: 120px; }
+    &.cellType { min-width: 100px; }
+    &.cellValue { min-width: 80px; }
+    &.cellUsage { min-width: 120px; }
+    &.cellTickets { min-width: 200px; }
+    &.cellStatus { min-width: 100px; }
+    &.cellActions { min-width: 80px; justify-content: center; }
   }
 }

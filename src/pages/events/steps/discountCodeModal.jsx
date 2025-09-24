@@ -50,6 +50,7 @@ const DiscountCodeModal = ({
   onClose = () => {},
   onSave = () => {},
   availableTickets = [],
+  isExpired = false,
 }) => {
   const [activePanel, setActivePanel] = useState('basic');
   const [localDiscountCode, setLocalDiscountCode] = useState({
@@ -77,6 +78,7 @@ const DiscountCodeModal = ({
       validUntilDate: "",
       validUntilTime: "",
       usageLimit: "",
+      isActive: true,
       ...discountCode,
     });
     setSelectedTickets(discountCode.ticketsApplicable || []);
@@ -89,6 +91,14 @@ const DiscountCodeModal = ({
       [name]: value,
     }));
   };
+
+   const handleToggleChange = (e) => {
+    const { name, checked } = e.target;
+    setLocalDiscountCode(prev => ({
+      ...prev,
+      [name]: checked,
+    }));
+  }; 
 
   const handleDateChange = (date, dateFieldName, timeFieldName) => {
     const { date: dateStr, time: timeStr } = formatDateObject(date);
@@ -258,11 +268,31 @@ const DiscountCodeModal = ({
                   />
                 </div>
 
+                {/* ✅ Add the toggle switch here */}
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>Status</label>
+                  <div className={styles.toggleContainer}>
+                    <label className={styles.toggleSwitch}>
+                      <input
+                        type="checkbox"
+                        name="isActive"
+                        checked={localDiscountCode.isActive && !isExpired}
+                        onChange={handleToggleChange}
+                        disabled={isExpired}
+                      />
+                      <span className={styles.slider}></span>
+                    </label>
+                    <span className={styles.toggleLabel}>
+                      {isExpired ? "Expired" : localDiscountCode.isActive ? "Active" : "Inactive"}
+                    </span>
+                  </div>
+                </div>                
+
                 <div className={styles.formGroup}>
                   <label className={styles.formLabel}>
                     Applicable Tickets
                   </label>
-                  <p className={styles.formHelper}>Select the tickets to which this coupon code will apply. Leave blank to apply to all tickets.</p>
+                  <p className={styles.formHelper}>Select the tickets to which this coupon code will apply.</p>
                   <div className={styles.customDropdown}>
                     <button
                       type="button"
@@ -353,6 +383,7 @@ DiscountCodeModal.propTypes = {
   onClose: PropTypes.func,
   onSave: PropTypes.func,
   availableTickets: PropTypes.array,
+  isExpired: PropTypes.bool,
 };
 
 export default DiscountCodeModal;

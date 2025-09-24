@@ -1,77 +1,171 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
 import { Link } from 'react-router-dom';
 import styles from './eventHeaderNav.module.scss';
 
-// Import icons from assets folder
-import { ReactComponent as ArrowIcon } from '../../../assets/icons/small-arrow-icon.svg';
-import { ReactComponent as PreviewIcon } from '../../../assets/icons/preview-icon.svg';
-// Removed specific ThreeDotsIcon import as it's now inlined
+// --- SVG Icons ---
+const ArrowIcon = () => (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M9 18l6-6-6-6"/>
+    </svg>
+);
 
-/**
- * EventHeaderNav component displays the breadcrumb navigation and event status.
- * It now includes a "3 dots" menu for mobile navigation specific to event creation/management.
- *
- * @param {Object} props Component props
- * @param {string} props.currentStep Current step name
- * @param {string} props.eventName Event name
- * @param {boolean} props.isDraft Whether the event is in draft mode
- * @param {boolean} props.canPreview Whether the event can be previewed
- * @param {Function} props.toggleMobileSidebar Function to toggle mobile sidebar visibility
- * @returns {JSX.Element} EventHeaderNav component
- */
-const EventHeaderNav = ({ currentStep, eventName, isDraft, canPreview, toggleMobileSidebar }) => {
-  return (
-    <div className={styles.eventNav}>
-      {/* "3 dots" menu icon for mobile (specific to Event Manage Header) */}
-      <button className={styles.mobileSidebarToggleButton} onClick={toggleMobileSidebar} aria-label="Open menu">
-        {/* Using the provided SVG directly */}
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M12 8C13.1 8 14 7.1 14 6C14 4.9 13.1 4 12 4C10.9 4 10 4.9 10 6C10 7.1 10.9 8 12 8ZM12 10C10.9 10 10 10.9 10 12C10 13.1 10.9 14 12 14C13.1 14 14 13.1 14 12C14 10.9 13.1 10 12 10ZM12 16C10.9 16 10 16.9 10 18C10 19.1 10.9 20 12 20C13.1 20 14 19.1 14 18C14 16.9 13.1 16 12 16Z" fill="currentColor"/>
-        </svg>
-      </button>
+const ScannerIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M3 7V5a2 2 0 0 1 2-2h2" /><path d="M17 3h2a2 2 0 0 1 2 2v2" /><path d="M21 17v2a2 2 0 0 1-2 2h-2" /><path d="M7 21H5a2 2 0 0 1-2-2v-2" /><line x1="7" y1="12" x2="17" y2="12" />
+    </svg>
+);
 
-      <div className={styles.breadcrumbContainer}>
-        <div className={styles.breadcrumb}>
-          <Link to="/events" className={styles.breadcrumbLink}>
-            Events
-          </Link>
-          <span className={styles.breadcrumbSeparator}>
-            <ArrowIcon />
-          </span>
-          {/* Conditionally render event name link based on whether it's the create page or manage page */}
-          {eventName && currentStep !== "Create Event" ? (
-            <Link to={`/events/manage/${eventName.toLowerCase().replace(/\s/g, '-')}/overview`} className={styles.breadcrumbLink}>
-              {eventName}
-            </Link>
-          ) : (
-            <span className={styles.breadcrumbLink}>{eventName}</span>
-          )}
-          {isDraft && (
-            <>
-              <span className={styles.breadcrumbDraft}>
-                Draft
-              </span>
-            </>
-          )}
+const LinkIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.72" /><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.72-1.72" />
+    </svg>
+);
+
+const GearIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 20V18M12 6V4M20 12H18M6 12H4M18.36 18.36L17 17M7.05 7.05L5.64 5.64M18.36 5.64L17 7.05M7.05 17L5.64 18.36M12 16a4 4 0 100-8 4 4 0 000 8z" />
+    </svg>
+);
+
+
+// --- Generate Scanner ID Modal Component ---
+const GenerateScannerIdModal = ({ isOpen, onClose }) => {
+    if (!isOpen) return null;
+
+    const handleAddUserClick = () => {
+        // This is a dummy function as requested.
+        console.log("Add User clicked. No action is configured.");
+        onClose();
+    };
+
+    // --- THIS RETURN STATEMENT WAS MISSING ---
+    return (
+        <div className={styles.modalBackdrop} onClick={onClose}>
+            <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+                <div className={styles.modalHeader}>
+                    <h2>Generate Scanner ID</h2>
+                    <button onClick={onClose} className={styles.closeButton}>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M18 6L6 18" stroke="#6B7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                            <path d="M6 6L18 18" stroke="#6B7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                    </button>
+                </div>
+                <div className={styles.modalBody}>
+                    <p>Enter a User ID and Password for the scanner operator.</p>
+                    <div className={styles.formGroup}>
+                        <label htmlFor="userId" className={styles.formLabel}>User Id</label>
+                        <input type="text" id="userId" className={styles.formInput} placeholder="e.g. gate_A_operator" />
+                    </div>
+                    <div className={styles.formGroup}>
+                        <label htmlFor="password" className={styles.formLabel}>Password</label>
+                        <input type="password" id="password" className={styles.formInput} placeholder="Enter a secure password" />
+                    </div>
+                </div>
+                <div className={styles.modalFooter}>
+                    <button className={styles.addUserButton} onClick={handleAddUserClick}>Add User</button>
+                </div>
+            </div>
         </div>
-      </div>
-    </div>
+    );
+};
+
+// --- Main Component ---
+const EventHeaderNav = ({
+  currentStep,
+  eventName,
+  eventId,
+  isDraft,
+  toggleMobileSidebar,
+}) => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isCopied, setIsCopied] = useState(false);
+  const [isActionMenuOpen, setIsActionMenuOpen] = useState(false);
+  const actionMenuRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (actionMenuRef.current && !actionMenuRef.current.contains(event.target)) {
+        setIsActionMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  const handleCopyLink = () => {
+    const eventLink = `https://www.prizmatix.nz/events/${eventId}`;
+    navigator.clipboard.writeText(eventLink).then(() => {
+        setIsCopied(true);
+        setTimeout(() => setIsCopied(false), 2500);
+        setIsActionMenuOpen(false); // <-- ADDED: Close menu on click
+    }).catch(err => {
+        console.error('Failed to copy text: ', err);
+    });
+  };
+
+  const handleOpenScannerModal = () => {
+    setIsModalOpen(true);
+    setIsActionMenuOpen(false); // <-- ADDED: Close menu on click
+  };
+
+  return (
+    <>
+      <nav className={styles.eventNav}>
+        <button className={styles.mobileSidebarToggleButton} onClick={toggleMobileSidebar} aria-label="Open menu">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 8C13.1 8 14 7.1 14 6C14 4.9 13.1 4 12 4C10.9 4 10 4.9 10 6C10 7.1 10.9 8 12 8ZM12 10C10.9 10 10 10.9 10 12C10 13.1 10.9 14 12 14C13.1 14 14 13.1 14 12C14 10.9 13.1 10 12 10ZM12 16C10.9 16 10 16.9 10 18C10 19.1 10.9 20 12 20C13.1 20 14 19.1 14 18C14 16.9 13.1 16 12 16Z" fill="currentColor"/>
+          </svg>
+        </button>
+
+        <div className={styles.breadcrumbContainer}>
+          <div className={styles.breadcrumb}>
+            <Link to="/events" className={styles.breadcrumbLink}>Events</Link>
+            <span className={styles.breadcrumbSeparator}><ArrowIcon /></span>
+            <Link to={`/events/manage/${eventId}/overview`} className={styles.breadcrumbLink}>{eventName}</Link>
+            {isDraft && <span className={styles.breadcrumbDraft}>Draft</span>}
+          </div>
+        </div>
+
+        <div className={styles.actionButtonsContainer} ref={actionMenuRef}>
+          <button className={styles.mobileActionsButton} onClick={() => setIsActionMenuOpen(!isActionMenuOpen)}>
+            <GearIcon />
+          </button>
+          
+          <div className={`${styles.actionButtons} ${isActionMenuOpen ? styles.active : ''}`}>
+              <button className={styles.generateButton} onClick={handleOpenScannerModal}>
+                  <ScannerIcon />
+                  <span>Generate Scanner ID</span>
+              </button>
+              <button
+                className={styles.copyLinkButton}
+                onClick={handleCopyLink}
+                data-copied-tooltip={isCopied ? 'Copied!' : 'Copy event link'}
+              >
+                  <LinkIcon />
+              </button>
+          </div>
+        </div>
+      </nav>
+
+      <GenerateScannerIdModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+    </>
   );
 };
 
 EventHeaderNav.propTypes = {
   currentStep: PropTypes.string.isRequired,
   eventName: PropTypes.string.isRequired,
+  eventId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
   isDraft: PropTypes.bool,
-  canPreview: PropTypes.bool,
-  toggleMobileSidebar: PropTypes.func.isRequired, // Added propType
+  toggleMobileSidebar: PropTypes.func.isRequired,
 };
 
 EventHeaderNav.defaultProps = {
   isDraft: true,
-  canPreview: false
 };
 
 export default EventHeaderNav;
-
