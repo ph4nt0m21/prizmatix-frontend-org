@@ -12,12 +12,12 @@ import { format } from 'date-fns';
 const OrdersAndAttendeesSection = ({ eventId }) => {
   const [activeTab, setActiveTab] = useState('Orders');
   const [searchQuery, setSearchQuery] = useState('');
-  
+
   const [orders, setOrders] = useState([]);
   const [attendees, setAttendees] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  
+
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [attendeeFilters, setAttendeeFilters] = useState({
     ticketType: 'All',
@@ -26,6 +26,30 @@ const OrdersAndAttendeesSection = ({ eventId }) => {
     endDate: '',
   });
 
+  // ✅ Always fetch attendees on mount (for stats + tab later)
+  useEffect(() => {
+    const fetchAttendees = async () => {
+      try {
+        const response = await GetEventAttendeesAPI(eventId);
+        const formattedAttendees = response.data.map((attendee, index) => ({
+          id: attendee.ticketId || `att-${index}`,
+          name: attendee.attendeeName,
+          ticketType: attendee.ticketType,
+          isCheckedIn: false,
+        }));
+        setAttendees(formattedAttendees);
+      } catch (err) {
+        setError('Failed to fetch attendees. Please try again later.');
+        console.error(err);
+      }
+    };
+
+    if (eventId) {
+      fetchAttendees();
+    }
+  }, [eventId]);
+
+  // ✅ Fetch orders only when Orders tab is active
   useEffect(() => {
     const fetchOrders = async () => {
       try {
@@ -44,62 +68,38 @@ const OrdersAndAttendeesSection = ({ eventId }) => {
       } catch (err) {
         setError('Failed to fetch orders. Please try again later.');
         console.error(err);
+      } finally {
+        setIsLoading(false);
       }
     };
 
-    const fetchAttendees = async () => {
-      try {
-        const response = await GetEventAttendeesAPI(eventId);
-        const formattedAttendees = response.data.map((attendee, index) => ({
-          id: attendee.ticketId || `att-${index}`,
-          name: attendee.attendeeName,
-          ticketType: attendee.ticketType,
-          isCheckedIn: false,
-        }));
-        setAttendees(formattedAttendees);
-      } catch (err) {
-        setError('Failed to fetch attendees. Please try again later.');
-        console.error(err);
-      }
-    };
-
-    const fetchData = async () => {
+    if (activeTab === 'Orders' && eventId) {
       setIsLoading(true);
       setError(null);
-      if (activeTab === 'Orders') {
-        await fetchOrders();
-      } else {
-        await fetchAttendees();
-      }
-      setIsLoading(false);
-    };
-
-    if (eventId) {
-      fetchData();
-    } else {
-      setIsLoading(false);
-      setError("Event ID is missing.");
+      fetchOrders();
     }
   }, [activeTab, eventId]);
 
   const filteredAttendees = useMemo(() => {
     return attendees.filter(attendee => {
       const searchMatch =
-        (attendee.name && attendee.name.toLowerCase().includes(searchQuery.toLowerCase()));
+        attendee.name && attendee.name.toLowerCase().includes(searchQuery.toLowerCase());
 
-      const ticketTypeMatch = attendeeFilters.ticketType === 'All' || attendee.ticketType === attendeeFilters.ticketType;
-      const statusMatch = 
+      const ticketTypeMatch =
+        attendeeFilters.ticketType === 'All' || attendee.ticketType === attendeeFilters.ticketType;
+
+      const statusMatch =
         attendeeFilters.status === 'All' ||
         (attendeeFilters.status === 'Checked In' && attendee.isCheckedIn) ||
         (attendeeFilters.status === 'Not Checked In' && !attendee.isCheckedIn);
-      
+
       return searchMatch && ticketTypeMatch && statusMatch;
     });
   }, [searchQuery, attendees, attendeeFilters]);
-  
+
   const handleOrderSelect = (order) => setSelectedOrder(order);
   const handleCloseModal = () => setSelectedOrder(null);
-  
+
   const handleCheckIn = (attendeeId) => {
     setAttendees(currentAttendees =>
       currentAttendees.map(attendee =>
@@ -107,7 +107,8 @@ const OrdersAndAttendeesSection = ({ eventId }) => {
       )
     );
   };
-  
+
+  // ✅ Stats are always available now
   const totalAttendees = attendees.length;
   const checkedInCount = attendees.filter(a => a.isCheckedIn).length;
 
@@ -122,7 +123,7 @@ const OrdersAndAttendeesSection = ({ eventId }) => {
         </div>
       );
     }
-    
+
     if (activeTab === 'Attendees') {
       return (
         <>
@@ -164,11 +165,8 @@ const OrdersAndAttendeesSection = ({ eventId }) => {
           {renderContent()}
         </div>
       </div>
-      
-      <OrderDetailsModal
-        order={selectedOrder}
-        onClose={handleCloseModal}
-      />
+
+      <OrderDetailsModal order={selectedOrder} onClose={handleCloseModal} />
     </>
   );
 };
