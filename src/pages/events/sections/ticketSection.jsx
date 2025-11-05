@@ -9,7 +9,8 @@ import {
   GetEventTicketStructuresAPI, 
   UpdateTicketStructureAPI, 
   DeleteTicketStructureAPI,
-  CreateTicketStructureAPI
+  CreateTicketStructureAPI,
+  GetEventAPI
 } from "../../../services/allApis";
 
 // We can add a local helper function to use the same logic
@@ -29,8 +30,19 @@ const TicketSection = () => {
   const [tickets, setTickets] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [eventData, setEventData] = useState({});
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTicket, setEditingTicket] = useState(null);
+
+  const fetchEventDetails = async () => {
+    try {
+        const response = await GetEventAPI(eventId); // ⬅️ NEW FETCH
+        setEventData(response.data);
+    } catch (err) {
+        console.error("Failed to fetch event details:", err);
+        // Do not set error, as ticket fetch might still succeed
+    }
+};
 
   const fetchTickets = async () => {
     try {
@@ -48,6 +60,7 @@ const TicketSection = () => {
 
   useEffect(() => {
     if (eventId) {
+      fetchEventDetails();
       fetchTickets();
     }
   }, [eventId]);
@@ -116,10 +129,16 @@ const TicketSection = () => {
     try {
       // Define fallback dates
       const fallbackListingStartTime = new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString();
-      const fallbackListingEndTime = new Date(Date.now() + 12 * 60 * 60 * 1000).toISOString(); // You might want to get this from the event data
+
+      const eventDateTime = {
+        startDate: eventData.startDate,
+        startTime: eventData.startTime,
+        endDate: eventData.endDate,
+        endTime: eventData.endTime,
+      };
 
       const listingStartTime = formatDateTimeForAPI(ticketData.salesStartDate, ticketData.salesStartTime) || fallbackListingStartTime;
-      const listingEndTime = formatDateTimeForAPI(ticketData.salesEndDate, ticketData.salesEndTime) || fallbackListingEndTime;
+      const listingEndTime = formatDateTimeForAPI(ticketData.salesEndDate, ticketData.salesEndTime) || formatDateTimeForAPI(eventDateTime.endDate, eventDateTime.endTime);
       
       const commonPayload = {
         name: ticketData.name,

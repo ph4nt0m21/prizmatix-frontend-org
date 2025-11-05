@@ -55,19 +55,33 @@
 
 .checkInButton {
   padding: 6px 16px;
-  background-color: #FFFFFF;
   border: 1px solid #D1D5DB;
   border-radius: 6px;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
+  background-color: #fff;
   transition: all 0.2s;
 
   &:hover {
     background-color: #F9FAFB;
-    border-color: #9CA3AF;
+  }
+
+  &.checkedIn {
+    background-color: #F5F3FF;
+    border-color: #C4B5FD;
+    color: #7C3AED;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+
+    svg {
+      stroke: #7C3AED;
+    }
   }
 }
+
 
 .checkedInStatus {
   display: inline-flex;

@@ -1,9 +1,9 @@
 /* This is the scrolling container */
 .tableContainer {
-  display: block;
+  display: flex;
+  justify-content: center;
   width: 100%;
   overflow-x: auto;
-  /* Add a fallback for Webkit browsers for better scrollbar styling if needed */
   -webkit-overflow-scrolling: touch;
 }
 
@@ -11,7 +11,6 @@
 .table {
   border-collapse: collapse;
   font-size: 14px;
-  /* REMOVED width: 100%; */
 }
 
 /* These styles force columns to take up their natural width without wrapping */
@@ -25,7 +24,6 @@
 .table th {
   color: #6B7280;
   font-weight: 500;
-  background-color: #F9FAFB;
   font-size: 12px;
   text-transform: uppercase;
 }
@@ -100,4 +98,26 @@
   text-align: center;
   padding: 48px;
   color: #6B7280;
+}
+
+.reissueButton {
+  background: #f3f3f3;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: background 0.2s ease;
+
+  &:hover {
+    background: #e6e6e6;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
 }

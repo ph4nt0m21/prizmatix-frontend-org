@@ -208,3 +208,56 @@ export const GetAllEmailCampaignsAPI = async () => {
 export const GetEmailCampaignByIdAPI = async (id) => {
   return await apiClient.get(`/admin/email-campaigns/${id}`);
 };
+
+// Update existing email campaign
+export const UpdateEmailCampaignAPI = async (id, data) => {
+  return await apiClient.put(`/admin/email-campaigns/${id}`, data);
+};
+
+// Delete email campaign
+export const DeleteEmailCampaignAPI = async (id) => {
+  return await apiClient.delete(`/admin/email-campaigns/${id}`);
+};
+
+// Send Test Emails for a Campaign
+export const SendTestEmailCampaignAPI = async (campaignId, data) => {
+  // data = { testEmails: ["a@b.com", "c@d.com"] }
+  return await apiClient.post(`/admin/email-campaigns/${campaignId}/test`, data);
+};
+
+// Upload Attachments to a Campaign
+export const UploadEmailCampaignAttachmentsAPI = async (campaignId, formData) => {
+  // formData = FormData with one or more files
+  return await apiClient.post(`/admin/email-campaigns/${campaignId}/attachments`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+};
+
+// =============== ORDER REISSUE EMAIL API ===============
+export const ReissueOrderEmailAPI = async (orderId) => {
+  return await apiClient.post(`/api/admin/orders/${orderId}/reissue-email`);
+};
+
+
+// =============== SCANNER USER APIs ===============
+export const CreateScannerUserAPI = async (data) => {
+  return await apiClient.post("/admin/scanner-users", data);
+};
+
+export const GetAttendeeScanner = async () => {
+  return await apiClient.get(`/scanner/attendees`);
+};
+
+export const CheckInAttendeeAPI = async (ticketId) => {
+  return await apiClient.post(`/scanner/checkin/${ticketId}`);
+};
+
+export const VerifyQrCodeAPI = async (data) => {
+  return await apiClient.post("/scanner/verify", data);
+};
+
+export const CheckoutAttendeeAPI = async (ticketId) => {
+  return await apiClient.post(`/scanner/checkout/${ticketId}`);
+};
+
+

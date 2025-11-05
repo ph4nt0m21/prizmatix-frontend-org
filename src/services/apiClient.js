@@ -41,12 +41,15 @@ apiClient.interceptors.response.use(
     return response;
   },
   (error) => {
-    if (error.response && (error.response.status === 401 || error.response.status === 403)) {
-      Cookies.remove("token");
-      // Also clear user data
-      localStorage.removeItem('userData');
-      window.location.href = "/login"; 
-    }
+    const status = error.response?.status;
+const url = error.config?.url || "";
+
+// 🧠 Skip forced logout for invalid QR scans
+if ((status === 401 || status === 403) && !url.includes("/scanner/verify")) {
+  Cookies.remove("token");
+  localStorage.removeItem("userData");
+  window.location.href = "/login";
+}
     return Promise.reject(error);
   }
 );

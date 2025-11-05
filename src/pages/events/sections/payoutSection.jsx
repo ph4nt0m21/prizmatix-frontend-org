@@ -5,60 +5,42 @@ import styles from './payoutSection.module.scss';
 // Import SVG components
 import { ReactComponent as PlusIcon } from '../../../assets/icons/plus-icon.svg';
 import { ReactComponent as CardPaymentsIcon } from '../../../assets/icons/card-payments.svg';
-// Import the newly created EditIcon SVG
 import { ReactComponent as EditIcon } from '../../../assets/icons/edit-icon.svg';
 
 /**
  * PayoutSection component - Displays payout information and history.
  *
  * @param {Object} props Component props
- * @param {string} props.title Section title to display
- * @param {string} props.description Brief description of the section
+ * @param {Object} props.dashboardData Data object containing revenue and other metrics.
  * @returns {JSX.Element} PayoutSection component
  */
-const PayoutSection = ({ title, description }) => {
-  const [grossRevenue, setGrossRevenue] = useState(0);
-  const [currentBalance, setCurrentBalance] = useState(0);
+const PayoutSection = ({ dashboardData }) => {
+  // Derive revenue and balance from props
+  const grossRevenue = dashboardData?.revenue ?? 0;
+  const currentBalance = grossRevenue * 0.25; // Calculate 25% of revenue
+
   const [payoutHistory, setPayoutHistory] = useState([]);
   const [showPayoutModal, setShowPayoutModal] = useState(false);
   const [payoutType, setPayoutType] = useState('full'); // 'full' or 'custom'
   const [customPayoutAmount, setCustomPayoutAmount] = useState('');
   const [fullPayoutAmount, setFullPayoutAmount] = useState(0);
-  const [payoutStep, setPayoutStep] = useState('selection'); // 'selection', 'input', 'display', or 'account_details'
-  const [accountDetails, setAccountDetails] = useState({
-    accountNo: '',
-    street: '',
-    streetNo: '',
-  });
+  // The 'display' step is now the last step
+  const [payoutStep, setPayoutStep] = useState('selection'); // 'selection', 'input', or 'display'
 
   useEffect(() => {
-    // Simulate API call to fetch data
-    const fetchPayoutData = async () => {
-      await new Promise(resolve => setTimeout(resolve, 500));
-      setGrossRevenue(16868.92);
-      setCurrentBalance(4217.23);
-      setFullPayoutAmount(4217.23);
-      setPayoutHistory([]);
-    };
-    
-    fetchPayoutData();
-  }, []);
+    setFullPayoutAmount(currentBalance);
+    setPayoutHistory([]);
+  }, [currentBalance]);
 
   const handleRequestPayoutClick = () => {
     setShowPayoutModal(true);
     setPayoutType('full');
     setCustomPayoutAmount('');
     setPayoutStep('selection');
-    setAccountDetails({ accountNo: '', street: '', streetNo: '' }); // Reset account details
   };
 
   const handleCloseModal = () => {
     setShowPayoutModal(false);
-  };
-
-  const handleAccountDetailsChange = (e) => {
-    const { name, value } = e.target;
-    setAccountDetails(prev => ({ ...prev, [name]: value }));
   };
 
   const handleContinue = () => {
@@ -74,14 +56,11 @@ const PayoutSection = ({ title, description }) => {
         setPayoutStep('display');
         break;
       case 'display':
-        setPayoutStep('account_details'); // Proceed to account details form
-        break;
-      case 'account_details':
         const amount = payoutType === 'full' ? fullPayoutAmount : customPayoutAmount;
-        console.log(`Initiating ${payoutType} payout:`, amount);
-        console.log('With Account Details:', accountDetails);
-        // In a real app, send 'amount' and 'accountDetails' to the backend
+        console.log(`Sending payout request for ${payoutType} amount: $${amount}`);
+        // In a real app, you would make an API call here.
         setShowPayoutModal(false);
+        // Optionally, you could show a success notification here.
         break;
       default:
         handleCloseModal();
@@ -90,9 +69,6 @@ const PayoutSection = ({ title, description }) => {
 
   const handleBack = () => {
     switch (payoutStep) {
-      case 'account_details':
-        setPayoutStep('display');
-        break;
       case 'display':
         if (payoutType === 'custom') {
           setPayoutStep('input');
@@ -108,17 +84,16 @@ const PayoutSection = ({ title, description }) => {
     }
   };
 
-  // Validations
+  // Validation
   const isCustomAmountValid = parseFloat(customPayoutAmount) > 0 && parseFloat(customPayoutAmount) <= currentBalance;
-  const isAccountDetailsValid =
-    accountDetails.accountNo.trim() !== '' &&
-    accountDetails.street.trim() !== '' &&
-    accountDetails.streetNo.trim() !== '';
+  
+  // Determine button text based on the current step
+  const continueButtonText = payoutStep === 'display' ? 'Send Request' : 'Continue';
 
   return (
     <div className={styles.sectionContainer}>
       <div className={styles.sectionHeader}>
-        <h2 className={styles.sectionTitle}>{title}</h2>
+        <h2 className={styles.sectionTitle}>Payouts</h2>
         <button className={styles.requestPayoutButton} onClick={handleRequestPayoutClick}>
           <PlusIcon className={styles.buttonIcon} />
           Request Payout
@@ -159,18 +134,14 @@ const PayoutSection = ({ title, description }) => {
         <div className={styles.modalOverlay}>
           <div className={styles.modalContent}>
             <div className={styles.modalHeader}>
-              <h3 className={styles.modalTitle}>
-                {payoutStep === 'account_details' ? 'Account Missing for Payout' : 'Request Payout'}
-              </h3>
+              <h3 className={styles.modalTitle}>Request Payout</h3>
               <button className={styles.modalCloseButton} onClick={handleCloseModal}>
                 &times;
               </button>
             </div>
-            {payoutStep !== 'account_details' && (
-                <p className={styles.modalDescription}>
-                    Choose how you'd like to receive your funds in advance.
-                </p>
-            )}
+            <p className={styles.modalDescription}>
+                Choose how you'd like to receive your funds in advance.
+            </p>
 
             <div className={styles.payoutModalBody}>
               {/* Step 1: Selection */}
@@ -246,14 +217,14 @@ const PayoutSection = ({ title, description }) => {
                 </div>
               )}
 
-              {/* Step 3: Confirmation Display */}
+              {/* Step 3: Confirmation Display (Final Step) */}
               {payoutStep === 'display' && (
                 <div className={styles.customAmountDisplaySection}>
                   <h4 className={styles.customAmountPrompt}>
                     {payoutType === 'full' ? 'Full Amount' : 'Custom Amount'}
                   </h4>
                   <div className={styles.displayCard}>
-                    <p className={styles.displayCardTitle}>Amount</p>
+                    <p className={styles.displayCardTitle}>Amount to Request</p>
                     <div className={styles.displayAmountContainer}>
                       <span className={styles.finalAmount}>
                         ${(payoutType === 'full' ? fullPayoutAmount : parseFloat(customPayoutAmount)).toFixed(2)}
@@ -262,58 +233,11 @@ const PayoutSection = ({ title, description }) => {
                          <EditIcon className={styles.editIcon} onClick={() => setPayoutStep('input')} />
                       )}
                     </div>
-                    <p className={styles.deliveryTime}>credited within 2 business days</p>
+                    <p className={styles.deliveryTime}>Request will be processed within 2 business days</p>
                   </div>
                 </div>
               )}
-
-              {/* Step 4: Account Details */}
-              {payoutStep === 'account_details' && (
-                <div className={styles.customAmountInputSection}>
-                    <p className={styles.modalDescription} style={{textAlign: 'left', width: '100%', marginBottom: '24px'}}>Add an Account for this and future payouts</p>
-                    <div style={{ marginBottom: '16px', width: '100%' }}>
-                        <p className={styles.cardTitle} style={{ marginBottom: '8px', textAlign: 'left' }}>Account No.</p>
-                        <div className={styles.amountInputContainer}>
-                        <input
-                            type="text"
-                            name="accountNo"
-                            value={accountDetails.accountNo}
-                            onChange={handleAccountDetailsChange}
-                            placeholder="e.g., 1234567890"
-                            className={styles.amountInput}
-                        />
-                        </div>
-                    </div>
-                    <div style={{ display: 'flex', gap: '16px', width: '100%' }}>
-                        <div style={{ flex: 1 }}>
-                        <p className={styles.cardTitle} style={{ marginBottom: '8px', textAlign: 'left' }}>Street</p>
-                        <div className={styles.amountInputContainer}>
-                            <input
-                            type="text"
-                            name="street"
-                            value={accountDetails.street}
-                            onChange={handleAccountDetailsChange}
-                            placeholder="e.g., Festival Ave"
-                            className={styles.amountInput}
-                            />
-                        </div>
-                        </div>
-                        <div style={{ flex: 1 }}>
-                        <p className={styles.cardTitle} style={{ marginBottom: '8px', textAlign: 'left' }}>Street No.</p>
-                        <div className={styles.amountInputContainer}>
-                            <input
-                            type="text"
-                            name="streetNo"
-                            value={accountDetails.streetNo}
-                            onChange={handleAccountDetailsChange}
-                            placeholder="e.g., 123"
-                            className={styles.amountInput}
-                            />
-                        </div>
-                        </div>
-                    </div>
-                </div>
-              )}
+              
             </div>
 
             <div className={styles.modalActions}>
@@ -328,12 +252,9 @@ const PayoutSection = ({ title, description }) => {
               <button
                 className={styles.continueButton}
                 onClick={handleContinue}
-                disabled={
-                  (payoutStep === 'input' && !isCustomAmountValid) ||
-                  (payoutStep === 'account_details' && !isAccountDetailsValid)
-                }
+                disabled={payoutStep === 'input' && !isCustomAmountValid}
               >
-                Continue
+                {continueButtonText}
               </button>
             </div>
           </div>
@@ -344,8 +265,7 @@ const PayoutSection = ({ title, description }) => {
 };
 
 PayoutSection.propTypes = {
-  title: PropTypes.string.isRequired,
-  description: PropTypes.string.isRequired,
+  dashboardData: PropTypes.object,
 };
 
 export default PayoutSection;

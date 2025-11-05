@@ -1,596 +1,558 @@
 @import '../../styles/variables';
 @import '../../styles/mixins';
 
-// NEW: Two-column page layout for desktop, single column for mobile
+/* ------------------------------
+   Top-level layout
+   ------------------------------ */
 .pageWrapper {
   display: flex;
-  background-color: #F9FAFB;
+  background-color: #F7F7FA;
   min-height: 100vh;
+  align-items: flex-start;
+  gap: 32px; /* Gap between filter card and main content */
 
-  @media (max-width: 768px) {
-    flex-direction: column; // Stack sidebar and main content vertically
-    position: relative; // Needed for fixed sidebar positioning
+  @media (max-width: 1024px) {
+    flex-direction: column;
+    position: relative;
+    gap: 0;
   }
 }
 
-// NEW: Sidebar styles
+/* ------------------------------
+   Left sidebar (outer area)
+   ------------------------------ */
 .sidebar {
-  width: 256px;
+  width: 84px;
   flex-shrink: 0;
-  background-color: #FFFFFF;
-  border-right: 1px solid #E5E7EB;
-  padding: 32px 16px;
+  background: linear-gradient(180deg, #2e2540 0%, #22172c 100%);
+  min-height: 100vh;
+  padding: 20px 12px;
   display: flex;
   flex-direction: column;
-
-  @media (max-width: 768px) {
-    position: fixed; // Make it an overlay on mobile
-    top: 0;
-    left: -256px; // Hidden by default (starts off-screen)
-    height: 100vh; // Full viewport height
-    z-index: 100; // Higher than main content, lower than modal overlays
-    transition: transform 0.3s ease-in-out;
-    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.5);
-    padding-top: 20px; // Adjust padding for mobile
-    padding-bottom: 20px;
-  }
-
-  &.open {
-    @media (max-width: 768px) {
-      transform: translateX(100%); // Slides into view
-    }
-  }
+  gap: 16px;
+  align-items: center;
 }
 
+/* Inner card that contains Manage Event items */
+.sidebarInnerCard {
+  width: 280px;
+  flex-shrink: 0;
+  background-color: #FFFFFF;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 6px 18px rgba(17, 24, 39, 0.04);
+  border: 1px solid rgba(229, 231, 235, 0.9);
+  margin-top: 40px;
+  margin-left: 24px;
+}
+
+/* Title inside the card */
 .sidebarTitle {
   font-size: 16px;
   font-weight: 600;
   color: #111827;
-  padding: 0 8px 12px 8px;
   margin: 0 0 16px 0;
-  border-bottom: 1px solid #F3F4F6;
+  display: block;
 }
 
+/* Filters list (card) */
 .filterNav {
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 
+/* Each filter row */
 .filterItem {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 8px 12px;
+  padding: 10px 4px;
   border-radius: 6px;
   font-size: 14px;
   font-weight: 500;
-  color: #374151;
+  color: #6B7280;
   background-color: transparent;
   border: none;
   cursor: pointer;
+  transition: all 0.16s ease;
   text-align: left;
-  transition: background-color 0.2s ease;
-
-  &:hover {
-    background-color: #F3F4F6;
-  }
-
-  &.activeFilter {
-    background-color: #F3F4F6;
-    color: #111827;
-  }
-
-  span {
-    font-size: 12px;
-    color: #6B7280;
-    background-color: #E5E7EB;
-    padding: 2px 8px;
-    border-radius: 9999px;
-  }
+  width: 100%;
 }
 
-// Main content area
+.filterItem:hover {
+  background-color: #F3F0FF;
+  color: #6D28D9;
+}
+
+.filterItem.activeFilter {
+  font-weight: 600;
+  color: #111827;
+}
+
+.filterItem span {
+  color: #6B7280;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.filterItem.activeFilter span {
+  color: #111827;
+  font-weight: 600;
+}
+
+/* ------------------------------
+   Main content area
+   ------------------------------ */
 .mainContent {
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding: 32px;
+  padding: 40px 48px 40px 0;
+  gap: 24px;
+  min-width: 0; /* Prevents flex overflow */
+}
 
-  @media (max-width: 768px) {
-    padding: 16px; // Adjust padding for mobile
-    width: 100%; // Take full width
+@media (max-width: 1024px) {
+  .mainContent {
+    padding: 20px;
   }
 }
 
+/* Header row containing title, search and create button */
 .header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
-
-  @media (max-width: 768px) {
-    flex-wrap: wrap; // Allow items to wrap
-    margin-bottom: 16px; // Reduce margin
-    gap: 10px; // Add some gap between wrapped items
-  }
+  gap: 18px;
+  justify-content: space-between;
 }
 
-/* Mobile sidebar toggle button */
-.mobileSidebarToggleButton {
-  display: none; // Hidden by default on desktop
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 0;
-  width: 24px; // Size of the icon
-  height: 24px;
-  color: #333; // Icon color
-  margin-right: 10px; // Space between button and title
-
-  svg {
-    width: 24px;
-    height: 24px;
-  }
-
-  &:hover {
-    opacity: 0.8;
-  }
-
-  @media (max-width: 768px) {
-    display: block; // Show on mobile
-  }
-}
-
-
-.pageTitle {
-  font-size: 24px;
-  font-weight: 600;
-  color: #111827;
+/* left side (title + page label) */
+.pageTitle h1 {
   margin: 0;
-
-  @media (max-width: 768px) {
-    font-size: 20px; // Smaller font on mobile
-    flex-basis: 100%; // Take full width on mobile if needed
-  }
+  font-size: 28px;
+  font-weight: 700;
+  color: #111827;
 }
 
+/* Right header area (search + button) */
 .headerActions {
   display: flex;
   align-items: center;
   gap: 16px;
-
-  @media (max-width: 768px) {
-    flex-grow: 1; // Allow actions to take available space
-    justify-content: flex-end; // Push items to the right
-  }
-
-  @media (max-width: 480px) {
-    width: 100%; // Take full width on very small screens
-    justify-content: space-between; // Distribute search and button
-    margin-top: 10px; // Add some top margin
-  }
 }
 
+/* Search input */
 .searchContainer {
   position: relative;
-  width: 280px;
-
-  @media (max-width: 768px) {
-    width: 180px; // Smaller search input on mobile
-  }
-
-  @media (max-width: 480px) {
-    width: 100%; // Full width on very small screens
-    max-width: 140px; // Max width to prevent it from being too large
-  }
+  width: 320px;
 }
 
 .searchInput {
-  height: 40px;
-  width: 100%; // Ensure it takes full width of its container
-  padding-left: 16px;
-  padding-right: 40px;
-  border-radius: 6px;
-  border: 1px solid #D1D5DB;
+  height: 44px;
+  width: 100%;
+  padding: 10px 44px 10px 16px;
+  border-radius: 10px;
+  border: 1px solid #E6E7EB;
   background-color: #FFFFFF;
   font-size: 14px;
-  &:focus {
-    outline: none;
-    border-color: #8B5CF6;
-  }
+  color: #111827;
+  box-shadow: none;
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
 
-  @media (max-width: 480px) {
-    font-size: 13px; // Smaller font
-    padding: 6px 10px; // Smaller padding
-    padding-right: 30px; // Adjust for smaller icon
-  }
+.searchInput:focus {
+  outline: none;
+  border-color: rgba(139, 92, 246, 0.9);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
 }
 
 .searchIcon {
   position: absolute;
+  right: 14px;
   top: 50%;
-  right: 12px;
   transform: translateY(-50%);
-  color: #6B7280;
-
-  @media (max-width: 480px) {
-    right: 8px; // Adjust position
-    width: 16px; // Smaller icon
-    height: 16px;
-  }
+  color: #9CA3AF;
 }
 
+/* Create event button */
 .createEventButton {
-  display: flex;
+  height: 44px;
+  padding: 0 20px;
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  height: 40px;
-  padding: 0 16px;
-  border-radius: 6px;
+  gap: 8px;
+  border-radius: 10px;
+  font-weight: 600;
   font-size: 14px;
-  font-weight: 500;
-  background-color: #8B5CF6;
+  color: #ffffff;
+  background-color: #6D28D9;
   border: none;
-  color: white;
   cursor: pointer;
-  transition: background-color 0.2s ease;
-
-  &:hover {
-    background-color: #7C3AED;
-  }
-
-  @media (max-width: 768px) {
-    height: 36px; // Smaller height
-    padding: 0 12px; // Smaller padding
-    font-size: 13px; // Smaller font
-  }
+  transition: background-color .15s ease, transform .15s ease;
 }
 
-// Events table and rows
+.createEventButton:hover {
+  background-color: #5B21B6;
+  transform: translateY(-1px);
+}
+
+/* ------------------------------
+   Events Table Card
+   ------------------------------ */
 .eventsTable {
-  background-color: white;
-  border-radius: 8px;
-  border: 1px solid #E5E7EB;
+  width: 100%;
+  background-color: transparent;
+  border: none;
+  box-shadow: none;
+  overflow: visible;
 }
 
+/* Column headings */
 .tableHeader {
   display: grid;
-  grid-template-columns: 1fr 120px 120px 120px 60px;
+  grid-template-columns: minmax(300px, 1.5fr) 120px 140px 120px 64px;
+  gap: 16px;
   padding: 12px 24px;
-  background-color: #F9FAFB;
   color: #6B7280;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  border-bottom: 1px solid #E5E7EB;
-
-  @media (max-width: 768px) {
-    display: none; // Hide table header on mobile
-  }
+  text-transform: none;
+  align-items: center;
 }
 
-.eventColumn, .eventInfoCell {
-  text-align: left;
-}
-.statusColumn, .statusCell {
-  text-align: left;
-  padding-left: 10px;
-}
-.soldColumn, .soldCell {
-  text-align: left;
-}
-.grossColumn, .grossCell {
-  text-align: right;
-}
-.actionsColumn, .actionsCell {
-  text-align: center;
+@media (max-width: 900px) {
+  .tableHeader { display: none; }
 }
 
+/* Each event row */
 .eventRow {
   display: grid;
-  grid-template-columns: 1fr 120px 120px 120px 60px; // Desktop grid
+  grid-template-columns: minmax(300px, 1.5fr) 120px 140px 120px 64px;
+  gap: 16px;
   align-items: center;
-  padding: 12px 24px;
-  border-bottom: 1px solid #E5E7EB;
+  padding: 16px 24px;
+  border-bottom: 1px solid #F3F4F6;
+  background: #ffffff;
+  transition: transform .18s ease, box-shadow .18s ease;
   cursor: pointer;
-  transition: background-color 0.2s ease;
-  &:hover {
-    background-color: #F9FAFB;
-  }
-  &:last-child {
-    border-bottom: none;
-  }
+  border-radius: 12px;
+  margin-bottom: 12px;
+  border: 1px solid #EFEFF1;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03);
+}
 
-  @media (max-width: 768px) {
-    display: flex; // Change to flexbox for mobile
-    flex-wrap: wrap; // Allow content to wrap
-    padding: 16px; // Adjust padding for mobile
-    justify-content: space-between; // Distribute content
-    align-items: flex-start; // Align items to the top
-    gap: 10px; // Add gap between stacked items
+.eventRow:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 30px rgba(2, 6, 23, 0.06);
+}
+
+/* Mobile responsiveness */
+@media (max-width: 900px) {
+  .eventRow {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
   }
 }
 
+/* Event left info block */
 .eventInfoCell {
   display: flex;
   align-items: center;
   gap: 16px;
-  @media (max-width: 768px) {
-    flex-basis: 100%; // Take full width on mobile
-    margin-bottom: 10px; // Add space below
-  }
+  min-width: 0;
 }
 
+/* Date block */
 .dateBlock {
   width: 48px;
   height: 48px;
-  border-radius: 6px;
-  background-color: #F3F4F6;
+  border-radius: 8px;
+  background-color: #F9FAFB;
+  border: 1px solid #F1F2F4;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-
-  .dateMonth {
-    font-size: 10px;
-    font-weight: 600;
-    color: #4F46E5;
-    text-transform: uppercase;
-  }
-  .dateDay {
-    font-size: 18px;
-    font-weight: 600;
-    color: #1F2937;
-    line-height: 1.2;
-  }
 }
 
+.dateMonth {
+  font-size: 10px;
+  font-weight: 700;
+  color: #EF4444;
+  text-transform: uppercase;
+}
+
+.dateDay {
+  font-size: 18px;
+  font-weight: 700;
+  color: #111827;
+  line-height: 1.2;
+}
+
+/* Thumbnail */
 .eventThumbnail {
-  width: 64px;
-  height: 48px;
-  border-radius: 4px;
+  width: 72px;
+  height: 56px;
+  border-radius: 8px;
   overflow: hidden;
   flex-shrink: 0;
-  img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
 }
 
+.eventThumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Text details */
 .eventDetails {
+  min-width: 0;
   .eventName {
-    font-size: 14px;
+    margin: 0;
+    font-size: 15px;
     font-weight: 600;
     color: #111827;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   .eventLocation {
-    font-size: 12px;
+    margin: 4px 0 0 0;
+    font-size: 13px;
     color: #6B7280;
+    font-weight: 500;
   }
 }
 
+/* Status column */
 .statusCell {
-  @media (max-width: 768px) {
-    flex-basis: 48%; // Take half width on mobile
-    text-align: left;
-    padding-left: 0; // Remove padding
-    &::before {
-      content: "Status: "; // Add label
-      font-weight: 600;
-      color: #6B7280;
-    }
-  }
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
 }
 
 .statusBadge {
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 13px;
   display: inline-block;
-  padding: 4px 12px;
-  border-radius: 9999px;
-  font-size: 12px;
-  font-weight: 500;
+  text-align: center;
+  min-width: 60px;
 }
 
+/* Colors for badges */
 .draftBadge {
-  background-color: #FEF3C7;
+  background: #FEF3C7; /* Lighter yellow */
   color: #92400E;
 }
 
 .liveBadge {
-  background-color: #D1FAE5;
-  color: #065F46;
+  background: #E0E7FF; /* Lighter purple/blue */
+  color: #3730A3;
 }
 
+.pastBadge {
+  background: #F3F4F6;
+  color: #4B5563;
+}
+
+/* Sold column */
 .soldCell {
-  font-size: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+  min-width: 0;
+}
+
+.soldCell > span {
+  font-weight: 600;
   color: #374151;
-  @media (max-width: 768px) {
-    flex-basis: 48%; // Take half width on mobile
-    text-align: left;
-    &::before {
-      content: "Sold: "; // Add label
-      font-weight: 600;
-      color: #6B7280;
-    }
-  }
-  .salesProgress {
-    height: 4px;
-    background-color: #E5E7EB;
-    border-radius: 2px;
-    margin-top: 4px;
-    width: 100%;
-    .progressBar {
-      height: 100%;
-      width: 0%; // Default to 0
-      background-color: #4F46E5;
-      border-radius: 2px;
-    }
-  }
-}
-
-.grossCell {
   font-size: 14px;
-  font-weight: 500;
-  color: #111827;
-  @media (max-width: 768px) {
-    flex-basis: 48%; // Take half width on mobile
-    text-align: left;
-    &::before {
-      content: "Gross: "; // Add label
-      font-weight: 600;
-      color: #6B7280;
-    }
-  }
 }
 
+.salesProgress {
+  height: 6px;
+  background-color: #E5E7EB;
+  border-radius: 6px;
+  overflow: hidden;
+  width: 100%;
+}
+
+.progressBar {
+  height: 100%;
+  width: 0%;
+  background-color: #6D28D9;
+  border-radius: 6px;
+  transition: width 0.6s cubic-bezier(.2,.9,.3,1);
+}
+
+/* Gross column */
+.grossCell {
+  text-align: left;
+  font-weight: 600;
+  color: #111827;
+  font-size: 14px;
+}
+
+/* Actions column */
 .actionsCell {
-  text-align: center;
-  @media (max-width: 768px) {
-    flex-basis: 4%; // Keep small, push to right
-    text-align: right;
-    padding-right: 0;
-  }
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
 }
 
 .actionsButton {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
-  background-color: transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
   border: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   cursor: pointer;
-  &:hover {
-    background-color: #F3F4F6;
-  }
+  transition: background-color 0.15s ease;
 }
 
-.noEventsMessage {
-  padding: 64px 24px;
-  text-align: center;
-  color: #6B7280;
+.actionsButton:hover {
+  background-color: #F3F4F6;
 }
 
-.loadingContainer {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100%;
-}
-
-/* Add these styles to eventsPage.module.scss */
-
+/* Action menu */
 .actionsMenuContainer {
   position: relative;
-  display: inline-block;
 }
 
 .actionsMenu {
   position: absolute;
-  top: 100%;
+  top: 44px;
   right: 0;
-  background-color: white;
-  border: 1px solid #E5E7EB;
-  border-radius: 6px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  min-width: 140px;
+  background: #ffffff;
+  border: 1px solid #F1F2F4;
+  border-radius: 8px;
+  box-shadow: 0 8px 30px rgba(2, 6, 23, 0.08);
+  padding: 8px;
   z-index: 10;
-  width: 120px;
-  padding: 4px;
   display: flex;
   flex-direction: column;
+  gap: 4px;
+}
 
-  button {
-    background: none;
-    border: none;
-    padding: 8px 12px;
-    text-align: left;
-    cursor: pointer;
-    border-radius: 4px;
-    font-size: 14px;
-    color: #374151;
+.actionsMenu button {
+  background: transparent;
+  border: none;
+  text-align: left;
+  padding: 8px 12px;
+  font-weight: 500;
+  color: #374151;
+  cursor: pointer;
+  border-radius: 6px;
+  font-size: 14px;
+}
 
-    &:hover {
-      background-color: #F3F4F6;
-    }
-  }
+.actionsMenu button:hover {
+  background: #F9FAFB;
+  color: #111827;
 }
 
 .deleteAction {
-  color: #EF4444; // Red for delete actions
-  &:hover {
-    background-color: #FEF2F2 !important;
-  }
+  color: #EF4444;
+}
+.deleteAction:hover {
+    color: #DC2626;
+    background-color: #FEF2F2;
 }
 
-/* Styles for the Delete Confirmation Modal */
+
+/* ------------------------------
+   Delete modal & Utilities
+   ------------------------------ */
 .deleteModalOverlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
+  inset: 0;
+  background: rgba(17, 24, 39, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 3000;
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
 }
 
 .deleteModal {
-  background-color: white;
-  padding: 24px;
-  border-radius: 8px;
   width: 90%;
-  max-width: 400px;
+  max-width: 420px;
+  background: #ffffff;
+  padding: 32px;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(2,6,23,0.18);
   text-align: center;
+}
 
-  h3 {
-    margin-top: 0;
-    font-size: 18px;
-    color: #111827;
-  }
+.deleteModal h3 {
+  margin: 0 0 8px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #111827;
+}
 
-  p {
-    color: #6B7280;
-    margin-bottom: 24px;
-  }
+.deleteModal p {
+  color: #6B7280;
+  margin-bottom: 24px;
+  line-height: 1.5;
 }
 
 .deleteModalActions {
   display: flex;
-  justify-content: center;
   gap: 12px;
+  justify-content: center;
+}
 
-  button {
-    padding: 10px 20px;
-    border-radius: 6px;
-    font-size: 14px;
-    font-weight: 500;
+.cancelButton, .confirmDeleteButton {
+    height: 40px;
+    padding: 0 18px;
+    border-radius: 8px;
+    font-weight: 600;
     cursor: pointer;
-    border: 1px solid transparent;
-  }
+    transition: all 0.15s ease;
 }
 
 .cancelButton {
-  background-color: #FFFFFF;
+  background: #ffffff;
+  border: 1px solid #D1D5DB;
   color: #374151;
-  border-color: #D1D5DB;
-
-  &:hover {
+}
+.cancelButton:hover {
     background-color: #F9FAFB;
-  }
 }
 
 .confirmDeleteButton {
-  background-color: #EF4444;
-  color: white;
+  background: #DC2626;
+  color: #fff;
+  border: none;
+}
+.confirmDeleteButton:hover {
+    background: #B91C1C;
+}
 
-  &:hover {
-    background-color: #DC2626;
-  }
+.noEventsMessage {
+  padding: 64px;
+  color: #6B7280;
+  text-align: center;
+  background-color: #FFF;
+  border-radius: 12px;
+  border: 1px solid #EFEFF1;
+}
+
+.loadingContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 50vh;
+  width: 100%;
 }
