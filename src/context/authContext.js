@@ -64,7 +64,7 @@ export const AuthProvider = ({ children }) => {
         organizationName: response.data.organizationName,
         name: response.data.name || `${response.data.firstName} ${response.data.lastName}`,
         email: response.data.email || credentials.username,
-        role: response.data.role,
+        role: response.data.roles && response.data.roles.length > 0 ? response.data.roles[0] : null,
       };
       localStorage.setItem('userData', JSON.stringify(userData));
 

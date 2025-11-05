@@ -1,17 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom'; // NEW: Import useParams
 import QrScanner from 'react-qr-scanner';
 import styles from './scannerPage.module.scss';
 import { FiXCircle, FiCheckCircle, FiMaximize, FiUsers } from 'react-icons/fi';
-
-// Import the table component
 import AttendeesTable from './components/attendeesTable';
-// Import your API functions
-import { GetEventAttendeesAPI } from '../../services/allApis';
+import { GetAttendeeScanner, CheckInAttendeeAPI, CheckoutAttendeeAPI, VerifyQrCodeAPI } from '../../services/allApis';
 
 const ScannerPage = () => {
-  const { eventId } = useParams(); // NEW: Get eventId directly from the URL
-
   // Scanner State
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [scannedData, setScannedData] = useState(null);
@@ -21,56 +15,62 @@ const ScannerPage = () => {
   // Data & UI State
   const [attendees, setAttendees] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  
-  // UPDATED: Fetch attendees using the eventId from the URL
-  useEffect(() => {
-    if (!eventId) {
-        setError("No Event ID provided in the URL.");
-        setIsLoading(false);
-        return;
-    };
 
+  // ✅ Fetch attendees from scanner API
+  useEffect(() => {
     const fetchAttendees = async () => {
       try {
         setIsLoading(true);
-        const response = await GetEventAttendeesAPI(eventId); // Use the correct API with eventId
-        const formattedAttendees = response.data.map((attendee, index) => ({
-          id: attendee.ticketId || `att-${index}`,
-          name: attendee.attendeeName,
-          ticketType: attendee.ticketType,
-          isCheckedIn: false,
+        const response = await GetAttendeeScanner(); // no eventId needed
+        const formatted = response.data.map((a) => ({
+          id: a.ticketId,
+          name: a.attendeeName,
+          ticketType: a.ticketType,
+          isCheckedIn: a.checkedIn,
+          checkedInAt: a.checkedInAt,
         }));
-        setAttendees(formattedAttendees);
+        setAttendees(formatted);
       } catch (err) {
         console.error("Failed to fetch attendees:", err);
-        setError('Could not load the attendee list for this event.');
+        setError('Could not load the attendee list.');
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchAttendees();
-  }, [eventId]); // This effect re-runs if the eventId in the URL changes
+  }, []);
 
-  const handleScan = (data) => {
-    if (data) {
-      const scannedId = data.text;
-      const targetAttendee = attendees.find(att => att.id === scannedId);
-      setScannedData({ text: scannedId, timestamp: new Date().toLocaleTimeString() });
+  const handleScan = async (data) => {
+  if (data) {
+    const qrContent = data.text.trim();
 
-      if (targetAttendee) {
-        if (!targetAttendee.isCheckedIn) {
-          handleCheckIn(scannedId);
-          setSuccessMessage(`${targetAttendee.name} has been successfully checked in.`);
-        } else {
-          setError(`${targetAttendee.name} has already been checked in.`);
-        }
-      } else {
-        setError(`Ticket with ID "${scannedId}" not found in this event's attendee list.`);
-      }
-      setIsScannerOpen(false);
-    }
-  };
+    setScannedData({ text: qrContent, timestamp: new Date().toLocaleTimeString() });
+    setError(null);
+    setSuccessMessage(null);
+    setIsScannerOpen(false);
+
+    try {
+  const response = await VerifyQrCodeAPI({ qrContent }); // Pass as { qrContent }
+  const { orderId, eventName, attendees: attendeesFromOrder } = response.data;
+
+  const formattedAttendees = attendeesFromOrder.map((a) => ({
+    id: a.ticketId,
+    name: a.attendeeName,
+    ticketType: a.ticketType,
+    isCheckedIn: a.checkedIn,
+    checkedInAt: a.checkedInAt,
+  }));
+
+  setAttendees(formattedAttendees);
+  setSuccessMessage(`Order #${orderId} verified for ${eventName}. Found ${formattedAttendees.length} attendees.`);
+} catch (err) {
+  console.error("QR verification failed:", err);
+  setError("Invalid QR Code or ticket does not belong to this event.");
+}
+
+  }
+};
 
   const handleError = (err) => {
     console.error(err);
@@ -84,22 +84,54 @@ const ScannerPage = () => {
     setSuccessMessage(null);
     setIsScannerOpen(true);
   };
-  
-  const handleCheckIn = (attendeeId) => {
-    setAttendees(current => current.map(att => att.id === attendeeId ? { ...att, isCheckedIn: true } : att));
-  };
+
+  // ✅ Toggle check-in (optimistic UI, later connect API)
+  const handleToggleCheckIn = async (ticketId, isCurrentlyCheckedIn) => {
+  try {
+    if (isCurrentlyCheckedIn) {
+      // Checkout
+      await CheckoutAttendeeAPI(ticketId);
+      setAttendees(current =>
+        current.map(att =>
+          att.id === ticketId ? { ...att, isCheckedIn: false, checkedInAt: null } : att
+        )
+      );
+    } else {
+      // Checkin
+      await CheckInAttendeeAPI(ticketId);
+      setAttendees(current =>
+        current.map(att =>
+          att.id === ticketId ? { ...att, isCheckedIn: true, checkedInAt: new Date().toISOString() } : att
+        )
+      );
+    }
+  } catch (err) {
+    console.error("Check-in/out failed:", err);
+    setError("Failed to update attendee status. Please try again.");
+  }
+};
 
   const cameraConstraints = { video: { facingMode: 'environment' } };
 
-  // Main UI
   return (
     <div className={styles.scannerContainer}>
       <div className={styles.contentWrapper}>
         <h1>Ticket Scanner</h1>
         {isScannerOpen ? (
           <div className={styles.scannerActive}>
-            <div className={styles.scannerPreview}><QrScanner delay={300} onError={handleError} onScan={handleScan} style={{ width: '100%' }} constraints={cameraConstraints} /><div className={styles.viewfinder}></div></div>
-            <button onClick={() => setIsScannerOpen(false)} className={styles.closeButton}><FiXCircle /> Close Scanner</button>
+            <div className={styles.scannerPreview}>
+              <QrScanner
+                delay={300}
+                onError={handleError}
+                onScan={handleScan}
+                style={{ width: '100%' }}
+                constraints={cameraConstraints}
+              />
+              <div className={styles.viewfinder}></div>
+            </div>
+            <button onClick={() => setIsScannerOpen(false)} className={styles.closeButton}>
+              <FiXCircle /> Close Scanner
+            </button>
           </div>
         ) : (
           <div className={styles.scannerIdle}>
@@ -112,7 +144,11 @@ const ScannerPage = () => {
 
       <div className={styles.attendeesSection}>
         <div className={styles.tableHeader}><FiUsers /><h2>Attendee List</h2></div>
-        {isLoading ? <p className={styles.loadingText}>Loading attendees...</p> : <AttendeesTable attendees={attendees} onCheckIn={handleCheckIn} />}
+        {isLoading ? (
+          <p className={styles.loadingText}>Loading attendees...</p>
+        ) : (
+          <AttendeesTable attendees={attendees} onToggleCheckIn={handleToggleCheckIn} />
+        )}
       </div>
     </div>
   );

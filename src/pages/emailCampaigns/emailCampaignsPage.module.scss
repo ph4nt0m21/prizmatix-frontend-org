@@ -1,6 +1,6 @@
 .emailCampaignsPageContainer {
   width: 100%;
-  height: 100vh;
+  min-height: 100vh;
   overflow-y: auto;
   overflow-x: hidden;
   padding: 24px 40px;
@@ -10,9 +10,18 @@
   background: #f9fafb;
 }
 
+/* --- Page Header --- */
 .pageHeader {
   display: flex;
   justify-content: space-between;
+  align-items: center;
+  max-width: 964px; /* Matches form width + padding */
+  margin: 0 auto 16px auto;
+}
+
+.headerActions {
+  display: flex;
+  gap: 12px;
   align-items: center;
 }
 
@@ -26,70 +35,131 @@
 }
 
 .pageTitle {
-  font-size: 24px;
+  font-size: 28px;
   font-weight: 600;
-  margin: 16px 0 24px 0;
-}
-
-.formSection {
-  background: #fff;
-  padding: 20px;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  margin-bottom: 20px;
-  max-width: 1000px;
+  margin-bottom: 24px;
+  max-width: 900px;
   margin-left: auto;
   margin-right: auto;
-
-  h2 {
-    font-size: 18px;
-    font-weight: 500;
-    margin-bottom: 16px;
-  }
 }
 
+/* --- NEW: Main Form Container --- */
+.emailFormContainer {
+  background: #fff;
+  padding: 32px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  max-width: 900px;
+  margin: 0 auto;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05),
+    0 2px 4px -1px rgba(0, 0, 0, 0.03);
+}
+
+.formSubheading {
+  font-size: 18px;
+  font-weight: 600;
+  margin-top: 28px;
+  margin-bottom: 20px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #f3f4f6;
+  color: #111827;
+}
+
+.formSubheading:first-of-type {
+  margin-top: 0;
+}
+
+/* --- IMPROVED: Form Group & Inputs --- */
 .formGroup {
-  margin-bottom: 16px;
+  margin-bottom: 24px;
+  position: relative;
 
   label {
     display: block;
     font-size: 14px;
     font-weight: 500;
-    margin-bottom: 6px;
+    margin-bottom: 8px;
+    color: #374151;
   }
 
-  input,
-  select {
+  input {
     width: 100%;
-    padding: 10px 12px;
+    box-sizing: border-box;
+    padding: 12px 16px;
     border: 1px solid #d1d5db;
-    border-radius: 6px;
+    border-radius: 8px;
     font-size: 14px;
     outline: none;
-    transition: border 0.2s;
+    transition: all 0.2s;
+    background-color: #f9fafb;
+
+    &::placeholder {
+      color: #9ca3af;
+    }
 
     &:focus {
       border-color: #7c3aed;
+      background-color: #fff;
+      box-shadow: 0 0 0 3px #ede9fe;
     }
   }
 }
 
+/* --- Rich Text Editor Wrapper --- */
+.richTextEditorWrapper {
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: all 0.2s;
+
+  &:focus-within {
+    border-color: #7c3aed;
+    box-shadow: 0 0 0 3px #ede9fe;
+  }
+
+  :global(.ProseMirror) {
+    min-height: 200px;
+    padding: 12px 16px;
+    outline: none;
+
+    p.is-editor-empty:first-child::before {
+      content: attr(data-placeholder);
+      float: left;
+      color: #adb5bd;
+      pointer-events: none;
+      height: 0;
+    }
+
+    a {
+      color: #7c3aed;
+      text-decoration: none;
+      cursor: pointer;
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+  }
+}
+
+/* --- Send Options --- */
 .toggleGroup {
   display: flex;
   gap: 8px;
 }
 
 .toggleButton {
-  padding: 8px 16px;
+  padding: 10px 20px;
   border: 1px solid #d1d5db;
-  border-radius: 6px;
+  border-radius: 8px;
   background: #f9fafb;
   font-size: 14px;
+  font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
 
   &:hover {
     background: #f3f4f6;
+    border-color: #c9ced4;
   }
 
   &.active {
@@ -99,50 +169,148 @@
   }
 }
 
-.checkboxGroup {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-
-  .checkboxLabel {
+.dateTimePickerWrapper {
+  margin-top: 16px;
+  label {
+    display: block;
     font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 8px;
+    color: #374151;
+  }
+  .dateTimeInput {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 14px;
+    background-color: #f9fafb;
+  }
+}
+
+/* --- NEW: Attachment Section --- */
+.attachmentSection {
+  margin-top: 28px;
+  padding: 20px;
+  border: 1px dashed #d1d5db;
+  border-radius: 8px;
+  background-color: #fcfcfd;
+}
+
+.attachmentList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+
+  .attachmentItem {
+    background: #eef2ff;
+    border: 1px solid #c7d2fe;
+    color: #3730a3;
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-size: 13px;
     display: flex;
     align-items: center;
-    gap: 8px;
-  }
+    gap: 6px;
 
-  input[type="checkbox"] {
-    width: 16px;
-    height: 16px;
+    button {
+      border: none;
+      background: transparent;
+      font-size: 16px;
+      color: #6b7280;
+      cursor: pointer;
+      &:hover {
+        color: #b91c1c;
+      }
+    }
   }
 }
 
-.richTextEditor {
-  .ql-container {
-    border-radius: 6px;
-    font-size: 14px;
-    min-height: 200px;
-  }
+.attachmentPlaceholder {
+  color: #6b7280;
+  font-size: 14px;
+  text-align: center;
+  padding: 12px 0;
+}
 
-  .ql-toolbar {
-    border-radius: 6px 6px 0 0;
+.addAttachmentButton {
+  margin-top: 16px;
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  color: #374151;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+  display: block; /* Ensures it takes full width */
+
+  &:hover {
     background: #f9fafb;
-  }
-
-  .ql-editor {
-    min-height: 150px;
+    border-color: #7c3aed;
+    color: #7c3aed;
   }
 }
 
+/* --- Footer Actions --- */
+.footerActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid #f3f4f6;
+}
+
+.primaryButton,
+.secondaryButton {
+  border: none;
+  padding: 12px 22px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.primaryButton {
+  background: #7c3aed;
+  color: #fff;
+  &:hover {
+    background: #6d28d9;
+  }
+  &:disabled {
+    background: #a78bfa;
+    cursor: not-allowed;
+  }
+}
+
+.secondaryButton {
+  background: #fff;
+  color: #374151;
+  border: 1px solid #d1d5db;
+  &:hover {
+    background: #f3f4f6;
+  }
+}
+
+/* --- Other Component Styles --- */
 .multiSelect {
   .select__control {
     border: 1px solid #d1d5db;
-    border-radius: 6px;
-    padding: 4px;
-    min-height: 45px;
+    border-radius: 8px;
+    padding: 6px;
+    min-height: 50px;
+    background-color: #f9fafb;
     &:hover {
       border-color: #7c3aed;
     }
+  }
+  .select__control--is-focused {
+    border-color: #7c3aed !important;
+    background-color: #fff !important;
+    box-shadow: 0 0 0 3px #ede9fe !important;
   }
   .select__multi-value {
     background: #ede9fe;
@@ -153,88 +321,43 @@
     background: #7c3aed;
     color: white;
   }
-}
-
-.dateTimePickerWrapper {
-  margin-top: 12px;
-
-  .dateTimeInput {
-    width: 100%;
-    padding: 10px;
-    border: 1px solid #d1d5db;
-    border-radius: 6px;
-    font-size: 14px;
+  .select__option--is-focused {
+    background-color: #f3e8ff;
   }
 }
 
-.footerActions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  margin-top: 24px;
-}
-
-.primaryButton {
-  background: #7c3aed;
-  color: #fff;
-  border: none;
-  padding: 10px 18px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
-
-  &:hover {
-    background: #6d28d9;
-  }
-}
-
-.suggestionsList {
+.subjectSuggestionsList {
   position: absolute;
+  top: 100%;
+  left: 0;
+  width: 250px;
   background: #fff;
   border: 1px solid #e5e7eb;
   border-radius: 6px;
   list-style: none;
   padding: 4px 0;
-  margin: 0;
+  margin: 4px 0 0 0;
   z-index: 1000;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 
   li {
     padding: 8px 12px;
     cursor: pointer;
     font-size: 14px;
-
     &:hover {
       background: #f3f4f6;
-      color: #7c3aed;
     }
   }
 }
 
-
-.secondaryButton {
-  background: #f9fafb;
-  color: #374151;
-  border: 1px solid #d1d5db;
-  padding: 10px 18px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 14px;
-
-  &:hover {
-    background: #f3f4f6;
-  }
-}
-
-/* Preview modal styles */
+/* --- Modal Styles --- */
 .previewOverlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0,0,0,0.5);
+  background: rgba(0, 0, 0, 0.45);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -246,42 +369,65 @@
   padding: 24px;
   border-radius: 8px;
   width: 600px;
+  max-width: 95%;
   max-height: 80vh;
   overflow-y: auto;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 
   h2 {
+    margin-top: 0;
     margin-bottom: 12px;
     font-size: 20px;
     font-weight: 600;
   }
 
-  h3 {
-    margin-bottom: 12px;
-    font-size: 18px;
-    font-weight: 500;
+  p {
+    margin-top: 0;
+    color: #4b5563;
+  }
+
+  .previewActions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 24px;
   }
 }
 
-.previewBanner {
-  width: 100%;
-  border-radius: 6px;
-  margin-bottom: 16px;
-}
-
-.previewMessage {
-  font-size: 14px;
-  line-height: 1.5;
-  margin-bottom: 16px;
-}
-
-.previewEventInfo {
-  font-size: 14px;
-  color: #374151;
-  margin-bottom: 16px;
-}
-
-.previewActions {
+.testEmailList {
+  list-style: none;
+  margin: 12px 0 0 0;
+  padding: 0;
   display: flex;
-  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+
+  li {
+    background: #ede9fe;
+    color: #4c1d95;
+    border-radius: 4px;
+    padding: 4px 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    button {
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      color: #6b21a8;
+      font-size: 15px;
+      padding: 0;
+      line-height: 1;
+      &:hover {
+        color: #b91c1c;
+      }
+    }
+  }
+}
+.fileSizeNote {
+  font-size: 0.85rem;
+  color: #888;
+  margin-top: -0.5rem;
+  margin-bottom: 0.5rem;
 }

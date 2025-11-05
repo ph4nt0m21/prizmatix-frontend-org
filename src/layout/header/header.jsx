@@ -89,16 +89,19 @@ const Header = ({ toggleMobileSidebar }) => {
         </div>
 
         {/* Only show Create Event button when not in event creation flow or events page */}
-        {!isEventCreationRoute && !isEventsPage && (
-          <button
-            type="button"
-            className={styles.createEventButton}
-            onClick={handleCreateEvent}
-          >
-            <span className={styles.plusIcon}>+</span>
-            Create Event
-          </button>
-        )}
+        {userData?.roles?.includes("ORGANIZER") || userData?.roles?.includes("SUPER_ADMIN") ? (
+  !isEventCreationRoute && !isEventsPage && (
+    <button
+      type="button"
+      className={styles.createEventButton}
+      onClick={handleCreateEvent}
+    >
+      <span className={styles.plusIcon}>+</span>
+      Create Event
+    </button>
+  )
+) : null}
+
       </div>
     </header>
   );
