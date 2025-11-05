@@ -1,174 +1,116 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, useParams, useOutletContext } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import EventHeaderNav from "./components/eventHeaderNav";
 import EventManageSidebar from "./components/eventManageSidebar";
 import LoadingSpinner from "../../components/common/loadingSpinner/loadingSpinner";
 import styles from "./manageEventPage.module.scss";
 
 // Import API and section components
-import { GetEventDashboardAPI } from "../../services/allApis";
+import { GetEventDashboardAPI, GetEventAPI } from "../../services/allApis";
 import OverviewSection from "./sections/overviewSection";
 import OrdersAndAttendeesSection from "./sections/ordersAndAttendeesSection/ordersAndAttendeesSection";
 import PayoutSection from "./sections/payoutSection";
-import PromotionsSection from "./sections/promotionsSection";
 import TicketSection from "./sections/ticketSection";
 import DiscountSection from "./sections/discountSection";
 
 const EventManagePage = () => {
   const navigate = useNavigate();
   const { eventId, section } = useParams();
-  // We still get global context, but will use its toggleMobileSidebar for the main header's action
-  const { toggleMobileSidebar: toggleGlobalSidebar } = useOutletContext(); // Renamed to avoid conflict
 
-  // NEW: Local state for this page's sidebar visibility
   const [isManageSidebarOpen, setIsManageSidebarOpen] = useState(false);
-
-  // NEW: Local toggle function for this page's sidebar
-  const toggleManageSidebar = () => {
-    setIsManageSidebarOpen(!isManageSidebarOpen);
-  };
-
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [successMessage, setSuccessMessage] = useState(null);
-
   const [dashboardData, setDashboardData] = useState(null);
-
-  const [eventData, setEventData] = useState({
-    name: "Event Dashboard",
-    status: "Live",
-  });
-
+  const [eventData, setEventData] = useState(null);
   const [currentSection, setCurrentSection] = useState("overview");
-
-  const [sectionStatus, setSectionStatus] = useState({
-    overview: { completed: true, valid: true, visited: true },
-    ordersAndAttendees: { completed: true, valid: true, visited: false },
-    payout: { completed: true, valid: true, visited: false },
-    promotions: { completed: true, valid: true, visited: false },
-    tickets: { completed: false, valid: true, visited: false },
-    discounts: { completed: false, valid: true, visited: false },
-  });
 
   useEffect(() => {
     const fetchEventData = async () => {
+      if (!eventId) return;
+
       try {
         setIsLoading(true);
-        const response = await GetEventDashboardAPI(eventId);
-        setDashboardData(response.data);
+        // Fetch both dashboard and detailed event data in parallel
+        const [dashboardRes, eventRes] = await Promise.all([
+          GetEventDashboardAPI(eventId),
+          GetEventAPI(eventId)
+        ]);
+        
+        setDashboardData(dashboardRes.data);
+        setEventData(eventRes.data);
         setError(null);
       } catch (error) {
-        console.error("Error fetching event dashboard data:", error);
+        console.error("Error fetching event data:", error);
         setError("Failed to load event data. Please try again.");
       } finally {
         setIsLoading(false);
       }
     };
 
-    if (eventId) {
-      fetchEventData();
-    }
+    fetchEventData();
   }, [eventId]);
 
   useEffect(() => {
-    if (section) {
-      setCurrentSection(section);
-    } else {
-      setCurrentSection("overview");
-    }
+    setCurrentSection(section || "overview");
   }, [section]);
 
   const navigateToManageSection = (sectionName) => {
     navigate(`/events/manage/${eventId}/${sectionName}`);
-    setCurrentSection(sectionName);
-    // Close this page's mobile sidebar after navigation
     if (window.innerWidth <= 768 && isManageSidebarOpen) {
-      toggleManageSidebar();
+      setIsManageSidebarOpen(false);
     }
   };
 
   const renderCurrentSection = () => {
-    if (isLoading) {
-      return (
-        <div className={styles.loadingContainer}>
-          <LoadingSpinner size="large" />
-          <p>Loading event data...</p>
-        </div>
-      );
-    }
-
-    if (error) {
-       return <div className={styles.errorMessage}>{error}</div>
-    }
-
     switch (currentSection) {
       case "overview":
-        return <OverviewSection dashboardData={dashboardData} />;
+        return <OverviewSection dashboardData={dashboardData} eventData={eventData} />;
       case "ordersAndAttendees":
         return <OrdersAndAttendeesSection eventId={eventId} />;
       case "payout":
-        return <PayoutSection />;
-      case "promotions":
-        return <PromotionsSection />;
+        return <PayoutSection dashboardData={dashboardData} />;
       case "tickets":
         return <TicketSection />;
       case "discounts":
         return <DiscountSection />;
       default:
-        return <OverviewSection dashboardData={dashboardData} />;
+        return <OverviewSection dashboardData={dashboardData} eventData={eventData} />;
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className={styles.loadingContainerFullPage}>
+        <LoadingSpinner size="large" />
+      </div>
+    );
+  }
+
+  if (error) {
+     return <div className={styles.errorMessage}>{error}</div>
+  }
+
   return (
     <>
-      {/* EventHeaderNav will now use the local toggleManageSidebar */}
       <EventHeaderNav
-        currentStep={currentSection === "overview" ? "Overview" : currentSection}
-        eventName={eventData.name}
-        isDraft={eventData.status !== "Live"}
-        toggleMobileSidebar={toggleManageSidebar} // Pass the local toggle function
+        eventName={eventData?.name || ''}
+        isDraft={!eventData?.isPublished}
+        toggleMobileSidebar={() => setIsManageSidebarOpen(!isManageSidebarOpen)}
         eventId={eventId}
       />
-      <div className={styles.content}>
-        {/* EventManageSidebar will use the local isManageSidebarOpen and toggleManageSidebar */}
+      <div className={styles.contentWrapper}>
         <EventManageSidebar
           currentSection={currentSection}
-          sectionStatus={sectionStatus}
+          sectionStatus={{}} // sectionStatus can be implemented later
           navigateToSection={navigateToManageSection}
-          navigateToEventEditPage={() =>
-            navigate(`/events/edit-page/${eventId}`)
-          }
           eventId={eventId}
-          isMobileSidebarOpen={isManageSidebarOpen} // Pass local state
-          toggleMobileSidebar={toggleManageSidebar} // Pass local toggle function
+          isMobileSidebarOpen={isManageSidebarOpen}
+          toggleMobileSidebar={() => setIsManageSidebarOpen(!isManageSidebarOpen)}
         />
-        <div className={styles.mainContent}>
-          {successMessage && (
-            <div className={styles.successMessage}>
-              {successMessage}
-              <button
-                className={styles.dismissButton}
-                onClick={() => setSuccessMessage(null)}
-              >
-                ✕
-              </button>
-            </div>
-          )}
-          {error && !isLoading && (
-            <div className={styles.errorMessage}>
-              {error}
-              <button
-                className={styles.dismissButton}
-                onClick={() => setError(null)}
-              >
-                ✕
-              </button>
-            </div>
-          )}
-          <div className={styles.sectionContent}>{renderCurrentSection()}</div>
-        </div>
+        <main className={styles.mainContent}>
+          {renderCurrentSection()}
+        </main>
       </div>
-      <div className={styles.footer}>© 2025 Event Tickets Platform</div>
     </>
   );
 };

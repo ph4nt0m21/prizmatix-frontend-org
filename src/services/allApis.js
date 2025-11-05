@@ -208,3 +208,24 @@ export const GetAllEmailCampaignsAPI = async () => {
 export const GetEmailCampaignByIdAPI = async (id) => {
   return await apiClient.get(`/admin/email-campaigns/${id}`);
 };
+
+// =============== SCANNER USER APIs ===============
+export const CreateScannerUserAPI = async (data) => {
+  return await apiClient.post("/admin/scanner-users", data);
+};
+
+export const GetAttendeeScanner = async () => {
+  return await apiClient.get(`/scanner/attendees`);
+};
+
+export const CheckInAttendeeAPI = async (ticketId) => {
+  return await apiClient.post(`/scanner/checkin/${ticketId}`);
+};
+
+export const VerifyQrCodeAPI = async (data) => {
+  return await apiClient.post("/scanner/verify", data);
+};
+
+export const CheckoutAttendeeAPI = async (ticketId) => {
+  return await apiClient.post(`/scanner/checkout/${ticketId}`);
+};

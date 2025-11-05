@@ -7,7 +7,6 @@ import "./App.css";
 // Import all your pages
 import HomePage from "./pages/homePage/homePage";
 import LoginPage from "./pages/auth/loginPage";
-import RegisterPage from "./pages/auth/multiStepRegisterPage";
 import ForgotPasswordPage from "./pages/auth/forgotPasswordPage";
 import ResetLinkSentPage from "./pages/auth/resetLinkSentPage";
 import ResetPasswordPage from "./pages/auth/resetPasswordPage";
@@ -18,9 +17,9 @@ import EventEditPage from './pages/events/eventEditPage';
 import TicketEditPage from './pages/events/ticketEditPage';
 import NotFoundPage from "./pages/notFound/notFoundPage";
 // NEW: Import EmailCampaignsPage
-import EmailCampaignsPage from './pages/emailCampaigns/emailCampaignsPage';
-import ReportsPage from './pages/reports/reportsPage';
-import ScannerPage from './pages/scanner/scannerPage';
+// import UnauthorizedPage from './pages/unauthorized/unauthorizedPage';
+import DashboardPage from "./pages/admin/DashboardPage";
+
 
 // Import utilities and components
 import ProtectedRoute from "./security/protectedRoute";
@@ -53,15 +52,16 @@ const AppContent = () => {
   return (
     <>
       <Routes>
-        {/* Public Routes */}
+        {/* ======================================== */}
+        {/* ========= 1. PUBLIC ROUTES ========= */}
+        {/* ======================================== */}
+        {/* These routes are accessible to everyone. */}
+        {/* If the user is already logged in, redirect them away from these pages. */}
         <Route
           path="/login"
           element={isAuthenticated ? <Navigate to="/" /> : <LoginPage />}
         />
-        <Route
-          path="/register"
-          element={isAuthenticated ? <Navigate to="/" /> : <RegisterPage />}
-        />
+        
         <Route
           path="/forgot-password"
           element={isAuthenticated ? <Navigate to="/" /> : <ForgotPasswordPage />}
@@ -74,30 +74,32 @@ const AppContent = () => {
           path="/reset-password"
           element={isAuthenticated ? <Navigate to="/" /> : <ResetPasswordPage />}
         />
-
-        {/* Protected Routes */}
         <Route element={<ProtectedRoute />}>
-          <Route path="/" element={<MainLayout />}>
-            <Route index element={<HomePage />} />
-            <Route path="events" element={<EventsPage />} />
-            <Route path="events/manage/:eventId/:section" element={<EventManagePage />} />
-            <Route path="events/edit-page/:eventId/:step" element={<EventEditPage />} />
-            <Route path="events/edit-page/:eventId" element={<EventEditPage />} />
-            <Route path="events/edit-page" element={<EventEditPage />} />
-            <Route path="events/tickets/:eventId" element={<TicketEditPage />} />
-            <Route path="events/tickets" element={<TicketEditPage />} />
-            <Route path="events/create" element={<CreateEventPage />} />
-            <Route path="events/create/:eventId" element={<CreateEventPage />} />
-            <Route path="events/create/:eventId/:step" element={<CreateEventPage />} />
-            <Route path="campaigns" element={<EmailCampaignsPage />} />
-            <Route path="reports" element={<ReportsPage />} />
-            <Route path="reports/:eventId" element={<ReportsPage />} />
-            <Route path="scanner" element={<ScannerPage />} />
-            <Route path="scanner/:eventId" element={<ScannerPage />} />
+          
+          {/* Routes for ORGANIZER and ADMINISTRATOR */}
+          <Route element={<ProtectedRoute allowedRoles={['ORGANIZER', 'ADMINISTRATOR']} />}>
+            <Route path="/" element={<MainLayout />}>
+              <Route index element={<DashboardPage />} />
+              <Route path="events" element={<EventsPage />} />
+              <Route path="events/manage/:eventId/:section" element={<EventManagePage />} />
+              <Route path="events/edit-page/:eventId/:step" element={<EventEditPage />} />
+              <Route path="events/edit-page/:eventId" element={<EventEditPage />} />
+              <Route path="events/edit-page" element={<EventEditPage />} />
+              <Route path="events/tickets/:eventId" element={<TicketEditPage />} />
+              <Route path="events/tickets" element={<TicketEditPage />} />
+              <Route path="events/create" element={<CreateEventPage />} />
+              <Route path="events/create/:eventId" element={<CreateEventPage />} />
+              <Route path="events/create/:eventId/:step" element={<CreateEventPage />} />
+    </Route>
           </Route>
-        </Route>
 
-        {/* 404 */}
+        </Route> {/* End of main ProtectedRoute wrapper */}
+        
+
+        {/* ======================================== */}
+        {/* ===== 3. OTHER PUBLIC ROUTES ======= */}
+        {/* ======================================== */}
+        {/* <Route path="/unauthorized" element={<UnauthorizedPage />} /> */}
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
 

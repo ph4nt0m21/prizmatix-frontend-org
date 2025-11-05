@@ -1,9 +1,9 @@
 /* This is the scrolling container */
 .tableContainer {
-  display: block;
+  display: flex;
+  justify-content: center;
   width: 100%;
   overflow-x: auto;
-  /* Add a fallback for Webkit browsers for better scrollbar styling if needed */
   -webkit-overflow-scrolling: touch;
 }
 
@@ -11,7 +11,6 @@
 .table {
   border-collapse: collapse;
   font-size: 14px;
-  /* REMOVED width: 100%; */
 }
 
 /* These styles force columns to take up their natural width without wrapping */

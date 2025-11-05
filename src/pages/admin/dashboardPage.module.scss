@@ -1,0 +1,28 @@
+.pageWrapper {
+  background-color: #F7F7FA;
+  padding: 40px;
+  min-height: 100vh;
+}
+
+.pageTitle {
+  margin: 0 0 24px 0;
+  font-size: 28px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.contentCard {
+  background-color: #FFFFFF;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 6px 18px rgba(17, 24, 39, 0.04);
+  border: 1px solid rgba(229, 231, 235, 0.9);
+}
+
+.loadingContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  width: 100%;
+}

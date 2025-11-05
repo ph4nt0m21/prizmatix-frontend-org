@@ -1,0 +1,149 @@
+// Reusing styles from eventsPage.module.scss
+@import '../../styles/variables.scss';
+@import '../../styles//mixins.scss';
+
+.backButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 24px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  color: #374151;
+  background-color: #fff;
+  border: 1px solid #D1D5DB;
+  cursor: pointer;
+  transition: background-color .15s ease;
+
+  &:hover {
+    background-color: #F9FAFB;
+  }
+}
+
+.listHeader {
+  font-size: 20px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 20px 0;
+}
+
+// Table styles adapted from eventsPage.module.scss
+.eventsTable {
+  width: 100%;
+}
+
+.tableHeader {
+  display: grid;
+  grid-template-columns: minmax(300px, 1.5fr) 120px 140px 120px;
+  gap: 16px;
+  padding: 12px 24px;
+  color: #6B7280;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.eventRow {
+  display: grid;
+  grid-template-columns: minmax(300px, 1.5fr) 120px 140px 120px;
+  gap: 16px;
+  align-items: center;
+  padding: 16px 24px;
+  background: #ffffff;
+  transition: transform .18s ease, box-shadow .18s ease;
+  cursor: pointer;
+  border-radius: 12px;
+  margin-bottom: 12px;
+  border: 1px solid #EFEFF1;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03);
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(2, 6, 23, 0.05);
+  }
+}
+
+.eventInfoCell {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+}
+
+.dateBlock {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  background-color: #F9FAFB;
+  border: 1px solid #F1F2F4;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.dateMonth {
+  font-size: 10px;
+  font-weight: 700;
+  color: #EF4444;
+}
+
+.dateDay {
+  font-size: 18px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.eventDetails {
+  min-width: 0;
+  .eventName {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 600;
+    color: #111827;
+  }
+  .eventLocation {
+    margin: 4px 0 0 0;
+    font-size: 13px;
+    color: #6B7280;
+  }
+}
+
+.statusCell {}
+
+.statusBadge {
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.draftBadge { background: #FEF3C7; color: #92400E; }
+.liveBadge { background: #E0E7FF; color: #3730A3; }
+.pastBadge { background: #F3F4F6; color: #4B5563; }
+
+.soldCell {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  span { font-weight: 600; color: #374151; font-size: 14px; }
+}
+
+.salesProgress {
+  height: 6px;
+  background-color: #E5E7EB;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.progressBar {
+  height: 100%;
+  background-color: #6D28D9;
+}
+
+.grossCell {
+  font-weight: 600;
+  color: #111827;
+  font-size: 14px;
+}

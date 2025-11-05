@@ -1,0 +1,65 @@
+// Reusing styles from ordersAndAttendeesSection.module.scss
+.backButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 24px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  color: #374151;
+  background-color: #fff;
+  border: 1px solid #D1D5DB;
+  cursor: pointer;
+  transition: background-color .15s ease;
+
+  &:hover {
+    background-color: #F9FAFB;
+  }
+}
+
+.mainHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 24px;
+  border-bottom: 1px solid #E5E7EB;
+  background-color: #FFFFFF;
+  border-radius: 8px 8px 0 0;
+  border: 1px solid #E5E7EB;
+}
+
+.tabs {
+  display: flex;
+}
+
+.tabButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 8px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  color: #6B7280;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+
+  &.active {
+    color: #4F46E5;
+    border-bottom-color: #4F46E5;
+  }
+}
+
+.mainContent {
+  padding-top: 0;
+}
+
+.contentCard {
+  background: #FFFFFF;
+  border-radius: 0 0 8px 8px;
+  border: 1px solid #E5E7EB;
+  border-top: none;
+}

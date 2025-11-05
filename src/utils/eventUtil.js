@@ -155,31 +155,57 @@ const formatAddress = (locationData) => {
   return components.join(", ");
 };
 
+// ✅ NEW: Helper function to convert local time to UTC and split it
+const convertAndSplitUTC = (dateStr, timeStr) => {
+  // If either part is missing, return null values
+  if (!dateStr || !timeStr) {
+    return { date: null, time: null };
+  }
+
+  // 1. Ensure time string has seconds
+  const timeWithSeconds = timeStr.split(':').length === 3 ? timeStr : `${timeStr}:00`;
+  
+  // 2. Create a Date object from the local date and time
+  const localDateTime = new Date(`${dateStr}T${timeWithSeconds}`);
+
+  // 3. Convert to a UTC ISO string (e.g., "2025-10-04T12:37:01.123Z")
+  const isoString = localDateTime.toISOString();
+
+  // 4. Split the ISO string into date and time parts
+  const utcDate = isoString.substring(0, 10); // "2025-10-04"
+  const utcTime = isoString.substring(11, 19); // "12:37:01"
+
+  return { date: utcDate, time: utcTime };
+};
+
+
 export const prepareDateTimeDataForAPI = (dateTimeData, eventId = null) => {
   const userData = getUserData();
   const eventData = getEventData();
-
-  // Use provided eventId first, or fall back to stored eventId
   const eventDataId = eventId || eventData?.eventId || 0;
 
-  // Format time string to ensure HH:MM:SS format
-  const formatTimeString = (timeStr) => {
-    if (!timeStr) return "";
-
-    // If the time string already has seconds, return it
-    if (timeStr.split(":").length === 3) return timeStr;
-
-    // Otherwise, add :00 for seconds
-    return `${timeStr}:00`;
-  };
+  // ✅ CHANGED: Convert start and end times to their UTC equivalents
+  const { date: utcStartDate, time: utcStartTime } = convertAndSplitUTC(
+    dateTimeData.startDate,
+    dateTimeData.startTime
+  );
+  const { date: utcEndDate, time: utcEndTime } = convertAndSplitUTC(
+    dateTimeData.endDate,
+    dateTimeData.endTime
+  );
 
   return {
-    id: parseInt(eventDataId, 10), // Convert to integer if it's a string
-    startDate: dateTimeData.startDate || "",
-    startTime: formatTimeString(dateTimeData.startTime),
-    endDate: dateTimeData.endDate || "",
-    endTime: formatTimeString(dateTimeData.endTime),
-    timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    id: parseInt(eventDataId, 10),
+    
+    // Send the UTC date and time under the original keys
+    startDate: utcStartDate || "",
+    startTime: utcStartTime || "",
+    endDate: utcEndDate || "",
+    endTime: utcEndTime || "",
+
+    // ✅ CRITICAL: Explicitly label the time as UTC
+    timeZone: "UTC",
+
     updatedBy: userData?.id || eventData?.createdBy || 0,
   };
 };

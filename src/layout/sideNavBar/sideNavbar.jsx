@@ -6,6 +6,7 @@ import { LoginAPI } from '../../services/allApis';
 import styles from './sideNavBar.module.scss';
 import { getUserData, clearUserData } from '../../utils/authUtil';
 import { clearEventDataOnLogout } from '../../utils/eventUtil';
+import { useAuth } from '../../context/authContext';
 
 // Import SVG components
 import { ReactComponent as OverviewIcon } from '../../assets/icons/overview-icon.svg';
@@ -42,37 +43,37 @@ const ScannerIcon = (props) => (
   </svg>
 );
 
-
 const SideNavBar = ({ isMobileSidebarOpen, toggleMobileSidebar }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [currentUser, setCurrentUser] = useState(null);
+  const { isAuthenticated, currentUser, logout } = useAuth();
+
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isSettingsOverlayOpen, setIsSettingsOverlayOpen] = useState(false);
+  const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
   const profileDropdownRef = useRef(null);
   const sideNavRef = useRef(null);
 
-  const isAuthenticated = !!Cookies.get('token');
 
-  useEffect(() => {
-    const fetchUserData = async () => {
-      if (isAuthenticated) {
-        try {
-          const storedUserData = getUserData();
-          if (storedUserData) {
-            setCurrentUser(storedUserData);
-          } else {
-            const token = Cookies.get('token');
-            const response = await LoginAPI(token);
-            setCurrentUser(response.data);
-          }
-        } catch (error) {
-          console.error('Error fetching user profile:', error);
-        }
-      }
-    };
-    fetchUserData();
-  }, [isAuthenticated]);
+  // useEffect(() => {
+  //   const fetchUserData = async () => {
+  //     if (isAuthenticated) {
+  //       try {
+  //         const storedUserData = getUserData();
+  //         if (storedUserData) {
+  //           setCurrentUser(storedUserData);
+  //         } else {
+  //           const token = Cookies.get('token');
+  //           const response = await LoginAPI(token);
+  //           setCurrentUser(response.data);
+  //         }
+  //       } catch (error) {
+  //         console.error('Error fetching user profile:', error);
+  //       }
+  //     }
+  //   };
+  //   fetchUserData();
+  // }, [isAuthenticated]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -97,12 +98,17 @@ const SideNavBar = ({ isMobileSidebarOpen, toggleMobileSidebar }) => {
   }, [location.pathname]);
 
   const handleLogout = () => {
-    Cookies.remove('token');
-    clearUserData();
-    setCurrentUser(null);
-    setIsProfileOpen(false);
+    // 1. Call the logout function from the context.
+    // This will set isAuthenticated to false.
+    logout();
+
+    // 2. Perform any other app-specific cleanup.
     clearEventDataOnLogout();
-    navigate('/login');
+
+    // 3. DO NOT NAVIGATE HERE.
+    // The ProtectedRoute component will now see that isAuthenticated is false
+    // and will automatically handle the redirect to '/login'.
+    // navigate('/login'); // <-- This line has been removed.
   };
 
   const toggleProfileDropdown = () => {
@@ -114,20 +120,20 @@ const SideNavBar = ({ isMobileSidebarOpen, toggleMobileSidebar }) => {
     setIsProfileOpen(false);
   };
 
+  const handleOpenHelpModal = () => {
+    setIsHelpModalOpen(true);
+  };
+
+  const userRole = currentUser?.role || '';
+
   // Navigation items
   const navItems = [
-    { id: 'overview', path: '/', icon: OverviewIcon, label: 'Overview' },
-    { id: 'events', path: '/events', icon: EventsIcon, label: 'Events' },
-    { id: 'reports', path: '/reports/87', icon: ReportsIcon, label: 'Reports' },
-    { id: 'campaigns', path: '/campaigns', icon: CampaignsIcon, label: 'Campaigns' },
-    // The ScannerIcon component is now used here
-    { id: 'scanner', path: '/scanner/87', icon: ScannerIcon, label: 'Scanner' }
-  ];
-
-  // Bottom navigation items
-  const bottomItems = [
-    { id: 'help', path: '/help', icon: HelpIcon, label: 'Help & Support' },
-  ];
+  ...(['ORGANIZER', 'ADMINISTRATOR'].includes(userRole)
+    ? [
+        { id: 'dashboard', path: '/', icon: OverviewIcon, label: 'dashboard' },
+      ]
+    : [])
+];
 
   const getUserInitials = () => {
     if (currentUser?.name) {
@@ -176,23 +182,7 @@ const SideNavBar = ({ isMobileSidebarOpen, toggleMobileSidebar }) => {
           })}
         </ul>
 
-        <div className={styles.bottomNav}>
-          {bottomItems.map((item) => {
-            const IconComponent = item.icon;
-            return (
-              <NavLink
-                key={item.id}
-                to={item.path}
-                className={({ isActive }) => isActive ? `${styles.navLink} ${styles.active}` : styles.navLink}
-                title={item.label}
-              >
-                <div className={styles.iconWrapper}>
-                  <IconComponent className={styles.icon} />
-                </div>
-                
-              </NavLink>
-            );
-          })}
+        <div className={styles.bottomNav}>    
 
           {isAuthenticated && (
             <div className={styles.profileContainer} ref={profileDropdownRef}>

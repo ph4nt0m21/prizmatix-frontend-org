@@ -8,7 +8,7 @@ const AttendeesTable = ({ attendees, onCheckIn }) => {
   }
 
   const getTicketTypeClass = (type) => {
-    switch(type.toLowerCase()){
+    switch(String(type).toLowerCase()){
       case 'vip': return styles.vip;
       case 'standard': return styles.standard;
       case 'early bird':
@@ -22,7 +22,11 @@ const AttendeesTable = ({ attendees, onCheckIn }) => {
         <thead>
           <tr>
             <th><input type="checkbox" /></th>
+            <th>#</th>
             <th>Name</th>
+            <th>Mail</th>
+            <th>Mobile No.</th>
+            <th>Order Date</th>
             <th>Ticket Type</th>
             <th></th>
           </tr>
@@ -31,7 +35,11 @@ const AttendeesTable = ({ attendees, onCheckIn }) => {
           {attendees.map((attendee) => (
             <tr key={attendee.id}>
               <td><input type="checkbox" /></td>
+              <td>{attendee.orderId}</td>
               <td>{attendee.name}</td>
+              <td>{attendee.email}</td>
+              <td>{attendee.mobile}</td>
+              <td>{attendee.orderDate}</td>
               <td><span className={`${styles.ticketType} ${getTicketTypeClass(attendee.ticketType)}`}>{attendee.ticketType}</span></td>
               <td>
                 {attendee.isCheckedIn ? (

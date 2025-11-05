@@ -3,7 +3,6 @@ import Cookies from 'js-cookie';
 // Correctly import OrganizationRegisterInitiateAPI instead of the non-existent RegisterAPI
 import {
   LoginAPI,
-  OrganizationRegisterInitiateAPI,
   ProfileAPI
 } from '../services/allApis';
 
@@ -64,7 +63,7 @@ export const AuthProvider = ({ children }) => {
         organizationName: response.data.organizationName,
         name: response.data.name || `${response.data.firstName} ${response.data.lastName}`,
         email: response.data.email || credentials.username,
-        role: response.data.role,
+        role: response.data.roles && response.data.roles.length > 0 ? response.data.roles[0] : null,
       };
       localStorage.setItem('userData', JSON.stringify(userData));
 
@@ -76,43 +75,6 @@ export const AuthProvider = ({ children }) => {
       console.error('Login error:', err);
       const errorMessage =
         err.response?.data?.message || 'Login failed. Please check your credentials.';
-      setError(errorMessage);
-      throw new Error(errorMessage);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  /**
-   * Registers a new user/organization.
-   * @param {object} userData - The data for the new user.
-   */
-  const register = async (userData) => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      // Call the correct, existing API function
-      const response = await OrganizationRegisterInitiateAPI(userData);
-
-      const token = response.data.token || response.data.accessToken;
-      if (token) {
-        Cookies.set('token', token, { expires: 1 });
-      }
-
-      const user = response.data.user || {};
-      if (!user.name) {
-        user.name = `${userData.firstName} ${userData.lastName}`;
-      }
-      localStorage.setItem('userData', JSON.stringify(user));
-
-      setCurrentUser(user);
-      setIsAuthenticated(true);
-      return response.data;
-    } catch (err) {
-      const errorMessage =
-        err.response?.data?.message ||
-        err.response?.data?.error ||
-        'Registration failed. Please try again.';
       setError(errorMessage);
       throw new Error(errorMessage);
     } finally {
@@ -143,7 +105,6 @@ export const AuthProvider = ({ children }) => {
     isLoading,
     error,
     login,
-    register,
     logout,
     clearError,
   };
