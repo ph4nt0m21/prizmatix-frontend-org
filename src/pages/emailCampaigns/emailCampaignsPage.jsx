@@ -78,6 +78,8 @@ const EmailCampaignsPage = () => {
   const [eventDetails, setEventDetails] = useState(null);
   const [showSubjectSuggestions, setShowSubjectSuggestions] = useState(false);
   const [subjectCursorPosition, setSubjectCursorPosition] = useState(0);
+  const [isSaved, setIsSaved] = useState(false);
+  const [campaignSavedId, setCampaignSavedId] = useState(null);
 
   const MAX_FILE_SIZE_MB = 5;
 
@@ -89,10 +91,10 @@ const EmailCampaignsPage = () => {
       Link.configure({ openOnClick: false }),
       Placeholder.configure({ placeholder: "Write your message here..." }),
       Mention.configure({
-  HTMLAttributes: { class: styles.mention },
-  renderLabel: ({ node }) => `@${node.attrs.id}`, // ✅ add '@' at render time
-  suggestion,
-}),
+        HTMLAttributes: { class: styles.mention },
+        renderLabel: ({ node }) => `@${node.attrs.id}`, // ✅ add '@' at render time
+        suggestion,
+      }),
     ],
     content: message,
     onUpdate: ({ editor }) => setMessage(editor.getHTML()),
@@ -102,7 +104,7 @@ const EmailCampaignsPage = () => {
     if (editor && message !== editor.getHTML()) {
       try {
         editor.commands.setContent(message || "");
-      } catch {}
+      } catch { }
     }
   }, [editor, message]);
 
@@ -121,6 +123,13 @@ const EmailCampaignsPage = () => {
     };
     fetchEvents();
   }, []);
+
+  useEffect(() => {
+    if (campaignId) {
+      setIsSaved(true);
+      setCampaignSavedId(campaignId);
+    }
+  }, [campaignId]);
 
   useEffect(() => {
     if (!campaignId) return;
@@ -151,17 +160,17 @@ const EmailCampaignsPage = () => {
 
   // Restore valid cached attachments on mount
   useEffect(() => {
-  if (campaignId) {
-    // editing existing campaign — keep its attachments
-    return;
-  }
+    if (campaignId) {
+      // editing existing campaign — keep its attachments
+      return;
+    }
 
-  // New campaign: clear cached attachments from previous drafts
-  clearCachedAttachments();
-  clearDraftCampaignId();
+    // New campaign: clear cached attachments from previous drafts
+    clearCachedAttachments();
+    clearDraftCampaignId();
 
-  setAttachments([]); // ensure UI shows empty
-}, [campaignId]);
+    setAttachments([]); // ensure UI shows empty
+  }, [campaignId]);
 
 
   // ---------------- PAYLOAD BUILDER ----------------
@@ -173,19 +182,19 @@ const EmailCampaignsPage = () => {
     const urls = cached.map((a) => a.url);
 
     const sanitizeMentions = (html) => {
-  // 1️⃣ Remove data attributes from mention spans
-  let clean = html.replace(/\sdata-[^=]+="[^"]*"/g, "");
-  // 2️⃣ Convert non-breaking spaces to normal spaces
-  clean = clean.replace(/&nbsp;/g, " ");
-  // 3️⃣ Trim overall whitespace
-  return clean.trim();
-};
+      // 1️⃣ Remove data attributes from mention spans
+      let clean = html.replace(/\sdata-[^=]+="[^"]*"/g, "");
+      // 2️⃣ Convert non-breaking spaces to normal spaces
+      clean = clean.replace(/&nbsp;/g, " ");
+      // 3️⃣ Trim overall whitespace
+      return clean.trim();
+    };
 
     const cleanMessage = sanitizeMentions(
-  (message || "")
-    .replace(/\uFFFD/g, "")
-    .replace(/\u00A0/g, " ")
-);
+      (message || "")
+        .replace(/\uFFFD/g, "")
+        .replace(/\u00A0/g, " ")
+    );
 
     return {
       campaignName,
@@ -206,7 +215,7 @@ const EmailCampaignsPage = () => {
 
   // ---------------- HANDLERS ----------------
   const handleBack = () => navigate(-1);
-  
+
 
   const handleAttachmentUpload = async (e) => {
     const files = Array.from(e.target.files);
@@ -215,7 +224,7 @@ const EmailCampaignsPage = () => {
     const oversized = files.filter((f) => f.size > MAX_FILE_SIZE_MB * 1024 * 1024);
     if (oversized.length > 0) {
       toast.warning(`file size should not exceed ${MAX_FILE_SIZE_MB} MB and were not uploaded.`);
-      if (fileInputRef.current) fileInputRef.current.value = null; 
+      if (fileInputRef.current) fileInputRef.current.value = null;
       return;
     }
 
@@ -280,25 +289,43 @@ const EmailCampaignsPage = () => {
     removeCachedAttachment(url);
   };
 
-  const handleSend = async () => {
-    if (!selectedEvents.length) return toast.error("Select at least one event");
-    setIsCreating(true);
-    setLoading(true);
-
+  const handleSaveCampaign = async () => {
     try {
+      setLoading(true);
       let effectiveCampaignId = campaignId || getDraftCampaignId();
 
       if (!effectiveCampaignId) {
         const res = await CreateEmailCampaignAPI(createCampaignPayload(false));
         effectiveCampaignId = res.data.id;
         if (!effectiveCampaignId)
-          throw new Error("Campaign created but no ID was returned.");
+          throw new Error("Campaign created but no ID returned.");
+        setDraftCampaignId(String(effectiveCampaignId));
+        setCampaignSavedId(effectiveCampaignId);
+        toast.success("Campaign saved successfully!");
       } else {
         await UpdateEmailCampaignAPI(
           effectiveCampaignId,
           createCampaignPayload(false)
         );
+        setCampaignSavedId(effectiveCampaignId);
+        toast.success("Campaign updated successfully!");
       }
+
+      setIsSaved(true); // ✅ reveal Send/Test buttons
+    } catch (err) {
+      console.error("Error saving campaign:", err);
+      toast.error("Failed to save campaign");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSend = async () => {
+    try {
+      setLoading(true);
+      const effectiveCampaignId = campaignSavedId || campaignId || getDraftCampaignId();
+      if (!effectiveCampaignId)
+        return toast.error("Please save the campaign before sending.");
 
       await SendEmailCampaignAPI(effectiveCampaignId);
       toast.success("Campaign sent successfully!");
@@ -309,50 +336,35 @@ const EmailCampaignsPage = () => {
       console.error(err);
       toast.error("Error sending campaign");
     } finally {
-      setIsCreating(false);
       setLoading(false);
     }
   };
 
   const handleSendTestEmails = async () => {
-  if (!testEmails || testEmails.length === 0) {
-    return toast.error("Please add at least one test email address.");
-  }
+    if (!testEmails || testEmails.length === 0)
+      return toast.error("Please add at least one test email address.");
 
-  try {
-    let effectiveCampaignId = campaignId || getDraftCampaignId();
-    if (effectiveCampaignId) effectiveCampaignId = Number(effectiveCampaignId);
-
-    // Step 1️⃣ - Create or use existing campaign
-    if (!effectiveCampaignId) {
-      const res = await CreateEmailCampaignAPI(createCampaignPayload(false));
-      effectiveCampaignId = res.data.id;
+    try {
+      setLoading(true);
+      const effectiveCampaignId = campaignSavedId || campaignId || getDraftCampaignId();
       if (!effectiveCampaignId)
-        throw new Error("Campaign created but no ID returned.");
-      setDraftCampaignId(String(effectiveCampaignId));
+        return toast.error("Please save the campaign before sending test emails.");
+
+      await SendTestEmailCampaignAPI(effectiveCampaignId, testEmails);
+      toast.success("Test emails sent successfully!");
+      setIsTestModalOpen(false);
+    } catch (err) {
+      console.error("Failed to send test emails:", err);
+      toast.error("Failed to send test emails");
+    } finally {
+      setLoading(false);
     }
-
-    // Step 2️⃣ - Update campaign with current form data
-    await UpdateEmailCampaignAPI(
-      effectiveCampaignId,
-      createCampaignPayload(false)
-    );
-
-    // Step 3️⃣ - Send test emails
-    await SendTestEmailCampaignAPI(effectiveCampaignId, testEmails);
-
-    toast.success("Test emails sent successfully!");
-    setIsTestModalOpen(false);
-  } catch (err) {
-    console.error("Failed to send test emails:", err);
-    toast.error("Failed to send test emails");
-  }
-};
+  };
 
 
   const handleSubjectChange = (e) => {
-  setSubject(e.target.value);
-};
+    setSubject(e.target.value);
+  };
 
 
   const handleSubjectSuggestionClick = (decorator) => {
@@ -398,11 +410,12 @@ const EmailCampaignsPage = () => {
         <div className={styles.headerActions}>
           <button
             className={styles.secondaryButton}
-            onClick={() => setIsTestModalOpen(true)}
+            onClick={handleOpenPreview}
           >
-            Send Test Mail
+            Preview
           </button>
         </div>
+
       </div>
 
       <h1 className={styles.pageTitle}>
@@ -487,9 +500,8 @@ const EmailCampaignsPage = () => {
               <button
                 key={opt}
                 onClick={() => setSendOption(opt)}
-                className={`${styles.toggleButton} ${
-                  sendOption === opt ? styles.active : ""
-                }`}
+                className={`${styles.toggleButton} ${sendOption === opt ? styles.active : ""
+                  }`}
               >
                 {opt === "now" ? "Send Now" : "Schedule for later"}
               </button>
@@ -514,22 +526,41 @@ const EmailCampaignsPage = () => {
           <button className={styles.secondaryButton} onClick={handleBack}>
             Back
           </button>
+
+          {/* Save or Update button */}
           <button
             className={styles.primaryButton}
-            onClick={handleSend}
-            disabled={isCreating || loading || uploading}
+            onClick={handleSaveCampaign}
+            disabled={loading || uploading}
           >
-            {uploading
-              ? "Waiting for upload..."
-              : isCreating
-              ? "Creating..."
-              : loading
-              ? "Sending..."
+            {loading
+              ? "Saving..."
               : campaignId
-              ? "Update & Send"
-              : "Send Campaign"}
+                ? "Update Campaign"
+                : "Save Campaign"}
           </button>
+
+          {/* Only show send buttons once saved */}
+          {isSaved && (
+            <>
+              <button
+                className={styles.primaryButton}
+                onClick={() => setIsTestModalOpen(true)}
+              >
+                Send Test Mail
+              </button>
+
+              <button
+                className={styles.primaryButton}
+                onClick={handleSend}
+                disabled={loading}
+              >
+                {loading ? "Sending..." : "Send Campaign"}
+              </button>
+            </>
+          )}
         </div>
+
       </div>
 
       {/* --- MODALS --- */}
@@ -585,12 +616,12 @@ const EmailCampaignsPage = () => {
                 Cancel
               </button>
               <button
-  className={styles.primaryButton}
-  onClick={handleSendTestEmails}
-  disabled={loading}
->
-  {loading ? "Sending..." : "Send"}
-</button>
+                className={styles.primaryButton}
+                onClick={handleSendTestEmails}
+                disabled={loading}
+              >
+                {loading ? "Sending..." : "Send"}
+              </button>
 
             </div>
           </div>

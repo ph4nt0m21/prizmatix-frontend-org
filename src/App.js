@@ -40,7 +40,7 @@ const AppContent = () => {
   const { isAuthenticated, isLoading } = useAuth();
 
   useEffect(() => {
-    checkAndCleanupEventData(120); 
+    checkAndCleanupEventData(120);
     setupEventDataCleanup();
   }, []);
 
@@ -81,14 +81,14 @@ const AppContent = () => {
           element={isAuthenticated ? <Navigate to="/" /> : <ResetPasswordPage />}
         />
         {/* ... other public auth routes ... */}
-        
+
         {/* ======================================== */}
         {/* ======== 2. PROTECTED ROUTES ========= */}
         {/* ======================================== */}
         {/* This single ProtectedRoute acts as a gatekeeper. */}
         {/* If the user is not authenticated, it will redirect them to "/login". */}
         <Route element={<ProtectedRoute />}>
-          
+
           {/* Routes for ORGANIZER and SUPER_ADMIN */}
           <Route element={<ProtectedRoute allowedRoles={['ORGANIZER', 'SUPER_ADMIN']} />}>
             <Route path="/" element={<MainLayout />}>
@@ -104,22 +104,25 @@ const AppContent = () => {
               <Route path="events/create/:eventId" element={<CreateEventPage />} />
               <Route path="events/create/:eventId/:step" element={<CreateEventPage />} />
               <Route path="campaigns" element={<EmailCampaignsListPage />} />
-<Route path="campaigns/new" element={<EmailCampaignsPage />} />
-<Route path="campaigns/:campaignId:" element={<EmailCampaignsPage />} />
-<Route path="campaigns/:campaignId/edit" element={<EmailCampaignsPage />} />
+              <Route path="campaigns/new" element={<EmailCampaignsPage />} />
+              <Route path="campaigns/:campaignId:" element={<EmailCampaignsPage />} />
+              <Route path="campaigns/:campaignId/edit" element={<EmailCampaignsPage />} />
               <Route path="reports" element={<ReportsPage />} />
               <Route path="reports/:eventId" element={<ReportsPage />} />
             </Route>
           </Route>
 
           {/* Routes for SCANNER (and ORGANIZER) */}
+          {/* Routes for SCANNER (and ORGANIZER) */}
           <Route element={<ProtectedRoute allowedRoles={['SCANNER', 'ORGANIZER']} />}>
-            {/* You might want a different layout for the scanner or just nest it */}
-            <Route path="/scanner" element={<ScannerPage />} />
+            <Route path="/" element={<MainLayout />}>
+              <Route path="scanner" element={<ScannerPage />} />
+            </Route>
           </Route>
 
+
         </Route> {/* End of main ProtectedRoute wrapper */}
-        
+
 
         {/* ======================================== */}
         {/* ===== 3. OTHER PUBLIC ROUTES ======= */}
