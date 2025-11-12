@@ -1,7 +1,8 @@
 /* This is the scrolling container */
 .tableContainer {
   display: block;
-  width: 100%;
+  justify-content: center;
+  width: 660px;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   background: #FFFFFF;

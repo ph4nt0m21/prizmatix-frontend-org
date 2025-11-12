@@ -75,6 +75,17 @@
   margin-bottom: 8px;
 }
 
+// .iconImage {
+//   width: 48px;
+//   height: 48px;
+//   transition: transform 0.2s ease, opacity 0.2s ease;
+// }
+
+// .navItem:hover .iconImage {
+//   transform: scale(1.1);
+//   opacity: 0.9;
+// }
+
 .navLink {
   display: flex;
   flex-direction: column;
@@ -83,18 +94,9 @@
   padding: 16px 0;
   width: 100%;
   text-decoration: none;
-  color: rgba(255, 255, 255, 0.6);
   position: relative;
   transition: all 0.3s ease;
-  background: #1E202C;
-
-   &:hover {
-
-    .iconWrapper{
-      color: #fff;
-      background-color: rgba(255, 255, 255, 0.1);
-    }
-  } 
+  background: transparent !important;
 
   &.active {
     border-radius: 12px;
@@ -110,24 +112,24 @@
       border-radius: 12px 0 0 12px;
     }
 
-    .iconWrapper {
-      background-color: #413653; /* New icon color */
-      position: relative; /* This is crucial for positioning the new pseudo-element */
+    // .iconWrapper {
+    //   background-color: #413653; /* New icon color */
+    //   position: relative; /* This is crucial for positioning the new pseudo-element */
 
      
       
-      // The new pseudo-element for the horizontal bar
-      &::before {
-        content: '';
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 3px;
-        height: 100%;
-        background-color: #9A6AFF; /* Violet color for the bar */
-        border-radius: 2px 0 0 2px;
-      }
-    }
+    //   // The new pseudo-element for the horizontal bar
+    //   &::before {
+    //     content: '';
+    //     position: absolute;
+    //     left: 0;
+    //     top: 0;
+    //     width: 3px;
+    //     height: 100%;
+    //     background-color: #9A6AFF; /* Violet color for the bar */
+    //     border-radius: 2px 0 0 2px;
+    //   }
+    // }
   }
 
   @media (max-width: 768px) {
@@ -135,10 +137,10 @@
     align-items: center;
     justify-content: center; // Align content to start
     padding: 10px 0px; // Adjust padding
-    .iconWrapper {
-      margin-right: 10px; // Space between icon and label
-      margin-bottom: 4px; // Remove bottom margin
-    }
+    // .iconWrapper {
+    //   margin-right: 10px; // Space between icon and label
+    //   margin-bottom: 4px; // Remove bottom margin
+    // }
     .navLabel {
       font-size: 12px;
       opacity: 1; 
@@ -146,14 +148,14 @@
   }
 }
 
-.iconWrapper {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 48px;
-  height: 48px;
-  margin-bottom: 6px;
-}
+// .iconWrapper {
+//   display: flex;
+//   align-items: center;
+//   justify-content: center;
+//   width: 48px;
+//   height: 48px;
+//   margin-bottom: 6px;
+// }
 
 .icon {
   width: 48px;
