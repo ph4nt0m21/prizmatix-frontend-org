@@ -27,6 +27,44 @@
   }
 }
 
+.checkInAllButton {
+  background-color: #b042ff;      /* Primary purple tone */
+  color: #ffffff;
+  font-weight: 500;
+  border: none;
+  border-radius: 8px;
+  padding: 0.6rem 1.2rem;
+  margin-left: auto;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(176, 66, 255, 0.25);
+
+  &:hover {
+    background-color: #9c3ae6; /* Slightly darker hover tone */
+    box-shadow: 0 3px 8px rgba(176, 66, 255, 0.35);
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    background-color: #8b33d4;
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(176, 66, 255, 0.25);
+  }
+
+  &:disabled {
+    background-color: #d6b8fa;
+    color: #f4e9ff;
+    cursor: not-allowed;
+    box-shadow: none;
+    opacity: 0.7;
+  }
+}
+
 .attendeesSection {
   width: 100%;
   max-width: 750px;
