@@ -17,6 +17,7 @@ const ScannerPage = () => {
   const [successMessage, setSuccessMessage] = useState(null);
   const [attendees, setAttendees] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [hasScanned, setHasScanned] = useState(false);
 
   useEffect(() => {
     const fetchAttendees = async () => {
@@ -43,6 +44,7 @@ const ScannerPage = () => {
 
   const handleScan = async (data) => {
     if (data) {
+      setHasScanned(true);
       const qrContent = data.text.trim();
       setScannedData({ text: qrContent, timestamp: new Date().toLocaleTimeString() });
       setError(null);
@@ -181,11 +183,11 @@ const ScannerPage = () => {
           <FiUsers />
           <h2>Attendee List</h2>
           {/* ✅ NEW BUTTON */}
-          {attendees.length > 0 && (
-            <button className={styles.checkInAllButton} onClick={handleCheckInAll}>
-              Check In All
-            </button>
-          )}
+          {hasScanned && attendees.length > 0 && (
+  <button className={styles.checkInAllButton} onClick={handleCheckInAll}>
+    Check In All
+  </button>
+)}
         </div>
 
         {isLoading ? (
