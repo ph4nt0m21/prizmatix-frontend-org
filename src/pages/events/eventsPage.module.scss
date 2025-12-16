@@ -343,7 +343,7 @@
 
 .statusBadge {
   padding: 5px 12px;
-  border-radius: 999px;
+  border-radius: 4px;
   font-weight: 600;
   font-size: 13px;
   display: inline-block;
@@ -353,13 +353,13 @@
 
 /* Colors for badges */
 .draftBadge {
-  background: #FEF3C7; /* Lighter yellow */
-  color: #92400E;
+  background: #FEF8EC; /* Lighter yellow */
+  color: #F1B940;
 }
 
 .liveBadge {
-  background: #E0E7FF; /* Lighter purple/blue */
-  color: #3730A3;
+  background: #EBD0FF; /* Lighter purple/blue */
+  color: #9F20FF;
 }
 
 .pastBadge {

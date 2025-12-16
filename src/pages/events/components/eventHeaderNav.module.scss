@@ -41,10 +41,10 @@
   }
 }
 
-.breadcrumbContainer {
-  display: flex;
-  align-items: center;
-}
+// .breadcrumbContainer {
+//   display: flex;
+//   align-items: center;
+// }
 
 .breadcrumb {
   display: flex;
@@ -55,6 +55,28 @@
     font-weight: 700;
   }
 }
+.breadcrumbContainer {
+  display: flex;
+  align-items: center;
+  gap: 8px; // space between back and "Events"
+}
+
+.backButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: #6b7280;
+
+  &:hover {
+    color: #111827;
+  }
+}
+
 
 .breadcrumbLink {
   color: #6b7280;
@@ -76,8 +98,8 @@
 .breadcrumbDraft {
   margin-left: 8px;
   padding: 2px 8px;
-  background-color: #D1FAE5;
-  color: #065F46;
+  background-color: #F4E5FF;
+  color: #9F20FF;
   font-size: 12px;
   font-weight: 500;
   border-radius: 4px;
