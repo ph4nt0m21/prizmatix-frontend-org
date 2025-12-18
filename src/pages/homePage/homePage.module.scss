@@ -752,13 +752,17 @@
   display: flex;
   flex-direction: column;
   padding: 0;
+
   background-color: #f8f8f8;
+  
 }
 
 .homePageContent {
   background: #f9fafb;
   min-height: calc(100% - 112px); // header offset
   width: 100%;
+   border-radius: 4px;
+
 }
 
 /* ============================
@@ -1388,5 +1392,336 @@ overflow: hidden;
       grid-column: span 2;
       align-items: flex-start;
     }
+  }
+}
+/* top analytics tiles */
+.overviewStatsRow {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.analyticsTile {
+  display: flex;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+}
+
+.analyticsIconWrapper {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #eff6ff;
+}
+
+.analyticsIcon {
+  stroke: #4b5563;
+  fill: none;
+  stroke-width: 1.8;
+}
+
+.analyticsContent {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.analyticsLabel {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.analyticsValue {
+  font-size: 20px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.analyticsSub {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+/* main analytics row */
+.analyticsMainRow {
+  display: grid;
+  grid-template-columns: 1.6fr 1.1fr;
+  gap: 16px;
+  margin-top: 24px;
+}
+
+/* chart card */
+.salesChartCard {
+  border-radius: 16px;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  padding: 16px 18px 20px;
+}
+
+.salesChartHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.salesChartControls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.salesSelect {
+  border-radius: 999px;
+  border: 1px solid #e5e7eb;
+  padding: 4px 10px;
+  font-size: 12px;
+  background: #ffffff;
+  color: #4b5563;
+}
+
+.salesActionButton {
+  border-radius: 999px;
+  border: 1px solid #e5e7eb;
+  padding: 4px 10px;
+  font-size: 12px;
+  background: #f9fafb;
+  color: #4b5563;
+  cursor: pointer;
+}
+
+/* chart area */
+.salesChartBody {
+  display: flex;
+  margin-top: 8px;
+}
+
+.salesYAxis {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  font-size: 10px;
+  color: #9ca3af;
+  margin-right: 8px;
+}
+
+.salesLinesWrapper {
+  position: relative;
+  flex: 1;
+  height: 220px;
+  border-radius: 14px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  padding: 8px 8px 24px;
+  overflow: visible;
+}
+
+/* SVG lines */
+.salesSvg {
+  position: absolute;
+  inset: 8px 8px 32px 8px;
+  width: calc(100% - 16px);
+  height: calc(100% - 40px);
+}
+
+.salesGridLine {
+  stroke: #e5e7eb;
+  stroke-width: 0.3;
+}
+.pathViews {
+  stroke: #22c55e;
+  stroke-width: 0.8;  /* thinner line */
+}
+
+.pathTickets {
+  stroke: #ec4899;
+  stroke-width: 0.8;
+}
+
+.pathOrders {
+  stroke: #3b82f6;
+  stroke-width: 0.8;
+}
+
+
+// .pathViews {
+//   stroke: #22c55e;
+//   stroke-width: 1.5;
+// }
+
+// .pathTickets {
+//   stroke: #ec4899;
+//   stroke-width: 1.5;
+// }
+
+// .pathOrders {
+//   stroke: #3b82f6;
+//   stroke-width: 1.5;
+// }
+
+/* hover vertical line */
+.salesHoverLine {
+  position: absolute;
+  top: 16px;
+  bottom: 40px;
+  width: 1px;
+  background: #d1d5db;
+}
+
+/* dots + labels */
+.salesPointColumn {
+  position: absolute;
+  bottom: 26px;
+  transform: translateX(-50%);
+  width: 40px;
+  height: calc(100% - 40px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+}
+
+.salesDot {
+  position: absolute;
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  border: 2px solid #ffffff;
+}
+
+.dotOrders {
+  background: #3b82f6;
+}
+
+.dotTickets {
+  background: #ec4899;
+}
+
+.dotViews {
+  background: #22c55e;
+}
+
+.salesBarLabel {
+  position: absolute;
+  bottom: -18px;
+  font-size: 11px;
+  color: #6b7280;
+}
+
+/* legend */
+.salesLegend {
+  position: absolute;
+  left: 16px;
+  bottom: 4px;
+  display: flex;
+  gap: 16px;
+  font-size: 11px;
+  color: #6b7280;
+}
+
+.legendDot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  margin-right: 4px;
+}
+
+/* tooltip */
+.salesTooltip {
+  position: absolute;
+  bottom: 110px;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.tooltipInner {
+  min-width: 130px;
+  background: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.15);
+  padding: 8px 10px;
+  font-size: 11px;
+  color: #111827;
+}
+
+.tooltipDate {
+  font-weight: 600;
+}
+
+.tooltipSub {
+  font-size: 10px;
+  color: #9ca3af;
+  margin-bottom: 6px;
+}
+
+.tooltipRow {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 2px;
+}
+
+/* earnings card */
+.earningsCard {
+  border-radius: 16px;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  padding: 16px 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.earningsHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.earningsRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.earningsLabel {
+  font-size: 13px;
+  font-weight: 500;
+  color: #111827;
+}
+
+.earningsSub {
+  font-size: 11px;
+  color: #6b7280;
+  margin-top: 2px;
+}
+
+.earningsValue {
+  font-size: 16px;
+  font-weight: 600;
+  color: #111827;
+}
+
+/* responsive adjustments */
+@media (max-width: 1024px) {
+  .overviewStatsRow {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .analyticsMainRow {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .overviewStatsRow {
+    grid-template-columns: 1fr;
   }
 }
