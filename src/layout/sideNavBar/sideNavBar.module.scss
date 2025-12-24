@@ -10,7 +10,7 @@
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-
+  height: 100vh;
   background: var(--gradient, linear-gradient(180deg, #31204B 0%, #1E202C 100%));
   padding: 8px 8px;
   color: #fff;
@@ -98,7 +98,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 16px 0;
+  // padding: 16px 0;
   width: 100%;
   text-decoration: none;
   position: relative;

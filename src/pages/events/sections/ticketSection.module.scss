@@ -94,6 +94,7 @@
   &.cellId { flex-basis: 5%; }
   &.cellTicket { flex-basis: 30%; font-weight: 500; }
   &.cellQuantity { flex-basis: 15%; }
+  &.cellSold { flex-basis: 15%; }
   &.cellMaxPurchase { flex-basis: 15%; }
   &.cellPrice { flex-basis: 25%; }
   &.cellActions { flex-basis: 10%; justify-content: flex-end; }
@@ -156,6 +157,7 @@
     &.cellId { min-width: 40px; }
     &.cellTicket { min-width: 200px; }
     &.cellQuantity { min-width: 100px; }
+    &.cellSold { min-width: 100px; }
     &.cellMaxPurchase { min-width: 120px; }
     &.cellPrice { min-width: 90px; }
     &.cellActions { min-width: 80px; justify-content: center; }

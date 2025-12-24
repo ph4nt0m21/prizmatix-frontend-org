@@ -12,6 +12,8 @@
   align-self: stretch;
   width: 100%;
   border: 1px solid #E9EAEC;
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
   background: #FFF;
 
   @media (max-width: 768px) {

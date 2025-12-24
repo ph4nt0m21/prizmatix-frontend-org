@@ -118,9 +118,9 @@ const SettingsOverlay = ({ isOpen, onClose }) => {
               <li className={activeSection === 'general' ? styles.active : ''} onClick={() => setActiveSection('general')}>
                 <GeneralIcon className={styles.navIcon} /> General
               </li>
-              <li className={activeSection === 'organisation' ? styles.active : ''} onClick={() => setActiveSection('organisation')}>
+              {/* <li className={activeSection === 'organisation' ? styles.active : ''} onClick={() => setActiveSection('organisation')}>
                 <OrganisationIcon className={styles.navIcon} /> Organisation
-              </li>
+              </li> */}
             </ul>
           </nav>
           <div className={styles.mainContent}>

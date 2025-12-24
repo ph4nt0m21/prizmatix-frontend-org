@@ -247,6 +247,9 @@ const TicketSection = () => {
                 <div className={`${styles.ticketCell} ${styles.cellQuantity}`}>
                   Quantity
                 </div>
+                <div className={`${styles.ticketCell} ${styles.cellSold}`}>
+                  Sold
+                </div>
                 <div className={`${styles.ticketCell} ${styles.cellMaxPurchase}`}>
                   Max Per Order
                 </div>
@@ -267,6 +270,9 @@ const TicketSection = () => {
                   </div>
                   <div className={`${styles.ticketCell} ${styles.cellQuantity}`}>
                     {formatQuantity(ticket)}
+                  </div>
+                  <div className={`${styles.ticketCell} ${styles.cellSold}`}>
+                    {ticket.sold || 0}
                   </div>
                   <div className={`${styles.ticketCell} ${styles.cellMaxPurchase}`}>
                     {formatMaxPurchase(ticket)}
