@@ -236,16 +236,30 @@
 }
 
 .profileIcon {
+  position: relative;
   width: 36px;
   height: 36px;
-  border-radius: 50%;
-  background-color: #7C3AED;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
-  font-size: 14px;
-  font-weight: 500;
+}
+
+.profileSvg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.profileInitials {
+  position: relative;
+  z-index: 1;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+  user-select: none;
 }
 
 .profileDropdown {
@@ -294,6 +308,11 @@
   font-size: 18px;
   font-weight: 500;
   margin-right: 12px;
+}
+
+.profileAvatarSvg {
+  width: 100%;
+  height: 100%;
 }
 
 .profileDetails {

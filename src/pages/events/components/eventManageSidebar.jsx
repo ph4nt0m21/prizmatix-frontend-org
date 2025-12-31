@@ -162,10 +162,10 @@ const EventManageSidebar = ({
 
   return (
     <div className={`${styles.sidebar} ${isMobileSidebarOpen ? styles.open : ''}`}>
-      <div className={styles.sidebarHeader}>
+      {/* <div className={styles.sidebarHeader}>
         <h2 className={styles.sidebarTitle}>Manage Event</h2>
         <p className={styles.sidebarSubtitle}>Event management options</p>
-      </div>
+      </div> */}
 
       <div className={styles.sectionsList}>
         {/* Manage Event Sections */}
