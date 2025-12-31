@@ -79,7 +79,7 @@ const OverviewSection = ({ dashboardData, eventData }) => {
     return date.toLocaleDateString('en-US', { day: 'numeric', weekday: 'short', month: 'short', year: 'numeric' });
   };
   
-  let eventStatus = 'Live';
+  let eventStatus = 'Past';
   if (eventData.isPublished) {
     const now = new Date();
     const eventEndDate = eventData.endDate ? new Date(eventData.endDate) : new Date(eventData.startDate);

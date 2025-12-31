@@ -454,14 +454,14 @@ const EmailCampaignsListPage = () => {
                     <td className={styles.actionsCell}>
                       <div className={styles.actions}>
                         {/* Eye icon if you want preview button visible */}
-                        {/* <button
+                        <button
                           type="button"
                           className={styles.iconButton}
                           title="Preview"
                           onClick={() => handleView(c.id)}
                         >
                           <IconEye />
-                        </button> */}
+                        </button>
                         <button
                           type="button"
                           className={styles.iconButton}

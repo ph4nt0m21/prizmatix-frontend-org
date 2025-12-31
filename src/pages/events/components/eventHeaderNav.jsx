@@ -109,7 +109,7 @@ const navigate = useNavigate();
                 <Link to="/events" className={styles.breadcrumbLink}>Events</Link>
                 <span className={styles.breadcrumbSeparator}><ArrowIcon /></span>
                 <Link to={`/events/manage/${eventId}/overview`} className={styles.breadcrumbLink}>{eventName}</Link>
-                {isDraft && <span className={styles.breadcrumbDraft}>Live</span>}
+                {isDraft && <span className={styles.breadcrumbDraft}>PAST</span>}
               </div>
             </div>
             <div className={styles.actionButtonsContainer} ref={actionMenuRef}>

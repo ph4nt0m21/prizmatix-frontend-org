@@ -45,6 +45,8 @@ import logoImage from '../../assets/images/small-logo.svg';
 import SettingsOverlay from '../../../src/components/settingsOverlay/settingsOverlay';
 import HelpSupportModal from '../../components/helpSupportModal/helpSupportModal';
 
+import { ReactComponent as ProfileIcon } from '../../assets/icons/profile-gradient.svg';
+
 // Inline scanner icon (unchanged)
 const ScannerIcon = (props) => (
   <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -292,16 +294,22 @@ const SideNavBar = ({ isMobileSidebarOpen, toggleMobileSidebar }) => {
                 aria-label="Toggle Profile Menu"
               >
                 <div className={styles.profileIcon}>
-                  {getUserInitials()}
-                </div>
+  <ProfileIcon className={styles.profileSvg} />
+  <span className={styles.profileInitials}>
+    {getUserInitials()}
+  </span>
+</div>
+
+
               </button>
 
               {isProfileOpen && (
                 <div className={styles.profileDropdown}>
                   <div className={styles.profileInfo}>
                     <div className={styles.profileAvatar}>
-                      {getUserInitials()}
-                    </div>
+  <ProfileIcon className={styles.profileAvatarSvg} />
+</div>
+
                     <div className={styles.profileDetails}>
                       <div className={styles.profileName}>{currentUser?.name || 'Sarath Babu John'}</div>
                       <div className={styles.profileEmail}>{currentUser?.email || 'sarathbabujohn333@gmail.com'}</div>
