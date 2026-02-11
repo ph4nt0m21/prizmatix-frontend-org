@@ -1,18 +1,17 @@
 import React, { useState } from 'react';
 import styles from './toolbar.module.scss';
-import { FiSearch, FiUpload, FiPlus, FiFilter } from 'react-icons/fi';
+import { FiSearch, FiUpload, FiFilter } from 'react-icons/fi';
 import { CSVLink } from 'react-csv';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import FilterModal from './filterModal';
 
-const Toolbar = ({ activeTab, searchQuery, setSearchQuery, data, currentFilters, onApplyFilters, ticketTypes }) => {
+const Toolbar = ({ activeTab, searchQuery, setSearchQuery, data, currentFilters, onApplyFilters, ticketTypes, isFilterPanelOpen, onFilterToggle }) => {
   const [exportOpen, setExportOpen] = useState(false);
-  const [searchActive, setSearchActive] = useState(false);
   const [isFilterModalOpen, setFilterModalOpen] = useState(false);
+  const useInlineFilter = typeof onFilterToggle === 'function';
 
   const isOrdersTab = activeTab === 'Orders';
-  const addButtonText = isOrdersTab ? 'Add Order' : 'Add Attendee';
   
   const searchPlaceholder = isOrdersTab 
     ? "Search by Order ID, Name, or Mail..." 
@@ -58,66 +57,55 @@ const Toolbar = ({ activeTab, searchQuery, setSearchQuery, data, currentFilters,
   return (
     <>
       <div className={styles.toolbar}>
-        {searchActive ? (
-          <div className={styles.searchContainer}>
-            <FiSearch className={styles.searchIcon} />
-            <input
-              type="text"
-              placeholder={searchPlaceholder}
-              className={styles.searchInput}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onBlur={() => setSearchActive(false)}
-              autoFocus
-            />
+        <div className={styles.searchContainer}>
+          <FiSearch className={styles.searchIcon} />
+          <input
+            type="text"
+            placeholder={searchPlaceholder}
+            className={styles.searchInput}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+        <div className={styles.actions}>
+          <button 
+            className={styles.actionButton} 
+            onClick={() => useInlineFilter ? onFilterToggle() : setFilterModalOpen(true)}
+          >
+            <FiFilter /> Filter
+          </button>
+          <div className={styles.exportContainer}>
+            <button className={styles.actionButton} onClick={() => setExportOpen(!exportOpen)}>
+              <FiUpload /> Export
+            </button>
+            {exportOpen && (
+              <div className={styles.exportDropdown}>
+                <CSVLink
+                  data={data}
+                  headers={csvHeaders}
+                  filename={isOrdersTab ? "orders.csv" : "attendees.csv"}
+                  className={styles.exportLink}
+                  onClick={() => setExportOpen(false)}
+                >
+                  Export as CSV
+                </CSVLink>
+                <button onClick={handleExportPDF} className={styles.exportLink}>Export as PDF</button>
+              </div>
+            )}
           </div>
-        ) : (
-          <div className={styles.actions}>
-            <button className={styles.iconButton} onClick={() => setSearchActive(true)}>
-              <FiSearch />
-            </button>
-            <button 
-              className={styles.actionButton} 
-              onClick={() => setFilterModalOpen(true)}
-              // Disable filter button for Orders tab for now
-              disabled={isOrdersTab}
-            >
-              <FiFilter /> Filter
-            </button>
-            <div className={styles.exportContainer}>
-              <button className={styles.actionButton} onClick={() => setExportOpen(!exportOpen)}>
-                <FiUpload /> Export
-              </button>
-              {exportOpen && (
-                <div className={styles.exportDropdown}>
-                  <CSVLink
-                    data={data}
-                    headers={csvHeaders}
-                    filename={isOrdersTab ? "orders.csv" : "attendees.csv"}
-                    className={styles.exportLink}
-                    onClick={() => setExportOpen(false)}
-                  >
-                    Export as CSV
-                  </CSVLink>
-                  <button onClick={handleExportPDF} className={styles.exportLink}>Export as PDF</button>
-                </div>
-              )}
-            </div>
-            <button className={`${styles.actionButton} ${styles.primary}`}>
-              <FiPlus /> {addButtonText}
-            </button>
-          </div>
-        )}
+        </div>
       </div>
 
-      <FilterModal
-        isOpen={isFilterModalOpen}
-        onClose={() => setFilterModalOpen(false)}
-        onApplyFilters={onApplyFilters}
-        currentFilters={currentFilters}
-        ticketTypes={ticketTypes}
-        activeTab={activeTab}
-      />
+      {!useInlineFilter && (
+        <FilterModal
+          isOpen={isFilterModalOpen}
+          onClose={() => setFilterModalOpen(false)}
+          onApplyFilters={onApplyFilters}
+          currentFilters={currentFilters}
+          ticketTypes={ticketTypes}
+          activeTab={activeTab}
+        />
+      )}
     </>
   );
 };

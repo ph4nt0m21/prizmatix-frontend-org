@@ -1,12 +1,14 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import styles from './reportsPage.module.scss';
-import { FiTag, FiUsers } from 'react-icons/fi';
+import { FiTag, FiUsers, FiDollarSign, FiFileText } from 'react-icons/fi';
 import { format } from 'date-fns';
 
-import { GetEventOrdersAPI, GetEventAttendeesAPI } from '../../services/allApis';
+import { GetEventOrdersAPI, GetEventAttendeesAPI, GetAllOrganizationEventsAPI } from '../../services/allApis';
+import { getUserData } from '../../utils/authUtil';
 
 import Toolbar from './components/toolbar';
+import FilterPanel from './components/filterPanel';
 import OrdersTable from './components/ordersTable';
 import AttendeesTable from './components/attendeesTable';
 import StatsGrid from './components/statsGrid';
@@ -23,22 +25,41 @@ const ReportsPage = () => {
   const [error, setError] = useState(null);
   
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false);
+  const [events, setEvents] = useState([]);
   const [filters, setFilters] = useState({
     ticketType: 'All',
     status: 'All',
     startDate: '',
     endDate: '',
+    eventId: '',
   });
 
   useEffect(() => {
-    // This logic would be replaced with a global API call in a real app
-    const fetchEventSpecificData = async () => {
+    const fetchEvents = async () => {
+      try {
+        const userData = getUserData();
+        const orgId = userData?.organizationId;
+        if (orgId) {
+          const res = await GetAllOrganizationEventsAPI(orgId);
+          const list = Array.isArray(res.data) ? res.data : (res.data?.content || []);
+          setEvents(list);
+        }
+      } catch (err) {
+        console.error('Failed to fetch events:', err);
+      }
+    };
+    fetchEvents();
+  }, []);
+
+  useEffect(() => {
+    const fetchEventSpecificData = async (targetEventId) => {
       setIsLoading(true);
       setError(null);
       try {
         let response;
         if (activeTab === 'Orders') {
-          response = await GetEventOrdersAPI(eventId);
+          response = await GetEventOrdersAPI(targetEventId);
           const formattedOrders = response.data.map(order => ({
             id: `#${order.orderId}`,
             customer: { name: `${order.buyerFirstName} ${order.buyerLastName}`, email: order.buyerEmail },
@@ -51,7 +72,7 @@ const ReportsPage = () => {
           }));
           setOrders(formattedOrders);
         } else {
-          response = await GetEventAttendeesAPI(eventId);
+          response = await GetEventAttendeesAPI(targetEventId);
           const formattedAttendees = response.data.map((attendee, index) => ({
             id: attendee.ticketId || `att-${index}`,
             name: attendee.attendeeName,
@@ -68,22 +89,31 @@ const ReportsPage = () => {
       }
     };
 
-    if (eventId) {
-      fetchEventSpecificData();
+    const targetEventId = filters.eventId || eventId;
+    if (targetEventId) {
+      fetchEventSpecificData(targetEventId);
     } else {
-        // Handle global data fetching if needed
-        setError("Event ID is missing from the URL.");
-        setIsLoading(false);
+      setError("Please select an event or ensure Event ID is in the URL.");
+      setIsLoading(false);
     }
-  }, [activeTab, eventId]);
+  }, [activeTab, eventId, filters.eventId]);
 
   const filteredData = useMemo(() => {
     if (activeTab === 'Orders') {
-      return orders.filter(order =>
+      let result = orders.filter(order =>
         order.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
         order.customer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         order.customer.email.toLowerCase().includes(searchQuery.toLowerCase())
       );
+      if (filters.startDate || filters.endDate) {
+        result = result.filter(order => {
+          const orderDate = new Date(order.orderDate);
+          if (filters.startDate && orderDate < new Date(filters.startDate)) return false;
+          if (filters.endDate && orderDate > new Date(filters.endDate + 'T23:59:59')) return false;
+          return true;
+        });
+      }
+      return result;
     }
     return attendees.filter(attendee => {
       const searchMatch = attendee.name.toLowerCase().includes(searchQuery.toLowerCase());
@@ -110,11 +140,7 @@ const ReportsPage = () => {
     if (isLoading) return <div className={styles.placeholder}><p>Loading data...</p></div>;
     if (error) return <div className={styles.placeholder}><p>{error}</p></div>;
     if (activeTab === 'Orders') {
-      return (
-        <div className={styles.contentCard}>
-          <OrdersTable orders={filteredData} onOrderSelect={handleOrderSelect} />
-        </div>
-      );
+      return <OrdersTable orders={filteredData} onOrderSelect={handleOrderSelect} />;
     }
     if (activeTab === 'Attendees') {
       return (
@@ -129,37 +155,83 @@ const ReportsPage = () => {
   return (
     <>
       <div className={styles.reportsContainer}>
-        <div className={styles.mainHeader}>
-          <h1>Reports</h1>
-          <Toolbar
-            activeTab={activeTab}
-            searchQuery={searchQuery}
-            setSearchQuery={setSearchQuery}
-            data={filteredData}
-            currentFilters={filters}
-            onApplyFilters={setFilters}
-            ticketTypes={ticketTypes}
-          />
-        </div>
-
-        {/* NEW: Tabs are now in their own scrollable container */}
-        <div className={styles.tabsContainer}>
-            <button
-              className={`${styles.tabButton} ${activeTab === 'Orders' ? styles.active : ''}`}
-              onClick={() => setActiveTab('Orders')}
-            >
-              <FiTag /> Orders
-            </button>
-            <button
-              className={`${styles.tabButton} ${activeTab === 'Attendees' ? styles.active : ''}`}
-              onClick={() => setActiveTab('Attendees')}
-            >
-              <FiUsers /> Attendees ({checkedInCount}/{totalAttendees})
-            </button>
+        <div className={styles.headerSection}>
+          <h1 className={styles.mainHeader}>Reports</h1>
+          <div className={styles.tabsContainer}>
+          <button
+            className={`${styles.tabButton} ${activeTab === 'Orders' ? styles.active : ''}`}
+            onClick={() => setActiveTab('Orders')}
+          >
+            <FiTag /> Orders
+          </button>
+          <button
+            className={`${styles.tabButton} ${activeTab === 'Attendees' ? styles.active : ''}`}
+            onClick={() => setActiveTab('Attendees')}
+          >
+            <FiUsers /> Attendees {activeTab === 'Attendees' && `(${checkedInCount}/${totalAttendees})`}
+          </button>
+          <button
+            className={`${styles.tabButton} ${activeTab === 'Payout' ? styles.active : ''}`}
+            onClick={() => setActiveTab('Payout')}
+          >
+            <FiDollarSign /> Payout
+          </button>
+          <button
+            className={`${styles.tabButton} ${activeTab === 'Event Summary' ? styles.active : ''}`}
+            onClick={() => setActiveTab('Event Summary')}
+          >
+            <FiFileText /> Event Summary
+          </button>
+          </div>
         </div>
 
         <div className={styles.mainContent}>
-          {renderContent()}
+          {(activeTab === 'Orders' || activeTab === 'Attendees') && (
+            <div className={styles.contentCard}>
+              <div className={styles.toolbarRow}>
+                <Toolbar
+                  activeTab={activeTab}
+                  searchQuery={searchQuery}
+                  setSearchQuery={setSearchQuery}
+                  data={filteredData}
+                  currentFilters={filters}
+                  onApplyFilters={setFilters}
+                  ticketTypes={ticketTypes}
+                  isFilterPanelOpen={isFilterPanelOpen}
+                  onFilterToggle={() => setIsFilterPanelOpen(!isFilterPanelOpen)}
+                />
+              </div>
+              {activeTab === 'Orders' && (
+                <FilterPanel
+                  isOpen={isFilterPanelOpen}
+                  onApplyFilters={(f) => setFilters(prev => ({ ...prev, ...f }))}
+                  currentFilters={filters}
+                  events={events}
+                />
+              )}
+              {activeTab === 'Attendees' && (
+                <FilterPanel
+                  isOpen={isFilterPanelOpen}
+                  onApplyFilters={(f) => setFilters(prev => ({ ...prev, ...f }))}
+                  currentFilters={filters}
+                  events={events}
+                />
+              )}
+              <div className={styles.tableSection}>
+                {renderContent()}
+              </div>
+            </div>
+          )}
+          {activeTab === 'Payout' && (
+            <div className={styles.placeholder}>
+              <p>Payout reports coming soon.</p>
+            </div>
+          )}
+          {activeTab === 'Event Summary' && (
+            <div className={styles.placeholder}>
+              <p>Event Summary coming soon.</p>
+            </div>
+          )}
         </div>
       </div>
       

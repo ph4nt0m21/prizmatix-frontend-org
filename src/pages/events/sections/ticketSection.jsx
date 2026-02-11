@@ -272,7 +272,7 @@ const TicketSection = () => {
                     {formatQuantity(ticket)}
                   </div>
                   <div className={`${styles.ticketCell} ${styles.cellSold}`}>
-                    {ticket.sold || 0}
+                    {ticket.soldCount ?? ticket.sold ?? 0}
                   </div>
                   <div className={`${styles.ticketCell} ${styles.cellMaxPurchase}`}>
                     {formatMaxPurchase(ticket)}

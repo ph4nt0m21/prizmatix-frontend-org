@@ -4,16 +4,21 @@
 .contentWrapper {
   display: flex;
   flex-grow: 1; /* Ensures it fills the space below the header */
+  height: calc(100vh - 112px); /* Match main layout header offset */
+  background-color: #F7F7FA;
+  padding: 24px 32px 32px;
+  box-sizing: border-box;
+  column-gap: 24px;
+  overflow: hidden; /* Only mainContent should scroll */
 }
 
 .mainContent {
   flex-grow: 1;
-  background-color: #F7F7FA;
-  padding: 24px;
-  overflow-y: auto; /* Allows the content itself to scroll */
+  padding: 0;
+  overflow-y: auto; /* Scroll only the main content area */
   
   @media (max-width: 1024px) {
-    padding: 16px;
+    padding: 0;
   }
 }
 

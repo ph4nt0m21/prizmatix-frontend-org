@@ -1,48 +1,43 @@
 .reportsContainer {
-  padding: 1.5rem; // Adjusted padding for mobile
+  padding: 0 32px;
   background-color: #F9FAFB;
-  min-height: 100vh;
+  min-height: 100%;
+}
+
+.headerSection {
+  background: #FFFFFF;
+  border-radius: 12px;
+  border: 1px solid #E5E7EB;
+  padding: 24px 24px 0;
+  margin: 24px 0 24px 0;
 }
 
 .mainHeader {
-  display: flex;
-  flex-wrap: wrap; // Allows items to wrap on small screens
-  justify-content: space-between;
-  align-items: center;
-  gap: 1rem; // Adds space between title and toolbar when they wrap
-  padding: 1rem;
-  background-color: #FFFFFF;
-  border-radius: 8px;
-  border: 1px solid #E5E7EB;
-
-  h1 {
-    font-size: 1.5rem;
-    font-weight: 600;
-    margin: 0;
-  }
+  font-size: 28px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 20px 0;
 }
 
-// NEW: Container for the tabs to enable horizontal scrolling
 .tabsContainer {
   display: flex;
   overflow-x: auto;
-  padding: 0.5rem 0;
+  padding: 0;
+  margin: 0;
   border-bottom: 1px solid #E5E7EB;
-  margin-top: 1.5rem;
 
-  // Hide the scrollbar for a cleaner look
   &::-webkit-scrollbar {
     display: none;
   }
-  -ms-overflow-style: none;  // IE and Edge
-  scrollbar-width: none;  // Firefox
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 .tabButton {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 0.75rem 1rem;
+  padding: 12px 20px;
   border: none;
   background: none;
   cursor: pointer;
@@ -50,25 +45,36 @@
   font-weight: 500;
   color: #6B7280;
   border-bottom: 2px solid transparent;
-  margin-bottom: -2px;
-  white-space: nowrap; // Prevents button text from wrapping
+  margin-bottom: -1px;
+  white-space: nowrap;
 
   &.active {
-    color: #4F46E5;
-    border-bottom-color: #4F46E5;
+    color: #7C3AED;
+    border-bottom-color: #7C3AED;
   }
 }
 
 .mainContent {
-  padding-top: 1.5rem;
-  align-items: center;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 24px;
 }
 
 .contentCard {
   background: #FFFFFF;
-  border-radius: 8px;
+  border-radius: 12px;
   border: 1px solid #E5E7EB;
   overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.toolbarRow {
+  padding: 16px 24px;
+  border-bottom: 1px solid #E5E7EB;
+}
+
+.tableSection {
+  padding: 0;
 }
 
 .placeholder {
@@ -83,19 +89,8 @@
   border: 1px solid #E5E7EB;
 }
 
-// Media query for larger screens to restore original layout if needed
-@media (min-width: 768px) {
+@media (max-width: 768px) {
   .reportsContainer {
-    padding: 24px;
-  }
-
-  .mainHeader {
-    padding: 0 24px;
-    height: 80px; // A fixed height for consistency
-    flex-wrap: nowrap; // Prevent wrapping on desktop
-  }
-
-  .tabsContainer {
-    justify-content: center; // Center the tabs on desktop
+    padding: 16px;
   }
 }

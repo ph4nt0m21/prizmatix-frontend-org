@@ -167,8 +167,9 @@ const OrdersTable = ({ orders, onOrderSelect }) => {
   }
 
   return (
-    <div className={styles.tableContainer}>
-      <table className={styles.table}>
+    <>
+      <div className={styles.tableContainer}>
+        <table className={styles.table}>
         <colgroup>
   <col style={{ width: '50px' }} />       {/* checkbox */}
   <col style={{ width: '110px' }} />      {/* order id */}
@@ -238,8 +239,8 @@ const OrdersTable = ({ orders, onOrderSelect }) => {
             </tr>
           ))}
         </tbody>
-      </table>
-
+        </table>
+      </div>
       <div className={styles.pagination}>
         <span>Rows per page: 10</span>
         <span>1 - {orders.length} of {orders.length}</span>
@@ -248,7 +249,7 @@ const OrdersTable = ({ orders, onOrderSelect }) => {
           <button>&gt;</button>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

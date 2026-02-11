@@ -3,17 +3,19 @@
 
 .sidebar {
   display: flex;
-  width: 280px;
-  min-width: 280px;
+  width: 260px;
+  min-width: 260px;
   flex-direction: column;
   align-items: flex-start;
   background: #FFF;
-  box-shadow: 0px 2px 4px 0px rgba(0, 0, 0, 0.05);
-  border-radius: 8px;
+  box-shadow: 0px 2px 4px 0px rgba(15, 23, 42, 0.04);
+  border-radius: 16px;
+  border: 1px solid #E5E7EB;
   position: relative;
   z-index: 1;
   padding: 20px;
   flex-shrink: 0;
+  height: 100%;
 
   @media (max-width: 768px) {
     position: fixed;
@@ -68,7 +70,6 @@
   flex-direction: column;
   width: 100%;
   padding: 16px 0;
-  overflow-y: auto;
 }
 
 .sectionGroup {
@@ -91,17 +92,17 @@
   align-items: center;
   padding: 10px 24px;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition: background-color 0.2s ease, color 0.2s ease;
   position: relative;
+  border-radius: 8px;
 
   &:hover:not(.active) {
-    // UPDATED: Use the new purple color with 5% opacity
     background-color: rgba(139, 92, 246, 0.05);
   }
 
   &.active {
-    // UPDATED: Use the new purple color with 10% opacity
-    background-color: rgba(139, 92, 246, 0.1);
+    /* Full pill highlight like Figma example */
+    background-color: rgba(139, 92, 246, 0.08);
   }
 }
 
@@ -113,8 +114,29 @@
   height: 24px;
   margin-right: 12px;
   position: relative;
-  // NEW: Set the color for all section icons
+  /* Base icon color */
+  color: #6B7280;
+}
+
+.sectionItem.active .sectionIconContainer {
+  /* Icon turns purple on active */
   color: #8b5cf6;
+}
+
+/* Ensure icon outline follows current color */
+.sectionIconContainer svg path {
+  stroke: currentColor;
+}
+
+.sectionLabel {
+  font-size: 14px;
+  color: #4B5563;
+  flex: 1;
+}
+
+.sectionItem.active .sectionLabel {
+  color: #8b5cf6;
+  font-weight: 500;
 }
 
 .sectionIcon {
@@ -162,11 +184,10 @@
 
 .sectionLabel {
   font-size: 14px;
-  color: #6b7280;
+  color: #4B5563;
   flex: 1;
 
   .active & {
-    // UPDATED: Use the new purple color
     color: #8b5cf6;
     font-weight: 500;
   }
