@@ -81,67 +81,70 @@ const AttendeesTable = ({ attendees, onCheckIn }) => {
   };
 
   return (
-    <div className={styles.tableContainer}>
-      <table className={styles.table}>
-        
-        {/* Column width control */}
-        <colgroup>
-          <col style={{ width: '50px' }} />        {/* checkbox */}
-          <col style={{ width: '260px' }} />       {/* name */}
-          <col style={{ width: '160px' }} />       {/* ticket type */}
-          <col style={{ width: '160px' }} />       {/* check-in button */}
-        </colgroup>
+    <>
+      <div className={styles.tableContainer}>
+        <table className={styles.table}>
+          <colgroup>
+            <col style={{ width: '50px' }} />
+            <col style={{ width: '260px' }} />
+            <col style={{ width: '160px' }} />
+            <col style={{ width: '160px' }} />
+          </colgroup>
 
-        <thead>
-          <tr>
-            <th>
-              <input type="checkbox" className={styles.rowCheckbox} />
-            </th>
-            <th>Name</th>
-            <th>Ticket Type</th>
-            <th></th>
-          </tr>
-        </thead>
-
-        <tbody>
-          {attendees.map((attendee) => (
-            <tr key={attendee.id} className={styles.tableRow}>
-              
-              <td>
-                <input 
-                  type="checkbox" 
-                  className={styles.rowCheckbox}
-                />
-              </td>
-
-              <td className={styles.nameCell}>{attendee.name}</td>
-
-              <td>
-                <span className={`${styles.ticketType} ${getTicketTypeClass(attendee.ticketType)}`}>
-                  {attendee.ticketType}
-                </span>
-              </td>
-
-              <td>
-                {attendee.isCheckedIn ? (
-                  <span className={styles.checkedInStatus}>
-                    <FiCheck /> Checked In
-                  </span>
-                ) : (
-                  <button
-                    className={styles.checkInButton}
-                    onClick={() => onCheckIn(attendee.id)}
-                  >
-                    Check In
-                  </button>
-                )}
-              </td>
-
+          <thead>
+            <tr>
+              <th>
+                <input type="checkbox" className={styles.rowCheckbox} />
+              </th>
+              <th>Name</th>
+              <th>Ticket Type</th>
+              <th></th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+          </thead>
+
+          <tbody>
+            {attendees.map((attendee) => (
+              <tr key={attendee.id} className={styles.tableRow}>
+                <td>
+                  <input
+                    type="checkbox"
+                    className={styles.rowCheckbox}
+                  />
+                </td>
+                <td className={styles.nameCell}>{attendee.name}</td>
+                <td>
+                  <span className={`${styles.ticketType} ${getTicketTypeClass(attendee.ticketType)}`}>
+                    {attendee.ticketType}
+                  </span>
+                </td>
+                <td>
+                  {attendee.isCheckedIn ? (
+                    <span className={styles.checkedInStatus}>
+                      <FiCheck /> Checked In
+                    </span>
+                  ) : (
+                    <button
+                      className={styles.checkInButton}
+                      onClick={() => onCheckIn(attendee.id)}
+                    >
+                      Check In
+                    </button>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div className={styles.pagination}>
+        <span>Rows per page: 10</span>
+        <span>1 - {attendees.length} of {attendees.length}</span>
+        <div>
+          <button type="button">&lt;</button>
+          <button type="button">&gt;</button>
+        </div>
+      </div>
+    </>
   );
 };
 

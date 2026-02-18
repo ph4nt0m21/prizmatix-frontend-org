@@ -86,8 +86,9 @@
 }
 
 .filterItem.activeFilter {
+  background-color: #F3F0FF;
   font-weight: 600;
-  color: #111827;
+  color: #6D28D9;
 }
 
 .filterItem span {
@@ -97,7 +98,7 @@
 }
 
 .filterItem.activeFilter span {
-  color: #111827;
+  color: #6D28D9;
   font-weight: 600;
 }
 

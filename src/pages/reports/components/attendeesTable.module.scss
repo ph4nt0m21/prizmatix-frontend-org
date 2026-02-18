@@ -3,7 +3,9 @@
 ================================ */
 .tableContainer {
   width: 100%;
+  max-height: calc(100vh - 400px);
   overflow-x: auto;
+  overflow-y: auto;
   background: #ffffff;
   border-radius: 8px;
 }
@@ -32,6 +34,9 @@
   text-transform: uppercase;
   white-space: nowrap;
   text-align: left;
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
 /* ================================
@@ -124,6 +129,29 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
+}
+
+/* ================================
+   PAGINATION
+================================ */
+.pagination {
+  display: flex;
+  justify-content: flex-end;
+  padding: 16px 24px;
+  color: #6B7280;
+  gap: 24px;
+  background: #ffffff;
+  border-top: 1px solid #E5E7EB;
+
+  button {
+    background: none;
+    border: none;
+    cursor: pointer;
+
+    &:hover {
+      color: #111827;
+    }
+  }
 }
 
 /* ================================

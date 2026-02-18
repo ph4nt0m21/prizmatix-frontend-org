@@ -11,6 +11,7 @@
   align-items: flex-start;
   background: var(--gradient, linear-gradient(180deg, #31204B 0%, #1E202C 100%));
   box-sizing: border-box;
+  overflow: hidden; // prevent outer page scroll; inner content handles scrolling
 
   @media (max-width: 768px) {
     padding: 0; // Remove padding on mobile to allow sidebar to fill screen edge

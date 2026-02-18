@@ -143,34 +143,45 @@ const OverviewSection = ({ dashboardData, eventData }) => {
         {/* Event Info Header */}
         <div className={styles.eventInfoHeader}>
           <div>
-            <h2 className={styles.eventName}>{eventData.name} <span className={`${styles.statusBadge} ${styles[eventStatus.toLowerCase()]}`}>{eventStatus}</span></h2>
-            <p className={styles.eventMeta}>
-              {eventMetaString}
-            </p>
+            <h2 className={styles.eventName}>
+              {eventData.name}{' '}
+              <span className={`${styles.statusBadge} ${styles[eventStatus.toLowerCase()]}`}>
+                {eventStatus}
+              </span>
+            </h2>
+            <p className={styles.eventMeta}>{eventMetaString}</p>
           </div>
-          <select className={styles.timeframeSelector} defaultValue="All Time">
-            <option>All Time</option>
-          </select>
         </div>
 
         {/* Stats Grid */}
         <div className={styles.statsGrid}>
-           <div className={styles.statCard}>
+          <div className={styles.statCard}>
             <p className={styles.statTitle}>Revenue</p>
             <div className={styles.statValue}>{formatCurrency(dashboardData.revenue)}</div>
           </div>
           <div className={styles.statCard}>
             <p className={styles.statTitle}>Tickets Issued</p>
-            <div className={styles.statValue}>{dashboardData.totalTicketsIssued} <span className={styles.statTotal}>of {dashboardData.totalTicketCapacity}</span></div>
+            <div className={styles.statValue}>
+              {dashboardData.totalTicketsIssued}{' '}
+              <span className={styles.statTotal}>of {dashboardData.totalTicketCapacity}</span>
+            </div>
             <div className={styles.progressBarContainer}>
-              <div className={styles.progressBar} style={{ width: `${(dashboardData.totalTicketsIssued / dashboardData.totalTicketCapacity) * 100}%` }}></div>
+              <div
+                className={styles.progressBar}
+                style={{
+                  width:
+                    dashboardData.totalTicketCapacity > 0
+                      ? `${(dashboardData.totalTicketsIssued / dashboardData.totalTicketCapacity) * 100}%`
+                      : '0%',
+                }}
+              ></div>
             </div>
           </div>
           <div className={styles.statCard}>
             <p className={styles.statTitle}>Orders</p>
             <div className={styles.statValue}>{dashboardData.orderCount}</div>
             <div className={styles.statFooter}>
-              <button 
+              <button
                 className={styles.breakdownLink}
                 onClick={() => setOrdersModalOpen(true)}
               >
@@ -178,30 +189,58 @@ const OverviewSection = ({ dashboardData, eventData }) => {
               </button>
             </div>
           </div>
-          <div className={styles.statCard}>
-            <p className={styles.statTitle}>Event Views</p>
-            <div className={styles.statValue}>{dashboardData.eventViews}</div>
-          </div>
         </div>
 
-        {/* Earnings By Ticket Type Card */}
-        <div className={styles.detailCard}>
-          <div className={styles.cardHeader}>
-            <h3>Earnings By Ticket Type</h3>
-            <select className={styles.timeframeSelector} defaultValue="Daily">
-              <option>Daily</option>
-            </select>
-          </div>
-          <div className={styles.ticketTable}>
-            <div className={styles.ticketTableHeader}>
-              <span>Ticket Type</span><span>Earnings</span>
+        {/* Middle row: Earnings by ticket type + Earnings overview */}
+        <div className={styles.detailGrid}>
+          <div className={styles.detailCard}>
+            <div className={styles.cardHeader}>
+              <h3>Earnings By Ticket Type</h3>
             </div>
-            {dashboardData.earningsByTicketType?.map(ticket => (
-              <div key={ticket.ticketType} className={styles.ticketTableRow}>
-                <span>{ticket.ticketType}</span>
-                <span>{formatCurrency(ticket.totalEarnings)}</span>
+            <div className={styles.ticketTable}>
+              <div className={styles.ticketTableHeader}>
+                <span>Ticket Type</span>
+                <span>Earnings</span>
               </div>
-            ))}
+              {dashboardData.earningsByTicketType?.map((ticket) => (
+                <div key={ticket.ticketType} className={styles.ticketTableRow}>
+                  <span>{ticket.ticketType}</span>
+                  <span>{formatCurrency(ticket.totalEarnings)}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className={styles.earningsOverviewCard}>
+            <div className={styles.cardHeader}>
+              <h3>Earnings Overview</h3>
+            </div>
+
+            <div className={styles.earningsRow}>
+              <div>
+                <div className={styles.earningsLabel}>Total Revenue</div>
+                <div className={styles.earningsSub}>
+                  Our platform service fee deducted from total revenue.
+                </div>
+              </div>
+              <div className={styles.earningsValue}>
+                {formatCurrency(dashboardData.totalRevenue ?? dashboardData.revenue)}
+              </div>
+            </div>
+
+            <div className={styles.earningsRow}>
+              <div>
+                <div className={styles.earningsLabel}>Absorbed Fee</div>
+                <div className={styles.earningsSub}>
+                  Gateway fee deducted from total revenue.
+                </div>
+              </div>
+              <div className={styles.earningsValue}>
+                {(dashboardData.totalBookingFee ?? dashboardData.absorbedFee) != null
+                  ? formatCurrency(dashboardData.totalBookingFee ?? dashboardData.absorbedFee)
+                  : '-'}
+              </div>
+            </div>
           </div>
         </div>
 
@@ -209,7 +248,7 @@ const OverviewSection = ({ dashboardData, eventData }) => {
         <div className={styles.detailCard}>
           <div className={styles.cardHeader}>
             <h3>Sales Overview</h3>
-            <select 
+            <select
               className={styles.timeframeSelector}
               value={salesTimeframe}
               onChange={(e) => setSalesTimeframe(e.target.value)}

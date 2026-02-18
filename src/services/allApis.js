@@ -37,6 +37,11 @@ export const ResetPasswordAPI = async (data) => {
   return await apiClient.post("/reset-password", data);
 };
 
+// Change password (authenticated admin)
+export const ChangePasswordAPI = async (data) => {
+  return await apiClient.post("/admin/change-password", data);
+};
+
 // Profile API
 export const ProfileAPI = async () => {
   return await apiClient.get("/user/profile");
@@ -62,6 +67,12 @@ export const UpdateEventAPI = async (eventId, data) => {
 // Get all events with pagination
 export const GetAllEventsAPI = async (params) => {
   return await apiClient.get(`/api/events/`, { params });
+};
+
+// Get organization overview (org-level metrics + sales time-series)
+// Params (all optional): from (ISO date), to (ISO date), granularity (DAILY | WEEKLY | MONTHLY | YEARLY)
+export const GetOrganizationOverviewAPI = async (params = {}) => {
+  return await apiClient.get('/api/events/overview', { params });
 };
 
 // Get all events with pagination

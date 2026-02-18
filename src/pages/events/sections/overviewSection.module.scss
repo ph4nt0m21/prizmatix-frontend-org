@@ -5,6 +5,11 @@
   display: flex;
   flex-direction: column;
   gap: 24px;
+  background: #FFFFFF;
+  border-radius: 16px;
+  border: 1px solid #E5E7EB;
+  padding: 24px 24px 28px;
+  box-sizing: border-box;
 }
 
 /* Event Info Header */
@@ -56,7 +61,7 @@
 /* Stats Grid */
 .statsGrid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 24px;
 }
 
@@ -133,6 +138,12 @@
   padding: 24px;
 }
 
+.detailGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(260px, 1fr);
+  gap: 24px;
+}
+
 .cardHeader {
   display: flex;
   justify-content: space-between;
@@ -194,6 +205,51 @@
   margin-bottom: 8px;
 }
 
+/* Earnings overview card on the right */
+.earningsOverviewCard {
+  background: #FFFFFF;
+  border: 1px solid #E5E7EB;
+  border-radius: 12px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.earningsRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #F3F4F6;
+
+  &:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+}
+
+.earningsLabel {
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+}
+
+.earningsSub {
+  font-size: 12px;
+  color: #6B7280;
+  margin-top: 4px;
+  max-width: 200px;
+}
+
+.earningsValue {
+  font-size: 16px;
+  font-weight: 600;
+  color: #111827;
+  white-space: nowrap;
+}
+
 .loadingContainer {
   display: flex;
   justify-content: center;
@@ -205,6 +261,7 @@
 /* Responsive Breakpoints */
 @media (max-width: 1200px) {
   .statsGrid { grid-template-columns: repeat(2, 1fr); }
+  .detailGrid { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 768px) {

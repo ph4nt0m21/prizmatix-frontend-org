@@ -298,35 +298,106 @@
       background-color: #6d28d9;
     }
   }
-}
 
-.actionButtons {
-  display: flex;
-  justify-content: flex-end;
-  padding-top: 20px;
-  border-top: 1px solid #f3f4f6;
-  margin-top: 30px;
+  .changePasswordForm {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #e5e7eb;
+  }
 
-  .saveChangesButton {
-    padding: 10px 24px;
-    background-color: #7c3aed;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background-color 0.2s;
+  .inputWithIcon {
+    position: relative;
+    width: 100%;
 
-    &:hover {
-      background-color: #6d28d9;
+    .input {
+      padding-right: 44px;
     }
   }
 
-  @media (max-width: 768px) {
-    justify-content: center; /* Center buttons on mobile */
+  .iconButton {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    padding: 4px;
+    cursor: pointer;
+    color: #6b7280;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+      color: #374151;
+    }
+  }
+
+  .passwordRequirements {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px 16px;
+    margin-top: 8px;
+    margin-bottom: 12px;
+    font-size: 12px;
+    color: #6b7280;
+  }
+
+  .requirementItem {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .checkIcon {
+    font-size: 8px;
+    color: #9ca3af;
+
+    &.validIcon {
+      color: #7c3aed;
+    }
+  }
+
+  .validText {
+    color: #7c3aed;
+  }
+
+  .matchText {
+    font-size: 12px;
+    color: #059669;
+    margin-top: 4px;
+    display: block;
+  }
+
+  .fieldError {
+    font-size: 12px;
+    color: #dc2626;
+    margin-top: 4px;
+    display: block;
+  }
+
+  .changePasswordActions {
+    margin-top: 16px;
+
     .saveChangesButton {
-        width: 100%;
+      padding: 10px 24px;
+      background-color: #7c3aed;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background-color 0.2s;
+
+      &:hover:not(:disabled) {
+        background-color: #6d28d9;
+      }
+
+      &:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+      }
     }
   }
 }
