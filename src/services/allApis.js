@@ -249,6 +249,27 @@ export const ReissueOrderEmailAPI = async (orderId) => {
   return await apiClient.post(`/api/admin/orders/${orderId}/reissue-email`);
 };
 
+// =============== PAYOUT APIs (Organization Console – Manage Event) ===============
+
+// Get payout eligibility for an event (revenue summary + remaining payoutable)
+export const GetPayoutEligibilityAPI = async (eventId) => {
+  return await apiClient.get('/api/payouts/eligibility', { params: { eventId: Number(eventId) } });
+};
+
+// List payout requests for an event (newest first)
+export const GetPayoutRequestsAPI = async (eventId) => {
+  return await apiClient.get('/api/payouts/requests', { params: { eventId: Number(eventId) } });
+};
+
+// Create a payout request
+export const CreatePayoutRequestAPI = async (body) => {
+  return await apiClient.post('/api/payouts/request', {
+    eventId: Number(body.eventId),
+    amount: Number(body.amount),
+    payoutType: body.payoutType, // "FULL" | "CUSTOM" | "ADVANCE"
+  });
+};
+
 
 // =============== SCANNER USER APIs ===============
 export const CreateScannerUserAPI = async (data) => {

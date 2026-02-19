@@ -73,7 +73,7 @@ const navigateToEventEditPage = () => {
       case "ordersAndAttendees":
         return <OrdersAndAttendeesSection eventId={eventId} />;
       case "payout":
-        return <PayoutSection dashboardData={dashboardData} />;
+        return <PayoutSection eventId={eventId} dashboardData={dashboardData} />;
       case "tickets":
         return <TicketSection />;
       case "discounts":

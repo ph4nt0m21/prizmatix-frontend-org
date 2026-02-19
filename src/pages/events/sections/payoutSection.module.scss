@@ -503,3 +503,124 @@
     cursor: not-allowed;
   }
 }
+
+/* Loading / error / success */
+.loadingState,
+.errorState {
+  padding: 24px;
+  text-align: center;
+  color: #6B7280;
+}
+
+.errorState {
+  color: #B91C1C;
+}
+
+.successMessage {
+  width: 100%;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  background: #D1FAE5;
+  color: #065F46;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.noPayoutMessage {
+  width: 100%;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  background: #FEF3C7;
+  color: #92400E;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.submitError {
+  margin-top: 12px;
+  padding: 12px;
+  background: #FEE2E2;
+  color: #B91C1C;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+/* Payout requests table */
+.historyTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 16px;
+  display: block;
+}
+
+.tableWrapper {
+  width: 100%;
+  overflow-x: auto;
+  background: #fff;
+  border-radius: 8px;
+  border: 1px solid #E9E9EC;
+}
+
+.payoutTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+
+  th {
+    padding: 12px 16px;
+    background: #F9FAFB;
+    border-bottom: 1px solid #E5E7EB;
+    color: #4B5563;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    text-align: left;
+  }
+
+  td {
+    padding: 12px 16px;
+    border-bottom: 1px solid #E5E7EB;
+    color: #1F2937;
+  }
+
+  tbody tr:last-child td {
+    border-bottom: none;
+  }
+}
+
+.amountCell {
+  font-weight: 600;
+  color: #111827;
+}
+
+.dateCell {
+  color: #374151;
+}
+
+.statusPENDING {
+  background: #FEF3C7;
+  color: #92400E;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.statusPAID {
+  background: #D1FAE5;
+  color: #065F46;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.statusCANCELLED {
+  background: #F3F4F6;
+  color: #6B7280;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
