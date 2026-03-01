@@ -1,3 +1,14 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Onest:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+    .neon-glow {
+        box-shadow: 0 0 20px rgba(159, 32, 255, 0.5);
+    }
+}
 
 *{
   padding: 0;

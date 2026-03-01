@@ -118,7 +118,7 @@ const EventEditPage = () => {
           organizerName: fetchedData.organizationName || 'Organizer',
           category: fetchedData.category || '',
           searchTags: fetchedData.keywords ? fetchedData.keywords.split(',').map(tag => tag.trim()) : [],
-          
+
           location: {
             // The API response does not provide full address details, so we map what's available.
             locationType: fetchedData.eventLocationType || 'physical',
@@ -136,7 +136,7 @@ const EventEditPage = () => {
             latitude: '',
             longitude: '',
           },
-          
+
           dateTime: {
             startDate: fetchedData.startDate || '',
             startTime: fetchedData.startTime || '',
@@ -151,7 +151,7 @@ const EventEditPage = () => {
             bannerUrl: fetchedData.bannerImage || null, // API provides a full URL for bannerImage
           },
         };
-        
+
         setEventData(transformedData);
         setError(null);
       } catch (err) {
@@ -190,11 +190,11 @@ const EventEditPage = () => {
       case 'dateTime':
         const dt = eventData.dateTime;
         if (!dt?.startDate || !dt?.startTime || !dt?.endDate || !dt?.endTime) {
-            isValid = false;
+          isValid = false;
         } else {
-            const startDateTime = new Date(`${dt.startDate}T${dt.startTime}`);
-            const endDateTime = new Date(`${dt.endDate}T${dt.endTime}`);
-            isValid = endDateTime > startDateTime;
+          const startDateTime = new Date(`${dt.startDate}T${dt.startTime}`);
+          const endDateTime = new Date(`${dt.endDate}T${dt.endTime}`);
+          isValid = endDateTime > startDateTime;
         }
         break;
       case 'description':
@@ -207,8 +207,8 @@ const EventEditPage = () => {
       default:
         isValid = false;
     }
-    
-    setStepStatus(prev => ({ ...prev, [currentStepKey]: { ...prev[currentStepKey], valid: isValid }}));
+
+    setStepStatus(prev => ({ ...prev, [currentStepKey]: { ...prev[currentStepKey], valid: isValid } }));
     return isValid;
   }, [currentStep, eventData, getStepKey]);
 
@@ -268,10 +268,10 @@ const EventEditPage = () => {
         default:
           throw new Error("Invalid save step");
       }
-      
+
       setStepStatus(prev => ({ ...prev, [currentStepKey]: { ...prev[currentStepKey], completed: true } }));
       setSuccessMessage(`${currentStepKey.charAt(0).toUpperCase() + currentStepKey.slice(1)} updated successfully!`);
-      
+
       // Navigate to the next step or finish
       if (currentStep < totalSteps) {
         navigate(`/events/edit-page/${paramEventId}/${currentStep + 1}`);
@@ -341,7 +341,7 @@ const EventEditPage = () => {
         <main className={styles.mainContent}>
           {successMessage && <div className={styles.successMessage}>{successMessage}<button onClick={() => setSuccessMessage(null)}>✕</button></div>}
           {error && <div className={styles.errorMessage}>{error}<button onClick={() => setError(null)}>✕</button></div>}
-          
+
           <div className={styles.sectionContent}>
             {renderCurrentStep()}
           </div>

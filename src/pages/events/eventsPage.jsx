@@ -290,9 +290,9 @@ const EventsPage = () => {
                         <span className={styles.dateDay}>{date.day}</span>
                       </div>
                       <div className={styles.eventThumbnail}>
-                        <img 
-                          src={event.bannerImage || `https://placehold.co/144x112/e5e7eb/6b7280?text=${encodeURIComponent(event.name)}`} 
-                          alt={event.name} 
+                        <img
+                          src={event.bannerImage || `https://placehold.co/144x112/e5e7eb/6b7280?text=${encodeURIComponent(event.name)}`}
+                          alt={event.name}
                         />
                       </div>
                       <div className={styles.eventDetails}>
@@ -315,11 +315,10 @@ const EventsPage = () => {
                         <div
                           className={styles.progressBar}
                           style={{
-                            width: `${
-                              event.totalTicketCapacity > 0
+                            width: `${event.totalTicketCapacity > 0
                                 ? (event.totalTicketsIssued / event.totalTicketCapacity) * 100
                                 : 0
-                            }%`,
+                              }%`,
                           }}
                         ></div>
                       </div>
@@ -332,7 +331,7 @@ const EventsPage = () => {
                     <div className={styles.actionsCell}>
                       <div className={styles.actionsMenuContainer}>
                         <button className={styles.actionsButton} onClick={(e) => handleToggleMenu(e, event.id)}>
-                          <svg width="20" height="20" viewBox="0 0 24 24"><path d="M12 8C13.1 8 14 7.1 14 6C14 4.9 13.1 4 12 4C10.9 4 10 4.9 10 6C10 7.1 10.9 8 12 8ZM12 10C10.9 10 10 10.9 10 12C10 13.1 10.9 14 12 14C13.1 14 14 13.1 14 12C14 10.9 13.1 10 12 10ZM12 16C10.9 16 10 16.9 10 18C10 19.1 10.9 20 12 20C13.1 20 14 19.1 14 18C14 16.9 13.1 16 12 16Z" fill="#6B7280"/></svg>
+                          <svg width="20" height="20" viewBox="0 0 24 24"><path d="M12 8C13.1 8 14 7.1 14 6C14 4.9 13.1 4 12 4C10.9 4 10 4.9 10 6C10 7.1 10.9 8 12 8ZM12 10C10.9 10 10 10.9 10 12C10 13.1 10.9 14 12 14C13.1 14 14 13.1 14 12C14 10.9 13.1 10 12 10ZM12 16C10.9 16 10 16.9 10 18C10 19.1 10.9 20 12 20C13.1 20 14 19.1 14 18C14 16.9 13.1 16 12 16Z" fill="#6B7280" /></svg>
                         </button>
 
                         {openMenuId === event.id && (

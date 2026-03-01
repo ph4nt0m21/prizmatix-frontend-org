@@ -77,11 +77,11 @@
 //     document.addEventListener("mousedown", handleClickOutside);
 //     return () => document.removeEventListener("mousedown", handleClickOutside);
 //   }, []);
-  
+
 //   const handleNewCampaign = () => navigate('/campaigns/new');
 //   const handleEdit = (id) => navigate(`/campaigns/${id}/edit`);
 //   const handleView = (id) => navigate(`/campaigns/${id}/edit?preview=true`);
-  
+
 // //   const handleDuplicate = (id) => {
 // //     console.log("Duplicate campaign:", id);
 // //     toast.info("Duplicate functionality coming soon!");
@@ -442,13 +442,13 @@ const EmailCampaignsListPage = () => {
                     <td className={styles.dateCell}>
                       {c.createdAt
                         ? new Date(c.createdAt).toLocaleString('en-GB', {
-                            day: '2-digit',
-                            month: 'short',
-                            year: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                            hour12: true
-                          })
+                          day: '2-digit',
+                          month: 'short',
+                          year: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                          hour12: true
+                        })
                         : ''}
                     </td>
                     <td className={styles.actionsCell}>

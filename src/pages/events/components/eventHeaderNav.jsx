@@ -3,19 +3,19 @@ import PropTypes from 'prop-types';
 import { Link } from 'react-router-dom';
 import styles from './eventHeaderNav.module.scss';
 import GenerateScannerIdModal from '../components/generateScannerIdModal';
-import {  useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 // --- SVG Icons ---
 const ArrowIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M9 18l6-6-6-6"/>
+    <path d="M9 18l6-6-6-6" />
   </svg>
 );
 const BackIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-       xmlns="http://www.w3.org/2000/svg"
-       stroke="currentColor" strokeWidth="2"
-       strokeLinecap="round" strokeLinejoin="round">
-         <line x1="5" y1="12" x2="19" y2="12" />
+    xmlns="http://www.w3.org/2000/svg"
+    stroke="currentColor" strokeWidth="2"
+    strokeLinecap="round" strokeLinejoin="round">
+    <line x1="5" y1="12" x2="19" y2="12" />
     <polyline points="11 6 5 12 11 18" />
     {/* <path d="M15 18L9 12L15 6" /> reversed path of ArrowIcon */}
   </svg>
@@ -55,7 +55,7 @@ const EventHeaderNav = ({
   const [isCopied, setIsCopied] = useState(false);
   const [isActionMenuOpen, setIsActionMenuOpen] = useState(false);
   const actionMenuRef = useRef(null);
-const navigate = useNavigate();
+  const navigate = useNavigate();
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (actionMenuRef.current && !actionMenuRef.current.contains(event.target)) {
@@ -93,11 +93,11 @@ const navigate = useNavigate();
           <>
             <button className={styles.mobileSidebarToggleButton} onClick={toggleMobileSidebar} aria-label="Open menu">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 8C13.1 8 14 7.1 14 6C14 4.9 13.1 4 12 4C10.9 4 10 4.9 10 6C10 7.1 10.9 8 12 8ZM12 10C10.9 10 10 10.9 10 12C10 13.1 10.9 14 12 14C13.1 14 14 13.1 14 12C14 10.9 13.1 10 12 10ZM12 16C10.9 16 10 16.9 10 18C10 19.1 10.9 20 12 20C13.1 20 14 19.1 14 18C14 16.9 13.1 16 12 16Z" fill="currentColor"/>
+                <path d="M12 8C13.1 8 14 7.1 14 6C14 4.9 13.1 4 12 4C10.9 4 10 4.9 10 6C10 7.1 10.9 8 12 8ZM12 10C10.9 10 10 10.9 10 12C10 13.1 10.9 14 12 14C13.1 14 14 13.1 14 12C14 10.9 13.1 10 12 10ZM12 16C10.9 16 10 16.9 10 18C10 19.1 10.9 20 12 20C13.1 20 14 19.1 14 18C14 16.9 13.1 16 12 16Z" fill="currentColor" />
               </svg>
             </button>
             <div className={styles.breadcrumbContainer}>
-                    <button
+              <button
                 type="button"
                 className={styles.backButton}
                 onClick={() => navigate(-1)} // or navigate('/events')
@@ -158,7 +158,7 @@ EventHeaderNav.defaultProps = {
   eventName: '',
   eventId: null,
   isDraft: true,
-  toggleMobileSidebar: () => {},
+  toggleMobileSidebar: () => { },
   children: null,
 };
 

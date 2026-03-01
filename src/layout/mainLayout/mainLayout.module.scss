@@ -3,12 +3,12 @@
 
 // Outer container that wraps the entire application
 .outerContainer {
-  
+
   display: flex;
   width: 100%;
   height: 100vh;
   padding: 8px 8px 8px 0px;
-  align-items: flex-start;
+  align-items: stretch;
   background: var(--gradient, linear-gradient(180deg, #31204B 0%, #1E202C 100%));
   box-sizing: border-box;
   overflow: hidden; // prevent outer page scroll; inner content handles scrolling
@@ -25,7 +25,8 @@
   flex-direction: column;
   margin-left: 64px; // Match sidebar width on desktop
   width: 100%;
-  min-height: 100%;
+  min-height: 0; // Better for flex-children to shrink
+  height: 100%;
 
   @media (max-width: 768px) {
     margin-left: 0; // Take full width on mobile
@@ -41,6 +42,7 @@
   background-color: #ffffff;
   display: flex;
   flex-direction: column;
+  min-height: 0; // Essential for allowing flex child to shrink and show scrollbars
 
   // Create a subtle gradient overlay for the background
   &::before {

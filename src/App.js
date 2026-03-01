@@ -17,6 +17,7 @@ import EventManagePage from './pages/events/manageEventPage';
 import EventEditPage from './pages/events/eventEditPage';
 import TicketEditPage from './pages/events/ticketEditPage';
 import NotFoundPage from "./pages/notFound/notFoundPage";
+import LandingPage from "./pages/landingPage/landingPage"; // NEW: Import LandingPage
 // NEW: Import EmailCampaignsPage
 import EmailCampaignsListPage from './pages/emailCampaigns/emailCampaignsListPage';
 import EmailCampaignsPage from './pages/emailCampaigns/emailCampaignsPage';
@@ -61,24 +62,28 @@ const AppContent = () => {
         {/* These routes are accessible to everyone. */}
         {/* If the user is already logged in, redirect them away from these pages. */}
         <Route
+          path="/"
+          element={isAuthenticated ? <Navigate to="/overview" /> : <LandingPage />}
+        />
+        <Route
           path="/login"
-          element={isAuthenticated ? <Navigate to="/" /> : <LoginPage />}
+          element={isAuthenticated ? <Navigate to="/overview" /> : <LoginPage />}
         />
         <Route
           path="/register"
-          element={isAuthenticated ? <Navigate to="/" /> : <RegisterPage />}
+          element={isAuthenticated ? <Navigate to="/overview" /> : <RegisterPage />}
         />
         <Route
           path="/forgot-password"
-          element={isAuthenticated ? <Navigate to="/" /> : <ForgotPasswordPage />}
+          element={isAuthenticated ? <Navigate to="/overview" /> : <ForgotPasswordPage />}
         />
         <Route
           path="/reset-link-sent"
-          element={isAuthenticated ? <Navigate to="/" /> : <ResetLinkSentPage />}
+          element={isAuthenticated ? <Navigate to="/overview" /> : <ResetLinkSentPage />}
         />
         <Route
           path="/reset-password"
-          element={isAuthenticated ? <Navigate to="/" /> : <ResetPasswordPage />}
+          element={isAuthenticated ? <Navigate to="/overview" /> : <ResetPasswordPage />}
         />
         {/* ... other public auth routes ... */}
 
@@ -91,8 +96,8 @@ const AppContent = () => {
 
           {/* Routes for ORGANIZER and SUPER_ADMIN */}
           <Route element={<ProtectedRoute allowedRoles={['ORGANIZER', 'SUPER_ADMIN']} />}>
-            <Route path="/" element={<MainLayout />}>
-              <Route index element={<HomePage />} />
+            <Route element={<MainLayout />}>
+              <Route path="/overview" element={<HomePage />} />
               <Route path="events" element={<EventsPage />} />
               <Route path="events/manage/:eventId/:section" element={<EventManagePage />} />
               <Route path="events/edit-page/:eventId/:step" element={<EventEditPage />} />
@@ -113,10 +118,9 @@ const AppContent = () => {
           </Route>
 
           {/* Routes for SCANNER (and ORGANIZER) */}
-          {/* Routes for SCANNER (and ORGANIZER) */}
           <Route element={<ProtectedRoute allowedRoles={['SCANNER', 'ORGANIZER']} />}>
-            <Route path="/" element={<MainLayout />}>
-              <Route path="scanner" element={<ScannerPage />} />
+            <Route element={<MainLayout />}>
+              <Route path="/scanner" element={<ScannerPage />} />
             </Route>
           </Route>
 

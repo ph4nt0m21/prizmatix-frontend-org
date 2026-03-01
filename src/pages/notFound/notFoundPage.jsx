@@ -12,14 +12,14 @@ import styles from './notFoundPage.module.scss';
  */
 const NotFoundPage = () => {
   const navigate = useNavigate();
-  
+
   /**
    * Navigate back to the home page
    */
   const handleGoHome = () => {
     navigate('/');
   };
-  
+
   return (
     <div className={styles.notFoundContainer}>
       <div className={styles.content}>
@@ -28,9 +28,9 @@ const NotFoundPage = () => {
         <p className={styles.message}>
           The page you're looking for doesn't exist or has been moved.
         </p>
-        
+
         <div className={styles.actions}>
-          <Button 
+          <Button
             variant="primary"
             size="medium"
             onClick={handleGoHome}
@@ -40,7 +40,7 @@ const NotFoundPage = () => {
           </Button>
         </div>
       </div>
-      
+
       <div className={styles.decoration}>
         <div className={styles.circle}></div>
         <div className={styles.square}></div>

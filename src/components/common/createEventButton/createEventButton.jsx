@@ -12,23 +12,23 @@ import styles from './createEventButton.module.scss';
  */
 const CreateEventButton = ({ className = '' }) => {
   const navigate = useNavigate();
-  
+
   /**
    * Handler for navigating to the event creation page
    */
   const handleClick = () => {
     navigate('/events/create');
   };
-  
+
   // Combine CSS classes
   const buttonClasses = [
     styles.createEventButton,
     className
   ].filter(Boolean).join(' ');
-  
+
   return (
-    <button 
-      type="button" 
+    <button
+      type="button"
       className={buttonClasses}
       onClick={handleClick}
       aria-label="Create Event"

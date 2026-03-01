@@ -110,49 +110,49 @@ const SideNavBar = ({ isMobileSidebarOpen, toggleMobileSidebar }) => {
   const navItems = [
     ...(['ORGANIZER', 'SUPER_ADMIN'].includes(userRole)
       ? [
-          {
-            id: 'overview',
-            path: '/',
-            label: 'Overview',
-            defaultIcon: OverviewDefault,
-            hoverIcon: OverviewHover,
-            activeIcon: OverviewActive,
-          },
-          {
-            id: 'events',
-            path: '/events',
-            label: 'Events',
-            defaultIcon: EventsDefault,
-            hoverIcon: EventsHover,
-            activeIcon: EventsActive,
-          },
-          {
-            id: 'reports',
-            path: '/reports/87',
-            label: 'Reports',
-            defaultIcon: ReportsDefault,
-            hoverIcon: ReportsHover,
-            activeIcon: ReportsActive,
-          },
-          {
-            id: 'campaigns',
-            path: '/campaigns',
-            label: 'Campaigns',
-            defaultIcon: CampaignsDefault,
-            hoverIcon: CampaignsHover,
-            activeIcon: CampaignsActive,
-          },
-        ]
+        {
+          id: 'overview',
+          path: '/overview',
+          label: 'Overview',
+          defaultIcon: OverviewDefault,
+          hoverIcon: OverviewHover,
+          activeIcon: OverviewActive,
+        },
+        {
+          id: 'events',
+          path: '/events',
+          label: 'Events',
+          defaultIcon: EventsDefault,
+          hoverIcon: EventsHover,
+          activeIcon: EventsActive,
+        },
+        {
+          id: 'reports',
+          path: '/reports/87',
+          label: 'Reports',
+          defaultIcon: ReportsDefault,
+          hoverIcon: ReportsHover,
+          activeIcon: ReportsActive,
+        },
+        {
+          id: 'campaigns',
+          path: '/campaigns',
+          label: 'Campaigns',
+          defaultIcon: CampaignsDefault,
+          hoverIcon: CampaignsHover,
+          activeIcon: CampaignsActive,
+        },
+      ]
       : []),
     ...(['ORGANIZER', 'SCANNER'].includes(userRole)
       ? [{
-          id: 'scanner',
-          path: '/scanner',
-          label: 'Scanner',
-          defaultIcon: ScannerDefault,
-          hoverIcon: ScannerHover,
-          activeIcon: ScannerActive,
-        }]
+        id: 'scanner',
+        path: '/scanner',
+        label: 'Scanner',
+        defaultIcon: ScannerDefault,
+        hoverIcon: ScannerHover,
+        activeIcon: ScannerActive,
+      }]
       : []),
   ];
 
@@ -160,15 +160,15 @@ const SideNavBar = ({ isMobileSidebarOpen, toggleMobileSidebar }) => {
   const bottomItems = [
     ...(['ORGANIZER', 'SUPER_ADMIN'].includes(userRole)
       ? [
-          {
-            id: 'help',
-            label: 'Help & Support',
-            action: () => setIsHelpModalOpen(true),
-            defaultIcon: HelpDefault,
-            hoverIcon: HelpHover,
-            activeIcon: HelpActive, // not used as route active, but available if needed
-          },
-        ]
+        {
+          id: 'help',
+          label: 'Help & Support',
+          action: () => setIsHelpModalOpen(true),
+          defaultIcon: HelpDefault,
+          hoverIcon: HelpHover,
+          activeIcon: HelpActive, // not used as route active, but available if needed
+        },
+      ]
       : []),
   ];
 
@@ -251,15 +251,15 @@ const SideNavBar = ({ isMobileSidebarOpen, toggleMobileSidebar }) => {
                   onMouseEnter={() => setHoveredItem(item.id)}
                   onMouseLeave={() => setHoveredItem(null)}
                 >
-                    {item.defaultIcon ? (
-                      <img
-                        src={chooseIconSrc({ ...item, id: item.id, isActive: isHelpModalOpen })}
-                        alt={item.label}
-                        className={styles.iconImage}
-                      />
-                    ) : (
-                      <HelpDefault className={styles.icon} />
-                    )}
+                  {item.defaultIcon ? (
+                    <img
+                      src={chooseIconSrc({ ...item, id: item.id, isActive: isHelpModalOpen })}
+                      alt={item.label}
+                      className={styles.iconImage}
+                    />
+                  ) : (
+                    <HelpDefault className={styles.icon} />
+                  )}
                 </button>
               );
             }
@@ -297,11 +297,11 @@ const SideNavBar = ({ isMobileSidebarOpen, toggleMobileSidebar }) => {
                 aria-label="Toggle Profile Menu"
               >
                 <div className={styles.profileIcon}>
-  <ProfileIcon className={styles.profileSvg} />
-  <span className={styles.profileInitials}>
-    {getUserInitials()}
-  </span>
-</div>
+                  <ProfileIcon className={styles.profileSvg} />
+                  <span className={styles.profileInitials}>
+                    {getUserInitials()}
+                  </span>
+                </div>
 
 
               </button>
@@ -310,8 +310,8 @@ const SideNavBar = ({ isMobileSidebarOpen, toggleMobileSidebar }) => {
                 <div className={styles.profileDropdown}>
                   <div className={styles.profileInfo}>
                     <div className={styles.profileAvatar}>
-  <ProfileIcon className={styles.profileAvatarSvg} />
-</div>
+                      <ProfileIcon className={styles.profileAvatarSvg} />
+                    </div>
 
                     <div className={styles.profileDetails}>
                       <div className={styles.profileName}>{currentUser?.name || 'Sarath Babu John'}</div>

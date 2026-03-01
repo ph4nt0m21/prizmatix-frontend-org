@@ -177,17 +177,17 @@ const HomePage = () => {
           const tickets = series[1]?.[dataPointIndex] ?? 0;
           return (
             '<div class="chart-tooltip-custom">' +
-              '<div class="chart-tooltip-title">' + period + '</div>' +
-              '<div class="chart-tooltip-row">' +
-                '<span class="chart-tooltip-dot" style="background:#3b82f6"></span>' +
-                '<span class="chart-tooltip-label">Orders</span>' +
-                '<span class="chart-tooltip-value">' + orders.toLocaleString() + '</span>' +
-              '</div>' +
-              '<div class="chart-tooltip-row">' +
-                '<span class="chart-tooltip-dot" style="background:#ec4899"></span>' +
-                '<span class="chart-tooltip-label">Tickets sold</span>' +
-                '<span class="chart-tooltip-value">' + tickets.toLocaleString() + '</span>' +
-              '</div>' +
+            '<div class="chart-tooltip-title">' + period + '</div>' +
+            '<div class="chart-tooltip-row">' +
+            '<span class="chart-tooltip-dot" style="background:#3b82f6"></span>' +
+            '<span class="chart-tooltip-label">Orders</span>' +
+            '<span class="chart-tooltip-value">' + orders.toLocaleString() + '</span>' +
+            '</div>' +
+            '<div class="chart-tooltip-row">' +
+            '<span class="chart-tooltip-dot" style="background:#ec4899"></span>' +
+            '<span class="chart-tooltip-label">Tickets sold</span>' +
+            '<span class="chart-tooltip-value">' + tickets.toLocaleString() + '</span>' +
+            '</div>' +
             '</div>'
           );
         },
