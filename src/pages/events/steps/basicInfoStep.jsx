@@ -104,17 +104,18 @@ const BasicInfoStep = ({ eventData, handleInputChange, isValid, stepStatus }) =>
   //   }
   // };
   
+  const imgGroup = "http://localhost:3845/assets/051e93ffe0b187914b543b2e530734aa3088353d.svg";
+
   return (
     <div className={styles.stepContainer}>
       <div className={styles.stepHeader}>
-        <div className={styles.stepIcon}>
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 20C7.59 20 4 16.41 4 12C4 7.59 7.59 4 12 4C16.41 4 20 7.59 20 12C20 16.41 16.41 20 12 20Z" fill="#7C3AED"/>
-            <path d="M12 17C12.5523 17 13 16.5523 13 16C13 15.4477 12.5523 15 12 15C11.4477 15 11 15.4477 11 16C11 16.5523 11.4477 17 12 17Z" fill="#7C3AED"/>
-            <path d="M12 7C10.9 7 10 7.9 10 9H12C12 8.45 12.45 8 13 8C13.55 8 14 8.45 14 9C14 10 12 9.75 12 12H14C14 10.75 16 10.5 16 9C16 7.9 15.1 7 14 7H12Z" fill="#7C3AED"/>
-          </svg>
+        <div className={styles.stepIconContainer}>
+          <img src={imgGroup} alt="Icon" className={styles.stepIconImage} />
         </div>
-        <h2 className={styles.stepTitle}>Event Basic Information</h2>
+        <div className={styles.stepTextContainer}>
+          <h2 className={styles.stepTitle}>Basic Information</h2>
+          <p className={styles.stepDescription}>Add the essential details to get your event started.</p>
+        </div>
       </div>
       
       <div className={styles.formSection}>
@@ -154,13 +155,20 @@ const BasicInfoStep = ({ eventData, handleInputChange, isValid, stepStatus }) =>
             >
               <div className={styles.visibilityIcon}>
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 5C13.66 5 15 6.34 15 8C15 9.66 13.66 11 12 11C10.34 11 9 9.66 9 8C9 6.34 10.34 5 12 5ZM12 19.2C9.5 19.2 7.29 17.92 6 15.98C6.03 13.99 10 12.9 12 12.9C13.99 12.9 17.97 13.99 18 15.98C16.71 17.92 14.5 19.2 12 19.2Z" fill="#7C3AED"/>
+                  {/* Globe outline, with gap at the bottom right */}
+                  <path d="M12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12C22 13.5615 21.642 15.0396 21 16.3473" stroke="#7C3AED" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M2.5 12H21.5" stroke="#7C3AED" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M12 2C14.5013 4.73835 15.9228 8.29203 16 12C16 13.9 15.5 15.6 14.5 17" stroke="#7C3AED" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M12 2C9.49872 4.73835 8.07725 8.29203 8 12C8.07725 15.708 9.49872 19.2616 12 22" stroke="#7C3AED" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  {/* Checkmark circle */}
+                  <circle cx="18" cy="18" r="5" fill="#F5F3FF" stroke="#7C3AED" strokeWidth="2"/>
+                  <path d="M15.5 18L17 19.5L20.5 16" stroke="#7C3AED" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
               </div>
               <div className={styles.visibilityContent}>
                 <h3 className={styles.visibilityTitle}>Public Event</h3>
                 <p className={styles.visibilityDescription}>
-                  Choose how your event will appear to potential attendees
+                  Your event will be highlighted in the Explore section of Prizmatix.nz 
                 </p>
               </div>
               <div className={styles.visibilitySelector}>
@@ -176,13 +184,22 @@ const BasicInfoStep = ({ eventData, handleInputChange, isValid, stepStatus }) =>
             >
               <div className={styles.visibilityIcon}>
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M18 8H17V6C17 3.24 14.76 1 12 1C9.24 1 7 3.24 7 6V8H6C4.9 8 4 8.9 4 10V20C4 21.1 4.9 22 6 22H18C19.1 22 20 21.1 20 20V10C20 8.9 19.1 8 18 8ZM12 17C10.9 17 10 16.1 10 15C10 13.9 10.9 13 12 13C13.1 13 14 13.9 14 15C14 16.1 13.1 17 12 17ZM15.1 8H8.9V6C8.9 4.29 10.29 2.9 12 2.9C13.71 2.9 15.1 4.29 15.1 6V8Z" fill="#666666"/>
+                  {/* Hat brim */}
+                  <path d="M4 11H20" stroke="#666666" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  {/* Hat top */}
+                  <path d="M6 11L7.5 5.5C7.8 4.2 8.7 3 10.5 3H13.5C15.3 3 16.2 4.2 16.5 5.5L18 11" stroke="#666666" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  {/* Left lens */}
+                  <circle cx="7.5" cy="16.5" r="3.5" stroke="#666666" strokeWidth="2"/>
+                  {/* Right lens */}
+                  <circle cx="16.5" cy="16.5" r="3.5" stroke="#666666" strokeWidth="2"/>
+                  {/* Glasses bridge */}
+                  <path d="M11 16.5H13" stroke="#666666" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
               </div>
               <div className={styles.visibilityContent}>
                 <h3 className={styles.visibilityTitle}>Private Event</h3>
                 <p className={styles.visibilityDescription}>
-                  Choose how your event will appear to potential attendees
+                  Your event won't be publicly listed and can only be accessed via a Link.
                 </p>
               </div>
               <div className={styles.visibilitySelector}>

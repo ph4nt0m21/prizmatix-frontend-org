@@ -13,7 +13,7 @@ html, body {
   width: 100%;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
     Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-  font-size: 16px;
+  font-size: 14px;
   line-height: 1.5;
   color: $text-light;
   background-color: $background-dark;
@@ -85,6 +85,50 @@ input, select, textarea {
   
   &::placeholder {
     color: $text-muted;
+  }
+}
+
+input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  min-width: 16px;
+  min-height: 16px;
+  padding: 0;
+  appearance: none;
+  -webkit-appearance: none;
+  background-color: #ffffff;
+  border: 1px solid #d5d7da;
+  border-radius: 4px;
+  cursor: pointer;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  transition: all 0.2s ease;
+
+  &:checked {
+    background-color: #7C3AED;
+    border-color: #7C3AED;
+    
+    &::after {
+      content: '';
+      position: absolute;
+      width: 4px;
+      height: 8px;
+      border: solid #ffffff;
+      border-width: 0 2px 2px 0;
+      transform: rotate(45deg) translateY(-10%);
+    }
+  }
+
+  &:hover {
+    border-color: #a78bfa;
+  }
+
+  &:focus {
+    box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.2);
+    outline: none;
   }
 }
 

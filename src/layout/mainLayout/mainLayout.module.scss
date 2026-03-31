@@ -27,10 +27,13 @@
   width: 100%;
   min-height: 0;
   height: 100%;
+  border-radius: 12px;
+  overflow: hidden;
 
   @media (max-width: 768px) {
     margin-left: 0; // Take full width on mobile
     width: 100%; // Ensure it spans full width
+    border-radius: 0; // Remove rounded corners on mobile
   }
 }
 

@@ -10,30 +10,31 @@
 // Main container styling
 .stepContainer {
   width: 100%;
-  background-color: white;
-  border-radius: 8px;
-  padding: 120px;
-  padding-top: 48px;
-  padding-bottom: 48px;
-
-  @media (max-width: 768px) {
-    padding: 24px 16px; // Adjust padding for mobile screens
-    border-radius: 0; // Remove border-radius for full-width look on mobile
-  }
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
 }
 // Header styling
 .stepHeader {
   display: flex;
-  align-items: center;
-  margin-bottom: 24px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid #f0f0f0;
-  gap: 12px;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 24px 80px;
+  border-bottom: 1px solid #EAECF0;
 
   @media (max-width: 768px) {
-    margin-bottom: 16px; // Reduce margin for mobile
-    padding-bottom: 12px; // Reduce padding for mobile
+    gap: 16px;
+    padding: 24px;
   }
+}
+
+.stepTextContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-start;
+  flex: 1;
 }
 
 .stepTitle {
@@ -47,9 +48,19 @@
   }
 }
 
+.stepDescription {
+  font-size: 14px;
+  color: #666;
+  margin: 0;
+}
+
 // Form section styling
 .formSection {
-  padding: 0;
+  padding: 32px 80px;
+
+  @media (max-width: 768px) {
+    padding: 24px;
+  }
 }
 
 .formGroup {

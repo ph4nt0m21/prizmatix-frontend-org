@@ -22,12 +22,13 @@ const EventsPage = () => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [eventToDelete, setEventToDelete] = useState(null);
 
-  const filterOptions = ['All Events', 'Live Events', 'Drafts', 'Past'];
+  const filterOptions = ['All Events', 'Live Events', 'Drafts', 'Paused', 'Archive'];
   const userId = Cookies.get('userId');
 
   const liveCount = events.filter(event => event.status === 'Live').length;
   const draftCount = events.filter(event => event.status === 'Draft').length;
-  const pastCount = events.filter(event => event.status === 'Past').length;
+  const pausedCount = events.filter(event => event.status === 'Paused').length;
+  const archiveCount = events.filter(event => event.status === 'Past').length;
 
   useEffect(() => {
     fetchEvents();
@@ -115,7 +116,9 @@ const EventsPage = () => {
       filtered = filtered.filter(event => event.status === 'Live');
     } else if (currentFilter === 'Drafts') {
       filtered = filtered.filter(event => event.status === 'Draft');
-    } else if (currentFilter === 'Past') {
+    } else if (currentFilter === 'Paused') {
+      filtered = filtered.filter(event => event.status === 'Paused');
+    } else if (currentFilter === 'Archive') {
       filtered = filtered.filter(event => event.status === 'Past');
     }
 
@@ -207,11 +210,9 @@ const EventsPage = () => {
   };
 
   const formatEventDate = (event) => {
-    if (!event.startDate) return { month: 'TBD', day: '??' };
+    if (!event.startDate) return 'TBD';
     const date = new Date(event.startDate);
-    const month = date.toLocaleString('en-US', { month: 'short' }).toUpperCase();
-    const day = date.getDate();
-    return { month, day };
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   };
 
   if (isLoading && events.length === 0) {
@@ -250,7 +251,8 @@ const EventsPage = () => {
                 case 'All Events': count = events.length; break;
                 case 'Live Events': count = liveCount; break;
                 case 'Drafts': count = draftCount; break;
-                case 'Past': count = pastCount; break;
+                case 'Paused': count = pausedCount; break;
+                case 'Archive': count = archiveCount; break;
                 default: count = 0;
               }
               return (
@@ -276,22 +278,19 @@ const EventsPage = () => {
               <div>Status</div>
               <div>Sold</div>
               <div>Gross</div>
+              <div>Date</div>
               <div></div>
             </div>
 
             {filteredEvents.length > 0 ? (
               filteredEvents.map(event => {
-                const date = formatEventDate(event);
+                const eventDate = formatEventDate(event);
                 return (
                   <div key={event.id} className={styles.eventRow} onClick={() => handleViewEvent(event.id)}>
                     <div className={styles.eventInfoCell}>
-                      <div className={styles.dateBlock}>
-                        <span className={styles.dateMonth}>{date.month}</span>
-                        <span className={styles.dateDay}>{date.day}</span>
-                      </div>
                       <div className={styles.eventThumbnail}>
                         <img 
-                          src={event.bannerImage || `https://placehold.co/144x112/e5e7eb/6b7280?text=${encodeURIComponent(event.name)}`} 
+                          src={event.bannerImage || `https://placehold.co/48x48/0f1520/6b7280?text=${encodeURIComponent(event.name?.charAt(0) || 'E')}`} 
                           alt={event.name} 
                         />
                       </div>
@@ -329,10 +328,14 @@ const EventsPage = () => {
                       <span>{calculateGrossRevenue(event)}</span>
                     </div>
 
+                    <div className={styles.dateCell}>
+                      <span>{eventDate}</span>
+                    </div>
+
                     <div className={styles.actionsCell}>
                       <div className={styles.actionsMenuContainer}>
                         <button className={styles.actionsButton} onClick={(e) => handleToggleMenu(e, event.id)}>
-                          <svg width="20" height="20" viewBox="0 0 24 24"><path d="M12 8C13.1 8 14 7.1 14 6C14 4.9 13.1 4 12 4C10.9 4 10 4.9 10 6C10 7.1 10.9 8 12 8ZM12 10C10.9 10 10 10.9 10 12C10 13.1 10.9 14 12 14C13.1 14 14 13.1 14 12C14 10.9 13.1 10 12 10ZM12 16C10.9 16 10 16.9 10 18C10 19.1 10.9 20 12 20C13.1 20 14 19.1 14 18C14 16.9 13.1 16 12 16Z" fill="#6B7280"/></svg>
+                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="5" r="1.5" fill="#6B7280"/><circle cx="12" cy="12" r="1.5" fill="#6B7280"/><circle cx="12" cy="19" r="1.5" fill="#6B7280"/></svg>
                         </button>
 
                         {openMenuId === event.id && (

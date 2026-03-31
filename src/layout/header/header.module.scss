@@ -11,9 +11,11 @@
   gap: 10px;
   align-self: stretch;
   width: 100%;
-  border: 1px solid #E9EAEC;
-  border-top-left-radius: 8px;
-  border-top-right-radius: 8px;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+  border-bottom: 1px solid #E9EAEC;
+  border-radius: 0; // The main container wrapper now handles rounding
   background: #FFF;
 
   @media (max-width: 768px) {
