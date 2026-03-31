@@ -177,17 +177,17 @@ const HomePage = () => {
           const tickets = series[1]?.[dataPointIndex] ?? 0;
           return (
             '<div class="chart-tooltip-custom">' +
-              '<div class="chart-tooltip-title">' + period + '</div>' +
-              '<div class="chart-tooltip-row">' +
-                '<span class="chart-tooltip-dot" style="background:#3b82f6"></span>' +
-                '<span class="chart-tooltip-label">Orders</span>' +
-                '<span class="chart-tooltip-value">' + orders.toLocaleString() + '</span>' +
-              '</div>' +
-              '<div class="chart-tooltip-row">' +
-                '<span class="chart-tooltip-dot" style="background:#ec4899"></span>' +
-                '<span class="chart-tooltip-label">Tickets sold</span>' +
-                '<span class="chart-tooltip-value">' + tickets.toLocaleString() + '</span>' +
-              '</div>' +
+            '<div class="chart-tooltip-title">' + period + '</div>' +
+            '<div class="chart-tooltip-row">' +
+            '<span class="chart-tooltip-dot" style="background:#3b82f6"></span>' +
+            '<span class="chart-tooltip-label">Orders</span>' +
+            '<span class="chart-tooltip-value">' + orders.toLocaleString() + '</span>' +
+            '</div>' +
+            '<div class="chart-tooltip-row">' +
+            '<span class="chart-tooltip-dot" style="background:#ec4899"></span>' +
+            '<span class="chart-tooltip-label">Tickets sold</span>' +
+            '<span class="chart-tooltip-value">' + tickets.toLocaleString() + '</span>' +
+            '</div>' +
             '</div>'
           );
         },
@@ -225,13 +225,13 @@ const HomePage = () => {
             </p>
           </div>
           <div className={styles.bannerActions}>
-            <button className={styles.exportButton}>
+            {/* <button className={styles.exportButton}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M12 16L12 4M12 16L8 12M12 16L16 12" />
                 <path d="M4 20H20" />
               </svg>
               Export
-            </button>
+            </button> */}
             <button className={styles.createEventTopButton} onClick={handleCreateEvent}>
               + Create Event
             </button>

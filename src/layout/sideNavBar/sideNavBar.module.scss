@@ -208,17 +208,16 @@
   }
 }
 
-/* Profile Container and Dropdown */
 .profileContainer {
   position: relative;
   margin-top: 16px;
 
   @media (max-width: 768px) {
-    margin-top: 20px; // Adjust margin for mobile
-    width: 100%; // Take full width
+    margin-top: 20px;
+    width: 100%;
     display: flex;
-    justify-content: flex-start; // Align to start
-    padding: 0 15px; // Add padding
+    justify-content: center;
+    padding: 0;
   }
 }
 
@@ -273,13 +272,8 @@
   z-index: 1100;
 
   @media (max-width: 768px) {
-    position: static; // Position normally within the flow on mobile
-    width: 100%; // Take full width of sidebar
-    margin-top: 15px; // Add some top margin
-    box-shadow: none; // Remove shadow as it's part of the sidebar
-    border-radius: 0; // Remove border radius
-    background-color: transparent; // Transparent background
-    padding: 0; // Remove padding
+    left: 80px;
+    bottom: 10px;
   }
 }
 

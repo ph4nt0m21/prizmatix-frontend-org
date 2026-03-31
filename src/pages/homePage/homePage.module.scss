@@ -604,26 +604,54 @@
 }
 
 @media (max-width: 768px) {
+  .homePageContainer {
+    padding: 16px;
+  }
+
   .topBanner {
     flex-direction: column;
     align-items: flex-start;
     gap: 16px;
-    padding: 20px;
-    margin: 0 0 12px;
+    padding: 16px;
+    margin: 0 0 16px;
   }
 
   .bannerActions {
     width: 100%;
+    flex-direction: column;
+    align-items: stretch;
     justify-content: flex-start;
+
+    .createEventTopButton {
+      width: 100%;
+      justify-content: center;
+    }
   }
 
   .overviewSection {
     margin: 0;
-    border: none; // Remove border on mobile
+    border: none; 
+  }
+
+  .analyticsContainer {
+    padding: 16px;
   }
 
   .overviewStatsRow {
     grid-template-columns: 1fr;
+    gap: 16px;
+    padding-top: 16px;
+  }
+  
+  .salesChartCard, .earningsCard {
+    padding: 16px;
+    border-radius: 12px;
+  }
+
+  .salesChartHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
   }
 }
 
