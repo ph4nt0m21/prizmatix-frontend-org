@@ -218,20 +218,22 @@ const SideNavBar = ({ isMobileSidebarOpen, toggleMobileSidebar }) => {
               <NavLink
                 to={item.path}
                 className={({ isActive }) => (isActive ? `${styles.navLink} ${styles.active}` : styles.navLink)}
-                title={item.label}
               >
                 {({ isActive }) => (
-                  <div className={styles.iconWrapper}>
-                    {item.defaultIcon ? (
-                      <img
-                        src={chooseIconSrc({ ...item, id: item.id, isActive })}
-                        alt={item.label}
-                        className={styles.iconImage}
-                      />
-                    ) : item.iconComponent ? (
-                      <item.iconComponent className={styles.icon} />
-                    ) : null}
-                  </div>
+                  <>
+                    <div className={styles.iconWrapper}>
+                      {item.defaultIcon ? (
+                        <img
+                          src={chooseIconSrc({ ...item, id: item.id, isActive })}
+                          alt="" /* Decorative, tooltip acts as label */
+                          className={styles.iconImage}
+                        />
+                      ) : item.iconComponent ? (
+                        <item.iconComponent className={styles.icon} />
+                      ) : null}
+                    </div>
+                    <div className={styles.tooltip}>{item.label}</div>
+                  </>
                 )}
               </NavLink>
             </li>
@@ -247,19 +249,19 @@ const SideNavBar = ({ isMobileSidebarOpen, toggleMobileSidebar }) => {
                   key={item.id}
                   onClick={item.action}
                   className={styles.navLink} // Re-use style for consistency
-                  title={item.label}
                   onMouseEnter={() => setHoveredItem(item.id)}
                   onMouseLeave={() => setHoveredItem(null)}
                 >
                     {item.defaultIcon ? (
                       <img
                         src={chooseIconSrc({ ...item, id: item.id, isActive: isHelpModalOpen })}
-                        alt={item.label}
+                        alt=""
                         className={styles.iconImage}
                       />
                     ) : (
                       <HelpDefault className={styles.icon} />
                     )}
+                    <div className={styles.tooltip}>{item.label}</div>
                 </button>
               );
             }
@@ -270,20 +272,22 @@ const SideNavBar = ({ isMobileSidebarOpen, toggleMobileSidebar }) => {
                 key={item.id}
                 to={item.path}
                 className={({ isActive }) => (isActive ? `${styles.navLink} ${styles.active}` : styles.navLink)}
-                title={item.label}
                 onMouseEnter={() => setHoveredItem(item.id)}
                 onMouseLeave={() => setHoveredItem(null)}
               >
                 {({ isActive }) => (
-                  <div className={styles.iconWrapper}>
-                    {item.defaultIcon ? (
-                      <img
-                        src={chooseIconSrc({ ...item, id: item.id, isActive })}
-                        alt={item.label}
-                        className={styles.iconImage}
-                      />
-                    ) : null}
-                  </div>
+                  <>
+                    <div className={styles.iconWrapper}>
+                      {item.defaultIcon ? (
+                        <img
+                          src={chooseIconSrc({ ...item, id: item.id, isActive })}
+                          alt=""
+                          className={styles.iconImage}
+                        />
+                      ) : null}
+                    </div>
+                    <div className={styles.tooltip}>{item.label}</div>
+                  </>
                 )}
               </NavLink>
             );
@@ -297,13 +301,12 @@ const SideNavBar = ({ isMobileSidebarOpen, toggleMobileSidebar }) => {
                 aria-label="Toggle Profile Menu"
               >
                 <div className={styles.profileIcon}>
-  <ProfileIcon className={styles.profileSvg} />
-  <span className={styles.profileInitials}>
-    {getUserInitials()}
-  </span>
-</div>
-
-
+                  <ProfileIcon className={styles.profileSvg} />
+                  <span className={styles.profileInitials}>
+                    {getUserInitials()}
+                  </span>
+                </div>
+                <div className={styles.tooltip}>Profile</div>
               </button>
 
               {isProfileOpen && (

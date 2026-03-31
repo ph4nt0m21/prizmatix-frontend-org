@@ -1282,7 +1282,6 @@ const validateDiscountCodes = () => {
           </div>
         </div>
       </div>
-      <div className={styles.footer}>© 2025 Event Tickets Platform</div>
     </div>
   );
 };

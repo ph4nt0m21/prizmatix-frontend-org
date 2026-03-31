@@ -6,100 +6,113 @@
    ------------------------------ */
 .pageWrapper {
   display: flex;
-  background-color: #F7F7FA;
-  min-height: 100vh;
+  background-color: #fafafa;
+  min-height: calc(100vh - 72px);
   align-items: flex-start;
-  gap: 32px; /* Gap between filter card and main content */
+  gap: 16px;
+  padding: 24px;
 
   @media (max-width: 1024px) {
     flex-direction: column;
     position: relative;
     gap: 0;
+    padding: 24px;
   }
 }
 
 /* ------------------------------
-   Left sidebar (outer area)
+   Left sidebar card — matches Figma: 292px, p-16, rounded-8, shadow
    ------------------------------ */
-.sidebar {
-  width: 84px;
-  flex-shrink: 0;
-  background: linear-gradient(180deg, #2e2540 0%, #22172c 100%);
-  min-height: 100vh;
-  padding: 20px 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  align-items: center;
-}
-
-/* Inner card that contains Manage Event items */
 .sidebarInnerCard {
-  width: 280px;
+  width: 292px;
   flex-shrink: 0;
-  background-color: #FFFFFF;
-  border-radius: 12px;
-  padding: 24px;
-  box-shadow: 0 6px 18px rgba(17, 24, 39, 0.04);
-  border: 1px solid rgba(229, 231, 235, 0.9);
-  margin-top: 40px;
-  margin-left: 24px;
+  background-color: #ffffff;
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  position: sticky;
+  top: 16px;
+
+  @media (max-width: 1024px) {
+    width: 100%;
+    position: static;
+    margin-bottom: 16px;
+  }
 }
 
 /* Title inside the card */
 .sidebarTitle {
+  font-family: 'Inter', sans-serif;
   font-size: 16px;
   font-weight: 600;
-  color: #111827;
-  margin: 0 0 16px 0;
-  display: block;
+  color: #252b37;
+  margin: 0;
+  padding: 4px 8px;
+  margin-bottom: 16px;
 }
 
-/* Filters list (card) */
+/* Filters list */
 .filterNav {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 0;
 }
 
-/* Each filter row */
+/* Each filter row — 44px height, px-8, py-12, rounded-4 */
 .filterItem {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 4px;
-  border-radius: 6px;
+  padding: 12px 8px;
+  height: 44px;
+  border-radius: 4px;
+  font-family: 'Inter', sans-serif;
   font-size: 14px;
   font-weight: 500;
-  color: #6B7280;
+  color: #52525b;
+  opacity: 0.87;
   background-color: transparent;
   border: none;
   cursor: pointer;
   transition: all 0.16s ease;
   text-align: left;
   width: 100%;
+  line-height: 24px;
+
+  span {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+    background-color: #faf4ff;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    color: #890ee2;
+    opacity: 0.68;
+    line-height: 24px;
+  }
 }
 
 .filterItem:hover {
-  background-color: #F3F0FF;
-  color: #6D28D9;
+  background-color: #faf4ff;
+  color: #9f20ff;
+  opacity: 1;
 }
 
 .filterItem.activeFilter {
-  background-color: #F3F0FF;
+  background-color: #faf4ff;
   font-weight: 600;
-  color: #6D28D9;
-}
+  color: #9f20ff;
+  opacity: 1;
 
-.filterItem span {
-  color: #6B7280;
-  font-size: 14px;
-  font-weight: 500;
-}
-
-.filterItem.activeFilter span {
-  color: #6D28D9;
-  font-weight: 600;
+  span {
+    background-color: #ffffff;
+    color: #9f20ff;
+    opacity: 1;
+  }
 }
 
 /* ------------------------------
@@ -109,34 +122,27 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding: 40px 48px 40px 0;
-  gap: 24px;
-  min-width: 0; /* Prevents flex overflow */
+  gap: 8px;
+  min-width: 0;
 }
 
 @media (max-width: 1024px) {
   .mainContent {
-    padding: 20px;
+    padding: 0;
   }
 }
 
-/* Header row containing title, search and create button */
-.header {
-  display: flex;
-  align-items: center;
-  gap: 18px;
-  justify-content: space-between;
-}
-
-/* left side (title + page label) */
+/* Header row containing title and create button */
 .pageTitle h1 {
   margin: 0;
-  font-size: 28px;
-  font-weight: 700;
-  color: #111827;
+  font-family: 'Inter', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: #383c51;
+  line-height: 24px;
 }
 
-/* Right header area (search + button) */
+/* Right header area */
 .headerActions {
   display: flex;
   align-items: center;
@@ -150,22 +156,28 @@
 }
 
 .searchInput {
-  height: 44px;
+  height: 40px;
   width: 100%;
-  padding: 10px 44px 10px 16px;
-  border-radius: 10px;
-  border: 1px solid #E6E7EB;
-  background-color: #FFFFFF;
+  padding: 8px 44px 8px 16px;
+  border-radius: 8px;
+  border: 1px solid #e4e4e4;
+  background-color: #fafafa;
+  font-family: 'Inter', sans-serif;
   font-size: 14px;
-  color: #111827;
+  color: #222533;
   box-shadow: none;
   transition: border-color .15s ease, box-shadow .15s ease;
-}
 
-.searchInput:focus {
-  outline: none;
-  border-color: rgba(139, 92, 246, 0.9);
-  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+  &::placeholder {
+    color: #222533;
+    opacity: 0.5;
+  }
+
+  &:focus {
+    outline: none;
+    border-color: #7f56d9;
+    box-shadow: 0 0 0 2px rgba(127, 86, 217, 0.1);
+  }
 }
 
 .searchIcon {
@@ -176,30 +188,32 @@
   color: #9CA3AF;
 }
 
-/* Create event button */
+/* Create event button — Figma: #7f56d9, rounded-8, gap-8, px-16, py-10 */
 .createEventButton {
-  height: 44px;
-  padding: 0 20px;
+  height: 40px;
+  padding: 10px 16px;
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  border-radius: 10px;
+  border-radius: 8px;
+  font-family: 'Inter', sans-serif;
   font-weight: 600;
   font-size: 14px;
+  line-height: 20px;
   color: #ffffff;
-  background-color: #B042FF;
-  border: none;
+  background-color: #7f56d9;
+  border: 1px solid #7f56d9;
+  box-shadow: 0 1px 2px rgba(10, 13, 18, 0.05);
   cursor: pointer;
-  transition: background-color .15s ease, transform .15s ease;
-}
+  transition: background-color .15s ease;
 
-.createEventButton:hover {
-  background-color: #5B21B6;
-  transform: translateY(-1px);
+  &:hover {
+    background-color: #6941c6;
+  }
 }
 
 /* ------------------------------
-   Events Table Card
+   Events Table
    ------------------------------ */
 .eventsTable {
   width: 100%;
@@ -209,58 +223,62 @@
   overflow: visible;
 }
 
-/* Column headings */
+/* Column headings — Figma: white bg, rounded-8, #f5f5f5 border */
 .tableHeader {
   display: grid;
-  grid-template-columns: minmax(300px, 1.5fr) 120px 140px 120px 64px;
-  gap: 16px;
-  color: #383C51;
+  grid-template-columns: minmax(280px, 1.5fr) 100px 140px 120px 120px 40px;
+  gap: 0;
+  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  color: #252b37;
   font-size: 14px;
-  font-weight: 500;
-  text-transform: none;
+  font-weight: 600;
+  line-height: 24px;
   align-items: center;
   padding: 4px 16px;
-  align-items: center;
-  align-self: stretch;
   border-radius: 8px;
-  border: 1px solid var(--Surface-Background-grey, #F5F5F5);
-  background: #FFF;
-  margin-bottom: 12px;
+  border: 1px solid #f5f5f5;
+  background: #ffffff;
+  margin-bottom: 8px;
 
+  div {
+    padding: 8px;
+  }
+
+  div:nth-child(2),
+  div:nth-child(5) {
+    text-align: center;
+  }
+
+  @media (max-width: 900px) {
+    display: none;
+  }
 }
 
-@media (max-width: 900px) {
-  .tableHeader { display: none; }
-}
-
-/* Each event row */
+/* Each event row — Figma: white bg, rounded-8, #e9eaec border, shadow-xs, p-16 */
 .eventRow {
   display: grid;
-  grid-template-columns: minmax(300px, 1.5fr) 120px 140px 120px 64px;
-  gap: 16px;
+  grid-template-columns: minmax(280px, 1.5fr) 100px 140px 120px 120px 40px;
+  gap: 0;
   align-items: center;
-  padding: 16px 16px;
-  border-bottom: 1px solid #F3F4F6;
+  padding: 16px;
   background: #ffffff;
-  transition: transform .18s ease, box-shadow .18s ease;
+  border: 1px solid #e9eaec;
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(10, 13, 18, 0.05);
+  margin-bottom: 8px;
   cursor: pointer;
-  border-radius: 12px;
-  margin-bottom: 12px;
-  border: 1px solid #EFEFF1;
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03);
-}
+  transition: transform .18s ease, box-shadow .18s ease;
 
-.eventRow:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 10px 30px rgba(2, 6, 23, 0.06);
-}
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(10, 13, 18, 0.08);
+  }
 
-/* Mobile responsiveness */
-@media (max-width: 900px) {
-  .eventRow {
+  @media (max-width: 900px) {
     display: flex;
     flex-direction: column;
     align-items: stretch;
+    gap: 12px;
   }
 }
 
@@ -272,100 +290,90 @@
   min-width: 0;
 }
 
-/* Date block */
-.dateBlock {
+/* Thumbnail — Figma: 48px square, rounded-4 */
+.eventThumbnail {
   width: 48px;
   height: 48px;
-  border-radius: 8px;
-  background-color: #F9FAFB;
-  border: 1px solid #F1F2F4;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.dateMonth {
-  font-size: 10px;
-  font-weight: 700;
-  color: #EF4444;
-  text-transform: uppercase;
-}
-
-.dateDay {
-  font-size: 18px;
-  font-weight: 700;
-  color: #111827;
-  line-height: 1.2;
-}
-
-/* Thumbnail */
-.eventThumbnail {
-  width: 72px;
-  height: 56px;
-  border-radius: 8px;
+  border-radius: 4px;
   overflow: hidden;
   flex-shrink: 0;
+  background-color: #0f1520;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
 }
 
-.eventThumbnail img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+/* Date block — hidden, we use thumbnail instead per Figma */
+.dateBlock {
+  display: none;
 }
 
 /* Text details */
 .eventDetails {
   min-width: 0;
-  .eventName {
-    margin: 0;
-    font-size: 15px;
-    font-weight: 600;
-    color: #111827;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .eventLocation {
-    margin: 4px 0 0 0;
-    font-size: 13px;
-    color: #6B7280;
-    font-weight: 500;
-  }
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.eventName {
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+  color: #252b37;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.eventLocation {
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 20px;
+  color: #717680;
 }
 
 /* Status column */
 .statusCell {
   display: flex;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: center;
 }
 
 .statusBadge {
-  padding: 5px 12px;
-  border-radius: 4px;
+  padding: 4px 16px;
+  border-radius: 6px;
+  font-family: 'Inter', sans-serif;
   font-weight: 600;
-  font-size: 13px;
+  font-size: 14px;
   display: inline-block;
   text-align: center;
-  min-width: 60px;
+  line-height: normal;
 }
 
-/* Colors for badges */
+/* Badge colors — Figma spec */
 .draftBadge {
-  background: #FEF8EC; /* Lighter yellow */
-  color: #F1B940;
+  background: #fef8ec;
+  color: #f1b940;
 }
 
 .liveBadge {
-  background: #EBD0FF; /* Lighter purple/blue */
-  color: #9F20FF;
+  background: #f4e5ff;
+  border: 1px solid #ebd0ff;
+  color: #9f20ff;
 }
 
 .pastBadge {
-  background: #F3F4F6;
-  color: #4B5563;
+  background: rgba(136, 138, 151, 0.1);
+  border: 1px solid rgba(136, 138, 151, 0.15);
+  color: #717680;
 }
 
 /* Sold column */
@@ -373,20 +381,23 @@
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: 6px;
+  gap: 16px;
   min-width: 0;
+
+  > span {
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    color: #252b37;
+    font-size: 14px;
+    line-height: 24px;
+  }
 }
 
-.soldCell > span {
-  font-weight: 600;
-  color: #374151;
-  font-size: 14px;
-}
-
+/* Progress bar — Figma: 4px height, #f5f5f5 bg, #b042ff fill */
 .salesProgress {
-  height: 6px;
-  background-color: #E5E7EB;
-  border-radius: 6px;
+  height: 4px;
+  background-color: #f5f5f5;
+  border-radius: 10px;
   overflow: hidden;
   width: 100%;
 }
@@ -394,20 +405,32 @@
 .progressBar {
   height: 100%;
   width: 0%;
-  background-color: #B042FF;
-  border-radius: 6px;
+  background-color: #b042ff;
+  border-radius: 26px;
   transition: width 0.6s cubic-bezier(.2,.9,.3,1);
 }
 
 /* Gross column */
 .grossCell {
-  text-align: left;
+  text-align: center;
+  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
   font-weight: 600;
-  color: #111827;
-  font-size: 14px;
+  color: #252b37;
+  font-size: 16px;
+  line-height: 24px;
 }
 
-/* Actions column */
+/* Date column */
+.dateCell {
+  text-align: center;
+  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  font-weight: 600;
+  color: #252b37;
+  font-size: 16px;
+  line-height: 24px;
+}
+
+/* Actions column — Figma: bg-#fcfbfc, border #e9eaec, rounded-8, p-4 */
 .actionsCell {
   display: flex;
   justify-content: flex-end;
@@ -415,20 +438,21 @@
 }
 
 .actionsButton {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: transparent;
-  border: none;
+  background: #fcfbfc;
+  border: 1px solid #e9eaec;
   cursor: pointer;
   transition: background-color 0.15s ease;
-}
+  padding: 4px;
 
-.actionsButton:hover {
-  background-color: #F3F4F6;
+  &:hover {
+    background-color: #f3f4f6;
+  }
 }
 
 /* Action menu */
@@ -438,11 +462,11 @@
 
 .actionsMenu {
   position: absolute;
-  top: 44px;
+  top: 40px;
   right: 0;
   min-width: 140px;
   background: #ffffff;
-  border: 1px solid #F1F2F4;
+  border: 1px solid #e9eaec;
   border-radius: 8px;
   box-shadow: 0 8px 30px rgba(2, 6, 23, 0.08);
   padding: 8px;
@@ -450,33 +474,32 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
-}
 
-.actionsMenu button {
-  background: transparent;
-  border: none;
-  text-align: left;
-  padding: 8px 12px;
-  font-weight: 500;
-  color: #374151;
-  cursor: pointer;
-  border-radius: 6px;
-  font-size: 14px;
-}
+  button {
+    background: transparent;
+    border: none;
+    text-align: left;
+    padding: 8px 12px;
+    font-weight: 500;
+    color: #374151;
+    cursor: pointer;
+    border-radius: 6px;
+    font-size: 14px;
 
-.actionsMenu button:hover {
-  background: #F9FAFB;
-  color: #111827;
+    &:hover {
+      background: #f9fafb;
+      color: #111827;
+    }
+  }
 }
 
 .deleteAction {
-  color: #EF4444;
+  color: #ef4444 !important;
+  &:hover {
+    color: #dc2626 !important;
+    background-color: #fef2f2 !important;
+  }
 }
-.deleteAction:hover {
-    color: #DC2626;
-    background-color: #FEF2F2;
-}
-
 
 /* ------------------------------
    Delete modal & Utilities
@@ -500,19 +523,19 @@
   border-radius: 16px;
   box-shadow: 0 20px 60px rgba(2,6,23,0.18);
   text-align: center;
-}
 
-.deleteModal h3 {
-  margin: 0 0 8px 0;
-  font-size: 18px;
-  font-weight: 600;
-  color: #111827;
-}
+  h3 {
+    margin: 0 0 8px 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #111827;
+  }
 
-.deleteModal p {
-  color: #6B7280;
-  margin-bottom: 24px;
-  line-height: 1.5;
+  p {
+    color: #6b7280;
+    margin-bottom: 24px;
+    line-height: 1.5;
+  }
 }
 
 .deleteModalActions {
@@ -522,39 +545,40 @@
 }
 
 .cancelButton, .confirmDeleteButton {
-    height: 40px;
-    padding: 0 18px;
-    border-radius: 8px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.15s ease;
+  height: 40px;
+  padding: 0 18px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
 }
 
 .cancelButton {
   background: #ffffff;
-  border: 1px solid #D1D5DB;
+  border: 1px solid #d1d5db;
   color: #374151;
-}
-.cancelButton:hover {
-    background-color: #F9FAFB;
+  &:hover {
+    background-color: #f9fafb;
+  }
 }
 
 .confirmDeleteButton {
-  background: #DC2626;
+  background: #dc2626;
   color: #fff;
   border: none;
-}
-.confirmDeleteButton:hover {
-    background: #B91C1C;
+  &:hover {
+    background: #b91c1c;
+  }
 }
 
 .noEventsMessage {
   padding: 64px;
-  color: #6B7280;
+  color: #717680;
   text-align: center;
-  background-color: #FFF;
-  border-radius: 12px;
-  border: 1px solid #EFEFF1;
+  background-color: #fff;
+  border-radius: 8px;
+  border: 1px solid #e9eaec;
+  font-family: 'Inter', sans-serif;
 }
 
 .loadingContainer {
@@ -563,4 +587,14 @@
   justify-content: center;
   min-height: 50vh;
   width: 100%;
+}
+
+.errorMessage {
+  padding: 12px 16px;
+  background-color: #fef2f2;
+  border: 1px solid #fee2e2;
+  border-radius: 8px;
+  color: #b91c1c;
+  font-size: 14px;
+  margin-bottom: 8px;
 }

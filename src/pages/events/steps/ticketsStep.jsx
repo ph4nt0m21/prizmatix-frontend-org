@@ -142,7 +142,10 @@ const TicketsStep = ({
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={styles.stepIcon}>
           <path d="M20 12C20 10.9 19.1 10 18 10H17.74C17.9 9.55 18 9.03 18 8.5C18 6.57 16.43 5 14.5 5C13.45 5 12.46 5.45 11.83 6.39C11.35 5.32 10.24 4.5 8.89 4.5C7.16 4.5 5.75 5.91 5.75 7.64C5.75 8.47 6.09 9.24 6.64 9.81C5.09 10.24 4 11.7 4 13.34C4 15.3 5.54 16.91 7.5 16.98V17H18C19.1 17 20 16.1 20 15V12ZM10.75 13.13L8.92 11.29L8.21 12L10.75 14.54L15.79 9.5L15.08 8.79L10.75 13.13Z" fill="#7C3AED" />
         </svg>
-        <h2 className={styles.stepTitle}>Create Your Tickets</h2>
+        <div className={styles.stepTextContainer}>
+          <h2 className={styles.stepTitle}>Create Your Tickets</h2>
+          <p className={styles.stepDescription}>Manage and configure your event tickets.</p>
+        </div>
       </div>
 
       <div className={styles.formSection}>

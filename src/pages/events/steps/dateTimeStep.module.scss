@@ -4,46 +4,43 @@
 // Main container styling
 .stepContainer {
   width: 100%;
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  padding: 120px;
-  padding-top: 48px;
-  padding-bottom: 48px;
-
-  @media (max-width: 768px) {
-    padding: 24px 16px; // Adjust padding for mobile screens
-    border-radius: 0; // Remove border-radius for full-width look on mobile
-    box-shadow: none; // Remove box-shadow on mobile if it's full screen
-  }
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
 }
 
 // Header styling
 .stepHeader {
   display: flex;
-  align-items: center;
-  margin-bottom: 24px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid #f0f0f0;
-  gap: 12px;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 24px 80px;
+  border-bottom: 1px solid #EAECF0;
 
   @media (max-width: 768px) {
-    margin-bottom: 16px; // Adjust margin for mobile
-    padding-bottom: 12px; // Adjust padding for mobile
+    gap: 16px;
+    padding: 24px;
   }
+}
+
+.stepTextContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-start;
+  flex: 1;
+}
+
+.stepDescription {
+  font-size: 14px;
+  color: #666;
+  margin: 0;
 }
 
 .stepIcon {
   flex-shrink: 0;
   color: #7C3AED;
-
-  @media (max-width: 768px) {
-    // Optionally resize icon if needed for mobile, but 24px is often fine
-    svg {
-      width: 20px;
-      height: 20px;
-    }
-  }
 }
 
 .stepTitle {
@@ -53,63 +50,90 @@
   margin: 0;
 
   @media (max-width: 768px) {
-    font-size: 16px; // Adjust font size for mobile
+    font-size: 16px;
   }
 }
 
-// Form section styling
+// Form section styling — matches Figma: px-80px, py-32px, gap-32px
 .formSection {
-  padding: 0;
+  padding: 32px 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+
+  @media (max-width: 768px) {
+    padding: 24px;
+    gap: 24px;
+  }
 }
 
-.formGroup {
-  margin-bottom: 24px;
+// Each date block (start details / end details)
+.dateBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
   width: 100%;
-
-  @media (max-width: 768px) {
-    margin-bottom: 16px; // Adjust margin for mobile
-  }
 }
 
-.formLabel {
-  display: block;
-  font-size: 14px;
+// Section header inside a dateBlock
+.sectionHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sectionTitle {
+  font-family: 'Inter', sans-serif;
   font-weight: 600;
-  color: #333;
-  margin-bottom: 4px;
+  font-size: 16px;
+  line-height: 24px;
+  color: #383c51;
+  margin: 0;
+  padding: 2px 0;
 }
 
-.formDescription {
-  font-size: 13px;
-  color: #666;
-  margin-top: 0;
-  margin-bottom: 12px;
-
-  @media (max-width: 768px) {
-    font-size: 12px; // Adjust font size for mobile
-    margin-bottom: 8px; // Adjust margin for mobile
-  }
+.sectionDescription {
+  font-family: 'Inter', sans-serif;
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 24px;
+  color: #383c51;
+  margin: 0;
 }
 
-
-// Form row for multi-column layout
+// Row for side-by-side date + time fields — gap 24px per Figma
 .formRow {
   display: flex;
-  gap: 16px;
-  margin-bottom: 16px;
-  
+  gap: 24px;
+  width: 100%;
+
   @media (max-width: 640px) {
-    flex-direction: column; // Stack columns vertically on smaller screens
-    gap: 16px; // Adjust gap for mobile
-  }
-  
-  .formGroup {
-    flex: 1;
-    margin-bottom: 0; // Reset margin for formGroup within a row
+    flex-direction: column;
+    gap: 16px;
   }
 }
 
-// Form input styling
+// Individual field group (label + input)
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+}
+
+// Field label — 14px regular #383c51
+.formLabel {
+  font-family: 'Inter', sans-serif;
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 24px;
+  color: #383c51;
+  margin: 0;
+  padding: 2px 0;
+}
+
+// Form input — matches other steps: h-44px, rounded-6px, border #e5e7eb
 .formInput {
   width: 100%;
   height: 44px;
@@ -118,30 +142,37 @@
   border: 1px solid #e5e7eb;
   border-radius: 6px;
   color: #333;
+  font-family: 'Inter', sans-serif;
   font-size: 14px;
+  font-weight: 400;
   transition: all 0.2s ease;
-  
+
   &:focus {
     outline: none;
     border-color: #7C3AED;
     box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.05);
   }
-  
+
   &::placeholder {
     color: #9ca3af;
   }
 
   @media (max-width: 768px) {
-    height: 40px; // Slightly smaller input height for mobile
-    font-size: 13px; // Adjust font size for mobile
-    padding: 0 14px; // Adjust padding for mobile
+    height: 40px;
+    font-size: 13px;
+    padding: 0 14px;
   }
 }
 
-// Input with icon styling
+// Input with icon styling — the wrapper
 .inputWithIcon {
   position: relative;
-  
+  width: 100%;
+
+  .formInput {
+    padding-right: 44px;
+  }
+
   .inputIcon {
     position: absolute;
     right: 12px;
@@ -151,34 +182,37 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    
+    width: 20px;
+    height: 20px;
+
     svg {
-      color: #7C3AED;
+      width: 20px;
+      height: 20px;
+      color: #383c51;
     }
 
     @media (max-width: 768px) {
-      right: 10px; // Adjust icon position for mobile
+      right: 12px;
+      width: 20px;
+      height: 20px;
       svg {
-        width: 18px; // Slightly smaller icon for mobile
-        height: 18px;
+        width: 20px;
+        height: 20px;
       }
     }
   }
 }
 
-// Style for date and time inputs
+// Style for native date and time inputs
 input[type="date"].formInput,
 input[type="time"].formInput {
-  padding-right: 40px; // Extra padding for the icon
+  padding-right: 48px;
   cursor: pointer;
-  color: #9ca3af; // Placeholder color initially
 
-  // Style to make text black after selection (common issue with date/time inputs)
   &:not([value=""]) {
-    color: #333;
+    color: #383c51;
   }
-  
-  // Remove default calendar icon in Chrome
+
   &::-webkit-calendar-picker-indicator {
     opacity: 0;
     position: absolute;
@@ -188,8 +222,7 @@ input[type="time"].formInput {
     height: 100%;
     cursor: pointer;
   }
-  
-  // Remove default calendar icon in Firefox
+
   &::-webkit-clear-button,
   &::-webkit-inner-spin-button {
     display: none;
@@ -199,7 +232,7 @@ input[type="time"].formInput {
 // Error styling for inputs
 .inputError {
   border-color: #e53e3e !important;
-  
+
   &:focus {
     box-shadow: 0 0 0 2px rgba(229, 62, 62, 0.1) !important;
   }
@@ -224,9 +257,9 @@ input[type="time"].formInput {
   justify-content: space-between;
 
   @media (max-width: 768px) {
-    margin-bottom: 12px; // Adjust margin for mobile
-    padding: 10px 12px; // Adjust padding for mobile
-    font-size: 13px; // Adjust font size for mobile
+    margin-bottom: 12px;
+    padding: 10px 12px;
+    font-size: 13px;
   }
 }
 
@@ -236,7 +269,7 @@ input[type="time"].formInput {
   color: #b91c1c;
   font-size: 18px;
   cursor: pointer;
-  
+
   &:hover {
     opacity: 0.8;
   }
@@ -250,16 +283,16 @@ input[type="time"].formInput {
   color: #6b7280;
   margin: 0;
   background-color: transparent;
-  
+
   svg {
     margin-right: 8px;
     flex-shrink: 0;
   }
 
   @media (max-width: 768px) {
-    font-size: 12px; // Adjust font size for mobile
+    font-size: 12px;
     svg {
-      width: 16px; // Smaller icon for mobile
+      width: 16px;
       height: 16px;
     }
   }
@@ -272,9 +305,9 @@ input[type="time"].formInput {
   margin-top: 32px;
 
   @media (max-width: 768px) {
-    flex-direction: column-reverse; // Stack buttons vertically, "Next" usually on top
-    gap: 12px; // Space between buttons
-    margin-top: 24px; // Adjust top margin
+    flex-direction: column-reverse;
+    gap: 12px;
+    margin-top: 24px;
   }
 }
 
@@ -287,15 +320,15 @@ input[type="time"].formInput {
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  
+
   &:hover {
     background-color: #f9fafb;
   }
 
   @media (max-width: 768px) {
-    width: 100%; // Full width on mobile
-    padding: 10px 16px; // Adjust padding for mobile
-    font-size: 14px; // Consistent font size
+    width: 100%;
+    padding: 10px 16px;
+    font-size: 14px;
   }
 }
 
@@ -308,29 +341,26 @@ input[type="time"].formInput {
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  
+
   &:hover {
     background-color: #6D28D9;
   }
-  
+
   &:disabled {
     opacity: 0.6;
     cursor: not-allowed;
   }
 
   @media (max-width: 768px) {
-    width: 100%; // Full width on mobile
-    padding: 10px 24px; // Adjust padding for mobile
-    font-size: 14px; // Consistent font size
+    width: 100%;
+    padding: 10px 24px;
+    font-size: 14px;
   }
 }
 
-// Existing media queries from your file, adjusted or kept
+// Legacy media queries
 @media (max-width: 768px) {
-  // .formRow is already handled above within its own block
-  // .formInput is already handled above within its own block
-
-  .buttonGroup { // This class isn't explicitly used in your JSX, but keeping the styling for buttons if it's applied via a parent div
+  .buttonGroup {
     flex-direction: column;
     gap: 8px;
 
@@ -339,11 +369,11 @@ input[type="time"].formInput {
     }
   }
 
-  .stepHeading { // These classes don't seem to be in your provided JSX, but keeping the media queries
+  .stepHeading {
     font-size: 16px;
   }
 
-  .stepSubheading { // These classes don't seem to be in your provided JSX, but keeping the media queries
+  .stepSubheading {
     font-size: 14px;
   }
 }

@@ -356,7 +356,6 @@ const EventEditPage = () => {
           </div>
         </main>
       </div>
-      <div className={styles.footer}>© 2025 Event Tickets Platform</div>
     </>
   );
 };
