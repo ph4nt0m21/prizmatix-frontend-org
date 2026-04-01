@@ -272,78 +272,172 @@ const EventsPage = () => {
         <main className={styles.mainContent}>
           {error && <div className={styles.errorMessage}>{error}</div>}
 
-          <div className={styles.eventsTable}>
-            <div className={styles.tableHeader}>
-              <div>Event</div>
-              <div>Status</div>
-              <div>Sold</div>
-              <div>Gross</div>
-              <div>Date</div>
-              <div></div>
-            </div>
+          <div className={styles.tableContainer}>
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th>Event</th>
+                  <th>Status</th>
+                  <th>Sold</th>
+                  <th>Gross</th>
+                  <th>Date</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredEvents.length > 0 ? (
+                  filteredEvents.map(event => {
+                    const eventDate = formatEventDate(event);
+                    return (
+                      <tr key={event.id} className={styles.eventRow} onClick={() => handleViewEvent(event.id)}>
+                        <td>
+                          <div className={styles.eventInfoCell}>
+                            <div className={styles.eventThumbnail}>
+                              <img 
+                                src={event.bannerImage || `https://placehold.co/48x48/0f1520/6b7280?text=${encodeURIComponent(event.name?.charAt(0) || 'E')}`} 
+                                alt={event.name} 
+                              />
+                            </div>
+                            <div className={styles.eventDetails}>
+                              <h3 className={styles.eventName}>{event.name}</h3>
+                              <p className={styles.eventLocation}>
+                                {event.location?.city}{event.location?.city && ', '}{event.location?.country}
+                              </p>
+                            </div>
+                          </div>
+                        </td>
 
+                        <td>
+                          <div className={styles.statusCell}>
+                            <span className={`${styles.statusBadge} ${getStatusBadgeClass(event.status)}`}>
+                              {event.status}
+                            </span>
+                          </div>
+                        </td>
+
+                        <td>
+                          <div className={styles.soldCell}>
+                            <span>{formatTicketSales(event)}</span>
+                            <div className={styles.salesProgress}>
+                              <div
+                                className={styles.progressBar}
+                                style={{
+                                  width: `${
+                                    event.totalTicketCapacity > 0
+                                      ? (event.totalTicketsIssued / event.totalTicketCapacity) * 100
+                                      : 0
+                                  }%`,
+                                }}
+                              ></div>
+                            </div>
+                          </div>
+                        </td>
+
+                        <td>
+                          <div className={styles.grossCell}>
+                            <span>{calculateGrossRevenue(event)}</span>
+                          </div>
+                        </td>
+
+                        <td>
+                          <div className={styles.dateCell}>
+                            <span>{eventDate}</span>
+                          </div>
+                        </td>
+
+                        <td className={styles.actionsCellTd}>
+                          <div className={styles.actionsCell}>
+                            <div className={styles.actionsMenuContainer}>
+                              <button className={styles.actionsButton} onClick={(e) => handleToggleMenu(e, event.id)}>
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="5" r="1.5" fill="#6B7280"/><circle cx="12" cy="12" r="1.5" fill="#6B7280"/><circle cx="12" cy="19" r="1.5" fill="#6B7280"/></svg>
+                              </button>
+
+                              {openMenuId === event.id && (
+                                <div className={styles.actionsMenu}>
+                                  <button onClick={(e) => handleEditEvent(e, event.id)}>Edit</button>
+                                  <button onClick={(e) => handleDeleteClick(e, event)} className={styles.deleteAction}>Delete</button>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                ) : (
+                  <tr>
+                    <td colSpan="6">
+                      <div className={styles.noEventsMessage}>
+                        No events found for the selected filter.
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile Card View */}
+          <div className={styles.mobileCardList}>
             {filteredEvents.length > 0 ? (
               filteredEvents.map(event => {
                 const eventDate = formatEventDate(event);
                 return (
-                  <div key={event.id} className={styles.eventRow} onClick={() => handleViewEvent(event.id)}>
-                    <div className={styles.eventInfoCell}>
-                      <div className={styles.eventThumbnail}>
+                  <div key={event.id} className={styles.eventCard} onClick={() => handleViewEvent(event.id)}>
+                    <div className={styles.cardHeader}>
+                      <div className={styles.cardThumbnail}>
                         <img 
-                          src={event.bannerImage || `https://placehold.co/48x48/0f1520/6b7280?text=${encodeURIComponent(event.name?.charAt(0) || 'E')}`} 
+                          src={event.bannerImage || `https://placehold.co/56x56/0f1520/6b7280?text=${encodeURIComponent(event.name?.charAt(0) || 'E')}`} 
                           alt={event.name} 
                         />
                       </div>
-                      <div className={styles.eventDetails}>
-                        <h3 className={styles.eventName}>{event.name}</h3>
-                        <p className={styles.eventLocation}>
+                      <div className={styles.cardInfo}>
+                        <h3 className={styles.cardEventName}>{event.name}</h3>
+                        <p className={styles.cardEventLocation}>
                           {event.location?.city}{event.location?.city && ', '}{event.location?.country}
                         </p>
                       </div>
-                    </div>
-
-                    <div className={styles.statusCell}>
-                      <span className={`${styles.statusBadge} ${getStatusBadgeClass(event.status)}`}>
-                        {event.status}
-                      </span>
-                    </div>
-
-                    <div className={styles.soldCell}>
-                      <span>{formatTicketSales(event)}</span>
-                      <div className={styles.salesProgress}>
-                        <div
-                          className={styles.progressBar}
-                          style={{
-                            width: `${
-                              event.totalTicketCapacity > 0
-                                ? (event.totalTicketsIssued / event.totalTicketCapacity) * 100
-                                : 0
-                            }%`,
-                          }}
-                        ></div>
+                      <div className={styles.cardActions}>
+                        <span className={`${styles.statusBadge} ${getStatusBadgeClass(event.status)}`}>
+                          {event.status}
+                        </span>
+                        <div className={styles.actionsMenuContainer}>
+                          <button className={styles.actionsButton} onClick={(e) => handleToggleMenu(e, event.id)}>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="5" r="1.5" fill="#6B7280"/><circle cx="12" cy="12" r="1.5" fill="#6B7280"/><circle cx="12" cy="19" r="1.5" fill="#6B7280"/></svg>
+                          </button>
+                          {openMenuId === event.id && (
+                            <div className={styles.actionsMenu}>
+                              <button onClick={(e) => handleEditEvent(e, event.id)}>Edit</button>
+                              <button onClick={(e) => handleDeleteClick(e, event)} className={styles.deleteAction}>Delete</button>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
-
-                    <div className={styles.grossCell}>
-                      <span>{calculateGrossRevenue(event)}</span>
-                    </div>
-
-                    <div className={styles.dateCell}>
-                      <span>{eventDate}</span>
-                    </div>
-
-                    <div className={styles.actionsCell}>
-                      <div className={styles.actionsMenuContainer}>
-                        <button className={styles.actionsButton} onClick={(e) => handleToggleMenu(e, event.id)}>
-                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="5" r="1.5" fill="#6B7280"/><circle cx="12" cy="12" r="1.5" fill="#6B7280"/><circle cx="12" cy="19" r="1.5" fill="#6B7280"/></svg>
-                        </button>
-
-                        {openMenuId === event.id && (
-                          <div className={styles.actionsMenu}>
-                            <button onClick={(e) => handleEditEvent(e, event.id)}>Edit</button>
-                            <button onClick={(e) => handleDeleteClick(e, event)} className={styles.deleteAction}>Delete</button>
-                          </div>
-                        )}
+                    <div className={styles.cardStats}>
+                      <div className={styles.cardStat}>
+                        <span className={styles.cardStatLabel}>Sold</span>
+                        <span className={styles.cardStatValue}>{formatTicketSales(event)}</span>
+                        <div className={styles.salesProgress}>
+                          <div
+                            className={styles.progressBar}
+                            style={{
+                              width: `${
+                                event.totalTicketCapacity > 0
+                                  ? (event.totalTicketsIssued / event.totalTicketCapacity) * 100
+                                  : 0
+                              }%`,
+                            }}
+                          ></div>
+                        </div>
+                      </div>
+                      <div className={styles.cardStat}>
+                        <span className={styles.cardStatLabel}>Gross</span>
+                        <span className={styles.cardStatValue}>{calculateGrossRevenue(event)}</span>
+                      </div>
+                      <div className={styles.cardStat}>
+                        <span className={styles.cardStatLabel}>Date</span>
+                        <span className={styles.cardStatValue}>{eventDate}</span>
                       </div>
                     </div>
                   </div>

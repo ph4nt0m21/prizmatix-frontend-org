@@ -99,9 +99,31 @@ const EditEventSidebar = ({
                 <IconComponent className={styles.stepIcon} />
               </div>
               <span className={styles.stepLabel}>{step.label}</span>
+              <div
+                className={`${styles.stepStatusIndicator} ${
+                  isActive ? styles.activeIndicator :
+                  isCompleted ? styles.completedIndicator : ''
+                }`}
+              >
+                {isCompleted && (
+                  <svg width="8" height="8" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" fill="#FFFFFF"/>
+                  </svg>
+                )}
+              </div>
             </div>
           );
         })}
+      </div>
+
+      <div className={styles.progressInfoContainer}>
+        <div className={styles.progressText}>Step {currentStep} of {steps.length}</div>
+        <div className={styles.progressBar}>
+          <div
+            className={styles.progressFill}
+            style={{ width: `${(currentStep / steps.length) * 100}%` }}
+          ></div>
+        </div>
       </div>
     </div>
   );

@@ -64,7 +64,7 @@
   background: #FFFFFF;
   border-radius: 12px;
   border: 1px solid #E5E7EB;
-  overflow: hidden;
+  overflow: visible;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
@@ -92,5 +92,12 @@
 @media (max-width: 768px) {
   .reportsContainer {
     padding: 16px;
+  }
+  .headerSection {
+    padding: 16px 16px 0;
+    margin: 16px 0;
+  }
+  .mainHeader {
+    font-size: 22px;
   }
 }

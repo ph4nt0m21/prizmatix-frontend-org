@@ -5,12 +5,22 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 .actions {
   display: flex;
   align-items: center;
   gap: 12px;
+  flex-wrap: nowrap;
 }
 
 // Styles for the expanded search input
@@ -36,6 +46,10 @@
     outline: none;
     border-color: #4F46E5;
     box-shadow: 0 0 0 1px #4F46E5;
+  }
+
+  @media (max-width: 480px) {
+    width: 100%; // Make search take full width on mobile
   }
 }
 
@@ -69,6 +83,7 @@
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
+  white-space: nowrap; // Keep text on one line
   transition: background-color 0.2s;
 
   &:hover {

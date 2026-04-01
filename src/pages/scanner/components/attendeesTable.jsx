@@ -23,7 +23,6 @@ const AttendeesTable = ({ attendees, onToggleCheckIn }) => {
       <table className={styles.table}>
         <thead>
           <tr>
-            <th><input type="checkbox" /></th>
             <th>Name</th>
             <th>Ticket Type</th>
             <th></th>
@@ -32,7 +31,6 @@ const AttendeesTable = ({ attendees, onToggleCheckIn }) => {
         <tbody>
           {attendees.map((attendee) => (
             <tr key={attendee.id}>
-              <td><input type="checkbox" /></td>
               <td>{attendee.name}</td>
               <td>
                 <span className={`${styles.ticketType} ${getTicketTypeClass(attendee.ticketType)}`}>

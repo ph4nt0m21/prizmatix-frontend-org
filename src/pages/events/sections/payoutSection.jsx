@@ -30,7 +30,7 @@ const PAYOUT_STATUS_LABEL = {
 const formatCurrency = (value) =>
   typeof value === 'number' ? `$${value.toFixed(2)}` : '$0.00';
 
-const PayoutSection = ({ eventId, dashboardData }) => {
+const PayoutSection = ({ eventId, dashboardData, tableOnly = false }) => {
   const [eligibility, setEligibility] = useState(null);
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -163,6 +163,9 @@ const PayoutSection = ({ eventId, dashboardData }) => {
     payoutStep === 'display' ? (submitLoading ? 'Sending…' : 'Send request') : 'Continue';
 
   if (loading) {
+    if (tableOnly) {
+      return <div className={styles.loadingState}>Loading payout data…</div>;
+    }
     return (
       <div className={styles.sectionContainer}>
         <div className={styles.sectionHeader}>
@@ -174,12 +177,68 @@ const PayoutSection = ({ eventId, dashboardData }) => {
   }
 
   if (error) {
+    if (tableOnly) {
+      return <div className={styles.errorState}>{error}</div>;
+    }
     return (
       <div className={styles.sectionContainer}>
         <div className={styles.sectionHeader}>
           <h2 className={styles.sectionTitle}>Payout request</h2>
         </div>
         <div className={styles.errorState}>{error}</div>
+      </div>
+    );
+  }
+
+  if (tableOnly) {
+    return (
+      <div className={styles.payoutHistorySection} style={{ marginTop: 0, border: 'none', padding: 0 }}>
+        <h3 className={styles.historyTitle} style={{ textAlign: 'center', marginBottom: '24px' }}>Payout requests</h3>
+        {requests.length === 0 ? (
+          <div className={styles.noHistoryPlaceholder}>
+            <CardPaymentsIcon className={styles.noHistoryIcon} />
+            <p className={styles.noHistoryText}>No payout requests found for this event.</p>
+          </div>
+        ) : (
+          <div className={styles.tableWrapper}>
+            <table className={styles.payoutTable}>
+              <thead>
+                <tr>
+                  <th>Amount</th>
+                  <th>Type</th>
+                  <th>Status</th>
+                  <th>Requested</th>
+                </tr>
+              </thead>
+              <tbody>
+                {requests.map((req) => (
+                  <tr key={req.id}>
+                    <td className={styles.amountCell}>{formatCurrency(req.amount)}</td>
+                    <td>{PAYOUT_TYPE_LABEL[req.payoutType] ?? req.payoutType}</td>
+                    <td>
+                      <span
+                        className={
+                          req.status === 'PAID'
+                            ? styles.statusPAID
+                            : req.status === 'CANCELLED'
+                            ? styles.statusCANCELLED
+                            : styles.statusPENDING
+                        }
+                      >
+                        {PAYOUT_STATUS_LABEL[req.status] ?? req.status}
+                      </span>
+                    </td>
+                    <td className={styles.dateCell}>
+                      {req.requestedAt
+                        ? format(new Date(req.requestedAt), 'dd MMM yyyy, HH:mm')
+                        : '—'}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     );
   }
@@ -459,6 +518,7 @@ const PayoutSection = ({ eventId, dashboardData }) => {
 PayoutSection.propTypes = {
   eventId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
   dashboardData: PropTypes.object,
+  tableOnly: PropTypes.bool,
 };
 
 export default PayoutSection;

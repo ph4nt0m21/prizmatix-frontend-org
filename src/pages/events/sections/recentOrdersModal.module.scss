@@ -53,27 +53,38 @@
 .tableContainer {
   width: 100%;
   overflow-x: auto;
+  border-radius: 8px;
+  border: 1px solid #E5E7EB;
+  background: #ffffff;
 }
 
 .table {
   width: 100%;
   border-collapse: collapse;
   font-size: 14px;
-  
-  th, td {
-    padding: 12px 16px; /* Adjusted padding */
-    text-align: left;
-    border-bottom: 1px solid #F3F4F6;
-    white-space: nowrap; /* Prevent text wrapping */
-  }
+  table-layout: fixed;
   
   th {
-    color: #6B7280;
-    font-weight: 500;
+    padding: 16px 20px;
+    background: #F9FAFB;
+    border-bottom: 1px solid #E5E7EB;
+    color: #4B5563;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    white-space: nowrap;
+    text-align: left;
   }
   
   td {
-    color: #111827;
+    padding: 16px 20px;
+    border-bottom: 1px solid #E5E7EB;
+    vertical-align: middle;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: #1F2937;
+    font-weight: 500;
   }
 
   tbody tr:last-child td {

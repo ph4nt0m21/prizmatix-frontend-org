@@ -10,6 +10,28 @@
   box-sizing: border-box;
   column-gap: 24px;
   overflow: hidden; /* Only mainContent should scroll */
+  
+  @media (max-width: 768px) {
+    height: auto;
+    min-height: calc(100vh - 112px);
+    overflow: visible; /* Scroll naturally */
+    padding: 16px;
+    flex-direction: column;
+  }
+}
+
+// Overlay to close sidebar on mobile when clicking outside
+.sidebarOverlay {
+  display: none;
+
+  @media (max-width: 768px) {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 1000;
+    backdrop-filter: blur(2px);
+  }
 }
 
 .mainContent {
@@ -19,6 +41,10 @@
   
   @media (max-width: 1024px) {
     padding: 0;
+  }
+  
+  @media (max-width: 768px) {
+    overflow-y: visible;
   }
 }
 

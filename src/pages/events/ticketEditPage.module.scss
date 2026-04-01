@@ -6,6 +6,10 @@ File: ticketEditPage.module.scss
   background-color: #f9fafb;
   min-height: calc(100vh - 64px);
   width: 100%;
+  
+  @media (max-width: 768px) {
+    flex-direction: column;
+  }
 }
 
 .eventEditSidebar {
@@ -50,6 +54,12 @@ File: ticketEditPage.module.scss
       font-weight: 500;
     }
   }
+
+  @media (max-width: 768px) {
+    width: 100%;
+    margin: 0;
+    margin-bottom: 20px;
+  }
 }
 
 .mainContent {
@@ -68,6 +78,10 @@ File: ticketEditPage.module.scss
     font-size: 14px;
     color: #6B7280;
     margin-bottom: 24px;
+  }
+
+  @media (max-width: 768px) {
+    padding: 16px;
   }
 }
 
@@ -103,6 +117,12 @@ File: ticketEditPage.module.scss
 
   span {
     flex: 1;
+  }
+
+  @media (max-width: 480px) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
   }
 }
 

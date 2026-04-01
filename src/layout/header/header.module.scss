@@ -75,6 +75,7 @@
 .orgDetails {
   display: flex;
   flex-direction: column;
+  min-width: 0; // Essential for ellipsis in flex layouts
 }
 
 .orgLabel {
@@ -88,6 +89,9 @@
   font-weight: 500;
   color: #111827;
   margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .headerActions {

@@ -50,6 +50,7 @@ const EventHeaderNav = ({
   isDraft,
   toggleMobileSidebar,
   children, // Accept children prop
+  showActions, // Add prop to conditionally show action buttons
 }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
@@ -112,24 +113,26 @@ const navigate = useNavigate();
                 {isDraft && <span className={styles.breadcrumbDraft}>PAST</span>}
               </div>
             </div>
-            <div className={styles.actionButtonsContainer} ref={actionMenuRef}>
-              <button className={styles.mobileActionsButton} onClick={() => setIsActionMenuOpen(!isActionMenuOpen)}>
-                <GearIcon />
-              </button>
-              <div className={`${styles.actionButtons} ${isActionMenuOpen ? styles.active : ''}`}>
-                <button className={styles.generateButton} onClick={handleOpenScannerModal}>
-                  <ScannerIcon />
-                  <span>Generate Scanner ID</span>
+            {showActions && (
+              <div className={styles.actionButtonsContainer} ref={actionMenuRef}>
+                <button className={styles.mobileActionsButton} onClick={() => setIsActionMenuOpen(!isActionMenuOpen)}>
+                  <GearIcon />
                 </button>
-                <button
-                  className={styles.copyLinkButton}
-                  onClick={handleCopyLink}
-                  data-copied-tooltip={isCopied ? 'Copied!' : 'Copy event link'}
-                >
-                  <LinkIcon />
-                </button>
+                <div className={`${styles.actionButtons} ${isActionMenuOpen ? styles.active : ''}`}>
+                  <button className={styles.generateButton} onClick={handleOpenScannerModal}>
+                    <ScannerIcon />
+                    <span>Generate Scanner ID</span>
+                  </button>
+                  <button
+                    className={styles.copyLinkButton}
+                    onClick={handleCopyLink}
+                    data-copied-tooltip={isCopied ? 'Copied!' : 'Copy event link'}
+                  >
+                    <LinkIcon />
+                  </button>
+                </div>
               </div>
-            </div>
+            )}
           </>
         )}
       </nav>
@@ -152,6 +155,7 @@ EventHeaderNav.propTypes = {
   isDraft: PropTypes.bool,
   toggleMobileSidebar: PropTypes.func,
   children: PropTypes.node, // Added children to prop types
+  showActions: PropTypes.bool,
 };
 
 EventHeaderNav.defaultProps = {
@@ -160,6 +164,7 @@ EventHeaderNav.defaultProps = {
   isDraft: true,
   toggleMobileSidebar: () => {},
   children: null,
+  showActions: false, // Default to false
 };
 
 export default EventHeaderNav;
