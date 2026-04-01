@@ -255,6 +255,21 @@ const DiscountCodesStep = ({
                         )}
                       </div>
                     </div>
+                    <div className={styles.discountStatus}>
+                      <label className={styles.toggleSwitch}>
+                        <input
+                          type="checkbox"
+                          checked={code.isActive !== false}
+                          onChange={(e) => {
+                            const updatedCodes = [...discountCodes];
+                            updatedCodes[index] = { ...updatedCodes[index], isActive: e.target.checked };
+                            setDiscountCodes(updatedCodes);
+                          }}
+                          disabled={isExpired(code)}
+                        />
+                        <span className={styles.slider}></span>
+                      </label>
+                    </div>
                     <div className={styles.discountActions}>
                       <div className={styles.actionMenuContainer}>
                         <button type="button" className={styles.discountActionButton} onClick={(e) => { e.stopPropagation(); setOpenMenuIndex(openMenuIndex === index ? null : index); }} aria-label="Actions">

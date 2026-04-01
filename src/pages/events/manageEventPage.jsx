@@ -102,8 +102,12 @@ const navigateToEventEditPage = () => {
         isDraft={!eventData?.isPublished}
         toggleMobileSidebar={() => setIsManageSidebarOpen(!isManageSidebarOpen)}
         eventId={eventId}
+        showActions={true}
       />
       <div className={styles.contentWrapper}>
+        {isManageSidebarOpen && (
+          <div className={styles.sidebarOverlay} onClick={() => setIsManageSidebarOpen(false)}></div>
+        )}
         <EventManageSidebar
           currentSection={currentSection}
           sectionStatus={{}} // sectionStatus can be implemented later

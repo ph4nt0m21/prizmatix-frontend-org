@@ -197,6 +197,7 @@ import React, { useState, useRef } from 'react';
 import PropTypes from 'prop-types';
 import styles from './helpSupportModal.module.scss';
 import { toast } from 'react-toastify';
+import { CreateSupportTicketAPI } from '../../services/allApis';
 
 // --- SVG Icons ---
 
@@ -326,17 +327,36 @@ const HelpSupportModal = ({ isOpen, onClose }) => {
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
   const [attachments, setAttachments] = useState([]);
+  const [isSending, setIsSending] = useState(false);
   const fileInputRef = useRef(null);
 
   const handleFileChange = (event) => {
     setAttachments(Array.from(event.target.files));
   };
 
-  const handleSendSupportTicket = (e) => {
+  const handleSendSupportTicket = async (e) => {
     e.preventDefault();
-    console.log({ subject, message, attachments });
-    toast.success('Your support ticket has been sent!');
-    setView('success'); // show success popup
+    setIsSending(true);
+    try {
+      const formData = new FormData();
+      formData.append('subject', subject);
+      formData.append('message', message);
+      if (attachments.length > 0) {
+        attachments.forEach((file) => {
+          formData.append('attachments', file);
+        });
+      }
+      await CreateSupportTicketAPI(formData);
+      toast.success('Your support ticket has been sent!');
+      setView('success');
+    } catch (error) {
+      console.error('Error sending support ticket:', error);
+      toast.error(
+        error.response?.data?.message || 'Failed to send support ticket. Please try again.'
+      );
+    } finally {
+      setIsSending(false);
+    }
   };
 
   const handleClose = () => {
@@ -478,8 +498,8 @@ const HelpSupportModal = ({ isOpen, onClose }) => {
               </div>
 
               <div className={styles.footer}>
-                <button type="submit" className={styles.sendButton}>
-                  Send
+                <button type="submit" className={styles.sendButton} disabled={isSending}>
+                  {isSending ? 'Sending...' : 'Send'}
                 </button>
               </div>
             </form>

@@ -171,7 +171,6 @@ const OrdersTable = ({ orders, onOrderSelect }) => {
       <div className={styles.tableContainer}>
         <table className={styles.table}>
         <colgroup>
-  <col style={{ width: '50px' }} />       {/* checkbox */}
   <col style={{ width: '110px' }} />      {/* order id */}
   <col style={{ width: '160px' }} />      {/* name */}
   <col style={{ width: '260px' }} />      {/* mail */}
@@ -182,7 +181,6 @@ const OrdersTable = ({ orders, onOrderSelect }) => {
 </colgroup>
         <thead>
           <tr>
-            <th><input type="checkbox" /></th>
             <th>ORDER ID</th>
             <th>NAME</th>
             <th>MAIL</th>
@@ -196,14 +194,6 @@ const OrdersTable = ({ orders, onOrderSelect }) => {
         <tbody>
           {orders.map((order) => (
             <tr key={order.id} className={styles.tableRow} onClick={() => onOrderSelect(order)}>
-              <td>
-                <input
-                  type="checkbox"
-                  className={styles.rowCheckbox}
-                  onClick={(e) => e.stopPropagation()}
-                />
-              </td>
-
               <td className={styles.orderIdCell}>#{order.id}</td>
 
               <td className={styles.nameCell}>{order.customer.name}</td>

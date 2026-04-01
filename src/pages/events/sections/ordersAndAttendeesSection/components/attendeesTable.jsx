@@ -86,33 +86,20 @@ const AttendeesTable = ({ attendees, onCheckIn }) => {
         
         {/* Column width control */}
         <colgroup>
-          <col style={{ width: '50px' }} />        {/* checkbox */}
           <col style={{ width: '260px' }} />       {/* name */}
           <col style={{ width: '160px' }} />       {/* ticket type */}
-          <col style={{ width: '160px' }} />       {/* check-in button */}
         </colgroup>
 
         <thead>
           <tr>
-            <th>
-              <input type="checkbox" className={styles.rowCheckbox} />
-            </th>
             <th>Name</th>
             <th>Ticket Type</th>
-            <th></th>
           </tr>
         </thead>
 
         <tbody>
           {attendees.map((attendee) => (
             <tr key={attendee.id} className={styles.tableRow}>
-              
-              <td>
-                <input 
-                  type="checkbox" 
-                  className={styles.rowCheckbox}
-                />
-              </td>
 
               <td className={styles.nameCell}>{attendee.name}</td>
 
@@ -120,21 +107,6 @@ const AttendeesTable = ({ attendees, onCheckIn }) => {
                 <span className={`${styles.ticketType} ${getTicketTypeClass(attendee.ticketType)}`}>
                   {attendee.ticketType}
                 </span>
-              </td>
-
-              <td>
-                {attendee.isCheckedIn ? (
-                  <span className={styles.checkedInStatus}>
-                    <FiCheck /> Checked In
-                  </span>
-                ) : (
-                  <button
-                    className={styles.checkInButton}
-                    onClick={() => onCheckIn(attendee.id)}
-                  >
-                    Check In
-                  </button>
-                )}
               </td>
 
             </tr>

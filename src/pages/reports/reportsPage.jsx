@@ -11,19 +11,19 @@ import Toolbar from './components/toolbar';
 import FilterPanel from './components/filterPanel';
 import OrdersTable from './components/ordersTable';
 import AttendeesTable from './components/attendeesTable';
-import StatsGrid from './components/statsGrid';
 import OrderDetailsModal from './components/orderDetailsModal';
+import PayoutSection from '../events/sections/payoutSection';
 
 const ReportsPage = () => {
   const { eventId } = useParams();
   const [activeTab, setActiveTab] = useState('Orders');
   const [searchQuery, setSearchQuery] = useState('');
-  
+
   const [orders, setOrders] = useState([]);
   const [attendees, setAttendees] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  
+
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false);
   const [events, setEvents] = useState([]);
@@ -144,10 +144,7 @@ const ReportsPage = () => {
     }
     if (activeTab === 'Attendees') {
       return (
-        <>
-          <StatsGrid checkedInCount={checkedInCount} totalCount={totalAttendees} />
-          <AttendeesTable attendees={filteredData} onCheckIn={handleCheckIn} />
-        </>
+        <AttendeesTable attendees={filteredData} onCheckIn={handleCheckIn} />
       );
     }
   };
@@ -158,30 +155,24 @@ const ReportsPage = () => {
         <div className={styles.headerSection}>
           <h1 className={styles.mainHeader}>Reports</h1>
           <div className={styles.tabsContainer}>
-          <button
-            className={`${styles.tabButton} ${activeTab === 'Orders' ? styles.active : ''}`}
-            onClick={() => setActiveTab('Orders')}
-          >
-            <FiTag /> Orders
-          </button>
-          <button
-            className={`${styles.tabButton} ${activeTab === 'Attendees' ? styles.active : ''}`}
-            onClick={() => setActiveTab('Attendees')}
-          >
-            <FiUsers /> Attendees {activeTab === 'Attendees' && `(${checkedInCount}/${totalAttendees})`}
-          </button>
-          <button
-            className={`${styles.tabButton} ${activeTab === 'Payout' ? styles.active : ''}`}
-            onClick={() => setActiveTab('Payout')}
-          >
-            <FiDollarSign /> Payout
-          </button>
-          <button
-            className={`${styles.tabButton} ${activeTab === 'Event Summary' ? styles.active : ''}`}
-            onClick={() => setActiveTab('Event Summary')}
-          >
-            <FiFileText /> Event Summary
-          </button>
+            <button
+              className={`${styles.tabButton} ${activeTab === 'Orders' ? styles.active : ''}`}
+              onClick={() => { setActiveTab('Orders'); setSearchQuery(''); }}
+            >
+              <FiTag /> Orders
+            </button>
+            <button
+              className={`${styles.tabButton} ${activeTab === 'Attendees' ? styles.active : ''}`}
+              onClick={() => { setActiveTab('Attendees'); setSearchQuery(''); }}
+            >
+              <FiUsers /> Attendees {activeTab === 'Attendees' && `(${totalAttendees})`}
+            </button>
+            <button
+              className={`${styles.tabButton} ${activeTab === 'Payout' ? styles.active : ''}`}
+              onClick={() => { setActiveTab('Payout'); setSearchQuery(''); }}
+            >
+              <FiDollarSign /> Payout
+            </button>
           </div>
         </div>
 
@@ -223,18 +214,13 @@ const ReportsPage = () => {
             </div>
           )}
           {activeTab === 'Payout' && (
-            <div className={styles.placeholder}>
-              <p>Payout reports coming soon.</p>
-            </div>
-          )}
-          {activeTab === 'Event Summary' && (
-            <div className={styles.placeholder}>
-              <p>Event Summary coming soon.</p>
+            <div className={styles.tableSection}>
+              <PayoutSection eventId={filters.eventId || eventId} tableOnly={true} />
             </div>
           )}
         </div>
       </div>
-      
+
       <OrderDetailsModal
         order={selectedOrder}
         onClose={handleCloseModal}

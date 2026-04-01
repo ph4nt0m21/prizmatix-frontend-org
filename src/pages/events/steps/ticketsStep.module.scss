@@ -180,6 +180,11 @@
   padding: 12px 16px;
   background-color: #f3f4f6;
   border-bottom: 1px solid #e5e7eb;
+  border-radius: 8px 8px 0 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: #4b5563;
+  text-transform: uppercase;
 }
 
 // A single ticket row item
@@ -211,7 +216,7 @@
 
 // Column styles
 .ticketName {
-  flex: 3;
+  flex: 2;
   color: #333;
   padding: 0 8px;
 }
@@ -226,12 +231,12 @@
 .ticketPrice {
   flex: 1;
   color: #333;
-  padding: 0 20px;
+  padding: 0 8px;
   text-align: center;
 }
 
 .ticketActions {
-  flex: 1;
+  flex: 0 0 80px;
   color: #333;
   display: flex;
   justify-content: center;
@@ -265,6 +270,7 @@
   border-radius: 4px;
   background-color: transparent;
   transition: all 0.2s ease;
+  text-align: inherit;
 
   &:hover {
     border-color: #e5e7eb;
@@ -278,19 +284,22 @@
 }
 
 .inputWithPrefix {
-  position: relative;
   display: flex;
   align-items: center;
+  justify-content: center;
 
   .prefix {
-    position: absolute;
-    left: 12px;
-    pointer-events: none;
     color: #6b7280;
+    font-size: 14px;
+    flex-shrink: 0;
   }
 
   .ticketInput {
-    padding-left: 24px;
+    padding-left: 2px;
+    width: auto;
+    flex: 0 1 auto;
+    min-width: 40px;
+    max-width: 80px;
   }
 }
 
@@ -336,18 +345,23 @@
     padding: 0;
   }
 
-  // This wrapper will contain the table and allow it to scroll horizontally
   .tableWrapper {
     overflow-x: auto;
-    -webkit-overflow-scrolling: touch; // Smooth scrolling on iOS
+    -webkit-overflow-scrolling: touch;
   }
 
-  // This inner container will have a minimum width to force the scrollbar to appear
   .tableContent {
-    min-width: 650px;
+    min-width: 600px;
+  }
+
+  // Ensure header and row use the same padding so columns align
+  .ticketTableHeader,
+  .ticketItem {
+    padding: 12px 16px;
+    gap: 0;
   }
 
   .ticketInput {
-    text-align: left; // Align text to the left on mobile for easier reading
+    text-align: left;
   }
 }

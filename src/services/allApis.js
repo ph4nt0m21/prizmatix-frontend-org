@@ -292,4 +292,12 @@ export const CheckoutAttendeeAPI = async (ticketId) => {
   return await apiClient.post(`/scanner/checkout/${ticketId}`);
 };
 
+// =============== SUPPORT TICKET APIs ===============
 
+// Create a support ticket with subject, message, and optional attachments
+export const CreateSupportTicketAPI = async (formData) => {
+  // formData = FormData with 'subject', 'message', and optional 'attachments' file(s)
+  return await apiClient.post("/api/support/tickets", formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+};

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, useParams, useOutletContext } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import Cookies from "js-cookie";
 import { LoginAPI } from "../../services/allApis";
 import EventHeaderNav from "./components/eventHeaderNav";
@@ -48,7 +48,12 @@ import {
 const CreateEventPage = () => {
   const navigate = useNavigate();
   const { eventId, step } = useParams();
-  const { toggleMobileSidebar, isMobileSidebarOpen } = useOutletContext();
+
+  // Local state for this page's creation sidebar visibility
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const toggleMobileSidebar = () => {
+    setIsMobileSidebarOpen(prev => !prev);
+  };
 
   // Loading state
   const [isLoading, setIsLoading] = useState({
@@ -1222,6 +1227,9 @@ const validateDiscountCodes = () => {
         toggleMobileSidebar={toggleMobileSidebar}
       />
       <div className={styles.content}>
+        {isMobileSidebarOpen && (
+          <div className={styles.sidebarOverlay} onClick={toggleMobileSidebar}></div>
+        )}
         <EventCreationSidebar
           currentStep={currentStep}
           stepStatus={stepStatus}

@@ -5,13 +5,13 @@ import OrdersTable from './components/ordersTable';
 import OrderDetailsModal from './components/orderDetailsModal';
 import { GetEventOrdersAPI, GetEventAttendeesAPI } from '../../../../services/allApis';
 import { FiTag, FiUsers, FiPlus } from 'react-icons/fi';
-import StatsGrid from './components/statsGrid';
 import AttendeesTable from './components/attendeesTable';
 import { format } from 'date-fns';
 
 const OrdersAndAttendeesSection = ({ eventId }) => {
   const [activeTab, setActiveTab] = useState('Orders');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [orderSearchQuery, setOrderSearchQuery] = useState('');
+  const [attendeeSearchQuery, setAttendeeSearchQuery] = useState('');
 
   const [orders, setOrders] = useState([]);
   const [attendees, setAttendees] = useState([]);
@@ -22,6 +22,11 @@ const OrdersAndAttendeesSection = ({ eventId }) => {
   const [attendeeFilters, setAttendeeFilters] = useState({
     ticketType: 'All',
     status: 'All',
+    startDate: '',
+    endDate: '',
+  });
+  const [orderFilters, setOrderFilters] = useState({
+    ticketType: 'All',
     startDate: '',
     endDate: '',
   });
@@ -90,9 +95,11 @@ const OrdersAndAttendeesSection = ({ eventId }) => {
 
   const filteredAttendees = useMemo(() => {
     return attendees.filter(attendee => {
-      const searchMatch =
-        (attendee.name && attendee.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
-        (attendee.email && attendee.email.toLowerCase().includes(searchQuery.toLowerCase()));
+      const q = attendeeSearchQuery.toLowerCase();
+      const searchMatch = !q ||
+        (attendee.name && attendee.name.toLowerCase().includes(q)) ||
+        (attendee.email && attendee.email.toLowerCase().includes(q)) ||
+        (attendee.orderId && attendee.orderId.toLowerCase().includes(q));
 
       const ticketTypeMatch =
         attendeeFilters.ticketType === 'All' || attendee.ticketType === attendeeFilters.ticketType;
@@ -102,9 +109,23 @@ const OrdersAndAttendeesSection = ({ eventId }) => {
         (attendeeFilters.status === 'Checked In' && attendee.isCheckedIn) ||
         (attendeeFilters.status === 'Not Checked In' && !attendee.isCheckedIn);
 
-      return searchMatch && ticketTypeMatch && statusMatch;
+      // Date range filter
+      let dateMatch = true;
+      if (attendeeFilters.startDate || attendeeFilters.endDate) {
+        const orderDate = new Date(attendee.orderDate);
+        if (attendeeFilters.startDate) {
+          dateMatch = dateMatch && orderDate >= new Date(attendeeFilters.startDate);
+        }
+        if (attendeeFilters.endDate) {
+          const endDate = new Date(attendeeFilters.endDate);
+          endDate.setHours(23, 59, 59, 999);
+          dateMatch = dateMatch && orderDate <= endDate;
+        }
+      }
+
+      return searchMatch && ticketTypeMatch && statusMatch && dateMatch;
     });
-  }, [searchQuery, attendees, attendeeFilters]);
+  }, [attendeeSearchQuery, attendees, attendeeFilters]);
 
   const handleOrderSelect = (order) => setSelectedOrder(order);
   const handleCloseModal = () => setSelectedOrder(null);
@@ -117,6 +138,45 @@ const OrdersAndAttendeesSection = ({ eventId }) => {
     );
   };
 
+  // --- Search + filter for ORDERS ---
+  const filteredOrders = useMemo(() => {
+    return orders.filter(order => {
+      // Search match
+      const q = orderSearchQuery.toLowerCase();
+      const searchMatch = !q ||
+        (order.id && order.id.toLowerCase().includes(q)) ||
+        (order.customer?.name && order.customer.name.toLowerCase().includes(q)) ||
+        (order.customer?.email && order.customer.email.toLowerCase().includes(q));
+
+      // Ticket type filter
+      const ticketTypeMatch =
+        orderFilters.ticketType === 'All' || order.ticketType === orderFilters.ticketType;
+
+      // Date range filter
+      let dateMatch = true;
+      if (orderFilters.startDate || orderFilters.endDate) {
+        const orderDate = new Date(order.orderDate);
+        if (orderFilters.startDate) {
+          dateMatch = dateMatch && orderDate >= new Date(orderFilters.startDate);
+        }
+        if (orderFilters.endDate) {
+          const endDate = new Date(orderFilters.endDate);
+          endDate.setHours(23, 59, 59, 999);
+          dateMatch = dateMatch && orderDate <= endDate;
+        }
+      }
+
+      return searchMatch && ticketTypeMatch && dateMatch;
+    });
+  }, [orderSearchQuery, orders, orderFilters]);
+
+  // Extract unique ticket types for filter dropdown
+  const ticketTypes = useMemo(() => {
+    const source = activeTab === 'Orders' ? orders : attendees;
+    const types = [...new Set(source.map(item => item.ticketType).filter(Boolean))];
+    return ['All', ...types];
+  }, [orders, attendees, activeTab]);
+
   const totalAttendees = attendees.length;
   const checkedInCount = attendees.filter(a => a.isCheckedIn).length;
 
@@ -127,17 +187,14 @@ const OrdersAndAttendeesSection = ({ eventId }) => {
     if (activeTab === 'Orders') {
       return (
         <div className={styles.contentCard}>
-          <OrdersTable orders={orders} onOrderSelect={handleOrderSelect} />
+          <OrdersTable orders={filteredOrders} onOrderSelect={handleOrderSelect} />
         </div>
       );
     }
 
     if (activeTab === 'Attendees') {
       return (
-        <>
-          {/* StatsGrid can be re-added here if desired */}
-          <AttendeesTable attendees={filteredAttendees} onCheckIn={handleCheckIn} />
-        </>
+        <AttendeesTable attendees={filteredAttendees} onCheckIn={handleCheckIn} />
       );
     }
   };
@@ -157,17 +214,18 @@ const OrdersAndAttendeesSection = ({ eventId }) => {
               className={`${styles.tabButton} ${activeTab === 'Attendees' ? styles.active : ''}`}
               onClick={() => setActiveTab('Attendees')}
             >
-              <FiUsers /> Attendees ({checkedInCount}/{totalAttendees})
+              <FiUsers /> Attendees ({totalAttendees})
             </button>
           </div>
           <div className={styles.toolbarContainer}>
             <Toolbar
               activeTab={activeTab}
-              searchQuery={searchQuery}
-              setSearchQuery={setSearchQuery}
-              data={activeTab === 'Orders' ? orders : filteredAttendees}
-              currentFilters={attendeeFilters}
-              onApplyFilters={setAttendeeFilters}
+              searchQuery={activeTab === 'Orders' ? orderSearchQuery : attendeeSearchQuery}
+              setSearchQuery={activeTab === 'Orders' ? setOrderSearchQuery : setAttendeeSearchQuery}
+              data={activeTab === 'Orders' ? filteredOrders : filteredAttendees}
+              currentFilters={activeTab === 'Orders' ? orderFilters : attendeeFilters}
+              onApplyFilters={activeTab === 'Orders' ? setOrderFilters : setAttendeeFilters}
+              ticketTypes={ticketTypes}
             />
             {/* <button className={styles.addOrderButton}>
               <FiPlus /> Add Order

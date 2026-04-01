@@ -1,291 +1,412 @@
 @import '../../styles/variables';
 @import '../../styles/mixins';
 
-.eventEditPageContainer {
+/* New container to control the overall page layout */
+.pageContainer {
   display: flex;
-  background-color: #f9fafb;
-  min-height: calc(100vh - 64px); // Adjust based on your header height
-  width: 100%;
+  flex-direction: column;
+  height: 100vh;
+  /* Make the page fill the entire screen height */
+  overflow: hidden;
+  /* Prevent the whole page from scrolling */
+  background-color: #F1F1F1;
+  /* Match the content background */
+
+  @media (max-width: 768px) {
+    height: auto; // Allow height to adjust on mobile
+    min-height: 100vh; // Ensure it still takes full viewport height if content is short
+  }
 }
 
+// Main container for the create event page (this class is not directly used in the current JSX structure, can be removed if not needed elsewhere)
+.pageWrapper {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: #F8F8F8;
+}
+
+// Container for the content area that accounts for the sidebar
+// (This class is not directly used in the current JSX structure, can be removed if not needed elsewhere)
+.createEventContainer {
+  display: flex;
+  flex-direction: column;
+  width: calc(100% - 70px);
+  margin-left: 70px; // Sidebar width
+  flex: 1;
+
+  @media (max-width: 768px) {
+    width: 100%; // Take full width on mobile
+    margin-left: 0; // Remove sidebar margin
+  }
+}
+
+// Flex container for sidebar and main content
 .content {
   display: flex;
-  background: #f9fafb;
-  min-height: calc(100vh - 112px); // Adjusted to account for event header nav and main layout header
-  width: 100%;
+  background: #F1F1F1;
+  gap: 16px;
+  padding: 16px 24px;
+  flex: 1;
+  overflow: hidden; // Prevent this container from showing scrollbars
+
+  @media (max-width: 1280px) {
+    padding: 12px;
+  }
+
+  @media (max-width: 1024px) {
+    padding: 12px;
+  }
 
   @media (max-width: 768px) {
     flex-direction: column; // Stack sidebar and main content vertically
-    padding: 16px; // Add padding for mobile content area
-    overflow-y: auto; // Allow scrolling on mobile
+    overflow-y: auto; // Allow content to scroll on smaller screens
+    padding: 16px; // Adjust padding for mobile
+  }
+
+  @media (max-width: 480px) {
+    padding: 8px;
+    gap: 8px;
   }
 }
 
+// Overlay to close sidebar on mobile when clicking outside
+.sidebarOverlay {
+  display: none;
+
+  @media (max-width: 768px) {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 1000;
+    backdrop-filter: blur(2px);
+  }
+}
+
+// Main content area that contains the form (the step content and navigation)
 .mainContent {
   flex: 1;
-  padding: 20px;
   display: flex;
   flex-direction: column;
-  overflow-y: auto; // Allows scrolling if content is too long
-  background-color: #FFFFFF; /* Ensure background for the main content card */
-  border-radius: 8px; /* Consistent border-radius */
-  box-shadow: 0px 2px 4px 0px rgba(0, 0, 0, 0.05); /* Consistent shadow */
-
-  @media (max-width: 768px) {
-    padding: 0; /* Remove padding here, it's handled by .content */
-    min-height: 500px; /* Ensure a minimum height for the main content area */
-  }
-}
-
-.sectionContent {
-  flex: 1; // Allows content to take available space
-  width: 100%;
-  max-width: 100%;
-  padding-bottom: 20px; // Padding before navigation buttons
-}
-
-.contentCard {
-  background: #FFFFFF;
-  border-radius: 8px;
-  box-shadow: 0px 2px 4px 0px rgba(0, 0, 0, 0.05);
-  padding: 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 20px; // Spacing between form groups
-}
-
-.formGroup {
-  display: flex;
-  flex-direction: column;
-
-  label {
-    font-size: 14px;
-    font-weight: 500;
-    color: #374151;
-    margin-bottom: 8px;
-  }
-
-  input[type="text"],
-  textarea {
-    width: 100%;
-    padding: 10px 12px;
-    border: 1px solid #D1D5DB;
-    border-radius: 6px;
-    font-size: 14px;
-    color: #111827;
-    transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-
-    &:focus {
-      border-color: #7C3AED;
-      box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
-      outline: none;
-    }
-  }
-
-  textarea {
-    resize: vertical;
-    min-height: 120px;
-  }
-}
-
-.previewImage {
-  max-width: 100%;
-  height: auto;
-  margin-top: 10px;
-  border-radius: 8px;
-  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.05);
-}
-
-// Navigation buttons (back, next/submit)
-.navigation {
-  display: flex;
-  justify-content: space-between;
-  padding: 20px 0; // Add padding around buttons
-  border-top: 1px solid #E9EAEC; // Separator from content
-  margin-top: auto; // Push to bottom
-
-  @media (max-width: 768px) {
-    flex-direction: column; // Stack buttons vertically
-    gap: 10px; // Add space between stacked buttons
-    padding: 16px 0; // Adjust padding
-  }
-}
-
-.backButton, .nextButton {
-  padding: 10px 20px;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out, border-color 0.2s ease-in-out;
-
-  &:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-
-  @media (max-width: 768px) {
-    width: 100%; // Full width on mobile
-  }
-}
-
-.backButton {
+  overflow: hidden; // Important: this keeps the main content from scrolling
   background-color: #FFFFFF;
-  color: #4B5563;
-  border: 1px solid #D1D5DB;
-
-  &:hover:not(:disabled) {
-    background-color: #F3F4F6;
-  }
-}
-
-.nextButton {
-  background-color: #7C3AED;
-  color: #FFFFFF;
-  border: 1px solid #7C3AED;
-
-  &:hover:not(:disabled) {
-    background-color: #6D28D9;
-    border-color: #6D28D9;
-  }
-
-  &.submitButton {
-    background-color: #22C55E; // Green for submit
-    border-color: #22C55E;
-
-    &:hover:not(:disabled) {
-      background-color: #16A34A;
-      border-color: #16A34A;
-    }
-  }
-}
-
-// Error and success messages
-.errorMessage, .successMessage {
-  padding: 12px 20px;
-  margin-bottom: 20px;
-  border-radius: 6px;
-  font-size: 14px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  border-radius: 12px;
+  border: 1px solid #EAECF0;
+  box-shadow: 0px 1px 3px rgba(16, 24, 40, 0.1), 0px 1px 2px rgba(16, 24, 40, 0.06);
 
   @media (max-width: 768px) {
-    font-size: 13px; // Smaller font
-    padding: 10px 16px; // Adjust padding
+    min-height: auto;
+    overflow-y: visible; /* Prevent nested scrollbars */
   }
 }
 
+// Container for the step content (the actual form for each step)
+.stepContent {
+  flex: 1;
+  display: flex;
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  @media (max-width: 768px) {
+    overflow-y: visible;
+  }
+}
+
+// Error message styling
 .errorMessage {
-  background-color: #FEE2E2;
-  color: #EF4444;
-  border: 1px solid #FCA5A5;
-}
+  background-color: #fee2e2;
+  border: 1px solid #fca5a5;
+  border-radius: 6px;
+  color: #b91c1c;
+  padding: 12px 16px;
+  margin: 16px;
+  position: relative;
 
-.successMessage {
-  background-color: #D1FAE5;
-  color: #059669;
-  border: 1px solid #A7F3D0;
-}
-
-.dismissButton {
-  background: none;
-  border: none;
-  color: inherit;
-  font-size: 16px;
-  cursor: pointer;
-  opacity: 0.7;
-  transition: opacity 0.2s;
-
-  &:hover {
-    opacity: 1;
+  .dismissButton {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: none;
+    border: none;
+    color: #b91c1c;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 4px;
+    line-height: 1;
   }
 }
 
-// Loading/Error states for the entire page
-.loadingContainer, .errorContainer {
+// Success message styling
+.successMessage {
+  background-color: #d1fae5;
+  border: 1px solid #6ee7b7;
+  border-radius: 6px;
+  color: #065f46;
+  padding: 12px 16px;
+  margin: 16px;
+  position: relative;
+
+  .dismissButton {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: none;
+    border: none;
+    color: #065f46;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 4px;
+    line-height: 1;
+  }
+}
+
+// Loading state container
+.loadingContainer {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 100vh;
+  height: 100%;
   width: 100%;
 
   p {
     margin-top: 16px;
-    color: #6B7280;
+    color: #6b7280;
   }
-  button {
-    margin-top: 20px;
-    padding: 10px 20px;
+}
+
+// Navigation buttons container
+.navigation {
+  display: flex;
+  height: 64px;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 32px;
+  padding: 24px 80px;
+  align-self: stretch;
+  flex-shrink: 0; // Prevent shrinking
+  
+  background-color: #FFFFFF;
+  border-top: 1px solid #EAECF0;
+
+  @media (max-width: 768px) {
+    padding: 12px 20px; // Adjust padding for mobile
+    gap: 16px; // Reduce gap
+    justify-content: space-between; // Distribute buttons
+  }
+
+  @media (max-width: 480px) {
+    padding: 12px 16px;
+  }
+}
+
+// Back button styling
+.backButton {
+  padding: 10px 24px;
+  border-radius: 6px;
+  background-color: white;
+  border: 1px solid #d1d5db;
+  color: #6b7280;
+  font-weight: 500;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover:not(:disabled) {
+    background-color: #f9fafb;
+    border-color: #9ca3af;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  @media (max-width: 480px) {
+    padding: 8px 16px;
+    font-size: 13px;
+  }
+}
+
+// Next button styling
+.nextButton {
+  padding: 10px 24px;
+  border-radius: 6px;
+  background-color: #7C3AED;
+  border: none;
+  color: white;
+  font-weight: 500;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+
+  &:hover:not(:disabled) {
+    background-color: #6d28d9;
+  }
+
+  &:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+
+  @media (max-width: 480px) {
+    padding: 8px 16px;
+    font-size: 13px;
+  }
+}
+
+// Form container (this class is not directly used in the current JSX structure, can be removed if not needed elsewhere)
+.formContainer {
+  background-color: #FFFFFF;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  height: 100%;
+}
+
+// Tab content (this class is not directly used in the current JSX structure, can be removed if not needed elsewhere)
+.tabContent {
+  padding: 24px;
+  height: 100%;
+  overflow-y: auto;
+
+  @media (max-width: 768px) {
+    padding: 16px; // Reduce padding on mobile
+  }
+}
+
+// Step progress indicator (this class is not directly used in the current JSX structure, can be removed if not needed elsewhere)
+.stepProgress {
+  display: flex;
+  align-items: center;
+  margin-bottom: 24px;
+
+  @media (max-width: 768px) {
+    margin-bottom: 16px; // Reduce margin on mobile
+  }
+}
+
+.stepIndicator {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: #e5e7eb;
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+  margin-right: 8px;
+
+  &.active {
     background-color: #7C3AED;
     color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    &:hover {
-      background-color: #6D28D9;
+  }
+
+  &.completed {
+    background-color: #7C3AED;
+    color: white;
+
+    &:after {
+      content: '✓';
     }
   }
 }
 
-// Placeholder for unknown steps
-.placeholderContainer {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 400px;
-  text-align: center;
-  background: #FFFFFF;
-  border-radius: 8px;
-  padding: 32px;
-  box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.05);
+.stepLabel {
+  font-size: 14px;
+  font-weight: 500;
+  color: #6b7280;
+
+  &.active {
+    color: #111827;
+  }
+
+  &.completed {
+    color: #7C3AED;
+  }
 
   @media (max-width: 768px) {
-    height: 300px; /* Smaller height */
-    padding: 24px; /* Adjust padding */
+    font-size: 13px; // Smaller font on mobile
   }
 }
 
-.placeholderTitle {
-  font-size: 24px;
-  margin-bottom: 16px;
-  color: #111827;
+// Section containers
+.sectionContainer {
+  margin-bottom: 32px;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
 
   @media (max-width: 768px) {
-    font-size: 20px; /* Smaller font */
+    margin-bottom: 24px; // Reduce margin on mobile
   }
 }
 
-.placeholderMessage {
+.sectionTitle {
   font-size: 16px;
-  color: #6B7280;
-  margin-bottom: 24px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 8px 0;
 
   @media (max-width: 768px) {
-    font-size: 14px; /* Smaller font */
+    font-size: 15px; // Smaller font on mobile
   }
 }
 
-// Footer
+.sectionDescription {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 0 0 16px 0;
+
+  @media (max-width: 768px) {
+    font-size: 13px; // Smaller font on mobile
+    margin-bottom: 12px;
+  }
+}
+
+.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Tooltip for disabled steps */
+.disabled:hover::after {
+  content: "Please complete Basic Info step first";
+  position: absolute;
+  left: 100%;
+  top: 0;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+  z-index: 100;
+}
+
+// Footer styling - Note: this footer is part of createEventPage.jsx, not mainLayout
 .footer {
   display: flex;
   height: 48px;
+  /* Set a fixed height */
   padding: 0 24px;
   justify-content: center;
   align-items: center;
-  gap: 10px;
-  align-self: stretch;
-  border-top: 1px solid #E9EAEC;
   background: #FFF;
-  color: #6B7280;
-  font-size: 12px;
-  width: 100%;
+  color: #6b7280;
+  font-size: 14px;
+  box-shadow: 0px -1px 3px rgba(0, 0, 0, 0.05);
+  flex-shrink: 0;
+  /* Prevent footer from shrinking */
 
   @media (max-width: 768px) {
     padding: 0 16px; // Reduce padding on mobile
-    font-size: 11px; // Smaller font
-    height: 40px; // Slightly smaller height
+    font-size: 12px; // Smaller font
   }
 }

@@ -315,7 +315,7 @@ const EventEditPage = () => {
   }
 
   return (
-    <>
+    <div className={styles.pageContainer}>
       <EventHeaderNav
         currentStep={`Edit ${getStepKey(currentStep)}`}
         eventName={eventData.name || 'Loading Event...'}
@@ -324,6 +324,10 @@ const EventEditPage = () => {
         toggleMobileSidebar={toggleEditSidebar} // Pass the local toggle function to EventHeaderNav
       />
       <div className={styles.content}>
+        {/* Overlay for mobile sidebar */}
+        {isEditSidebarOpen && (
+          <div className={styles.sidebarOverlay} onClick={toggleEditSidebar}></div>
+        )}
         {/* EditEventSidebar now uses local state */}
         <EditEventSidebar
           currentStep={currentStep}
@@ -339,10 +343,30 @@ const EventEditPage = () => {
           toggleMobileSidebar={toggleEditSidebar} // Pass local toggle for closing
         />
         <main className={styles.mainContent}>
-          {successMessage && <div className={styles.successMessage}>{successMessage}<button onClick={() => setSuccessMessage(null)}>✕</button></div>}
-          {error && <div className={styles.errorMessage}>{error}<button onClick={() => setError(null)}>✕</button></div>}
+          {successMessage && (
+            <div className={styles.successMessage}>
+              {successMessage}
+              <button
+                className={styles.dismissButton}
+                onClick={() => setSuccessMessage(null)}
+              >
+                ✕
+              </button>
+            </div>
+          )}
+          {error && (
+            <div className={styles.errorMessage}>
+              {error}
+              <button
+                className={styles.dismissButton}
+                onClick={() => setError(null)}
+              >
+                ✕
+              </button>
+            </div>
+          )}
           
-          <div className={styles.sectionContent}>
+          <div className={styles.stepContent}>
             {renderCurrentStep()}
           </div>
 
@@ -356,7 +380,7 @@ const EventEditPage = () => {
           </div>
         </main>
       </div>
-    </>
+    </div>
   );
 };
 

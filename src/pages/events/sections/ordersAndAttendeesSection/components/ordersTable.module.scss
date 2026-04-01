@@ -5,6 +5,7 @@
   width: 100%;
   overflow-x: auto;
   background: #ffffff;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* ================================
@@ -16,6 +17,7 @@
   background: white;
   font-size: 14px;
   table-layout: fixed; /* required for colgroup to work */
+  min-width: 800px;
 }
 
 /* ================================
@@ -80,36 +82,55 @@
    TICKET TYPE
 ================================ */
 .ticketType {
-  background: #E0F2FE;
-  color: #0369A1;
-  padding: 4px 12px;
-  border-radius: 12px;
-  font-size: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 14px;
+  border-radius: 4px;
+  border: 1px solid #16A34A;
+  background: #FFF;
+  color: #16A34A;
+  font-size: 13px;
   font-weight: 600;
+  line-height: 1;
+  font-style: italic;
+  text-transform: uppercase;
   white-space: nowrap;
+  letter-spacing: 0.01em;
 }
 
 /* ================================
    REISSUE BUTTON
 ================================ */
 .reissueButton {
-  background: #EEF2FF;
-  border: 1px solid #C7D2FE;
-  color: #4338CA;
-  border-radius: 8px;
-  padding: 6px 12px;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
+  padding: 6px 16px;
+  border-radius: 4px;
+  border: 1px solid #2563EB;
+  background: #FFF;
+  color: #005DA5;
   font-size: 13px;
+  font-style: italic;
   font-weight: 500;
+  line-height: 1;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
 
-  &:hover {
-    background: #E0E7FF;
+  svg {
+    font-size: 14px;
+  }
+
+  &:hover:not(:disabled) {
+    background: #DBEAFE;
   }
 
   &:disabled {
     opacity: 0.6;
+    cursor: default;
   }
 }
 
@@ -147,6 +168,8 @@
   padding: 16px 24px;
   color: #6B7280;
   gap: 24px;
+  background: #ffffff;
+  border-top: 1px solid #E5E7EB;
 
   button {
     background: none;
