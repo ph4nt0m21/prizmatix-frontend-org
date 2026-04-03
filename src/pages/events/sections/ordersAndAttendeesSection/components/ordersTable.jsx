@@ -121,7 +121,9 @@
 // export default OrdersTable;
 
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { flexRender, getCoreRowModel, getPaginationRowModel, getSortedRowModel, useReactTable } from '@tanstack/react-table';
+import { isValid, parse } from 'date-fns';
 import styles from './ordersTable.module.scss';
 import { FiDownload, FiMail } from 'react-icons/fi';
 import jsPDF from 'jspdf';
@@ -129,7 +131,17 @@ import autoTable from 'jspdf-autotable';
 import { ReissueOrderEmailAPI } from '../../../../../services/allApis';
 
 const OrdersTable = ({ orders, onOrderSelect }) => {
+  const [sorting, setSorting] = useState([]);
+  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
   const [loadingOrderId, setLoadingOrderId] = useState(null);
+
+  useEffect(() => {
+    setPagination((p) => ({ ...p, pageIndex: 0 }));
+  }, [sorting]);
+
+  useEffect(() => {
+    setPagination((p) => ({ ...p, pageIndex: 0 }));
+  }, [orders?.length]);
 
   const handleDownloadDetailsPDF = (order, e) => {
     e.stopPropagation();
@@ -162,6 +174,115 @@ const OrdersTable = ({ orders, onOrderSelect }) => {
     }
   };
 
+  const parseOrderIdForSort = (id) => {
+    const raw = String(id ?? '');
+    const digits = raw.replace(/[^\d]/g, '');
+    const n = parseInt(digits, 10);
+    return Number.isNaN(n) ? 0 : n;
+  };
+
+  const parseOrderDateForSort = (orderDate) => {
+    // orderDate is formatted like: "dd MMM yyyy hh:mm a"
+    const parsed = parse(String(orderDate ?? ''), 'dd MMM yyyy hh:mm a', new Date());
+    if (!isValid(parsed)) return 0;
+    return parsed.getTime();
+  };
+
+  const columns = [
+    {
+      id: 'orderId',
+      accessorFn: (row) => row.id,
+      header: 'ORDER ID',
+      enableSorting: true,
+      sortingFn: (rowA, rowB) => parseOrderIdForSort(rowA.original.id) - parseOrderIdForSort(rowB.original.id),
+      cell: ({ row }) => <span className={styles.orderIdCell}>#{row.original.id}</span>,
+    },
+    {
+      id: 'name',
+      accessorFn: (row) => row.customer?.name ?? '',
+      header: 'NAME',
+      enableSorting: true,
+      cell: ({ row }) => row.original.customer?.name,
+      meta: { cellClassName: styles.nameCell },
+    },
+    {
+      id: 'email',
+      accessorFn: (row) => row.customer?.email ?? '',
+      header: 'MAIL',
+      enableSorting: true,
+      cell: ({ row }) => row.original.customer?.email,
+      meta: { cellClassName: styles.emailCell },
+    },
+    {
+      id: 'orderDate',
+      accessorFn: (row) => row.orderDate ?? '',
+      header: 'ORDER DATE',
+      enableSorting: true,
+      sortingFn: (rowA, rowB) =>
+        parseOrderDateForSort(rowA.original.orderDate) - parseOrderDateForSort(rowB.original.orderDate),
+      cell: ({ row }) => row.original.orderDate,
+      meta: { cellClassName: styles.dateCell },
+    },
+    {
+      id: 'ticketType',
+      accessorFn: (row) => row.ticketType ?? '',
+      header: 'TICKET TYPE',
+      enableSorting: true,
+      cell: ({ row }) => <span className={styles.ticketType}>{row.original.ticketType}</span>,
+    },
+    {
+      id: 'reissue',
+      header: 'RE-ISSUE EMAIL',
+      enableSorting: false,
+      cell: ({ row }) => (
+        <button
+          className={styles.reissueButton}
+          type="button"
+          onClick={(e) => handleReissueEmail(row.original.id, e)}
+          disabled={loadingOrderId === row.original.id}
+        >
+          {loadingOrderId === row.original.id ? (
+            'Sending…'
+          ) : (
+            <>
+              <FiMail /> Reissue
+            </>
+          )}
+        </button>
+      ),
+    },
+    {
+      id: 'download',
+      header: () => null,
+      enableSorting: false,
+      cell: ({ row }) => (
+        <button
+          className={styles.iconButton}
+          type="button"
+          title="Download"
+          onClick={(e) => handleDownloadDetailsPDF(row.original, e)}
+        >
+          <FiDownload />
+        </button>
+      ),
+    },
+  ];
+
+  const table = useReactTable({
+    data: orders ?? [],
+    columns,
+    state: { sorting, pagination },
+    onSortingChange: setSorting,
+    onPaginationChange: setPagination,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+  });
+
+  const totalRows = table.getPrePaginationRowModel().rows.length;
+  const pageStart = totalRows === 0 ? 0 : pagination.pageIndex * pagination.pageSize + 1;
+  const pageEnd = Math.min((pagination.pageIndex + 1) * pagination.pageSize, totalRows);
+
   if (!orders || orders.length === 0) {
     return <div className={styles.noResults}>No orders found.</div>;
   }
@@ -180,52 +301,43 @@ const OrdersTable = ({ orders, onOrderSelect }) => {
 </colgroup>
 
         <thead>
-          <tr>
-            <th>ORDER ID</th>
-            <th>NAME</th>
-            <th>MAIL</th>
-            <th>ORDER DATE</th>
-            <th>TICKET TYPE</th>
-            <th>RE-ISSUE EMAIL</th>
-            <th></th>
-          </tr>
+          {table.getHeaderGroups().map((headerGroup) => (
+            <tr key={headerGroup.id}>
+              {headerGroup.headers.map((header) => {
+                const isSortable = header.column.getCanSort();
+                const sortingState = header.column.getIsSorted();
+                const sortIndicator = sortingState === 'asc' ? ' ▲' : sortingState === 'desc' ? ' ▼' : '';
+
+                return (
+                  <th
+                    key={header.id}
+                    style={{ cursor: isSortable ? 'pointer' : 'default' }}
+                    onClick={isSortable ? header.column.getToggleSortingHandler() : undefined}
+                  >
+                    {header.isPlaceholder ? null : (
+                      <>
+                        {flexRender(header.column.columnDef.header, header.getContext())}
+                        {isSortable ? sortIndicator : null}
+                      </>
+                    )}
+                  </th>
+                );
+              })}
+            </tr>
+          ))}
         </thead>
 
         <tbody>
-          {orders.map((order) => (
-            <tr key={order.id} className={styles.tableRow} onClick={() => onOrderSelect(order)}>
-              <td className={styles.orderIdCell}>#{order.id}</td>
-
-              <td className={styles.nameCell}>{order.customer.name}</td>
-
-              <td className={styles.emailCell}>{order.customer.email}</td>
-
-              <td className={styles.dateCell}>{order.orderDate}</td>
-
-              <td>
-                <span className={styles.ticketType}>{order.ticketType}</span>
-              </td>
-
-              <td>
-                <button
-                  className={styles.reissueButton}
-                  onClick={(e) => handleReissueEmail(order.id, e)}
-                  disabled={loadingOrderId === order.id}
-                >
-                  {loadingOrderId === order.id ? 'Sending…' : <><FiMail /> Reissue</>}
-                </button>
-              </td>
-
-              <td className={styles.actionCell}>
-                <button
-                  className={styles.iconButton}
-                  title="Download"
-                  onClick={(e) => handleDownloadDetailsPDF(order, e)}
-                >
-                  <FiDownload />
-                </button>
-              </td>
-
+          {table.getRowModel().rows.map((row) => (
+            <tr key={row.id} className={styles.tableRow} onClick={() => onOrderSelect(row.original)}>
+              {row.getVisibleCells().map((cell) => {
+                const cellClassName = cell.column.columnDef.meta?.cellClassName;
+                return (
+                  <td key={cell.id} className={cellClassName}>
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </td>
+                );
+              })}
             </tr>
           ))}
         </tbody>
@@ -233,10 +345,16 @@ const OrdersTable = ({ orders, onOrderSelect }) => {
 
       <div className={styles.pagination}>
         <span>Rows per page: 10</span>
-        <span>1 - {orders.length} of {orders.length}</span>
+        <span>
+          {pageStart} - {pageEnd} of {totalRows}
+        </span>
         <div>
-          <button>&lt;</button>
-          <button>&gt;</button>
+          <button type="button" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}>
+            &lt;
+          </button>
+          <button type="button" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>
+            &gt;
+          </button>
         </div>
       </div>
     </div>

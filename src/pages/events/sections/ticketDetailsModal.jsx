@@ -17,8 +17,9 @@ const TicketDetailsModal = ({
   isOpen = false,
   onClose = () => {},
   onSave = () => {},
-  saveButtonText = "Create Ticket", // Add this line
-  editingTicket, // ADD THIS PROP
+  saveButtonText = "Create Ticket",
+  editingTicket,
+  allTickets = [],
 }) => {
   // State for active panel (Basic or Advance)
   const [activePanel, setActivePanel] = useState("basic");
@@ -43,12 +44,19 @@ const TicketDetailsModal = ({
     salesEndTime: "",
     isAdvance: false,
     description: "",
-    saleAfterTicket: "",
+    startsAfterTicketStructureId: null,
     ...ticket,
   });
 
   // Update local ticket when prop changes
   useEffect(() => {
+    const hasDependency =
+      ticket.startsAfterTicketStructureId != null &&
+      ticket.startsAfterTicketStructureId !== "" &&
+      Number.isFinite(Number(ticket.startsAfterTicketStructureId));
+
+    setSaleDateType(hasDependency ? "beforeAfter" : "custom");
+
     setLocalTicket({
       name: "",
       price: "",
@@ -63,7 +71,7 @@ const TicketDetailsModal = ({
       isAdvance: false,
       advanceAmount: "",
       description: "",
-      saleAfterTicket: "",
+      startsAfterTicketStructureId: null,
       ...ticket,
     });
 
@@ -123,8 +131,22 @@ const TicketDetailsModal = ({
    * Handle form submission
    */
   const handleSubmit = () => {
-    onSave(localTicket);
+    let startsAfterTicketStructureId = null;
+    if (saleDateType === "beforeAfter") {
+      const v = localTicket.startsAfterTicketStructureId;
+      if (v != null && v !== "" && Number.isFinite(Number(v))) {
+        startsAfterTicketStructureId = parseInt(String(v), 10);
+      }
+    }
+    onSave({
+      ...localTicket,
+      startsAfterTicketStructureId,
+    });
   };
+
+  const dependencyOptions = allTickets.filter(
+    (t) => t.id != null && t.id !== "" && (!editingTicket || t.id !== editingTicket.id)
+  );
 
   if (!isOpen) return null;
 
@@ -385,7 +407,9 @@ const TicketDetailsModal = ({
 
                 <div className={styles.formGroup}>
                   <label className={styles.formLabel}>Sale start/end</label>
-                  <p className={styles.formHelper}>Discount Codes</p>
+                  <p className={styles.formHelper}>
+                    Use fixed dates or start sales after another ticket sells out.
+                  </p>
 
                   <div className={styles.saleTypeToggle}>
                     <button
@@ -393,7 +417,13 @@ const TicketDetailsModal = ({
                       className={`${styles.saleTypeBtn} ${
                         saleDateType === "custom" ? styles.active : ""
                       }`}
-                      onClick={() => setSaleDateType("custom")}
+                      onClick={() => {
+                        setSaleDateType("custom");
+                        setLocalTicket((prev) => ({
+                          ...prev,
+                          startsAfterTicketStructureId: null,
+                        }));
+                      }}
                     >
                       Custom
                     </button>
@@ -413,10 +443,6 @@ const TicketDetailsModal = ({
                     <>
                       <div className={styles.formGroup}>
                         <label className={styles.formLabel}>Sales Start</label>
-                        <p className={styles.formHelper}>
-                          Enter the official name of your event that will be
-                          displayed to attendees
-                        </p>
 
                         <div className={styles.formRow}>
                           <div className={styles.formGroup}>
@@ -459,10 +485,6 @@ const TicketDetailsModal = ({
 
                       <div className={styles.formGroup}>
                         <label className={styles.formLabel}>Sales End</label>
-                        <p className={styles.formHelper}>
-                          Enter the official name of your event that will be
-                          displayed to attendees
-                        </p>
 
                         <div className={styles.formRow}>
                           <div className={styles.formGroup}>
@@ -513,15 +535,39 @@ const TicketDetailsModal = ({
                         Start sales after the selected ticket is sold out
                       </p>
 
-                      <input
-                        type="text"
-                        id="saleAfterTicket"
-                        name="saleAfterTicket"
-                        className={styles.formInput}
-                        placeholder="Select ticket type"
-                        value={localTicket.saleAfterTicket || ""}
-                        onChange={handleInputChange}
-                      />
+                      {dependencyOptions.length === 0 ? (
+                        <p className={styles.formHelper}>
+                          Add at least one other ticket with a saved ID to use
+                          this option.
+                        </p>
+                      ) : (
+                        <select
+                          id="startsAfterTicketStructureId"
+                          name="startsAfterTicketStructureId"
+                          className={styles.formSelect}
+                          value={
+                            localTicket.startsAfterTicketStructureId != null &&
+                            localTicket.startsAfterTicketStructureId !== ""
+                              ? String(localTicket.startsAfterTicketStructureId)
+                              : ""
+                          }
+                          onChange={(e) => {
+                            const v = e.target.value;
+                            setLocalTicket((prev) => ({
+                              ...prev,
+                              startsAfterTicketStructureId:
+                                v === "" ? null : parseInt(v, 10),
+                            }));
+                          }}
+                        >
+                          <option value="">Select ticket type</option>
+                          {dependencyOptions.map((t) => (
+                            <option key={t.id} value={String(t.id)}>
+                              {t.name || `Ticket #${t.id}`}
+                            </option>
+                          ))}
+                        </select>
+                      )}
                     </div>
                   )}
                 </div>
@@ -549,8 +595,9 @@ TicketDetailsModal.propTypes = {
   isOpen: PropTypes.bool,
   onClose: PropTypes.func,
   onSave: PropTypes.func,
-  saveButtonText: PropTypes.string, // Add this line
-  editingTicket: PropTypes.object, // ADD THIS PROP TYPE
+  saveButtonText: PropTypes.string,
+  editingTicket: PropTypes.object,
+  allTickets: PropTypes.array,
 };
 
 export default TicketDetailsModal;

@@ -596,6 +596,31 @@
   }
 }
 
+.payoutPagination {
+  display: flex;
+  justify-content: flex-end;
+  padding: 16px 24px;
+  color: #6B7280;
+  gap: 24px;
+  background: #ffffff;
+  border-top: 1px solid #E5E7EB;
+
+  button {
+    background: none;
+    border: none;
+    cursor: pointer;
+
+    &:hover {
+      color: #111827;
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+}
+
 .amountCell {
   font-weight: 600;
   color: #111827;

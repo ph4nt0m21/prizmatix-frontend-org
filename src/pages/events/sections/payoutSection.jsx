@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import PropTypes from 'prop-types';
 import { format } from 'date-fns';
 import styles from './payoutSection.module.scss';
+import { flexRender, getCoreRowModel, getPaginationRowModel, getSortedRowModel, useReactTable } from '@tanstack/react-table';
 
 import { ReactComponent as PlusIcon } from '../../../assets/icons/plus-icon.svg';
 import { ReactComponent as CardPaymentsIcon } from '../../../assets/icons/card-payments.svg';
@@ -162,6 +163,176 @@ const PayoutSection = ({ eventId, dashboardData, tableOnly = false }) => {
   const continueButtonText =
     payoutStep === 'display' ? (submitLoading ? 'Sending…' : 'Send request') : 'Continue';
 
+  const [payoutSorting, setPayoutSorting] = useState([]);
+  const [payoutPagination, setPayoutPagination] = useState({ pageIndex: 0, pageSize: 10 });
+
+  useEffect(() => {
+    setPayoutPagination((p) => ({ ...p, pageIndex: 0 }));
+  }, [payoutSorting]);
+
+  useEffect(() => {
+    setPayoutPagination((p) => ({ ...p, pageIndex: 0 }));
+  }, [requests?.length]);
+
+  const parseRequestedAtForSort = (requestedAt) => {
+    const t = new Date(requestedAt ?? '').getTime();
+    return Number.isNaN(t) ? 0 : t;
+  };
+
+  const payoutColumns = [
+    {
+      id: 'amount',
+      accessorFn: (row) => row.amount ?? 0,
+      header: 'Amount',
+      enableSorting: true,
+      sortingFn: (rowA, rowB) =>
+        parseFloat(rowA.original.amount ?? 0) - parseFloat(rowB.original.amount ?? 0),
+      cell: ({ row }) => formatCurrency(row.original.amount),
+      meta: { cellClassName: styles.amountCell },
+    },
+    {
+      id: 'type',
+      accessorFn: (row) => row.payoutType ?? '',
+      header: 'Type',
+      enableSorting: true,
+      cell: ({ row }) => PAYOUT_TYPE_LABEL[row.original.payoutType] ?? row.original.payoutType,
+    },
+    {
+      id: 'status',
+      accessorFn: (row) => row.status ?? '',
+      header: 'Status',
+      enableSorting: true,
+      cell: ({ row }) => (
+        <span
+          className={
+            row.original.status === 'PAID'
+              ? styles.statusPAID
+              : row.original.status === 'CANCELLED'
+              ? styles.statusCANCELLED
+              : styles.statusPENDING
+          }
+        >
+          {PAYOUT_STATUS_LABEL[row.original.status] ?? row.original.status}
+        </span>
+      ),
+    },
+    {
+      id: 'requestedAt',
+      accessorFn: (row) => row.requestedAt ?? '',
+      header: 'Requested',
+      enableSorting: true,
+      sortingFn: (rowA, rowB) =>
+        parseRequestedAtForSort(rowA.original.requestedAt) - parseRequestedAtForSort(rowB.original.requestedAt),
+      cell: ({ row }) =>
+        row.original.requestedAt ? format(new Date(row.original.requestedAt), 'dd MMM yyyy, HH:mm') : '—',
+      meta: { cellClassName: styles.dateCell },
+    },
+  ];
+
+  const payoutTable = useReactTable({
+    data: requests ?? [],
+    columns: payoutColumns,
+    state: { sorting: payoutSorting, pagination: payoutPagination },
+    onSortingChange: setPayoutSorting,
+    onPaginationChange: setPayoutPagination,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+  });
+
+  const payoutTotalRows = payoutTable.getPrePaginationRowModel().rows.length;
+  const payoutPageStart =
+    payoutTotalRows === 0 ? 0 : payoutPagination.pageIndex * payoutPagination.pageSize + 1;
+  const payoutPageEnd = Math.min((payoutPagination.pageIndex + 1) * payoutPagination.pageSize, payoutTotalRows);
+
+  const PayoutRequestsTable = () => (
+    <div className={styles.tableWrapper}>
+      <table className={styles.payoutTable}>
+        <thead>
+          {payoutTable.getHeaderGroups().map((headerGroup) => (
+            <tr key={headerGroup.id}>
+              {headerGroup.headers.map((header) => {
+                const isSortable = header.column.getCanSort();
+                const sortingState = header.column.getIsSorted();
+                const sortIndicator =
+                  sortingState === 'asc' ? ' ▲' : sortingState === 'desc' ? ' ▼' : '';
+
+                return (
+                  <th
+                    key={header.id}
+                    style={{ cursor: isSortable ? 'pointer' : 'default' }}
+                    onClick={isSortable ? header.column.getToggleSortingHandler() : undefined}
+                  >
+                    {header.isPlaceholder ? null : (
+                      <>
+                        {flexRender(header.column.columnDef.header, header.getContext())}
+                        {isSortable ? sortIndicator : null}
+                      </>
+                    )}
+                  </th>
+                );
+              })}
+            </tr>
+          ))}
+        </thead>
+        <tbody>
+          {payoutTable.getRowModel().rows.map((row) => (
+            <tr key={row.id}>
+              {row.getVisibleCells().map((cell) => {
+                const cellClassName = cell.column.columnDef.meta?.cellClassName;
+                return (
+                  <td key={cell.id} className={cellClassName}>
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </td>
+                );
+              })}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      <div className={styles.payoutPagination} aria-label="Payout table pagination">
+        <span>Rows per page: {payoutPagination.pageSize}</span>
+        <span>
+          {payoutPageStart} - {payoutPageEnd} of {payoutTotalRows}
+        </span>
+        <div>
+          <button
+            type="button"
+            onClick={() => payoutTable.setPageIndex(0)}
+            disabled={!payoutTable.getCanPreviousPage()}
+          >
+            &lt;&lt;
+          </button>
+          <button
+            type="button"
+            onClick={() => payoutTable.previousPage()}
+            disabled={!payoutTable.getCanPreviousPage()}
+            style={{ marginLeft: 8 }}
+          >
+            &lt;
+          </button>
+          <button
+            type="button"
+            onClick={() => payoutTable.nextPage()}
+            disabled={!payoutTable.getCanNextPage()}
+            style={{ marginLeft: 8 }}
+          >
+            &gt;
+          </button>
+          <button
+            type="button"
+            onClick={() => payoutTable.setPageIndex(Math.max(0, payoutTable.getPageCount() - 1))}
+            disabled={!payoutTable.getCanNextPage()}
+            style={{ marginLeft: 8 }}
+          >
+            &gt;&gt;
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
   if (loading) {
     if (tableOnly) {
       return <div className={styles.loadingState}>Loading payout data…</div>;
@@ -200,44 +371,7 @@ const PayoutSection = ({ eventId, dashboardData, tableOnly = false }) => {
             <p className={styles.noHistoryText}>No payout requests found for this event.</p>
           </div>
         ) : (
-          <div className={styles.tableWrapper}>
-            <table className={styles.payoutTable}>
-              <thead>
-                <tr>
-                  <th>Amount</th>
-                  <th>Type</th>
-                  <th>Status</th>
-                  <th>Requested</th>
-                </tr>
-              </thead>
-              <tbody>
-                {requests.map((req) => (
-                  <tr key={req.id}>
-                    <td className={styles.amountCell}>{formatCurrency(req.amount)}</td>
-                    <td>{PAYOUT_TYPE_LABEL[req.payoutType] ?? req.payoutType}</td>
-                    <td>
-                      <span
-                        className={
-                          req.status === 'PAID'
-                            ? styles.statusPAID
-                            : req.status === 'CANCELLED'
-                            ? styles.statusCANCELLED
-                            : styles.statusPENDING
-                        }
-                      >
-                        {PAYOUT_STATUS_LABEL[req.status] ?? req.status}
-                      </span>
-                    </td>
-                    <td className={styles.dateCell}>
-                      {req.requestedAt
-                        ? format(new Date(req.requestedAt), 'dd MMM yyyy, HH:mm')
-                        : '—'}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <PayoutRequestsTable />
         )}
       </div>
     );
@@ -301,44 +435,7 @@ const PayoutSection = ({ eventId, dashboardData, tableOnly = false }) => {
             )}
           </div>
         ) : (
-          <div className={styles.tableWrapper}>
-            <table className={styles.payoutTable}>
-              <thead>
-                <tr>
-                  <th>Amount</th>
-                  <th>Type</th>
-                  <th>Status</th>
-                  <th>Requested</th>
-                </tr>
-              </thead>
-              <tbody>
-                {requests.map((req) => (
-                  <tr key={req.id}>
-                    <td className={styles.amountCell}>{formatCurrency(req.amount)}</td>
-                    <td>{PAYOUT_TYPE_LABEL[req.payoutType] ?? req.payoutType}</td>
-                    <td>
-                      <span
-                        className={
-                          req.status === 'PAID'
-                            ? styles.statusPAID
-                            : req.status === 'CANCELLED'
-                            ? styles.statusCANCELLED
-                            : styles.statusPENDING
-                        }
-                      >
-                        {PAYOUT_STATUS_LABEL[req.status] ?? req.status}
-                      </span>
-                    </td>
-                    <td className={styles.dateCell}>
-                      {req.requestedAt
-                        ? format(new Date(req.requestedAt), 'dd MMM yyyy, HH:mm')
-                        : '—'}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <PayoutRequestsTable />
         )}
       </div>
 

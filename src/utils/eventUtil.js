@@ -308,6 +308,12 @@ export const prepareTicketsDataForAPI = (tickets, eventId = null) => {
         formatToISO(ticket.salesEndDate, ticket.salesEndTime) ||
         formatToISO(eventDateTime.endDate, eventDateTime.endTime);
 
+      const depRaw = ticket.startsAfterTicketStructureId;
+      const startsAfterTicketStructureId =
+        depRaw != null && depRaw !== "" && Number.isFinite(Number(depRaw))
+          ? parseInt(depRaw, 10)
+          : null;
+
       return {
         id: ticket.id || null,
         name: ticket.name,
@@ -321,6 +327,7 @@ export const prepareTicketsDataForAPI = (tickets, eventId = null) => {
         description: ticket.description || null,
         listingStartTime: listingStartTime,
         listingEndTime: listingEndTime,
+        startsAfterTicketStructureId,
         toBeDeleted: false,
       };
     }),

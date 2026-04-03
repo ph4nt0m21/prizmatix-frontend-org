@@ -50,7 +50,8 @@ const TicketsStep = ({
       salesEndDate: '',
       salesEndTime: '',
       isAdvance: false,
-      advanceAmount: ''
+      advanceAmount: '',
+      startsAfterTicketStructureId: null,
     });
     setCurrentTicketIndex(null);
     setActiveModalStep("basic");
@@ -112,6 +113,7 @@ const TicketsStep = ({
       salesEndTime: '',
       isAdvance: false,
       advanceAmount: '',
+      startsAfterTicketStructureId: null,
     };
     setTickets(prevTickets => [...prevTickets, newTicket]);
   };
@@ -280,6 +282,7 @@ const TicketsStep = ({
           activeStep={activeModalStep}
           setActiveStep={setActiveModalStep}
           allTickets={tickets}
+          excludeTicketIndex={currentTicketIndex}
         />
       )}
     </div>
