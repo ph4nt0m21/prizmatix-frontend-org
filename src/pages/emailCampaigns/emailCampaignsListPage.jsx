@@ -224,7 +224,7 @@
 // export default EmailCampaignsListPage;
 
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import {
@@ -233,6 +233,7 @@ import {
 } from '../../services/allApis';
 import { getUserData } from '../../utils/authUtil';
 import styles from './emailCampaignsListPage.module.scss';
+import { flexRender, getCoreRowModel, getPaginationRowModel, getSortedRowModel, useReactTable } from '@tanstack/react-table';
 
 // --- SVG Icons as Components ---
 const IconSearch = () => (
@@ -243,12 +244,6 @@ const IconEye = () => (
 );
 const IconMoreHorizontal = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg>
-);
-const IconDuplicate = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-  </svg>
 );
 const IconEdit = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -339,6 +334,130 @@ const EmailCampaignsListPage = () => {
     }
   };
 
+  const [sorting, setSorting] = useState([]);
+  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
+
+  useEffect(() => {
+    setPagination((p) => ({ ...p, pageIndex: 0 }));
+  }, [sorting]);
+
+  useEffect(() => {
+    setPagination((p) => ({ ...p, pageIndex: 0 }));
+  }, [campaigns?.length]);
+
+  const columns = [
+    {
+      id: 'campaignTitle',
+      accessorFn: (row) => row.campaignName || 'Untitled',
+      header: 'Campaign Title',
+      enableSorting: true,
+      cell: ({ row }) => row.original.campaignName || 'Untitled',
+      meta: { cellClassName: styles.titleCell },
+    },
+    {
+      id: 'subject',
+      accessorFn: (row) => row.subject ?? '',
+      header: 'Subject',
+      enableSorting: true,
+      cell: ({ row }) => row.original.subject,
+      meta: { cellClassName: styles.subjectCell },
+    },
+    {
+      id: 'createdAt',
+      accessorFn: (row) => row.createdAt ?? '',
+      header: 'Order Date',
+      enableSorting: true,
+      sortingFn: (rowA, rowB) => {
+        const a = new Date(rowA.original.createdAt ?? '').getTime();
+        const b = new Date(rowB.original.createdAt ?? '').getTime();
+        const na = Number.isNaN(a) ? 0 : a;
+        const nb = Number.isNaN(b) ? 0 : b;
+        return na - nb;
+      },
+      cell: ({ row }) => {
+        const createdAt = row.original.createdAt;
+        return createdAt
+          ? new Date(createdAt).toLocaleString('en-GB', {
+              day: '2-digit',
+              month: 'short',
+              year: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit',
+              hour12: true,
+            })
+          : '';
+      },
+      meta: { cellClassName: styles.dateCell },
+    },
+    {
+      id: 'actions',
+      header: () => null,
+      enableSorting: false,
+      cell: ({ row }) => {
+        const c = row.original;
+
+        return (
+          <div className={styles.actions}>
+            <button
+              type="button"
+              className={styles.iconButton}
+              title="Preview"
+              onClick={() => handleView(c.id)}
+            >
+              <IconEye />
+            </button>
+
+            <button
+              type="button"
+              className={styles.iconButton}
+              title="More options"
+              onClick={() => setOpenMenuId(openMenuId === c.id ? null : c.id)}
+            >
+              <IconMoreHorizontal />
+            </button>
+
+            {openMenuId === c.id && (
+              <div className={styles.dropdownMenu} ref={menuRef}>
+                <button
+                  type="button"
+                  className={styles.dropdownItem}
+                  onClick={() => handleEdit(c.id)}
+                >
+                  <IconEdit /> Edit
+                </button>
+                <button
+                  type="button"
+                  className={`${styles.dropdownItem} ${styles.deleteItem}`}
+                  onClick={() => handleDelete(c.id)}
+                  disabled={deletingId === c.id}
+                >
+                  <IconDelete /> {deletingId === c.id ? 'Deleting...' : 'Delete'}
+                </button>
+              </div>
+            )}
+          </div>
+        );
+      },
+      meta: { cellClassName: styles.actionsCell },
+    },
+  ];
+
+  const table = useReactTable({
+    data: campaigns ?? [],
+    columns,
+    state: { sorting, pagination },
+    onSortingChange: setSorting,
+    onPaginationChange: setPagination,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    getRowId: (row) => String(row.id),
+  });
+
+  const totalRows = table.getPrePaginationRowModel().rows.length;
+  const pageStart = totalRows === 0 ? 0 : pagination.pageIndex * pagination.pageSize + 1;
+  const pageEnd = Math.min((pagination.pageIndex + 1) * pagination.pageSize, totalRows);
+
   if (!isLoading && (!campaigns || campaigns.length === 0)) {
     return (
       <div className={styles.container}>
@@ -396,12 +515,32 @@ const EmailCampaignsListPage = () => {
         <div className={styles.tableWrapper}>
           <table className={styles.table}>
             <thead>
-              <tr>
-                <th>Campaign Title</th>
-                <th>Subject</th>
-                <th>Order Date</th>
-                <th style={{ width: 60 }} />
-              </tr>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <tr key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => {
+                    const isSortable = header.column.getCanSort();
+                    const sortingState = header.column.getIsSorted();
+                    const sortIndicator =
+                      sortingState === 'asc' ? ' ▲' : sortingState === 'desc' ? ' ▼' : '';
+                    const thStyle = header.column.id === 'actions' ? { width: 60 } : undefined;
+
+                    return (
+                      <th
+                        key={header.id}
+                        style={thStyle}
+                        onClick={isSortable ? header.column.getToggleSortingHandler() : undefined}
+                      >
+                        {header.isPlaceholder ? null : (
+                          <>
+                            {flexRender(header.column.columnDef.header, header.getContext())}
+                            {isSortable ? sortIndicator : null}
+                          </>
+                        )}
+                      </th>
+                    );
+                  })}
+                </tr>
+              ))}
             </thead>
             <tbody>
               {isLoading ? (
@@ -411,73 +550,16 @@ const EmailCampaignsListPage = () => {
                   </td>
                 </tr>
               ) : (
-                campaigns.map((c) => (
-                  <tr key={c.id}>
-                    <td className={styles.titleCell}>{c.campaignName || 'Untitled'}</td>
-                    <td className={styles.subjectCell}>{c.subject}</td>
-                    <td className={styles.dateCell}>
-                      {c.createdAt
-                        ? new Date(c.createdAt).toLocaleString('en-GB', {
-                            day: '2-digit',
-                            month: 'short',
-                            year: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                            hour12: true
-                          })
-                        : ''}
-                    </td>
-                    <td className={styles.actionsCell}>
-                      <div className={styles.actions}>
-                        {/* Eye icon if you want preview button visible */}
-                        <button
-                          type="button"
-                          className={styles.iconButton}
-                          title="Preview"
-                          onClick={() => handleView(c.id)}
-                        >
-                          <IconEye />
-                        </button>
-                        <button
-                          type="button"
-                          className={styles.iconButton}
-                          title="More options"
-                          onClick={() =>
-                            setOpenMenuId(openMenuId === c.id ? null : c.id)
-                          }
-                        >
-                          <IconMoreHorizontal />
-                        </button>
-
-                        {openMenuId === c.id && (
-                          <div className={styles.dropdownMenu} ref={menuRef}>
-                            {/* <button
-                              type="button"
-                              className={styles.dropdownItem}
-                              onClick={() => handleDuplicate(c.id)}
-                            >
-                              <IconDuplicate /> Duplicate
-                            </button> */}
-                            <button
-                              type="button"
-                              className={styles.dropdownItem}
-                              onClick={() => handleEdit(c.id)}
-                            >
-                              <IconEdit /> Edit
-                            </button>
-                            <button
-                              type="button"
-                              className={`${styles.dropdownItem} ${styles.deleteItem}`}
-                              onClick={() => handleDelete(c.id)}
-                              disabled={deletingId === c.id}
-                            >
-                              <IconDelete />{' '}
-                              {deletingId === c.id ? 'Deleting...' : 'Delete'}
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    </td>
+                table.getRowModel().rows.map((row) => (
+                  <tr key={row.id}>
+                    {row.getVisibleCells().map((cell) => {
+                      const cellClassName = cell.column.columnDef.meta?.cellClassName;
+                      return (
+                        <td key={cell.id} className={cellClassName}>
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        </td>
+                      );
+                    })}
                   </tr>
                 ))
               )}
@@ -488,18 +570,33 @@ const EmailCampaignsListPage = () => {
         <div className={styles.footer}>
           <div className={styles.rowsPerPage}>
             <span>Rows per page:</span>
-            <select defaultValue="10">
-              <option value="10">10</option>
-              <option value="25">25</option>
-              <option value="50">50</option>
+            <select
+              value={pagination.pageSize}
+              onChange={(e) => setPagination({ pageIndex: 0, pageSize: Number(e.target.value) })}
+            >
+              <option value={10}>10</option>
+              <option value={25}>25</option>
+              <option value={50}>50</option>
             </select>
           </div>
           <div className={styles.pageInfo}>
-            1–{campaigns?.length || 0} of {campaigns?.length || 0}
+            {pageStart}–{pageEnd} of {totalRows}
           </div>
           <div className={styles.paginationActions}>
-            <button type="button">&lt;</button>
-            <button type="button">&gt;</button>
+            <button
+              type="button"
+              onClick={() => table.previousPage()}
+              disabled={!table.getCanPreviousPage()}
+            >
+              &lt;
+            </button>
+            <button
+              type="button"
+              onClick={() => table.nextPage()}
+              disabled={!table.getCanNextPage()}
+            >
+              &gt;
+            </button>
           </div>
         </div>
       </div>

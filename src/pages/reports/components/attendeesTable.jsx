@@ -62,23 +62,79 @@
 
 // export default AttendeesTable;
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { flexRender, getCoreRowModel, getPaginationRowModel, getSortedRowModel, useReactTable } from '@tanstack/react-table';
 import styles from './attendeesTable.module.scss';
-import { FiCheck } from 'react-icons/fi';
 
-const AttendeesTable = ({ attendees, onCheckIn }) => {
-  if (!attendees || attendees.length === 0) {
-    return <div className={styles.noResults}>No attendees found.</div>;
-  }
+const DEFAULT_PAGE_SIZE = 10;
+
+const AttendeesTable = ({ attendees }) => {
+  const [sorting, setSorting] = useState([]);
+  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: DEFAULT_PAGE_SIZE });
 
   const getTicketTypeClass = (type) => {
     switch (String(type).toLowerCase()) {
-      case 'vip': return styles.vip;
-      case 'standard': return styles.standard;
+      case 'vip':
+        return styles.vip;
+      case 'standard':
+        return styles.standard;
       case 'early bird':
-      default: return styles.earlyBird;
+      default:
+        return styles.earlyBird;
     }
   };
+
+  useEffect(() => {
+    setPagination((p) => ({ ...p, pageIndex: 0 }));
+  }, [sorting]);
+
+  useEffect(() => {
+    setPagination((p) => ({ ...p, pageIndex: 0 }));
+  }, [attendees?.length]);
+
+  const columns = [
+    {
+      id: 'name',
+      accessorFn: (row) => row.name ?? '',
+      header: 'Name',
+      enableSorting: true,
+      cell: (info) => info.getValue(),
+      meta: { cellClassName: styles.nameCell },
+    },
+    {
+      id: 'ticketType',
+      accessorFn: (row) => row.ticketType ?? '',
+      header: 'Ticket Type',
+      enableSorting: true,
+      cell: (info) => {
+        const ticketType = info.getValue();
+        return (
+          <span className={`${styles.ticketType} ${getTicketTypeClass(ticketType)}`}>
+            {ticketType}
+          </span>
+        );
+      },
+    },
+  ];
+
+  const table = useReactTable({
+    data: attendees ?? [],
+    columns,
+    state: { sorting, pagination },
+    onSortingChange: setSorting,
+    onPaginationChange: setPagination,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+  });
+
+  const totalRows = table.getPrePaginationRowModel().rows.length;
+  const pageStart = totalRows === 0 ? 0 : pagination.pageIndex * pagination.pageSize + 1;
+  const pageEnd = Math.min((pagination.pageIndex + 1) * pagination.pageSize, totalRows);
+
+  if (!attendees || attendees.length === 0) {
+    return <div className={styles.noResults}>No attendees found.</div>;
+  }
 
   return (
     <>
@@ -90,32 +146,61 @@ const AttendeesTable = ({ attendees, onCheckIn }) => {
           </colgroup>
 
           <thead>
-            <tr>
-              <th>Name</th>
-              <th>Ticket Type</th>
-            </tr>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <tr key={headerGroup.id}>
+                {headerGroup.headers.map((header) => {
+                  const isSortable = header.column.getCanSort();
+                  const sortingState = header.column.getIsSorted();
+                  const sortIndicator = sortingState === 'asc' ? ' ▲' : sortingState === 'desc' ? ' ▼' : '';
+
+                  return (
+                    <th
+                      key={header.id}
+                      style={{ cursor: isSortable ? 'pointer' : 'default' }}
+                      onClick={isSortable ? header.column.getToggleSortingHandler() : undefined}
+                    >
+                      {header.isPlaceholder ? null : (
+                        <>
+                          {flexRender(header.column.columnDef.header, header.getContext())}
+                          {isSortable ? sortIndicator : null}
+                        </>
+                      )}
+                    </th>
+                  );
+                })}
+              </tr>
+            ))}
           </thead>
 
           <tbody>
-            {attendees.map((attendee) => (
-              <tr key={attendee.id} className={styles.tableRow}>
-                <td className={styles.nameCell}>{attendee.name}</td>
-                <td>
-                  <span className={`${styles.ticketType} ${getTicketTypeClass(attendee.ticketType)}`}>
-                    {attendee.ticketType}
-                  </span>
-                </td>
+            {table.getRowModel().rows.map((row) => (
+              <tr key={row.id} className={styles.tableRow}>
+                {row.getVisibleCells().map((cell) => {
+                  const cellClassName = cell.column.columnDef.meta?.cellClassName;
+                  return (
+                    <td key={cell.id} className={cellClassName}>
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </td>
+                  );
+                })}
               </tr>
             ))}
           </tbody>
         </table>
       </div>
-      <div className={styles.pagination}>
-        <span>Rows per page: 10</span>
-        <span>1 - {attendees.length} of {attendees.length}</span>
+
+      <div className={styles.pagination} aria-label="Table pagination">
+        <span>Rows per page: {pagination.pageSize}</span>
+        <span>
+          {pageStart} - {pageEnd} of {totalRows}
+        </span>
         <div>
-          <button type="button">&lt;</button>
-          <button type="button">&gt;</button>
+          <button type="button" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}>
+            &lt;
+          </button>
+          <button type="button" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>
+            &gt;
+          </button>
         </div>
       </div>
     </>

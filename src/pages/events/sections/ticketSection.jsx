@@ -90,6 +90,10 @@ const TicketSection = () => {
       salesStartTime: ticket.listingStartTime ? new Date(ticket.listingStartTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '',
       salesEndDate: ticket.listingEndTime ? new Date(ticket.listingEndTime).toLocaleDateString() : '',
       salesEndTime: ticket.listingEndTime ? new Date(ticket.listingEndTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '',
+      startsAfterTicketStructureId:
+        ticket.startsAfterTicketStructureId != null
+          ? ticket.startsAfterTicketStructureId
+          : null,
     };
     setEditingTicket(mappedTicket);
     setIsModalOpen(true);
@@ -140,6 +144,12 @@ const TicketSection = () => {
       const listingStartTime = formatDateTimeForAPI(ticketData.salesStartDate, ticketData.salesStartTime) || fallbackListingStartTime;
       const listingEndTime = formatDateTimeForAPI(ticketData.salesEndDate, ticketData.salesEndTime) || formatDateTimeForAPI(eventDateTime.endDate, eventDateTime.endTime);
       
+      const depRaw = ticketData.startsAfterTicketStructureId;
+      const startsAfterTicketStructureId =
+        depRaw != null && depRaw !== "" && Number.isFinite(Number(depRaw))
+          ? parseInt(depRaw, 10)
+          : null;
+
       const commonPayload = {
         name: ticketData.name,
         price: parseFloat(ticketData.price),
@@ -151,6 +161,7 @@ const TicketSection = () => {
         description: ticketData.description || null,
         listingStartTime: listingStartTime,
         listingEndTime: listingEndTime,
+        startsAfterTicketStructureId,
         isActive: true, // Assuming new/updated tickets are active
         isDeleted: false, // Assuming new/updated tickets are not deleted
         soldOut: false, // This might be set by backend based on ticketCapacity and sales
@@ -322,7 +333,8 @@ const TicketSection = () => {
         onSave={handleSaveTicket}
         ticket={editingTicket || {}}
         saveButtonText={editingTicket ? "Save Changes" : "Create Ticket"}
-        editingTicket={editingTicket} // Pass editingTicket prop to the modal
+        editingTicket={editingTicket}
+        allTickets={tickets}
       />
     </>
   );
