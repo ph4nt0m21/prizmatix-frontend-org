@@ -9,6 +9,7 @@
   padding: 4px;
   margin: 0;
   background-color: #ffffff;
+  min-width: 300px;
 
   @media (max-width: 768px) {
     flex-direction: column; // Stack panels vertically

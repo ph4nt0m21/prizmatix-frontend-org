@@ -124,9 +124,9 @@ const LoginPage = () => {
       {/* Right Panel with form */}
       <div className={styles.rightPanel}>
         <div className={styles.header}>
-          <button className={styles.backButton} onClick={handleGoBack} aria-label="Go back">
+          {/* <button className={styles.backButton} onClick={handleGoBack} aria-label="Go back">
             <ArrowIcon className={styles.backIcon} />
-          </button>
+          </button> */}
           <div className={styles.logoContainer}>
             <img src={logoImage} alt="Prizmatix Logo" className={styles.logo} />
           </div>
