@@ -457,6 +457,8 @@ const EmailCampaignsListPage = () => {
   const totalRows = table.getPrePaginationRowModel().rows.length;
   const pageStart = totalRows === 0 ? 0 : pagination.pageIndex * pagination.pageSize + 1;
   const pageEnd = Math.min((pagination.pageIndex + 1) * pagination.pageSize, totalRows);
+  const getColumnLabel = (column) =>
+    typeof column.columnDef.header === 'string' ? column.columnDef.header : '';
 
   if (!isLoading && (!campaigns || campaigns.length === 0)) {
     return (
@@ -555,7 +557,7 @@ const EmailCampaignsListPage = () => {
                     {row.getVisibleCells().map((cell) => {
                       const cellClassName = cell.column.columnDef.meta?.cellClassName;
                       return (
-                        <td key={cell.id} className={cellClassName}>
+                        <td key={cell.id} className={cellClassName} data-label={getColumnLabel(cell.column)}>
                           {flexRender(cell.column.columnDef.cell, cell.getContext())}
                         </td>
                       );

@@ -556,7 +556,7 @@
 
 .tableWrapper {
   width: 100%;
-  overflow-x: auto;
+  overflow-x: visible;
   background: #fff;
   border-radius: 8px;
   border: 1px solid #E5E7EB;
@@ -599,11 +599,27 @@
 .payoutPagination {
   display: flex;
   justify-content: flex-end;
+  align-items: center;
+  flex-wrap: wrap;
   padding: 16px 24px;
   color: #6B7280;
   gap: 24px;
   background: #ffffff;
   border-top: 1px solid #E5E7EB;
+
+  .rowsPerPage {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    select {
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      padding: 4px 8px;
+      background: #fff;
+      font-size: 14px;
+    }
+  }
 
   button {
     background: none;
@@ -658,4 +674,35 @@
 .statusCANCELLED {
   border: 1px solid #6B7280;
   color: #6B7280;
+}
+
+@media (max-width: 900px) {
+  .payoutTable thead {
+    display: none;
+  }
+
+  .payoutTable tbody tr {
+    display: block;
+    margin: 0 0 12px;
+    border: 1px solid #E5E7EB;
+    border-radius: 8px;
+    background: #fff;
+  }
+
+  .payoutTable td {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+  }
+
+  .payoutTable td::before {
+    content: attr(data-label);
+    font-size: 11px;
+    color: #6B7280;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
 }

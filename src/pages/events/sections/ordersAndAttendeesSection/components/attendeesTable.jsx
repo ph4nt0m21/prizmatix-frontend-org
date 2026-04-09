@@ -131,6 +131,8 @@ const AttendeesTable = ({ attendees }) => {
   const totalRows = table.getPrePaginationRowModel().rows.length;
   const pageStart = totalRows === 0 ? 0 : pagination.pageIndex * pagination.pageSize + 1;
   const pageEnd = Math.min((pagination.pageIndex + 1) * pagination.pageSize, totalRows);
+  const getColumnLabel = (column) =>
+    typeof column.columnDef.header === 'string' ? column.columnDef.header : '';
 
   if (!attendees || attendees.length === 0) {
     return <div className={styles.noResults}>No attendees found.</div>;
@@ -177,7 +179,7 @@ const AttendeesTable = ({ attendees }) => {
               {row.getVisibleCells().map((cell) => {
                 const cellClassName = cell.column.columnDef.meta?.cellClassName;
                 return (
-                  <td key={cell.id} className={cellClassName}>
+                  <td key={cell.id} className={cellClassName} data-label={getColumnLabel(cell.column)}>
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </td>
                 );
@@ -188,7 +190,19 @@ const AttendeesTable = ({ attendees }) => {
       </table>
 
       <div className={styles.pagination} aria-label="Table pagination">
-        <span>Rows per page: {pagination.pageSize}</span>
+        <div className={styles.rowsPerPage}>
+          <span>Rows per page:</span>
+          <select
+            value={pagination.pageSize}
+            onChange={(e) =>
+              setPagination({ pageIndex: 0, pageSize: Number(e.target.value) })
+            }
+          >
+            <option value={10}>10</option>
+            <option value={25}>25</option>
+            <option value={50}>50</option>
+          </select>
+        </div>
         <span>
           {pageStart} - {pageEnd} of {totalRows}
         </span>

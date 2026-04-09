@@ -4,7 +4,7 @@
 .tableContainer {
   width: 100%;
   max-height: calc(100vh - 400px);
-  overflow-x: auto;
+  overflow-x: visible;
   overflow-y: auto;
   background: #ffffff;
   -webkit-overflow-scrolling: touch;
@@ -200,11 +200,27 @@
 .pagination {
   display: flex;
   justify-content: flex-end;
+  align-items: center;
+  flex-wrap: wrap;
   padding: 16px 24px;
   color: #6B7280;
   gap: 24px;
   background: #ffffff;
   border-top: 1px solid #E5E7EB;
+
+  .rowsPerPage {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    select {
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      padding: 4px 8px;
+      background: #fff;
+      font-size: 14px;
+    }
+  }
 
   button {
     background: none;
@@ -214,6 +230,11 @@
     &:hover {
       color: #111827;
     }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
   }
 }
 
@@ -221,4 +242,45 @@
   text-align: center;
   padding: 40px;
   color: #6B7280;
+}
+
+@media (max-width: 900px) {
+  .tableContainer {
+    max-height: none;
+    overflow-y: visible;
+  }
+
+  .table {
+    min-width: 100%;
+    table-layout: auto;
+  }
+
+  .table thead {
+    display: none;
+  }
+
+  .table tbody tr {
+    display: block;
+    margin: 0 0 12px;
+    border: 1px solid #E5E7EB;
+    border-radius: 8px;
+    background: #fff;
+  }
+
+  .table td {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+  }
+
+  .table td::before {
+    content: attr(data-label);
+    font-size: 11px;
+    color: #6B7280;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
 }
