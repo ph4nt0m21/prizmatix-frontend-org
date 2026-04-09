@@ -364,7 +364,7 @@ const PayoutSection = ({ eventId, dashboardData, tableOnly = false }) => {
   if (tableOnly) {
     return (
       <div className={styles.payoutHistorySection} style={{ marginTop: 0, border: 'none', padding: 0 }}>
-        <h3 className={styles.historyTitle} style={{ textAlign: 'center', marginBottom: '24px' }}>Payout requests</h3>
+        <h3 className={styles.historyTitle} style={{ textAlign: 'center', margin: '24px' }}>Payout requests</h3>
         {requests.length === 0 ? (
           <div className={styles.noHistoryPlaceholder}>
             <CardPaymentsIcon className={styles.noHistoryIcon} />
