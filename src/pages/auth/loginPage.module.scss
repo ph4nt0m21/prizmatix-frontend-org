@@ -9,6 +9,7 @@
   padding: 4px;
   margin: 0;
   background-color: #ffffff;
+  min-width: 300px;
 
   @media (max-width: 768px) {
     flex-direction: column; // Stack panels vertically
@@ -290,13 +291,12 @@
   align-items: center;
   width: 100%;
   margin-top: 0;
-  margin-bottom: 20px;
+  margin-bottom: 10px;
 
   @media (max-width: 768px) {
     flex-direction: column; // Stack remember me and forgot password vertically
     align-items: flex-start; // Align items to the start
-    gap: 10px; // Add some space between them
-    margin-bottom: 15px; // Slightly reduce margin
+    gap: 30px; // Add some space between them
   }
 }
 
@@ -307,6 +307,7 @@
   font-size: 14px;
   color: #6b7280;
   cursor: pointer;
+  margin-left:20px;
 }
 
 .checkbox {
