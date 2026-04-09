@@ -447,7 +447,7 @@
   border-radius: 12px 12px 0 0;
   border: 1px solid #e5e7eb;
   box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  overflow-x: auto;
+  overflow-x: visible;
 }
 
 .table {
@@ -687,5 +687,41 @@
     &:hover {
       background-color: #6d28d9;
     }
+  }
+}
+
+@media (max-width: 900px) {
+  .table {
+    min-width: 100%;
+    table-layout: auto;
+  }
+
+  .table thead {
+    display: none;
+  }
+
+  .table tbody tr {
+    display: block;
+    margin: 0 0 12px;
+    border: 1px solid #E5E7EB;
+    border-radius: 8px;
+    background: #fff;
+  }
+
+  .table td {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+  }
+
+  .table td::before {
+    content: attr(data-label);
+    font-size: 11px;
+    color: #6B7280;
+    text-transform: uppercase;
+    font-weight: 600;
   }
 }
