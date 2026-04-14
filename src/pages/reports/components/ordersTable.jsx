@@ -287,15 +287,6 @@ const OrdersTable = ({ orders, onOrderSelect }) => {
     <>
       <div className={styles.tableContainer}>
         <table className={styles.table}>
-        <colgroup>
-  <col style={{ width: '110px' }} />      {/* order id */}
-  <col style={{ width: '160px' }} />      {/* name */}
-  <col style={{ width: '260px' }} />      {/* mail */}
-  <col style={{ width: '180px' }} />      {/* order date */}
-  <col style={{ width: '140px' }} />      {/* ticket type */}
-  <col style={{ width: '160px' }} />      {/* reissue btn */}
-  <col style={{ width: '60px' }} />       {/* icon */}
-</colgroup>
         <thead>
           {table.getHeaderGroups().map((headerGroup) => (
             <tr key={headerGroup.id}>

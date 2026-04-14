@@ -213,7 +213,7 @@
   }
 
   .table tbody tr {
-    display: block;
+    display: table-row;
     margin: 0 0 12px;
     border: 1px solid #E5E7EB;
     border-radius: 8px;
@@ -221,7 +221,7 @@
   }
 
   .table td {
-    display: flex;
+    display: table-cell;
     justify-content: space-between;
     gap: 12px;
     white-space: normal;
