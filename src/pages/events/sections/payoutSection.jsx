@@ -244,6 +244,8 @@ const PayoutSection = ({ eventId, dashboardData, tableOnly = false }) => {
   const payoutPageStart =
     payoutTotalRows === 0 ? 0 : payoutPagination.pageIndex * payoutPagination.pageSize + 1;
   const payoutPageEnd = Math.min((payoutPagination.pageIndex + 1) * payoutPagination.pageSize, payoutTotalRows);
+  const getColumnLabel = (column) =>
+    typeof column.columnDef.header === 'string' ? column.columnDef.header : '';
 
   const PayoutRequestsTable = () => (
     <div className={styles.tableWrapper}>
@@ -281,7 +283,7 @@ const PayoutSection = ({ eventId, dashboardData, tableOnly = false }) => {
               {row.getVisibleCells().map((cell) => {
                 const cellClassName = cell.column.columnDef.meta?.cellClassName;
                 return (
-                  <td key={cell.id} className={cellClassName}>
+                  <td key={cell.id} className={cellClassName} data-label={getColumnLabel(cell.column)}>
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </td>
                 );
@@ -292,7 +294,19 @@ const PayoutSection = ({ eventId, dashboardData, tableOnly = false }) => {
       </table>
 
       <div className={styles.payoutPagination} aria-label="Payout table pagination">
-        <span>Rows per page: {payoutPagination.pageSize}</span>
+        <div className={styles.rowsPerPage}>
+          <span>Rows per page:</span>
+          <select
+            value={payoutPagination.pageSize}
+            onChange={(e) =>
+              setPayoutPagination({ pageIndex: 0, pageSize: Number(e.target.value) })
+            }
+          >
+            <option value={10}>10</option>
+            <option value={25}>25</option>
+            <option value={50}>50</option>
+          </select>
+        </div>
         <span>
           {payoutPageStart} - {payoutPageEnd} of {payoutTotalRows}
         </span>

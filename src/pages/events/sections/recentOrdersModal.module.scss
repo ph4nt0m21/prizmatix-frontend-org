@@ -52,7 +52,7 @@
 /* NEW: Container to handle horizontal scrolling */
 .tableContainer {
   width: 100%;
-  overflow-x: auto;
+  overflow-x: visible;
   border-radius: 8px;
   border: 1px solid #E5E7EB;
   background: #ffffff;
@@ -95,11 +95,27 @@
 .pagination {
   display: flex;
   justify-content: flex-end;
+  align-items: center;
+  flex-wrap: wrap;
   padding: 16px 24px;
   color: #6B7280;
   gap: 24px;
   background: #ffffff;
   border-top: 1px solid #E5E7EB;
+
+  .rowsPerPage {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    select {
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      padding: 4px 8px;
+      background: #fff;
+      font-size: 14px;
+    }
+  }
 
   button {
     background: none;
@@ -114,5 +130,36 @@
       opacity: 0.5;
       cursor: not-allowed;
     }
+  }
+}
+
+@media (max-width: 900px) {
+  .table thead {
+    display: none;
+  }
+
+  .table tbody tr {
+    display: block;
+    margin: 0 0 12px;
+    border: 1px solid #E5E7EB;
+    border-radius: 8px;
+    background: #fff;
+  }
+
+  .table td {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+  }
+
+  .table td::before {
+    content: attr(data-label);
+    font-size: 11px;
+    color: #6B7280;
+    text-transform: uppercase;
+    font-weight: 600;
   }
 }
