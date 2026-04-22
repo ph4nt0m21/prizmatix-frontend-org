@@ -4,6 +4,7 @@ import styles from './overviewSection.module.scss';
 import Chart from 'react-apexcharts';
 import { format, startOfWeek, startOfMonth, startOfYear } from 'date-fns';
 import RecentOrdersModal from './recentOrdersModal';
+import { getPublishedEventTimingStatus } from '../eventStatusUtils';
 
 const OverviewSection = ({ dashboardData, eventData }) => {
   // --- All hooks are now at the top level, before any returns ---
@@ -79,12 +80,9 @@ const OverviewSection = ({ dashboardData, eventData }) => {
     return date.toLocaleDateString('en-US', { day: 'numeric', weekday: 'short', month: 'short', year: 'numeric' });
   };
   
-  let eventStatus = 'Past';
-  if (eventData.isPublished) {
-    const now = new Date();
-    const eventEndDate = eventData.endDate ? new Date(eventData.endDate) : new Date(eventData.startDate);
-    eventStatus = eventEndDate < now ? 'Past' : 'Live';
-  }
+  const eventStatus = eventData.isPublished
+    ? getPublishedEventTimingStatus(eventData)
+    : 'DRAFT';
   
   const locationString = [eventData.location?.city, eventData.location?.country].filter(Boolean).join(', ');
   const dateString = formatDate(eventData.startDate);

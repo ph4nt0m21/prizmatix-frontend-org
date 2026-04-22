@@ -228,9 +228,6 @@ const ResetPasswordPage = () => {
             </div>
           </div>
           
-          <div className={styles.footerContainer}>
-            <p className={styles.copyrightText}>Copyright© 2025 PRIZMATIX</p>
-          </div>
         </div>
       </div>
     );
@@ -417,9 +414,6 @@ const ResetPasswordPage = () => {
           </form>
         </div>
         
-        <div className={styles.footerContainer}>
-          <p className={styles.copyrightText}>Copyright© 2025 PRIZMATIX</p>
-        </div>
       </div>
     </div>
   );

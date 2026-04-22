@@ -210,11 +210,6 @@ const LoginPage = () => {
           </div>
         </div>
 
-        <div className={styles.footer}>
-          <p className={styles.copyright}>
-            Copyright © 2025 <span className={styles.companyName}>Prizmatix</span>
-          </p>
-        </div>
       </div>
     </div>
   );

@@ -9,6 +9,12 @@
   padding: 20px 24px;
   background: #F9FAFB;
   border-bottom: 1px solid #E5E7EB;
+
+  @media (max-width: 768px) {
+    padding: 16px;
+    gap: 12px;
+    align-items: stretch;
+  }
 }
 
 .filterRow {
@@ -17,6 +23,13 @@
   gap: 16px 24px;
   flex: 1;
   align-items: flex-end;
+
+  @media (max-width: 768px) {
+    width: 100%;
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+  }
 }
 
 .filterField {
@@ -24,11 +37,17 @@
   flex-direction: column;
   gap: 6px;
   min-width: 200px;
+  flex: 1;
 
   label {
     font-size: 13px;
     font-weight: 500;
     color: #374151;
+  }
+
+  @media (max-width: 768px) {
+    min-width: 0;
+    width: 100%;
   }
 }
 
@@ -39,6 +58,7 @@
   font-size: 14px;
   background: #FFFFFF;
   min-width: 180px;
+  width: 100%;
 
   &:focus {
     outline: none;
@@ -55,17 +75,34 @@
   display: flex;
   align-items: center;
   gap: 8px;
+
+  @media (max-width: 768px) {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
 }
 
 .dateSeparator {
   font-size: 13px;
   color: #6B7280;
+
+  @media (max-width: 768px) {
+    text-align: center;
+  }
 }
 
 .filterActions {
   display: flex;
   gap: 12px;
   margin-left: auto;
+
+  @media (max-width: 768px) {
+    width: 100%;
+    margin-left: 0;
+    justify-content: flex-end;
+  }
 }
 
 .clearBtn {
@@ -81,6 +118,10 @@
   &:hover {
     background: #F9FAFB;
   }
+
+  @media (max-width: 768px) {
+    min-width: 84px;
+  }
 }
 
 .applyBtn {
@@ -95,5 +136,9 @@
 
   &:hover {
     background: #6D28D9;
+  }
+
+  @media (max-width: 768px) {
+    min-width: 132px;
   }
 }

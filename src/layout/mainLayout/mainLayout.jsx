@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import Header from '../../layout/header/header';
-import Footer from '../../layout/footer/footer'; // Assuming Footer is used elsewhere
 import SideNavBar from '../../layout/sideNavBar/sideNavbar';
 import styles from './mainLayout.module.scss';
 import ErrorBoundary from '../../components/common/errorBoundary/errorBoundary';
@@ -60,8 +59,6 @@ const MainLayout = () => {
           </ErrorBoundary>
         </main>
 
-        {/* Footer (commented out as per original, but can be re-enabled if needed) */}
-        {/* {!isEventCreationOrManageRoute && <Footer />} */}
       </div>
     </div>
   );

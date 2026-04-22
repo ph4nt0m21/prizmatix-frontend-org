@@ -74,11 +74,6 @@ const ResetLinkSentPage = () => {
           </button>
         </div>
 
-        <div className={styles.footer}> {/* Re-using footer class */}
-          <p className={styles.copyright}> {/* Re-using copyright class */}
-            Copyright © 2025 <span className={styles.companyName}>Prizmatix</span> {/* Re-using companyName class */}
-          </p>
-        </div>
       </div>
     </div>
   );

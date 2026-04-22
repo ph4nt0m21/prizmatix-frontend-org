@@ -12,6 +12,7 @@ import OrdersAndAttendeesSection from "./sections/ordersAndAttendeesSection/orde
 import PayoutSection from "./sections/payoutSection";
 import TicketSection from "./sections/ticketSection";
 import DiscountSection from "./sections/discountSection";
+import { getPublishedEventTimingStatus } from "./eventStatusUtils";
 
 const EventManagePage = () => {
   const navigate = useNavigate();
@@ -66,6 +67,10 @@ const navigateToEventEditPage = () => {
   navigate(`/events/edit-page/${eventId}/1`);
 };
 
+  const eventStatus = eventData?.isPublished
+    ? getPublishedEventTimingStatus(eventData)
+    : 'DRAFT';
+
   const renderCurrentSection = () => {
     switch (currentSection) {
       case "overview":
@@ -100,6 +105,7 @@ const navigateToEventEditPage = () => {
       <EventHeaderNav
         eventName={eventData?.name || ''}
         isDraft={!eventData?.isPublished}
+        eventStatus={eventStatus}
         toggleMobileSidebar={() => setIsManageSidebarOpen(!isManageSidebarOpen)}
         eventId={eventId}
         showActions={true}

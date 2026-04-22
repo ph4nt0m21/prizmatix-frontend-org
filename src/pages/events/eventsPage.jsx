@@ -6,6 +6,7 @@ import LoadingSpinner from '../../components/common/loadingSpinner/loadingSpinne
 import EventHeaderNav from '../../pages/events/components/eventHeaderNav'; // Adjust path if necessary
 import styles from './eventsPage.module.scss';
 import { getUserData } from '../../utils/authUtil';
+import { getPublishedEventTimingStatus } from './eventStatusUtils';
 
 const EventsPage = () => {
   const navigate = useNavigate();
@@ -25,10 +26,10 @@ const EventsPage = () => {
   const filterOptions = ['All Events', 'Live Events', 'Drafts', 'Paused', 'Archive'];
   const userId = Cookies.get('userId');
 
-  const liveCount = events.filter(event => event.status === 'Live').length;
-  const draftCount = events.filter(event => event.status === 'Draft').length;
+  const liveCount = events.filter(event => event.status === 'LIVE').length;
+  const draftCount = events.filter(event => event.status === 'DRAFT').length;
   const pausedCount = events.filter(event => event.status === 'Paused').length;
-  const archiveCount = events.filter(event => event.status === 'Past').length;
+  const archiveCount = events.filter(event => event.status === 'PAST').length;
 
   useEffect(() => {
     fetchEvents();
@@ -73,11 +74,9 @@ const EventsPage = () => {
             const statusResponse = await GetEventStatusAPI(event.id);
             const isPublished = statusResponse.data?.step8Completed || false;
 
-            let status = 'Draft';
+            let status = 'DRAFT';
             if (isPublished) {
-              const now = new Date();
-              const eventEndDate = event.endDate ? new Date(event.endDate) : new Date(event.startDate);
-              status = eventEndDate < now ? 'Past' : 'Live';
+              status = getPublishedEventTimingStatus(event);
             }
 
             const dashboardResponse = await GetEventDashboardAPI(event.id);
@@ -94,7 +93,7 @@ const EventsPage = () => {
             };
           } catch (statusError) {
             console.error(`Failed to get status or dashboard for event ${event.id}:`, statusError);
-            return { ...event, status: 'Draft', totalTicketsIssued: 0, totalTicketCapacity: 0, revenue: 0 };
+            return { ...event, status: 'DRAFT', totalTicketsIssued: 0, totalTicketCapacity: 0, revenue: 0 };
           }
         })
       );
@@ -113,13 +112,13 @@ const EventsPage = () => {
     let filtered = [...events];
 
     if (currentFilter === 'Live Events') {
-      filtered = filtered.filter(event => event.status === 'Live');
+      filtered = filtered.filter(event => event.status === 'LIVE');
     } else if (currentFilter === 'Drafts') {
-      filtered = filtered.filter(event => event.status === 'Draft');
+      filtered = filtered.filter(event => event.status === 'DRAFT');
     } else if (currentFilter === 'Paused') {
       filtered = filtered.filter(event => event.status === 'Paused');
     } else if (currentFilter === 'Archive') {
-      filtered = filtered.filter(event => event.status === 'Past');
+      filtered = filtered.filter(event => event.status === 'PAST');
     }
 
     if (searchQuery.trim()) {
@@ -187,9 +186,9 @@ const EventsPage = () => {
 
   const getStatusBadgeClass = (status) => {
     switch (status) {
-      case 'Live': return styles.liveBadge;
-      case 'Draft': return styles.draftBadge;
-      case 'Past': return styles.pastBadge;
+      case 'LIVE': return styles.liveBadge;
+      case 'DRAFT': return styles.draftBadge;
+      case 'PAST': return styles.pastBadge;
       default: return '';
     }
   };
