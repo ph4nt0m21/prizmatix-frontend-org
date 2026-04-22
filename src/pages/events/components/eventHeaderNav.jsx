@@ -37,9 +37,9 @@ const LinkIcon = () => (
   </svg>
 );
 
-const GearIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M12 20V18M12 6V4M20 12H18M6 12H4M18.36 18.36L17 17M7.05 7.05L5.64 5.64M18.36 5.64L17 7.05M7.05 17L5.64 18.36M12 16a4 4 0 100-8 4 4 0 000 8z" />
+const ChevronDownIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="6 9 12 15 18 9" />
   </svg>
 );
 
@@ -48,6 +48,7 @@ const EventHeaderNav = ({
   eventName,
   eventId,
   isDraft,
+  eventStatus,
   toggleMobileSidebar,
   children, // Accept children prop
   showActions, // Add prop to conditionally show action buttons
@@ -110,13 +111,21 @@ const navigate = useNavigate();
                 <Link to="/events" className={styles.breadcrumbLink}>Events</Link>
                 <span className={styles.breadcrumbSeparator}><ArrowIcon /></span>
                 <Link to={`/events/manage/${eventId}/overview`} className={styles.breadcrumbLink}>{eventName}</Link>
-                {isDraft && <span className={styles.breadcrumbDraft}>PAST</span>}
+                <span className={styles.breadcrumbDraft}>
+                  {isDraft ? 'DRAFT' : eventStatus}
+                </span>
               </div>
             </div>
             {showActions && (
               <div className={styles.actionButtonsContainer} ref={actionMenuRef}>
-                <button className={styles.mobileActionsButton} onClick={() => setIsActionMenuOpen(!isActionMenuOpen)}>
-                  <GearIcon />
+                <button
+                  className={styles.mobileActionsButton}
+                  onClick={() => setIsActionMenuOpen(!isActionMenuOpen)}
+                  aria-expanded={isActionMenuOpen}
+                  aria-label="Toggle actions menu"
+                >
+                  <span>More</span>
+                  <ChevronDownIcon />
                 </button>
                 <div className={`${styles.actionButtons} ${isActionMenuOpen ? styles.active : ''}`}>
                   <button className={styles.generateButton} onClick={handleOpenScannerModal}>
@@ -153,6 +162,7 @@ EventHeaderNav.propTypes = {
   eventName: PropTypes.string,
   eventId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
   isDraft: PropTypes.bool,
+  eventStatus: PropTypes.oneOf(['LIVE', 'PAST', 'DRAFT']),
   toggleMobileSidebar: PropTypes.func,
   children: PropTypes.node, // Added children to prop types
   showActions: PropTypes.bool,
@@ -162,6 +172,7 @@ EventHeaderNav.defaultProps = {
   eventName: '',
   eventId: null,
   isDraft: true,
+  eventStatus: 'DRAFT',
   toggleMobileSidebar: () => {},
   children: null,
   showActions: false, // Default to false
