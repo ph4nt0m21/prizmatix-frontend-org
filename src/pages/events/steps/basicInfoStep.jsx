@@ -104,13 +104,48 @@ const BasicInfoStep = ({ eventData, handleInputChange, isValid, stepStatus }) =>
   //   }
   // };
   
-  const imgGroup = "http://localhost:3845/assets/051e93ffe0b187914b543b2e530734aa3088353d.svg";
-
   return (
     <div className={styles.stepContainer}>
       <div className={styles.stepHeader}>
         <div className={styles.stepIconContainer}>
-          <img src={imgGroup} alt="Icon" className={styles.stepIconImage} />
+          <svg
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            className={styles.stepIconImage}
+            aria-hidden="true"
+          >
+            <path
+              d="M9.75 3.5H6.25C4.73 3.5 3.5 4.73 3.5 6.25V9.75C3.5 11.27 4.73 12.5 6.25 12.5H9.75C11.27 12.5 12.5 11.27 12.5 9.75V6.25C12.5 4.73 11.27 3.5 9.75 3.5Z"
+              stroke="#7C3AED"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            <path
+              d="M17.75 3.5H14.25C13.84 3.5 13.5 3.84 13.5 4.25V7.75C13.5 8.16 13.84 8.5 14.25 8.5H17.75C18.16 8.5 18.5 8.16 18.5 7.75V4.25C18.5 3.84 18.16 3.5 17.75 3.5Z"
+              stroke="#7C3AED"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            <path
+              d="M17.75 13.5H14.25C13.84 13.5 13.5 13.84 13.5 14.25V17.75C13.5 18.16 13.84 18.5 14.25 18.5H17.75C18.16 18.5 18.5 18.16 18.5 17.75V14.25C18.5 13.84 18.16 13.5 17.75 13.5Z"
+              stroke="#7C3AED"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            <path
+              d="M9.75 13.5H6.25C4.73 13.5 3.5 14.73 3.5 16.25V17.75C3.5 18.16 3.84 18.5 4.25 18.5H11.75C12.16 18.5 12.5 18.16 12.5 17.75V16.25C12.5 14.73 11.27 13.5 9.75 13.5Z"
+              stroke="#7C3AED"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
         </div>
         <div className={styles.stepTextContainer}>
           <h2 className={styles.stepTitle}>Basic Information</h2>
