@@ -6,7 +6,7 @@ import LoadingSpinner from "../../components/common/loadingSpinner/loadingSpinne
 import styles from "./manageEventPage.module.scss";
 
 // Import API and section components
-import { GetEventDashboardAPI, GetEventAPI } from "../../services/allApis";
+import { GetEventDashboardAPI, GetEventAPI, GetEventStatusAPI } from "../../services/allApis";
 import OverviewSection from "./sections/overviewSection";
 import OrdersAndAttendeesSection from "./sections/ordersAndAttendeesSection/ordersAndAttendeesSection";
 import PayoutSection from "./sections/payoutSection";
@@ -31,14 +31,19 @@ const EventManagePage = () => {
 
       try {
         setIsLoading(true);
-        // Fetch both dashboard and detailed event data in parallel
-        const [dashboardRes, eventRes] = await Promise.all([
+        // Fetch dashboard, event details and publish status in parallel.
+        const [dashboardRes, eventRes, statusRes] = await Promise.all([
           GetEventDashboardAPI(eventId),
-          GetEventAPI(eventId)
+          GetEventAPI(eventId),
+          GetEventStatusAPI(eventId),
         ]);
-        
+
+        const isPublished = statusRes.data?.step8Completed ?? eventRes.data?.isPublished ?? false;
         setDashboardData(dashboardRes.data);
-        setEventData(eventRes.data);
+        setEventData({
+          ...eventRes.data,
+          isPublished,
+        });
         setError(null);
       } catch (error) {
         console.error("Error fetching event data:", error);

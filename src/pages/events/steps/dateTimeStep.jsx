@@ -43,6 +43,18 @@ const formatTimeForDisplay = (date) => {
   return `${hours}:${minutes}`;
 };
 
+const toDayStart = (date) => {
+  if (!date) return null;
+  const day = new Date(date);
+  day.setHours(0, 0, 0, 0);
+  return day;
+};
+
+const isSameCalendarDay = (firstDate, secondDate) => {
+  if (!firstDate || !secondDate) return false;
+  return toDayStart(firstDate).getTime() === toDayStart(secondDate).getTime();
+};
+
 // --- Custom Input Components ---
 
 const CustomDateInput = forwardRef(({ value, onClick, onChange, onFocus, onBlur, placeholder }, ref) => (
@@ -109,7 +121,6 @@ const DateTimeStep = ({
   // --- START DATE & TIME HANDLERS ---
 
   const handleStartDateSelect = (date) => {
-    if (isStartDateFocused.current) return;
     let newStartDate = date ? new Date(date) : null;
     if (newStartDate && startDate) {
       newStartDate.setHours(startDate.getHours(), startDate.getMinutes());
@@ -134,7 +145,6 @@ const DateTimeStep = ({
   };
 
   const handleStartTimeSelect = (time) => {
-    if (isStartTimeFocused.current) return;
     if (!time || !startDate) return;
     const newStartDate = new Date(startDate);
     newStartDate.setHours(time.getHours(), time.getMinutes());
@@ -161,7 +171,6 @@ const DateTimeStep = ({
   // --- END DATE & TIME HANDLERS ---
   
   const handleEndDateSelect = (date) => {
-    if (isEndDateFocused.current) return;
     let newEndDate = date ? new Date(date) : null;
     if (newEndDate && endDate) {
       newEndDate.setHours(endDate.getHours(), endDate.getMinutes());
@@ -186,10 +195,16 @@ const DateTimeStep = ({
   };
 
   const handleEndTimeSelect = (time) => {
-    if (isEndTimeFocused.current) return;
     if (!time || !endDate) return;
     const newEndDate = new Date(endDate);
     newEndDate.setHours(time.getHours(), time.getMinutes());
+
+    // Enforce same-day end time to be after or equal to start time.
+    if (startDate && isSameCalendarDay(startDate, newEndDate) && newEndDate < startDate) {
+      setEndTimeStr(formatTimeForDisplay(endDate));
+      return;
+    }
+
     setEndDate(newEndDate);
     setEndTimeStr(formatTimeForDisplay(newEndDate));
   };
@@ -227,10 +242,21 @@ const DateTimeStep = ({
       setEndDate(null);
       setEndDateStr('');
       setEndTimeStr('');
-    } else if (endDate && endDate < startDate) {
+    } else if (
+      endDate &&
+      toDayStart(endDate) &&
+      toDayStart(startDate) &&
+      toDayStart(endDate) < toDayStart(startDate)
+    ) {
       setEndDate(null);
       setEndDateStr('');
       setEndTimeStr('');
+    } else if (endDate && isSameCalendarDay(startDate, endDate) && endDate < startDate) {
+      // Keep same-day end time valid whenever start time changes.
+      const alignedEndDate = new Date(startDate);
+      setEndDate(alignedEndDate);
+      setEndDateStr(formatDateForDisplay(alignedEndDate));
+      setEndTimeStr(formatTimeForDisplay(alignedEndDate));
     }
   }, [startDate, endDate]);
 
@@ -349,6 +375,12 @@ const DateTimeStep = ({
                 timeIntervals={15}
                 timeFormat="HH:mm"
                 dateFormat="HH:mm"
+                minTime={
+                  startDate && endDate && isSameCalendarDay(startDate, endDate)
+                    ? startDate
+                    : new Date(new Date().setHours(0, 0, 0, 0))
+                }
+                maxTime={new Date(new Date().setHours(23, 59, 59, 999))}
               />
             </div>
           </div>
