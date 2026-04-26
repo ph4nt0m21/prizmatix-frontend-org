@@ -22,6 +22,8 @@ const DiscountCodesStep = ({
   isValid = false,
   stepStatus = { visited: false },
   fetchAvailableTickets,
+  onDiscountCodesCommit = null,
+  isSavingDiscountCodes = false,
 }) => {
   const [discountCodes, setDiscountCodes] = useState(eventData.discountCodes || []);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -32,10 +34,55 @@ const DiscountCodesStep = ({
   const [openDropdownIndex, setOpenDropdownIndex] = useState(null);
   const [isLoadingTickets, setIsLoadingTickets] = useState(false);
   const ticketsFetched = useRef(false);
+  const isPersistedDiscountCode = (discountCode) =>
+    discountCode?.id != null &&
+    discountCode?.id !== "" &&
+    Number.isFinite(Number(discountCode.id));
 
   useEffect(() => {
     handleInputChange(discountCodes, 'discountCodes');
   }, [discountCodes, handleInputChange]);
+
+  useEffect(() => {
+    if (openMenuIndex === null && openDropdownIndex === null) return undefined;
+
+    const handlePointerDown = (e) => {
+      const inTicketDropdown = e.target.closest(`.${styles.customDropdown}`);
+      const inActionMenu = e.target.closest(`.${styles.actionMenuContainer}`);
+      if (!inTicketDropdown) setOpenDropdownIndex(null);
+      if (!inActionMenu) setOpenMenuIndex(null);
+    };
+
+    document.addEventListener('mousedown', handlePointerDown);
+    return () => document.removeEventListener('mousedown', handlePointerDown);
+  }, [openMenuIndex, openDropdownIndex]);
+
+  useEffect(() => {
+    const hasSelectedTickets = discountCodes.some(
+      (code) => Array.isArray(code.ticketsApplicable) && code.ticketsApplicable.length > 0
+    );
+    if (!hasSelectedTickets || ticketsFetched.current) return;
+
+    const preloadTickets = async () => {
+      setIsLoadingTickets(true);
+      try {
+        const response = await fetchAvailableTickets();
+        if (response.data && Array.isArray(response.data)) {
+          setAvailableTickets(response.data);
+          ticketsFetched.current = true;
+        } else {
+          setAvailableTickets([]);
+        }
+      } catch (error) {
+        console.error("Failed to preload available tickets:", error);
+        setAvailableTickets([]);
+      } finally {
+        setIsLoadingTickets(false);
+      }
+    };
+
+    preloadTickets();
+  }, [discountCodes, fetchAvailableTickets]);
 
   const handleTicketDropdownClick = async (e, index) => {
     e.preventDefault();
@@ -57,10 +104,11 @@ const DiscountCodesStep = ({
         setIsLoadingTickets(false);
       }
     }
+    setOpenMenuIndex(null);
     setOpenDropdownIndex(openDropdownIndex === index ? null : index);
   };
 
-  const handleAddDiscountCodeRow = () => {
+  const handleAddDiscountCodeRow = async () => {
     const newDiscountCode = {
       code: '',
       type: 'percentage',
@@ -73,6 +121,12 @@ const DiscountCodesStep = ({
       ticketsApplicable: [],
       isActive: true,
     };
+    if (discountCodes.length > 0 && onDiscountCodesCommit) {
+      const persistedCodes = await onDiscountCodesCommit(discountCodes);
+      if (!persistedCodes) return;
+      setDiscountCodes([...persistedCodes, newDiscountCode]);
+      return;
+    }
     setDiscountCodes(prevCodes => [...prevCodes, newDiscountCode]);
   };
 
@@ -101,22 +155,35 @@ const DiscountCodesStep = ({
     setIsModalOpen(true);
   };
 
-  const handleSaveDiscountCode = (discountCodeData) => {
+  const handleSaveDiscountCode = async (discountCodeData) => {
+    let updatedDiscountCodes = [];
     if (currentDiscountCodeIndex !== null) {
-      const updatedDiscountCodes = [...discountCodes];
+      updatedDiscountCodes = [...discountCodes];
       updatedDiscountCodes[currentDiscountCodeIndex] = discountCodeData;
-      setDiscountCodes(updatedDiscountCodes);
     } else {
-      setDiscountCodes([...discountCodes, discountCodeData]);
+      updatedDiscountCodes = [...discountCodes, discountCodeData];
+    }
+    if (onDiscountCodesCommit) {
+      const persistedCodes = await onDiscountCodesCommit(updatedDiscountCodes);
+      if (!persistedCodes) return;
+      setDiscountCodes(persistedCodes);
+    } else {
+      setDiscountCodes(updatedDiscountCodes);
     }
     setIsModalOpen(false);
     setCurrentDiscountCode(null);
     setCurrentDiscountCodeIndex(null);
   };
 
-  const handleDeleteDiscountCode = (index) => {
+  const handleDeleteDiscountCode = async (index) => {
     const updatedDiscountCodes = [...discountCodes];
     updatedDiscountCodes.splice(index, 1);
+    if (onDiscountCodesCommit) {
+      const persistedCodes = await onDiscountCodesCommit(updatedDiscountCodes);
+      if (!persistedCodes) return;
+      setDiscountCodes(persistedCodes);
+      return;
+    }
     setDiscountCodes(updatedDiscountCodes);
   };
 
@@ -131,7 +198,8 @@ const DiscountCodesStep = ({
       return "All Tickets";
     }
     const names = selectedIds.map(id => {
-      const ticket = availableTickets.find(t => t.id === id);
+      const normalizedId = parseInt(id, 10);
+      const ticket = availableTickets.find(t => parseInt(t.id, 10) === normalizedId);
       return ticket ? ticket.name : null;
     }).filter(name => name !== null);
 
@@ -151,9 +219,7 @@ const DiscountCodesStep = ({
       </div>
 
       <div className={styles.formSection}>
-        {isLoadingTickets ? (
-          <div className={styles.loadingState}>Loading tickets...</div>
-        ) : discountCodes.length === 0 ? (
+        {discountCodes.length === 0 ? (
           <div className={styles.emptyDiscountCodesContainer}>
             <h3 className={styles.emptyStateTitle}>Add Coupon Code</h3>
             <p className={styles.emptyStateDescription}>You can add them later or don't add at all if you want</p>
@@ -161,6 +227,7 @@ const DiscountCodesStep = ({
               type="button"
               className={styles.createCouponButton}
               onClick={handleAddDiscountCodeRow}
+              disabled={isSavingDiscountCodes}
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M19 13H13V19H11V13H5V11H11V5H13V11H19V13Z" fill="currentColor" /></svg>
               Create Coupon code
@@ -244,7 +311,9 @@ const DiscountCodesStep = ({
                                 <input
                                   type="checkbox"
                                   value={ticket.id}
-                                  checked={code.ticketsApplicable.includes(ticket.id)}
+                                  checked={(code.ticketsApplicable || [])
+                                    .map((id) => parseInt(id, 10))
+                                    .includes(parseInt(ticket.id, 10))}
                                   onChange={(e) => handleTicketCheckChange(e, index)}
                                   className={styles.checkboxInput}
                                 />
@@ -260,9 +329,15 @@ const DiscountCodesStep = ({
                         <input
                           type="checkbox"
                           checked={code.isActive !== false}
-                          onChange={(e) => {
+                          onChange={async (e) => {
                             const updatedCodes = [...discountCodes];
                             updatedCodes[index] = { ...updatedCodes[index], isActive: e.target.checked };
+                            if (onDiscountCodesCommit) {
+                              const persistedCodes = await onDiscountCodesCommit(updatedCodes);
+                              if (!persistedCodes) return;
+                              setDiscountCodes(persistedCodes);
+                              return;
+                            }
                             setDiscountCodes(updatedCodes);
                           }}
                           disabled={isExpired(code)}
@@ -272,13 +347,13 @@ const DiscountCodesStep = ({
                     </div>
                     <div className={styles.discountActions}>
                       <div className={styles.actionMenuContainer}>
-                        <button type="button" className={styles.discountActionButton} onClick={(e) => { e.stopPropagation(); setOpenMenuIndex(openMenuIndex === index ? null : index); }} aria-label="Actions">
+                        <button type="button" className={styles.discountActionButton} onClick={(e) => { e.stopPropagation(); setOpenDropdownIndex(null); setOpenMenuIndex(openMenuIndex === index ? null : index); }} aria-label="Actions">
                           <svg width="4" height="16" viewBox="0 0 4 16" fill="#6B7280" xmlns="http://www.w3.org/2000/svg"><path d="M2 4C3.1 4 4 3.1 4 2s-.9-2-2-2-2 .9-2 2 .9 4 2 4zm0 6c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 6c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z" /></svg>
                         </button>
                         {openMenuIndex === index && (
                           <div className={styles.actionMenu}>
-                            <button onClick={(e) => { e.stopPropagation(); handleEditDiscountCode(index); setOpenMenuIndex(null); }}>Edit in Modal</button>
-                            <button onClick={(e) => { e.stopPropagation(); handleDeleteDiscountCode(index); setOpenMenuIndex(null); }} className={styles.deleteAction}>Delete</button>
+                            <button type="button" onClick={(e) => { e.stopPropagation(); handleEditDiscountCode(index); setOpenMenuIndex(null); }}>Edit</button>
+                            <button type="button" onClick={(e) => { e.stopPropagation(); handleDeleteDiscountCode(index); setOpenMenuIndex(null); }} className={styles.deleteAction}>Delete</button>
                           </div>
                         )}
                       </div>
@@ -289,7 +364,7 @@ const DiscountCodesStep = ({
             </div>
 
             <div className={styles.addDiscountCodeRow}>
-              <button type="button" className={styles.addDiscountCodeInlineButton} onClick={handleAddDiscountCodeRow}>
+              <button type="button" className={styles.addDiscountCodeInlineButton} onClick={handleAddDiscountCodeRow} disabled={isSavingDiscountCodes}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M19 13H13V19H11V13H5V11H11V5H13V11H19V13Z" fill="currentColor" /></svg>
                 Create Coupon code
               </button>
@@ -305,6 +380,8 @@ const DiscountCodesStep = ({
           onClose={() => setIsModalOpen(false)}
           onSave={handleSaveDiscountCode}
           availableTickets={availableTickets}
+          isSaving={isSavingDiscountCodes}
+          saveButtonText={isPersistedDiscountCode(currentDiscountCode) ? "Update Coupon" : "Save Coupon"}
         />
       )}
     </div>
@@ -317,6 +394,8 @@ DiscountCodesStep.propTypes = {
   isValid: PropTypes.bool,
   stepStatus: PropTypes.object,
   fetchAvailableTickets: PropTypes.func.isRequired,
+  onDiscountCodesCommit: PropTypes.func,
+  isSavingDiscountCodes: PropTypes.bool,
 };
 
 export default DiscountCodesStep;

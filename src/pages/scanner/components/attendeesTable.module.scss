@@ -2,7 +2,7 @@
 .tableContainer {
   display: block;
   width: 100%;
-  overflow-x: visible;
+  overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
   background: #FFFFFF;
   border-radius: 8px;
@@ -14,8 +14,8 @@
   width: 100%;
   border-collapse: collapse;
   font-size: 14px;
-  table-layout: fixed;
-  min-width: 800px;
+  table-layout: auto;
+  min-width: 100%;
 }
 
 .table th {
@@ -34,9 +34,10 @@
   padding: 16px 20px;
   border-bottom: 1px solid #E5E7EB;
   vertical-align: middle;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  overflow-wrap: anywhere;
   color: #1F2937;
   font-weight: 500;
 }

@@ -16,9 +16,14 @@ import styles from './ticketsStep.module.scss';
 const TicketsStep = ({
   eventData = {},
   handleInputChange = () => { },
+  onTicketsCommit = null,
+  isSavingTickets = false,
   isValid = false,
   stepStatus = { visited: false }
 }) => {
+  const isPersistedTicket = (ticket) =>
+    ticket?.id != null && ticket?.id !== "" && Number.isFinite(Number(ticket.id));
+
   // Extract tickets data from eventData or use defaults
   const [tickets, setTickets] = useState(eventData.tickets || []);
 
@@ -36,27 +41,16 @@ const TicketsStep = ({
     handleInputChange(tickets, 'tickets');
   }, [tickets, handleInputChange]);
 
-  /**
-   * Open ticket modal for creating a new ticket
-   */
-  const handleCreateTicket = () => {
-    setCurrentTicket({
-      name: '',
-      price: '',
-      quantity: '',
-      maxPurchaseAmount: 'No Limit',
-      salesStartDate: '',
-      salesStartTime: '',
-      salesEndDate: '',
-      salesEndTime: '',
-      isAdvance: false,
-      advanceAmount: '',
-      startsAfterTicketStructureId: null,
-    });
-    setCurrentTicketIndex(null);
-    setActiveModalStep("basic");
-    setIsModalOpen(true);
-  };
+  useEffect(() => {
+    if (openMenuIndex === null) return undefined;
+    const handlePointerDown = (e) => {
+      if (!e.target.closest(`.${styles.actionMenuContainer}`)) {
+        setOpenMenuIndex(null);
+      }
+    };
+    document.addEventListener('mousedown', handlePointerDown);
+    return () => document.removeEventListener('mousedown', handlePointerDown);
+  }, [openMenuIndex]);
 
   /**
    * Open ticket modal for editing an existing ticket
@@ -73,15 +67,23 @@ const TicketsStep = ({
    * Save the current ticket data
    * @param {Object} ticketData Ticket data to save
    */
-  const handleSaveTicket = (ticketData) => {
+  const handleSaveTicket = async (ticketData) => {
+    let updatedTickets = [];
     if (currentTicketIndex !== null) {
       // Editing existing ticket
-      const updatedTickets = [...tickets];
+      updatedTickets = [...tickets];
       updatedTickets[currentTicketIndex] = ticketData;
-      setTickets(updatedTickets);
     } else {
       // Adding new ticket
-      setTickets([...tickets, ticketData]);
+      updatedTickets = [...tickets, ticketData];
+    }
+
+    if (onTicketsCommit) {
+      const persistedTickets = await onTicketsCommit(updatedTickets);
+      if (!persistedTickets) return;
+      setTickets(persistedTickets);
+    } else {
+      setTickets(updatedTickets);
     }
 
     // Close the modal
@@ -101,7 +103,7 @@ const TicketsStep = ({
   };
 
   // Connect this to the main "Add Ticket" button.
-  const handleAddTicketRow = () => {
+  const handleAddTicketRow = async () => {
     const newTicket = {
       name: '',
       price: '',
@@ -115,6 +117,16 @@ const TicketsStep = ({
       advanceAmount: '',
       startsAfterTicketStructureId: null,
     };
+
+    // If there are existing rows, persist them first so IDs are available
+    // for before/after dependencies on the next ticket.
+    if (tickets.length > 0 && onTicketsCommit) {
+      const persistedTickets = await onTicketsCommit(tickets);
+      if (!persistedTickets) return;
+      setTickets([...persistedTickets, newTicket]);
+      return;
+    }
+
     setTickets(prevTickets => [...prevTickets, newTicket]);
   };
 
@@ -160,6 +172,7 @@ const TicketsStep = ({
               type="button"
               className={styles.createTicketButton}
               onClick={handleAddTicketRow}
+              disabled={isSavingTickets}
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M19 13H13V19H11V13H5V11H11V5H13V11H19V13Z" fill="currentColor" />
@@ -239,14 +252,14 @@ const TicketsStep = ({
                         <button type="button" className={styles.ticketActionButton} onClick={() => handleEditTicket(index)} aria-label="Advanced settings">
                           <svg width="16" height="16" viewBox="0 0 24 24" fill="#6B7280" xmlns="http://www.w3.org/2000/svg"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.69-1.62-.92L14.4 2.25C14.34 2.02 14.12 1.87 13.88 1.87H10.12c-.25 0-.47.15-.53.38L9.2 4.87c-.58.23-1.12.54-1.62.92L5.19 4.81c-.22-.08-.47 0-.59.22L2.69 8.35c-.11.2-.06.47.12.61l2.03 1.58c-.05.32-.07.64-.07.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.69 1.62.92l.39 2.62c.06.23.28.38.53.38h3.75c.25 0 .47-.15.53-.38l.39-2.62c.58.23 1.12.54 1.62-.92l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.11-.2-.06-.47-.12-.61l-2.03-1.58zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z" /></svg>
                         </button>
-                        <button type="button" className={styles.ticketActionButton} onClick={() => setOpenMenuIndex(openMenuIndex === index ? null : index)} aria-label="More actions">
+                        <button type="button" className={styles.ticketActionButton} onClick={(e) => { e.stopPropagation(); setOpenMenuIndex(openMenuIndex === index ? null : index); }} aria-label="More actions">
                           <svg width="4" height="16" viewBox="0 0 4 16" fill="#6B7280" xmlns="http://www.w3.org/2000/svg"><path d="M2 4C3.1 4 4 3.1 4 2s-.9-2-2-2-2 .9-2 2 .9 4 2 4zm0 6c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 6c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z" /></svg>
                         </button>
                         {openMenuIndex === index && (
                           <div className={styles.actionMenu}>
-                            <button onClick={() => { handleDuplicateTicket(index); }}>Duplicate</button>
-                            <button onClick={() => { handleEditTicket(index); setOpenMenuIndex(null); }}>Edit</button>
-                            <button onClick={() => { handleDeleteTicket(index); setOpenMenuIndex(null); }} className={styles.deleteAction}>Delete</button>
+                            <button type="button" onClick={() => { handleDuplicateTicket(index); }}>Duplicate</button>
+                            <button type="button" onClick={() => { handleEditTicket(index); setOpenMenuIndex(null); }}>Edit</button>
+                            <button type="button" onClick={() => { handleDeleteTicket(index); setOpenMenuIndex(null); }} className={styles.deleteAction}>Delete</button>
                           </div>
                         )}
                       </div>
@@ -261,6 +274,7 @@ const TicketsStep = ({
                 type="button"
                 className={styles.addTicketInlineButton}
                 onClick={handleAddTicketRow}
+                disabled={isSavingTickets}
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M19 13H13V19H11V13H5V11H11V5H13V11H19V13Z" fill="currentColor" />
@@ -279,6 +293,8 @@ const TicketsStep = ({
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
           onSave={handleSaveTicket}
+          isSaving={isSavingTickets}
+          saveButtonText={isPersistedTicket(currentTicket) ? "Update Ticket" : "Save Ticket"}
           activeStep={activeModalStep}
           setActiveStep={setActiveModalStep}
           allTickets={tickets}
@@ -292,6 +308,8 @@ const TicketsStep = ({
 TicketsStep.propTypes = {
   eventData: PropTypes.object,
   handleInputChange: PropTypes.func,
+  onTicketsCommit: PropTypes.func,
+  isSavingTickets: PropTypes.bool,
   isValid: PropTypes.bool,
   stepStatus: PropTypes.object
 };

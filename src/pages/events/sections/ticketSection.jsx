@@ -1,58 +1,126 @@
 import React, { useState, useEffect } from "react";
-import PropTypes from "prop-types";
 import { useParams } from "react-router-dom";
-import { format } from 'date-fns'; // Import the format function
 import styles from "./ticketSection.module.scss";
-import TicketDetailsModal from "./ticketDetailsModal";
+import TicketsStep from "../steps/ticketsStep";
 import LoadingSpinner from "../../../components/common/loadingSpinner/loadingSpinner";
-import { 
-  GetEventTicketStructuresAPI, 
-  UpdateTicketStructureAPI, 
+import {
+  GetEventTicketStructuresAPI,
+  UpdateTicketStructureAPI,
   DeleteTicketStructureAPI,
   CreateTicketStructureAPI,
-  GetEventAPI
+  GetEventAPI,
 } from "../../../services/allApis";
 
-// We can add a local helper function to use the same logic
 const formatDateTimeForAPI = (dateString, timeString) => {
   if (!dateString || !timeString) return null;
-  const paddedTime = timeString.includes(':') ? timeString : `${timeString}:00`;
+  const paddedTime = timeString.includes(":") ? timeString : `${timeString}:00`;
   const dateTime = new Date(`${dateString} ${paddedTime}`);
-  if (isNaN(dateTime.getTime())) {
-    console.warn("Invalid date or time provided:", dateString, timeString);
-    return null;
-  }
-  return format(dateTime, "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+  if (Number.isNaN(dateTime.getTime())) return null;
+  return dateTime.toISOString();
 };
 
 const TicketSection = () => {
   const { eventId } = useParams();
-  const [tickets, setTickets] = useState([]);
+  const [eventData, setEventData] = useState({ tickets: [], dateTime: {} });
   const [isLoading, setIsLoading] = useState(true);
+  const [isSavingTickets, setIsSavingTickets] = useState(false);
   const [error, setError] = useState(null);
-  const [eventData, setEventData] = useState({});
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingTicket, setEditingTicket] = useState(null);
 
-  const fetchEventDetails = async () => {
-    try {
-        const response = await GetEventAPI(eventId); // ⬅️ NEW FETCH
-        setEventData(response.data);
-    } catch (err) {
-        console.error("Failed to fetch event details:", err);
-        // Do not set error, as ticket fetch might still succeed
-    }
-};
+  const mapTicketStructureToStepTicket = (ticket = {}) => {
+    const startIso = ticket.listingStartTime ? new Date(ticket.listingStartTime) : null;
+    const endIso = ticket.listingEndTime ? new Date(ticket.listingEndTime) : null;
+    const isValidStart = startIso && !Number.isNaN(startIso.getTime());
+    const isValidEnd = endIso && !Number.isNaN(endIso.getTime());
 
-  const fetchTickets = async () => {
+    return {
+      id: ticket.id,
+      name: ticket.name || "",
+      price: ticket.price ?? "",
+      quantity: ticket.limitedQuantity ? ticket.ticketCapacity : "No Limit",
+      maxPurchaseAmount:
+        ticket.maxPurchasePerOrder && ticket.maxPurchasePerOrder > 0
+          ? ticket.maxPurchasePerOrder
+          : "",
+      salesStartDate: isValidStart ? startIso.toISOString().split("T")[0] : "",
+      salesStartTime: isValidStart ? startIso.toISOString().split("T")[1].slice(0, 5) : "",
+      salesEndDate: isValidEnd ? endIso.toISOString().split("T")[0] : "",
+      salesEndTime: isValidEnd ? endIso.toISOString().split("T")[1].slice(0, 5) : "",
+      startsAfterTicketStructureId:
+        ticket.startsAfterTicketStructureId != null
+          ? ticket.startsAfterTicketStructureId
+          : null,
+      description: ticket.description || "",
+      isAdvance: false,
+      advanceAmount: "",
+    };
+  };
+
+  const mapStepTicketToApiPayload = (ticket, dateTime) => {
+    const fallbackListingStartTime = new Date(
+      Date.now() - 12 * 60 * 60 * 1000
+    ).toISOString();
+    const eventEndTime = formatDateTimeForAPI(dateTime?.endDate, dateTime?.endTime);
+
+    const depRaw = ticket.startsAfterTicketStructureId;
+    const startsAfterTicketStructureId =
+      depRaw != null && depRaw !== "" && Number.isFinite(Number(depRaw))
+        ? parseInt(depRaw, 10)
+        : null;
+
+    return {
+      name: ticket.name,
+      price: parseFloat(ticket.price),
+      finalPrice: parseFloat(ticket.price),
+      ticketCapacity: ticket.quantity === "No Limit" ? 0 : parseInt(ticket.quantity, 10),
+      maxPurchasePerOrder: ticket.maxPurchaseAmount
+        ? parseInt(ticket.maxPurchaseAmount, 10)
+        : 0,
+      currency: "NZD",
+      limitedQuantity: ticket.quantity !== "No Limit",
+      description: ticket.description || null,
+      listingStartTime:
+        formatDateTimeForAPI(ticket.salesStartDate, ticket.salesStartTime) ||
+        fallbackListingStartTime,
+      listingEndTime:
+        formatDateTimeForAPI(ticket.salesEndDate, ticket.salesEndTime) || eventEndTime,
+      startsAfterTicketStructureId,
+      isActive: true,
+      isDeleted: false,
+      soldOut: false,
+    };
+  };
+
+  const fetchEventAndTickets = async () => {
     try {
       setIsLoading(true);
-      const response = await GetEventTicketStructuresAPI(eventId);
-      setTickets(response.data);
       setError(null);
+      const [eventResponse, ticketsResponse] = await Promise.all([
+        GetEventAPI(eventId),
+        GetEventTicketStructuresAPI(eventId),
+      ]);
+
+      const event = eventResponse?.data || {};
+      const dateTime = event.dateTime || {
+        startDate: event.startDate || "",
+        startTime: event.startTime || "",
+        endDate: event.endDate || "",
+        endTime: event.endTime || "",
+      };
+
+      const mappedTickets = Array.isArray(ticketsResponse?.data)
+        ? ticketsResponse.data
+            .filter((t) => t?.isDeleted !== true)
+            .map(mapTicketStructureToStepTicket)
+        : [];
+
+      setEventData({
+        ...event,
+        dateTime,
+        tickets: mappedTickets,
+      });
     } catch (err) {
-      console.error("Failed to fetch tickets:", err);
-      setError("Failed to load tickets. Please try again.");
+      console.error("Failed to load ticket section data:", err);
+      setError("Failed to load ticket section. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -60,288 +128,137 @@ const TicketSection = () => {
 
   useEffect(() => {
     if (eventId) {
-      fetchEventDetails();
-      fetchTickets();
+      fetchEventAndTickets();
     }
   }, [eventId]);
 
-  /**
-   * Handle clicking the "Create New Ticket" button
-   */
-  const handleCreateNew = () => {
-    setEditingTicket(null); // No ticket data for a new one
-    setIsModalOpen(true);
+  const handleInputChange = (value, fieldName) => {
+    if (fieldName !== "tickets") return;
+    setEventData((prev) => ({ ...prev, tickets: value || [] }));
   };
 
-  /**
-   * Handle clicking the edit button on a ticket row
-   * @param {Object} ticket The ticket to edit
-   */
-  const handleEditClick = (ticket) => {
-    // Map API data to modal's expected format
-    const mappedTicket = {
-      ...ticket,
-      name: ticket.name,
-      price: ticket.price,
-      quantity: ticket.limitedQuantity ? ticket.ticketCapacity : "No Limit",
-      enableMaxPurchase: !!ticket.maxPurchasePerOrder,
-      purchaseLimit: ticket.maxPurchasePerOrder,
-      salesStartDate: ticket.listingStartTime ? new Date(ticket.listingStartTime).toLocaleDateString() : '',
-      salesStartTime: ticket.listingStartTime ? new Date(ticket.listingStartTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '',
-      salesEndDate: ticket.listingEndTime ? new Date(ticket.listingEndTime).toLocaleDateString() : '',
-      salesEndTime: ticket.listingEndTime ? new Date(ticket.listingEndTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '',
-      startsAfterTicketStructureId:
-        ticket.startsAfterTicketStructureId != null
-          ? ticket.startsAfterTicketStructureId
-          : null,
-    };
-    setEditingTicket(mappedTicket);
-    setIsModalOpen(true);
-  };
-
-  /**
-   * Handle deleting a ticket
-   * @param {number} ticketId The ID of the ticket to delete
-   */
-  const handleDeleteClick = async (ticketId) => {
-    if (window.confirm("Are you sure you want to delete this ticket?")) {
-      try {
-        await DeleteTicketStructureAPI(ticketId);
-        console.log(`Ticket with ID ${ticketId} deleted successfully.`);
-        fetchTickets(); // Re-fetch the data to update the table
-      } catch (err)
-        {
-        console.error("Failed to delete ticket:", err);
-        setError("Failed to delete the ticket. Please try again.");
+  const validateTickets = (ticketsToCheck) => {
+    if (!ticketsToCheck || ticketsToCheck.length === 0) return false;
+    const invalidTickets = ticketsToCheck.filter((ticket) => {
+      if (!ticket.name || ticket.name.trim() === "") return true;
+      if (
+        ticket.price === null ||
+        ticket.price === "" ||
+        Number.isNaN(Number(ticket.price)) ||
+        parseFloat(ticket.price) < 0
+      ) {
+        return true;
       }
+      const isUnlimited = ticket.quantity === "No Limit";
+      if (!isUnlimited) {
+        if (
+          ticket.quantity === null ||
+          ticket.quantity === "" ||
+          Number.isNaN(Number(ticket.quantity)) ||
+          !Number.isInteger(Number(ticket.quantity)) ||
+          parseInt(ticket.quantity, 10) <= 0
+        ) {
+          return true;
+        }
+      }
+      if (
+        ticket.maxPurchaseAmount &&
+        (Number.isNaN(Number(ticket.maxPurchaseAmount)) ||
+          !Number.isInteger(Number(ticket.maxPurchaseAmount)) ||
+          parseInt(ticket.maxPurchaseAmount, 10) <= 0)
+      ) {
+        return true;
+      }
+      return false;
+    });
+    return invalidTickets.length === 0;
+  };
+
+  const onTicketsCommit = async (ticketsOverride = null) => {
+    const ticketsToSave = ticketsOverride || eventData.tickets;
+    if (!validateTickets(ticketsToSave)) {
+      setError("Please complete valid ticket details before saving.");
+      return false;
     }
-  };
 
-  /**
-   * Handle closing the modal
-   */
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-    setEditingTicket(null);
-  };
-  
-  /**
-   * Handle saving the ticket from the modal
-   * @param {Object} ticketData The data from the modal form
-   */
-  const handleSaveTicket = async (ticketData) => {
     try {
-      // Define fallback dates
-      const fallbackListingStartTime = new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString();
+      setError(null);
+      setIsSavingTickets(true);
 
-      const eventDateTime = {
-        startDate: eventData.startDate,
-        startTime: eventData.startTime,
-        endDate: eventData.endDate,
-        endTime: eventData.endTime,
-      };
-
-      const listingStartTime = formatDateTimeForAPI(ticketData.salesStartDate, ticketData.salesStartTime) || fallbackListingStartTime;
-      const listingEndTime = formatDateTimeForAPI(ticketData.salesEndDate, ticketData.salesEndTime) || formatDateTimeForAPI(eventDateTime.endDate, eventDateTime.endTime);
-      
-      const depRaw = ticketData.startsAfterTicketStructureId;
-      const startsAfterTicketStructureId =
-        depRaw != null && depRaw !== "" && Number.isFinite(Number(depRaw))
-          ? parseInt(depRaw, 10)
-          : null;
-
-      const commonPayload = {
-        name: ticketData.name,
-        price: parseFloat(ticketData.price),
-        finalPrice: parseFloat(ticketData.price), // Assuming finalPrice is same as price
-        ticketCapacity: ticketData.quantity === "No Limit" ? 0 : parseInt(ticketData.quantity),
-        maxPurchasePerOrder: ticketData.enableMaxPurchase ? parseInt(ticketData.maxPurchaseAmount, 10) : 0, // Set to 0 if not enabled
-        currency: "NZD", // Assuming default currency
-        limitedQuantity: ticketData.quantity !== "No Limit",
-        description: ticketData.description || null,
-        listingStartTime: listingStartTime,
-        listingEndTime: listingEndTime,
-        startsAfterTicketStructureId,
-        isActive: true, // Assuming new/updated tickets are active
-        isDeleted: false, // Assuming new/updated tickets are not deleted
-        soldOut: false, // This might be set by backend based on ticketCapacity and sales
-      };
-
-      if (editingTicket) {
-        // Logic to update an existing ticket
-        const payload = {
-          ...commonPayload,
-          id: editingTicket.id, // Include existing ID for update
-          eventId: parseInt(eventId, 10), // Ensure eventId is passed in body for PUT
-        };
-        await UpdateTicketStructureAPI(editingTicket.id, payload);
-        console.log("Updating ticket:", payload);
-      } else {
-        // Logic to create a new ticket
-        const payload = {
-          ...commonPayload,
-          // For creation, ID is usually generated by backend, so don't include it
-          eventId: parseInt(eventId, 10), // Pass eventId in body for POST
-        };
-        await CreateTicketStructureAPI(eventId, payload); // Use eventId in URL for POST
-        console.log("Creating new ticket:", payload);
+      const existingResponse = await GetEventTicketStructuresAPI(eventId);
+      const existingTickets = Array.isArray(existingResponse?.data)
+        ? existingResponse.data.filter((t) => t?.id != null && t.isDeleted !== true)
+        : [];
+      const currentIds = new Set(
+        ticketsToSave
+          .map((t) => t?.id)
+          .filter((id) => id != null && id !== "" && Number.isFinite(Number(id)))
+          .map((id) => parseInt(id, 10))
+      );
+      for (const existingTicket of existingTickets) {
+        const existingId = parseInt(existingTicket.id, 10);
+        if (!currentIds.has(existingId)) {
+          await DeleteTicketStructureAPI(existingId);
+        }
       }
-      
-      // After a successful save, close the modal and re-fetch the tickets.
-      handleCloseModal();
-      fetchTickets(); // Re-fetch the data to update the table
-      
+
+      for (const ticket of ticketsToSave) {
+        const payload = mapStepTicketToApiPayload(ticket, eventData.dateTime);
+        if (ticket.id) {
+          await UpdateTicketStructureAPI(ticket.id, {
+            ...payload,
+            id: ticket.id,
+            eventId: parseInt(eventId, 10),
+          });
+        } else {
+          await CreateTicketStructureAPI(eventId, {
+            ...payload,
+            eventId: parseInt(eventId, 10),
+          });
+        }
+      }
+
+      const savedTicketsResponse = await GetEventTicketStructuresAPI(eventId);
+      const savedTickets = Array.isArray(savedTicketsResponse?.data)
+        ? savedTicketsResponse.data
+            .filter((t) => t?.isDeleted !== true)
+            .map(mapTicketStructureToStepTicket)
+        : ticketsToSave;
+
+      setEventData((prev) => ({ ...prev, tickets: savedTickets }));
+      return savedTickets;
     } catch (err) {
       console.error("Failed to save ticket:", err);
-      setError(err.response?.data?.message || "Failed to save ticket. Please check your input.");
+      setError(
+        err.response?.data?.message || "Failed to save ticket. Please check your input."
+      );
+      return false;
+    } finally {
+      setIsSavingTickets(false);
     }
-  };
-
-  const formatQuantity = (ticket) => {
-    return ticket.limitedQuantity ? ticket.ticketCapacity : "Unlimited";
-  };
-
-  const formatMaxPurchase = (ticket) => {
-    return ticket.maxPurchasePerOrder > 0 ? ticket.maxPurchasePerOrder : "No Limit";
   };
 
   return (
-    <>
-      <div className={styles.ticketSectionContainer}>
-        <div className={styles.header}>
-          <h2 className={styles.title}>Tickets</h2>
-          <button
-            className={styles.createTicketButton}
-            onClick={handleCreateNew}
-          >
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 20 20"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M10 4.16669V15.8334"
-                stroke="white"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <path
-                d="M4.16602 10H15.8327"
-                stroke="white"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-            Create New Ticket
-          </button>
+    <div className={styles.ticketSectionContainer}>
+      {isLoading ? (
+        <div className={styles.loadingContainer}>
+          <LoadingSpinner size="large" />
         </div>
-
-        {isLoading ? (
-          <div className={styles.loadingContainer}>
-            <LoadingSpinner size="large" />
-          </div>
-        ) : error ? (
-          <div className={styles.errorMessage}>{error}</div>
-        ) : tickets.length > 0 ? (
-          <div className={styles.tableWrapper}>
-            <div className={styles.ticketsList}>
-              {/* Table Header */}
-              <div className={`${styles.ticketRow} ${styles.ticketsHeader}`}>
-                {/* <div className={`${styles.ticketCell} ${styles.cellId}`}>#</div> */}
-                <div className={`${styles.ticketCell} ${styles.cellTicket}`}>
-                  Ticket
-                </div>
-                <div className={`${styles.ticketCell} ${styles.cellQuantity}`}>
-                  Quantity
-                </div>
-                <div className={`${styles.ticketCell} ${styles.cellSold}`}>
-                  Sold
-                </div>
-                <div className={`${styles.ticketCell} ${styles.cellMaxPurchase}`}>
-                  Max Per Order
-                </div>
-                <div className={`${styles.ticketCell} ${styles.cellPrice}`}>
-                  Price
-                </div>
-                <div className={`${styles.ticketCell} ${styles.cellActions}`}></div>
-              </div>
-
-              {/* Table Body */}
-              {tickets.map((ticket) => (
-                <div key={ticket.id} className={styles.ticketRow}>
-                  {/* <div className={`${styles.ticketCell} ${styles.cellId}`}>
-                    {ticket.id}
-                  </div> */}
-                  <div className={`${styles.ticketCell} ${styles.cellTicket}`}>
-                    {ticket.name}
-                  </div>
-                  <div className={`${styles.ticketCell} ${styles.cellQuantity}`}>
-                    {formatQuantity(ticket)}
-                  </div>
-                  <div className={`${styles.ticketCell} ${styles.cellSold}`}>
-                    {ticket.soldCount ?? ticket.sold ?? 0}
-                  </div>
-                  <div className={`${styles.ticketCell} ${styles.cellMaxPurchase}`}>
-                    {formatMaxPurchase(ticket)}
-                  </div>
-                  <div className={`${styles.ticketCell} ${styles.cellPrice}`}>
-                    ${ticket.price.toFixed(2)}
-                  </div>
-                  <div className={`${styles.ticketCell} ${styles.cellActions}`}>
-                    <button
-                      className={styles.editButton}
-                      onClick={() => handleEditClick(ticket)}
-                    >
-                      <svg
-                        width="20"
-                        height="20"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                      >
-                        <path
-                          d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"
-                          fill="currentColor"
-                        />
-                      </svg>
-                    </button>
-                    <button
-                      className={styles.deleteButton}
-                      onClick={() => handleDeleteClick(ticket.id)}
-                    >
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" fill="currentColor"/>
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        ) : (
-          <div className={styles.noTicketsMessage}>No tickets have been created for this event.</div>
-        )}
-      </div>
-
-      <TicketDetailsModal
-        isOpen={isModalOpen}
-        onClose={handleCloseModal}
-        onSave={handleSaveTicket}
-        ticket={editingTicket || {}}
-        saveButtonText={editingTicket ? "Save Changes" : "Create Ticket"}
-        editingTicket={editingTicket}
-        allTickets={tickets}
-      />
-    </>
+      ) : (
+        <>
+          {error && <div className={styles.errorMessage}>{error}</div>}
+          <TicketsStep
+            eventData={eventData}
+            handleInputChange={handleInputChange}
+            onTicketsCommit={onTicketsCommit}
+            isSavingTickets={isSavingTickets}
+            isValid={validateTickets(eventData.tickets)}
+            stepStatus={{ visited: true }}
+          />
+        </>
+      )}
+    </div>
   );
-};
-
-TicketSection.propTypes = {
-  // We removed eventData as it's now fetched locally
 };
 
 export default TicketSection;
