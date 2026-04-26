@@ -51,6 +51,8 @@ const DiscountCodeModal = ({
   onSave = () => {},
   availableTickets = [],
   isExpired = false,
+  saveButtonText = "Save",
+  isSaving = false,
 }) => {
   const [activePanel, setActivePanel] = useState('basic');
   const [localDiscountCode, setLocalDiscountCode] = useState({
@@ -83,6 +85,17 @@ const DiscountCodeModal = ({
     });
     setSelectedTickets(discountCode.ticketsApplicable || []);
   }, [discountCode]);
+
+  useEffect(() => {
+    if (!isDropdownOpen) return undefined;
+    const handlePointerDown = (e) => {
+      if (!e.target.closest(`.${styles.customDropdown}`)) {
+        setIsDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handlePointerDown);
+    return () => document.removeEventListener('mousedown', handlePointerDown);
+  }, [isDropdownOpen]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -367,8 +380,9 @@ const DiscountCodeModal = ({
               type="button"
               className={styles.saveButton}
               onClick={handleSubmit}
+              disabled={isSaving}
             >
-              Save
+              {isSaving ? "Saving..." : saveButtonText}
             </button>
           </div>
         </div>
@@ -384,6 +398,8 @@ DiscountCodeModal.propTypes = {
   onSave: PropTypes.func,
   availableTickets: PropTypes.array,
   isExpired: PropTypes.bool,
+  saveButtonText: PropTypes.string,
+  isSaving: PropTypes.bool,
 };
 
 export default DiscountCodeModal;

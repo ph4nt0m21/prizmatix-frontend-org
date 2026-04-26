@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styles from './toolbar.module.scss';
 import { FiSearch, FiUpload, FiFilter } from 'react-icons/fi';
 import { CSVLink } from 'react-csv';
@@ -10,6 +10,17 @@ const Toolbar = ({ activeTab, searchQuery, setSearchQuery, data, currentFilters,
   const [exportOpen, setExportOpen] = useState(false);
   const [isFilterModalOpen, setFilterModalOpen] = useState(false);
   const useInlineFilter = typeof onFilterToggle === 'function';
+
+  useEffect(() => {
+    if (!exportOpen) return undefined;
+    const handlePointerDown = (e) => {
+      if (!e.target.closest(`.${styles.exportContainer}`)) {
+        setExportOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handlePointerDown);
+    return () => document.removeEventListener('mousedown', handlePointerDown);
+  }, [exportOpen]);
 
   const isOrdersTab = activeTab === 'Orders';
   

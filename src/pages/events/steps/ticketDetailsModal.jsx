@@ -35,6 +35,8 @@ const TicketDetailsModal = ({
   isOpen = false,
   onClose = () => {},
   onSave = () => {},
+  saveButtonText = "Save Ticket",
+  isSaving = false,
   allTickets = [],
   excludeTicketIndex = null,
 }) => {
@@ -427,8 +429,9 @@ const TicketDetailsModal = ({
               type="button" 
               className={styles.createButton}
               onClick={handleSubmit}
+              disabled={isSaving}
             >
-              Save Ticket
+              {isSaving ? "Saving..." : saveButtonText}
             </button>
           </div>
         </div>
@@ -442,6 +445,8 @@ TicketDetailsModal.propTypes = {
   isOpen: PropTypes.bool.isRequired,
   onClose: PropTypes.func.isRequired,
   onSave: PropTypes.func.isRequired,
+  saveButtonText: PropTypes.string,
+  isSaving: PropTypes.bool,
   allTickets: PropTypes.array,
   excludeTicketIndex: PropTypes.number,
 };

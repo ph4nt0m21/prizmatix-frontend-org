@@ -82,6 +82,17 @@ const DiscountCodeModal = ({
     setSelectedTickets(discountCode.ticketsApplicable || []);
   }, [discountCode]);
 
+  useEffect(() => {
+    if (!isDropdownOpen) return undefined;
+    const handlePointerDown = (e) => {
+      if (!e.target.closest(`.${styles.customDropdown}`)) {
+        setIsDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handlePointerDown);
+    return () => document.removeEventListener('mousedown', handlePointerDown);
+  }, [isDropdownOpen]);
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setLocalDiscountCode((prev) => ({
