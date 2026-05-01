@@ -413,3 +413,33 @@ export const preparePublishEventDataForAPI = (eventId = null) => {
     updatedBy: userData?.id || eventData?.createdBy || 0,
   };
 };
+
+/**
+ * True when all creation steps 1–7 are done and step 8 (publish) is not completed yet.
+ * Matches backend flags from GetEventStatusAPI.
+ * @param {Object|null|undefined} statusData - response.data from GetEventStatusAPI
+ * @returns {boolean}
+ */
+export const isCreationReadyForPublish = (statusData) => {
+  if (!statusData) return false;
+  const {
+    step1Completed,
+    step2Completed,
+    step3Completed,
+    step4Completed,
+    step5Completed,
+    step6Completed,
+    step7Completed,
+    step8Completed,
+  } = statusData;
+  return Boolean(
+    step1Completed &&
+      step2Completed &&
+      step3Completed &&
+      step4Completed &&
+      step5Completed &&
+      step6Completed &&
+      step7Completed &&
+      !step8Completed
+  );
+};

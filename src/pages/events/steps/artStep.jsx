@@ -4,6 +4,7 @@ import styles from './artStep.module.scss';
 // --- [NEW] Import the cropping library and its CSS ---
 import ReactCrop, { centerCrop, makeAspectCrop } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
+import { createCroppedJpegFile } from '../../../utils/imageCropUtil';
 
 
 /**
@@ -50,7 +51,6 @@ const ArtStep = ({
   const [crop, setCrop] = useState(); // The crop selection state
   const [completedCrop, setCompletedCrop] = useState(null); // The completed crop data
   const imgRef = useRef(null); // Ref to the image element in the cropper
-  const previewCanvasRef = useRef(null); // Ref to the hidden canvas for drawing the preview
 
   const supportedTypes = ['.jpg', '.jpeg', '.png', '.webp'];
   const maxSizes = {
@@ -247,57 +247,23 @@ const isFileSizeValid = (file, maxSizeMB) => {
     );
   }
 
-  const handleCropComplete = () => {
-    if (completedCrop?.width && completedCrop?.height && imgRef.current && previewCanvasRef.current) {
-      const image = imgRef.current;
-      const canvas = previewCanvasRef.current;
-      const crop = completedCrop;
+  const handleCropComplete = async () => {
+    if (!completedCrop?.width || !completedCrop?.height || !imgRef.current || !originalFile) {
+      return;
+    }
 
-      const scaleX = image.naturalWidth / image.width;
-      const scaleY = image.naturalHeight / image.height;
-      const ctx = canvas.getContext('2d');
-      const pixelRatio = window.devicePixelRatio;
+    try {
+      const croppedFile = await createCroppedJpegFile({
+        image: imgRef.current,
+        crop: completedCrop,
+        fileName: originalFile.name,
+        quality: 0.85,
+      });
 
-      canvas.width = crop.width * pixelRatio * scaleX;
-      canvas.height = crop.height * pixelRatio * scaleY;
-
-      ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
-      ctx.imageSmoothingQuality = 'high';
-
-      ctx.drawImage(
-        image,
-        crop.x * scaleX,
-        crop.y * scaleY,
-        crop.width * scaleX,
-        crop.height * scaleY,
-        0,
-        0,
-        crop.width * scaleX,
-        crop.height * scaleY
-      );
-
-      // Define your desired quality level (0.0 to 1.0)
-      const quality = 0.85; 
-
-      canvas.toBlob(
-        (blob) => {
-          if (!blob) {
-            console.error('Canvas is empty');
-            return;
-          }
-          
-          // If the original was a PNG, we should update the name to reflect the new JPG format
-          const newFileName = originalFile.name.replace(/\.(png|gif)$/i, '.jpg');
-
-          const croppedFile = new File([blob], newFileName, {
-            type: 'image/jpeg', // Force the blob to be treated as a JPEG
-          });
-          handleCropFinalized(croppingType, croppedFile);
-          handleCancelCrop();
-        },
-        'image/jpeg', // Force the output format to JPEG
-        quality 
-      );
+      handleCropFinalized(croppingType, croppedFile);
+      handleCancelCrop();
+    } catch (error) {
+      console.error('Failed to crop image:', error);
     }
   };
 
@@ -515,8 +481,6 @@ const isFileSizeValid = (file, maxSizeMB) => {
           </ul>
         </div>
       </div>
-
-      <canvas ref={previewCanvasRef} style={{ display: 'none' }} />
 
       {showCropModal && (
         <div className={styles.cropModalBackdrop}>

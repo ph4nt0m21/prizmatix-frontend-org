@@ -4,11 +4,13 @@ import styles from './scannerPage.module.scss';
 import { FiXCircle, FiCheckCircle, FiMaximize, FiUsers } from 'react-icons/fi';
 import AttendeesTable from './components/attendeesTable';
 import {
-  GetAttendeeScanner,
+  GetAllOrganizationEventsAPI,
+  GetEventAttendeesAPI,
   CheckInAttendeeAPI,
   CheckoutAttendeeAPI,
   VerifyQrCodeAPI,
 } from '../../services/allApis';
+import { getUserData } from '../../utils/authUtil';
 
 const ScannerPage = () => {
   const [isScannerOpen, setIsScannerOpen] = useState(false);
@@ -16,31 +18,70 @@ const ScannerPage = () => {
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
   const [attendees, setAttendees] = useState([]);
+  const [events, setEvents] = useState([]);
+  const [selectedEventId, setSelectedEventId] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [isEventLoading, setIsEventLoading] = useState(true);
   const [hasScanned, setHasScanned] = useState(false);
 
   useEffect(() => {
-    const fetchAttendees = async () => {
+    const fetchOrganizationEvents = async () => {
+      try {
+        setIsEventLoading(true);
+        const userData = getUserData();
+        const orgId = userData?.organizationId;
+
+        if (!orgId) {
+          setError('Organization not found. Please login again.');
+          setEvents([]);
+          return;
+        }
+
+        const response = await GetAllOrganizationEventsAPI(orgId);
+        const list = Array.isArray(response.data) ? response.data : response.data?.content || [];
+        setEvents(list);
+        setSelectedEventId(list[0]?.id ? String(list[0].id) : '');
+      } catch (err) {
+        console.error('Failed to fetch organization events:', err);
+        setError('Could not load organization events.');
+      } finally {
+        setIsEventLoading(false);
+      }
+    };
+
+    fetchOrganizationEvents();
+  }, []);
+
+  useEffect(() => {
+    const fetchAttendeesForEvent = async () => {
+      if (!selectedEventId) {
+        setAttendees([]);
+        setIsLoading(false);
+        return;
+      }
+
       try {
         setIsLoading(true);
-        const response = await GetAttendeeScanner();
-        const formatted = response.data.map((a) => ({
-          id: a.ticketId,
-          name: a.attendeeName,
-          ticketType: a.ticketType,
-          isCheckedIn: a.checkedIn,
-          checkedInAt: a.checkedInAt,
+        setError(null);
+        const response = await GetEventAttendeesAPI(selectedEventId);
+        const formatted = (response.data || []).map((a, index) => ({
+          id: a.ticketId || `att-${index}`,
+          name: a.attendeeName || 'Unknown',
+          ticketType: a.ticketType || 'N/A',
+          isCheckedIn: !!a.checkedIn,
+          checkedInAt: a.checkedInAt || null,
         }));
         setAttendees(formatted);
       } catch (err) {
-        console.error('Failed to fetch attendees:', err);
-        setError('Could not load the attendee list.');
+        console.error('Failed to fetch event attendees:', err);
+        setError('Could not load attendees for the selected event.');
       } finally {
         setIsLoading(false);
       }
     };
-    fetchAttendees();
-  }, []);
+
+    fetchAttendeesForEvent();
+  }, [selectedEventId]);
 
   const handleScan = async (data) => {
     if (data) {
@@ -55,17 +96,19 @@ const ScannerPage = () => {
         const response = await VerifyQrCodeAPI({ qrContent });
         const { orderId, eventName, attendees: attendeesFromOrder } = response.data;
 
-        const formattedAttendees = attendeesFromOrder.map((a) => ({
-          id: a.ticketId,
-          name: a.attendeeName,
-          ticketType: a.ticketType,
-          isCheckedIn: a.checkedIn,
-          checkedInAt: a.checkedInAt,
+        const scannedAttendees = (attendeesFromOrder || []).map((a, index) => ({
+          id: a.ticketId || `scan-${index}`,
+          name: a.attendeeName || 'Unknown',
+          ticketType: a.ticketType || 'N/A',
+          isCheckedIn: !!a.checkedIn,
+          checkedInAt: a.checkedInAt || null,
         }));
-
-        setAttendees(formattedAttendees);
+        const scannedById = new Map(scannedAttendees.map((a) => [a.id, a]));
+        setAttendees((current) =>
+          current.map((attendee) => scannedById.get(attendee.id) || attendee)
+        );
         setSuccessMessage(
-          `Order #${orderId} verified for ${eventName}. Found ${formattedAttendees.length} attendees.`
+          `Order #${orderId} verified for ${eventName}. Found ${scannedAttendees.length} attendees.`
         );
       } catch (err) {
         console.error('QR verification failed:', err);
@@ -142,6 +185,33 @@ const ScannerPage = () => {
     <div className={styles.scannerContainer}>
       <div className={styles.contentWrapper}>
         <h1>Ticket Scanner</h1>
+        <div className={styles.eventSelectorRow}>
+          <label htmlFor="event-selector" className={styles.eventSelectorLabel}>
+            Event
+          </label>
+          <select
+            id="event-selector"
+            className={styles.eventSelector}
+            value={selectedEventId}
+            onChange={(e) => {
+              setSelectedEventId(e.target.value);
+              setHasScanned(false);
+              setSuccessMessage(null);
+              setError(null);
+            }}
+            disabled={isEventLoading || events.length === 0}
+          >
+            {events.length === 0 ? (
+              <option value="">No events available</option>
+            ) : (
+              events.map((event) => (
+                <option key={event.id} value={event.id}>
+                  {event.name}
+                </option>
+              ))
+            )}
+          </select>
+        </div>
         {isScannerOpen ? (
           <div className={styles.scannerActive}>
             <div className={styles.scannerPreview}>
@@ -171,7 +241,11 @@ const ScannerPage = () => {
                 <p>{successMessage}</p>
               </div>
             )}
-            <button onClick={openScanner} className={styles.openButton}>
+            <button
+              onClick={openScanner}
+              className={styles.openButton}
+              disabled={!selectedEventId || isEventLoading}
+            >
               <FiMaximize /> Open Scanner
             </button>
           </div>
@@ -192,6 +266,8 @@ const ScannerPage = () => {
 
         {isLoading ? (
           <p className={styles.loadingText}>Loading attendees...</p>
+        ) : !selectedEventId ? (
+          <p className={styles.loadingText}>Select an event to see attendees.</p>
         ) : (
           <AttendeesTable attendees={attendees} onToggleCheckIn={handleToggleCheckIn} />
         )}

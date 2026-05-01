@@ -445,14 +445,18 @@ const verifyEmail = async () => {
    */
   const handleFileUpload = (file) => {
     if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setUploadedLogo({
-          url: e.target.result,
-          name: file.name
-        });
-      };
-      reader.readAsDataURL(file);
+      const previewUrl = URL.createObjectURL(file);
+      setUploadedLogo((prevLogo) => {
+        if (prevLogo?.url?.startsWith('blob:')) {
+          URL.revokeObjectURL(prevLogo.url);
+        }
+
+        return {
+          url: previewUrl,
+          name: file.name,
+          file,
+        };
+      });
     }
   };
   

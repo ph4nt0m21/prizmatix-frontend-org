@@ -21,6 +21,9 @@ const EventManageSidebar = ({
   sectionStatus,
   navigateToSection,
   navigateToEventEditPage,
+  navigateToPublishStep,
+  canPublish = false,
+  isPublished = false,
   eventId,
   isMobileSidebarOpen,
   toggleMobileSidebar
@@ -233,9 +236,46 @@ const EventManageSidebar = ({
         </div>
       </div>
 
+      {/* Publish draft — same gate as create wizard (steps 1–7); opens step 8 preview + Publish. Hidden once live. */}
+      {!isPublished && (
+      <div className={styles.publishActionWrap}>
+        <button
+          type="button"
+          className={styles.publishDraftButton}
+          disabled={!canPublish}
+          title={
+            canPublish
+              ? 'Open publish preview and publish your event'
+              : 'Finish every Create Event step (through discount codes), then you can publish here'
+          }
+          onClick={() => {
+            if (!canPublish || !navigateToPublishStep) return;
+            navigateToPublishStep();
+          }}
+        >
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-hidden
+          >
+            <path
+              d="M5 16h14v2H5v-2zm5.5-14H14v6h5l-7 7-7-7h5V2z"
+              fill="currentColor"
+            />
+          </svg>
+          Publish event
+        </button>
+      </div>
+      )}
+
       {/* Duplicate and Delete Event Buttons */}
-      <div className={styles.eventActions}>
-        <button className={styles.duplicateButton}>
+      <div
+        className={`${styles.eventActions} ${isPublished ? styles.eventActionsNoPublishAbove : ''}`}
+      >
+        <button type="button" className={styles.duplicateButton}>
           <svg
             width="16"
             height="16"
@@ -250,7 +290,7 @@ const EventManageSidebar = ({
           </svg>
           Duplicate Event
         </button>
-        <button className={styles.deleteButton}>
+        <button type="button" className={styles.deleteButton}>
           <svg
             width="16"
             height="16"
@@ -275,6 +315,9 @@ EventManageSidebar.propTypes = {
   sectionStatus: PropTypes.object.isRequired,
   navigateToSection: PropTypes.func.isRequired,
   navigateToEventEditPage: PropTypes.func.isRequired,
+  navigateToPublishStep: PropTypes.func,
+  canPublish: PropTypes.bool,
+  isPublished: PropTypes.bool,
   eventId: PropTypes.string,
   isMobileSidebarOpen: PropTypes.bool.isRequired,
   toggleMobileSidebar: PropTypes.func.isRequired,
