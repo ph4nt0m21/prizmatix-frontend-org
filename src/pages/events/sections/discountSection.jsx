@@ -62,7 +62,7 @@ const mapApiDiscountToStepDiscount = (code = {}) => {
   };
 };
 
-const DiscountSection = () => {
+const DiscountSection = ({ onCommitSuccess = () => {} }) => {
   const { eventId } = useParams();
   const [eventData, setEventData] = useState({ discountCodes: [], dateTime: {} });
   const [isLoading, setIsLoading] = useState(true);
@@ -203,6 +203,7 @@ const DiscountSection = () => {
         : codesToSave;
 
       setEventData((prev) => ({ ...prev, discountCodes: mappedSavedCodes }));
+      onCommitSuccess();
       return mappedSavedCodes;
     } catch (err) {
       console.error("Failed to save discount codes:", err);

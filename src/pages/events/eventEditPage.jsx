@@ -30,6 +30,42 @@ import {
   prepareDateTimeDataForAPI,
   prepareDescriptionDataForAPI,
 } from '../../utils/eventUtil';
+import { getUserData } from '../../utils/authUtil';
+
+const normalizeApiTime = (timeValue) => {
+  if (!timeValue) return '';
+  if (typeof timeValue === 'string') {
+    const trimmed = timeValue.trim();
+    if (/^\d{1,2}:\d{2}(:\d{2})?$/.test(trimmed)) {
+      return trimmed.slice(0, 5);
+    }
+    const parsed = new Date(trimmed);
+    if (!Number.isNaN(parsed.getTime())) {
+      const h = String(parsed.getHours()).padStart(2, '0');
+      const m = String(parsed.getMinutes()).padStart(2, '0');
+      return `${h}:${m}`;
+    }
+    return trimmed.slice(0, 5);
+  }
+  if (typeof timeValue === 'object') {
+    const hour = String(timeValue.hour ?? '').padStart(2, '0');
+    const minute = String(timeValue.minute ?? '').padStart(2, '0');
+    if (hour.trim() && minute.trim()) return `${hour}:${minute}`;
+  }
+  return '';
+};
+
+const getFileNameFromUrl = (urlValue) => {
+  if (!urlValue || typeof urlValue !== 'string') return null;
+  try {
+    const pathname = new URL(urlValue).pathname || '';
+    const fileName = pathname.split('/').pop();
+    return fileName || null;
+  } catch {
+    const fileName = urlValue.split('?')[0].split('/').pop();
+    return fileName || null;
+  }
+};
 
 /**
  * EventEditPage component for editing existing event details in a multi-step flow.
@@ -138,17 +174,33 @@ const EventEditPage = () => {
           },
           
           dateTime: {
-            startDate: fetchedData.startDate || '',
-            startTime: fetchedData.startTime || '',
-            endDate: fetchedData.endDate || '',
-            endTime: fetchedData.endTime || '',
+            startDate: fetchedData.dateTime?.startDate || fetchedData.startDate || '',
+            startTime: normalizeApiTime(
+              fetchedData.dateTime?.startTime || fetchedData.startTime
+            ),
+            endDate: fetchedData.dateTime?.endDate || fetchedData.endDate || '',
+            endTime: normalizeApiTime(
+              fetchedData.dateTime?.endTime || fetchedData.endTime
+            ),
           },
           description: fetchedData.description || '',
           art: {
             thumbnailFile: null,
             bannerFile: null,
-            thumbnailUrl: null, // thumbnailUrl is not in the API response
-            bannerUrl: fetchedData.bannerImage || null, // API provides a full URL for bannerImage
+            thumbnailUrl:
+              fetchedData.thumbnailImage ||
+              fetchedData.art?.thumbnailUrl ||
+              null,
+            bannerUrl:
+              fetchedData.bannerImage ||
+              fetchedData.art?.bannerUrl ||
+              null,
+            thumbnailName: getFileNameFromUrl(
+              fetchedData.thumbnailImage || fetchedData.art?.thumbnailUrl
+            ),
+            bannerName: getFileNameFromUrl(
+              fetchedData.bannerImage || fetchedData.art?.bannerUrl
+            ),
           },
         };
         
@@ -259,9 +311,39 @@ const EventEditPage = () => {
           if (artData?.thumbnailFile || artData?.bannerFile) {
             const formData = new FormData();
             formData.append("id", eventData.id);
+            const userData = getUserData();
+            if (userData?.id != null) {
+              formData.append("updatedBy", userData.id);
+            }
             if (artData.bannerFile) formData.append("bannerFile", artData.bannerFile);
             if (artData.thumbnailFile) formData.append("thumbnailFile", artData.thumbnailFile);
             await UploadEventBannerAPI(eventData.id, formData);
+            const refreshResponse = await GetEventAPI(eventData.id);
+            const r = refreshResponse?.data || {};
+            setEventData((prev) => ({
+              ...prev,
+              art: {
+                ...prev.art,
+                thumbnailFile: null,
+                bannerFile: null,
+                thumbnailUrl:
+                  r.thumbnailImage ||
+                  r.art?.thumbnailUrl ||
+                  prev.art?.thumbnailUrl ||
+                  null,
+                bannerUrl:
+                  r.bannerImage ||
+                  r.art?.bannerUrl ||
+                  prev.art?.bannerUrl ||
+                  null,
+                thumbnailName: getFileNameFromUrl(
+                  r.thumbnailImage || r.art?.thumbnailUrl
+                ),
+                bannerName: getFileNameFromUrl(
+                  r.bannerImage || r.art?.bannerUrl
+                ),
+              },
+            }));
           }
           break;
         }

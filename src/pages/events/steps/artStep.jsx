@@ -62,15 +62,22 @@ const ArtStep = ({
     // Get the file objects from the parent component's data
     const thumbnailFile = artData.thumbnailFile;
     const bannerFile = artData.bannerFile;
+    const thumbnailUrl = artData.thumbnailUrl || null;
+    const bannerUrl = artData.bannerUrl || null;
 
     // Create new blob URLs only if the files exist
     const newThumbnailUrl = thumbnailFile ? URL.createObjectURL(thumbnailFile) : null;
     const newBannerUrl = bannerFile ? URL.createObjectURL(bannerFile) : null;
 
+    setFiles({
+      thumbnail: thumbnailFile || null,
+      banner: bannerFile || null,
+    });
+
     // Update the local preview state
     setPreviews({
-      thumbnail: newThumbnailUrl,
-      banner: newBannerUrl
+      thumbnail: newThumbnailUrl || thumbnailUrl,
+      banner: newBannerUrl || bannerUrl
     });
         // IMPORTANT: Return a cleanup function
     // This runs when the component unmounts or when the files change,
@@ -84,7 +91,7 @@ const ArtStep = ({
       }
     };
     // This effect's dependency array ensures it re-runs if the file objects change
-  }, [artData.thumbnailFile, artData.bannerFile]);
+  }, [artData.thumbnailFile, artData.bannerFile, artData.thumbnailUrl, artData.bannerUrl]);
 
   const releaseFilePreviewUrl = (url) => {
     if (url && url.startsWith('blob:')) {
@@ -276,6 +283,9 @@ const isFileSizeValid = (file, maxSizeMB) => {
     setCrop(undefined);
   };
 
+  const hasThumbnailAsset = Boolean(files.thumbnail || previews.thumbnail);
+  const hasBannerAsset = Boolean(files.banner || previews.banner);
+
   return (
     <div className={styles.stepContainer}>
       <div className={styles.stepHeader}>
@@ -299,13 +309,13 @@ const isFileSizeValid = (file, maxSizeMB) => {
           </p>
 
           <div
-            className={`${styles.uploadDropzoneThumbnail} ${dragActive.thumbnail ? styles.dragActive : ''} ${files.thumbnail ? styles.hasFile : ''}`}
+            className={`${styles.uploadDropzoneThumbnail} ${dragActive.thumbnail ? styles.dragActive : ''} ${hasThumbnailAsset ? styles.hasFile : ''}`}
             onDragEnter={(e) => handleDrag(e, 'thumbnail', 'enter')}
             onDragOver={(e) => handleDrag(e, 'thumbnail', 'enter')}
             onDragLeave={(e) => handleDrag(e, 'thumbnail', 'leave')}
             onDrop={(e) => handleDrag(e, 'thumbnail', 'drop')}
           >
-            {files.thumbnail ? (
+            {hasThumbnailAsset ? (
               <div className={styles.imagePreview}>
                 <img
                   src={previews.thumbnail}
@@ -313,8 +323,8 @@ const isFileSizeValid = (file, maxSizeMB) => {
                   className={styles.previewImage}
                 />
                 <div className={styles.fileInfo}>
-                  <span className={styles.fileName}>{files.thumbnail.name}</span>
-                  <span className={styles.fileSize}>{formatFileSize(files.thumbnail.size)}</span>
+                  <span className={styles.fileName}>{files.thumbnail?.name || artData.thumbnailName || 'Current thumbnail'}</span>
+                  <span className={styles.fileSize}>{files.thumbnail?.size ? formatFileSize(files.thumbnail.size) : 'Uploaded image'}</span>
                 </div>
                 <button
                   type="button"
@@ -388,13 +398,13 @@ const isFileSizeValid = (file, maxSizeMB) => {
           </p>
 
           <div
-            className={`${styles.uploadDropzoneBanner} ${dragActive.banner ? styles.dragActive : ''} ${files.banner ? styles.hasFile : ''}`}
+            className={`${styles.uploadDropzoneBanner} ${dragActive.banner ? styles.dragActive : ''} ${hasBannerAsset ? styles.hasFile : ''}`}
             onDragEnter={(e) => handleDrag(e, 'banner', 'enter')}
             onDragOver={(e) => handleDrag(e, 'banner', 'enter')}
             onDragLeave={(e) => handleDrag(e, 'banner', 'leave')}
             onDrop={(e) => handleDrag(e, 'banner', 'drop')}
           >
-            {files.banner ? (
+            {hasBannerAsset ? (
               <div className={styles.imagePreview}>
                 <img
                   src={previews.banner}
@@ -402,8 +412,8 @@ const isFileSizeValid = (file, maxSizeMB) => {
                   className={styles.previewImage}
                 />
                 <div className={styles.fileInfo}>
-                  <span className={styles.fileName}>{files.banner.name}</span>
-                  <span className={styles.fileSize}>{formatFileSize(files.banner.size)}</span>
+                  <span className={styles.fileName}>{files.banner?.name || artData.bannerName || 'Current banner'}</span>
+                  <span className={styles.fileSize}>{files.banner?.size ? formatFileSize(files.banner.size) : 'Uploaded image'}</span>
                 </div>
                 <button
                   type="button"

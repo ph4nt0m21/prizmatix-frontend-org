@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import EventHeaderNav from "./components/eventHeaderNav";
 import EventManageSidebar from "./components/eventManageSidebar";
@@ -15,6 +15,33 @@ import DiscountSection from "./sections/discountSection";
 import { getPublishedEventTimingStatus } from "./eventStatusUtils";
 import { isCreationReadyForPublish } from "../../utils/eventUtil";
 
+const isPublishReadyFromEventData = (event = {}, dashboard = {}) => {
+  const hasName = Boolean(event?.name && String(event.name).trim().length > 0);
+  const hasDescription = Boolean(
+    event?.description && String(event.description).trim().length > 0
+  );
+
+  const startDate = event?.dateTime?.startDate || event?.startDate;
+  const startTime = event?.dateTime?.startTime || event?.startTime;
+  const endDate = event?.dateTime?.endDate || event?.endDate;
+  const endTime = event?.dateTime?.endTime || event?.endTime;
+  const hasDateTime = Boolean(startDate && startTime && endDate && endTime);
+
+  const isTba =
+    event?.location?.isToBeAnnounced === true || event?.eventLocationType === "tba";
+  const hasLocation = isTba || Boolean(
+    event?.location?.venue ||
+      event?.eventLocationName ||
+      (event?.location?.city && (event?.location?.country || event?.country))
+  );
+
+  const hasTickets =
+    Number(dashboard?.totalTicketCapacity || 0) > 0 ||
+    (Array.isArray(event?.tickets) && event.tickets.length > 0);
+
+  return hasName && hasDescription && hasDateTime && hasLocation && hasTickets;
+};
+
 const EventManagePage = () => {
   const navigate = useNavigate();
   const { eventId, section } = useParams();
@@ -27,12 +54,12 @@ const EventManagePage = () => {
   const [canPublishFromManage, setCanPublishFromManage] = useState(false);
   const [currentSection, setCurrentSection] = useState("overview");
 
-  useEffect(() => {
-    const fetchEventData = async () => {
+  const fetchEventData = useCallback(
+    async ({ showLoader = true } = {}) => {
       if (!eventId) return;
 
       try {
-        setIsLoading(true);
+        if (showLoader) setIsLoading(true);
         // Fetch dashboard, event details and publish status in parallel.
         const [dashboardRes, eventRes, statusRes] = await Promise.all([
           GetEventDashboardAPI(eventId),
@@ -40,24 +67,33 @@ const EventManagePage = () => {
           GetEventStatusAPI(eventId),
         ]);
 
-        const isPublished = statusRes.data?.step8Completed ?? eventRes.data?.isPublished ?? false;
-        setDashboardData(dashboardRes.data);
-        setEventData({
+        const isPublished =
+          statusRes.data?.step8Completed ?? eventRes.data?.isPublished ?? false;
+        const mergedEventData = {
           ...eventRes.data,
           isPublished,
-        });
-        setCanPublishFromManage(isCreationReadyForPublish(statusRes.data));
+        };
+        setDashboardData(dashboardRes.data);
+        setEventData(mergedEventData);
+        setCanPublishFromManage(
+          isCreationReadyForPublish(statusRes.data) ||
+            (!isPublished &&
+              isPublishReadyFromEventData(mergedEventData, dashboardRes.data))
+        );
         setError(null);
-      } catch (error) {
-        console.error("Error fetching event data:", error);
+      } catch (fetchError) {
+        console.error("Error fetching event data:", fetchError);
         setError("Failed to load event data. Please try again.");
       } finally {
-        setIsLoading(false);
+        if (showLoader) setIsLoading(false);
       }
-    };
+    },
+    [eventId]
+  );
 
+  useEffect(() => {
     fetchEventData();
-  }, [eventId]);
+  }, [fetchEventData]);
 
   useEffect(() => {
     setCurrentSection(section || "overview");
@@ -95,9 +131,9 @@ const EventManagePage = () => {
       case "payout":
         return <PayoutSection eventId={eventId} dashboardData={dashboardData} />;
       case "tickets":
-        return <TicketSection />;
+        return <TicketSection onCommitSuccess={() => fetchEventData({ showLoader: false })} />;
       case "discounts":
-        return <DiscountSection />;
+        return <DiscountSection onCommitSuccess={() => fetchEventData({ showLoader: false })} />;
       default:
         return <OverviewSection dashboardData={dashboardData} eventData={eventData} />;
     }
