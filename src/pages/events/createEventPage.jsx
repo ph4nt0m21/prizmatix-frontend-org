@@ -165,8 +165,15 @@ const CreateEventPage = () => {
   // Current step state (default to 1 if not specified)
   const [currentStep, setCurrentStep] = useState(1);
 
+  /** When editing an existing draft by URL, wait for GetEventStatusAPI before enforcing step-8 guard (avoids redirect race). */
+  const [eventCreationStatusLoaded, setEventCreationStatusLoaded] = useState(() => !eventId);
+
   // Error state
   const [error, setError] = useState(null);
+
+  useEffect(() => {
+    setEventCreationStatusLoaded(!eventId);
+  }, [eventId]);
 
   // Constants for file validations
   const supportedImageTypes = [".jpg", ".jpeg", ".png", ".webp"];
@@ -330,6 +337,9 @@ const CreateEventPage = () => {
         } catch (error) {
           console.error("Error fetching event status:", error);
         } finally {
+          if (eventId) {
+            setEventCreationStatusLoaded(true);
+          }
         }
       }
     };
@@ -339,8 +349,21 @@ const CreateEventPage = () => {
 
   useEffect(() => {
     if (step) {
-      const stepNumber = parseInt(step);
+      const stepNumber = parseInt(step, 10);
       if (!isNaN(stepNumber) && stepNumber >= 1 && stepNumber <= 8) {
+        if (eventId && !eventCreationStatusLoaded) {
+          setCurrentStep(stepNumber);
+          const stepKeyEarly = getStepKeyByNumber(stepNumber);
+          setStepStatus((prevStatus) => ({
+            ...prevStatus,
+            [stepKeyEarly]: {
+              ...prevStatus[stepKeyEarly],
+              visited: true,
+            },
+          }));
+          return;
+        }
+
         if (stepNumber === 8 && !areAllPreviousStepsCompleted()) {
           let firstIncompleteStep = 1;
           if (!stepStatus.basicInfo.completed) firstIncompleteStep = 1;
@@ -374,7 +397,7 @@ const CreateEventPage = () => {
     } else {
       setCurrentStep(1);
     }
-  }, [step, stepStatus, eventId, navigate]);
+  }, [step, stepStatus, eventId, navigate, eventCreationStatusLoaded]);
 
   useEffect(() => {
     const fetchEventData = async () => {

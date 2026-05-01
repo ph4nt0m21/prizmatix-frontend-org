@@ -3,6 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import { Link } from 'react-router-dom';
 import styles from './organizationProfile.module.scss';
+import ReactCrop, { centerCrop, makeAspectCrop } from 'react-image-crop';
+import 'react-image-crop/dist/ReactCrop.css';
+import { createCroppedJpegFile } from '../../../utils/imageCropUtil';
 
 // Import SVG components
 import { ReactComponent as ArrowIcon } from "../../../assets/icons/arrow-icon.svg";
@@ -55,7 +58,10 @@ const OrganizationProfile = ({
   // Crop modal state
   const [showCropModal, setShowCropModal] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
-  const [zoomLevel, setZoomLevel] = useState(1);
+  const [originalFile, setOriginalFile] = useState(null);
+  const [crop, setCrop] = useState();
+  const [completedCrop, setCompletedCrop] = useState(null);
+  const imgRef = useRef(null);
   
   // Social links state
   const [showAddSocialModal, setShowAddSocialModal] = useState(false);
@@ -73,6 +79,25 @@ const OrganizationProfile = ({
   ];
 
   const navigate = useNavigate();
+  const supportedTypes = ['.jpg', '.jpeg', '.png', '.webp'];
+  const maxFileSizeMB = 100;
+  const isFileSizeValid = (file, maxSizeMB) => {
+    if (!file?.size) return false;
+    return file.size <= maxSizeMB * 1024 * 1024;
+  };
+
+
+  const releaseFilePreviewUrl = (url) => {
+    if (url && url.startsWith('blob:')) {
+      URL.revokeObjectURL(url);
+    }
+  };
+
+  const isFileTypeSupported = (file) => {
+    if (!file?.name) return false;
+    const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+    return supportedTypes.includes(fileExtension);
+  };
 
   /**
    * Handle form submission
@@ -96,35 +121,83 @@ const OrganizationProfile = ({
   const handleLogoUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
+      if (!isFileTypeSupported(file)) {
+        alert(`Unsupported file type. Please use ${supportedTypes.join(', ')}`);
+        return;
+      }
+
+      if (!isFileSizeValid(file, maxFileSizeMB)) {
+        alert(`File size exceeds the ${maxFileSizeMB} MB limit.`);
+        return;
+      }
+
+      setOriginalFile(file);
       const reader = new FileReader();
       reader.onload = () => {
         setSelectedImage(reader.result);
         setShowCropModal(true);
       };
       reader.readAsDataURL(file);
+      e.target.value = null;
     }
   };
 
-  /**
-   * Handle zoom level change
-   * @param {Event} e - Range input change event
-   */
-  const handleZoomChange = (e) => {
-    setZoomLevel(parseFloat(e.target.value));
+  const onImageLoad = (e) => {
+    const { width, height } = e.currentTarget;
+
+    setCrop(
+      centerCrop(
+        makeAspectCrop(
+          {
+            unit: '%',
+            width: 90,
+          },
+          1,
+          width,
+          height
+        ),
+        width,
+        height
+      )
+    );
   };
 
   /**
    * Apply crop and save uploaded logo
    */
-  const handleCropConfirm = () => {
-    // In a real implementation, you would apply the crop to the image
-    setUploadedLogo({
-      url: selectedImage,
-      name: `${formData.name || 'logo'}.jpg`
-    });
-    setShowCropModal(false);
-    setSelectedImage(null);
-    setZoomLevel(1);
+  const handleCropConfirm = async () => {
+    if (!completedCrop?.width || !completedCrop?.height || !imgRef.current || !originalFile) {
+      return;
+    }
+
+    try {
+      const croppedFile = await createCroppedJpegFile({
+        image: imgRef.current,
+        crop: completedCrop,
+        fileName: originalFile.name,
+        quality: 0.85,
+      });
+
+      if (uploadedLogo?.url) {
+        releaseFilePreviewUrl(uploadedLogo.url);
+      }
+
+      const previewUrl = URL.createObjectURL(croppedFile);
+
+      setUploadedLogo({
+        url: previewUrl,
+        name: croppedFile.name,
+        file: croppedFile,
+      });
+
+      if (handleFileUpload) {
+        handleFileUpload(croppedFile);
+      }
+
+      handleCropCancel();
+    } catch (error) {
+      console.error('Failed to crop logo image:', error);
+    }
   };
 
   /**
@@ -133,13 +206,18 @@ const OrganizationProfile = ({
   const handleCropCancel = () => {
     setShowCropModal(false);
     setSelectedImage(null);
-    setZoomLevel(1);
+    setOriginalFile(null);
+    setCompletedCrop(null);
+    setCrop(undefined);
   };
 
   /**
    * Remove uploaded logo
    */
   const handleRemoveLogo = () => {
+    if (uploadedLogo?.url) {
+      releaseFilePreviewUrl(uploadedLogo.url);
+    }
     setUploadedLogo(null);
   };
 
@@ -410,82 +488,47 @@ const OrganizationProfile = ({
 
       {/* Image Crop Modal */}
       {showCropModal && (
-        <div className={styles.modalOverlay}>
-          <div className={styles.cropModal}>
-            <div className={styles.cropModalHeader}>
-              <h3 className={styles.cropModalTitle}>Crop Image</h3>
-              <button 
-                className={styles.closeModalButton} 
-                onClick={handleCropCancel}
-              >
-                ×
-              </button>
-            </div>
-            
-            <div className={styles.cropImageContainer}>
-              <div 
-                className={styles.cropImageWrapper}
-                style={{ 
-                  transform: `scale(${zoomLevel})` 
-                }}
-              >
-                {selectedImage && (
-                  <img 
-                    src={selectedImage} 
-                    alt="To crop" 
-                    className={styles.cropImage} 
+        <div className={styles.cropModalBackdrop}>
+          <div className={styles.cropModalContent}>
+            <h2>Crop Image</h2>
+
+            <div className={styles.cropContainer}>
+              {selectedImage && (
+                <ReactCrop
+                  crop={crop}
+                  onChange={(_, percentCrop) => setCrop(percentCrop)}
+                  onComplete={(c) => setCompletedCrop(c)}
+                  aspect={1}
+                  minWidth={100}
+                  minHeight={100}
+                >
+                  <img
+                    ref={imgRef}
+                    src={selectedImage}
+                    alt="To crop"
+                    className={styles.cropImage}
+                    onLoad={onImageLoad}
+                    style={{ maxHeight: '70vh' }}
                   />
-                )}
-              </div>
-              
-              <div className={styles.cropSelectionBox}>
-                <div className={styles.cropCorner} style={{ top: 0, left: 0 }}></div>
-                <div className={styles.cropCorner} style={{ top: 0, right: 0 }}></div>
-                <div className={styles.cropCorner} style={{ bottom: 0, left: 0 }}></div>
-                <div className={styles.cropCorner} style={{ bottom: 0, right: 0 }}></div>
-              </div>
+                </ReactCrop>
+              )}
             </div>
-            
-            <div className={styles.cropControlsContainer}>
-              {/* <div className={styles.cropTools}>
-                <button className={`${styles.cropTool} ${styles.active}`}>
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                  </svg>
-                </button>
-                <button className={styles.cropTool}>
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="12" cy="12" r="10"></circle>
-                  </svg>
-                </button>
-              </div> */}
-              
-              <div className={styles.zoomContainer}>
-                <input
-                  type="range"
-                  min="1"
-                  max="3"
-                  step="0.1"
-                  value={zoomLevel}
-                  onChange={handleZoomChange}
-                  className={styles.zoomSlider}
-                />
-              </div>
-              
-              <div className={styles.cropActions}>
-                <button 
-                  className={styles.cancelCropButton} 
+
+            <div className={styles.cropModalActions}>
+                <button
+                  type="button"
+                  className={styles.cancelButton}
                   onClick={handleCropCancel}
                 >
                   Cancel
                 </button>
-                <button 
-                  className={styles.uploadCropButton} 
+                <button
+                  type="button"
+                  className={styles.doneButton}
                   onClick={handleCropConfirm}
                 >
-                  Upload
+                  Done
                 </button>
-              </div>
             </div>
           </div>
         </div>

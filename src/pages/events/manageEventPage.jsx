@@ -13,6 +13,7 @@ import PayoutSection from "./sections/payoutSection";
 import TicketSection from "./sections/ticketSection";
 import DiscountSection from "./sections/discountSection";
 import { getPublishedEventTimingStatus } from "./eventStatusUtils";
+import { isCreationReadyForPublish } from "../../utils/eventUtil";
 
 const EventManagePage = () => {
   const navigate = useNavigate();
@@ -23,6 +24,7 @@ const EventManagePage = () => {
   const [error, setError] = useState(null);
   const [dashboardData, setDashboardData] = useState(null);
   const [eventData, setEventData] = useState(null);
+  const [canPublishFromManage, setCanPublishFromManage] = useState(false);
   const [currentSection, setCurrentSection] = useState("overview");
 
   useEffect(() => {
@@ -44,6 +46,7 @@ const EventManagePage = () => {
           ...eventRes.data,
           isPublished,
         });
+        setCanPublishFromManage(isCreationReadyForPublish(statusRes.data));
         setError(null);
       } catch (error) {
         console.error("Error fetching event data:", error);
@@ -67,10 +70,17 @@ const EventManagePage = () => {
     }
   };
 
-  // In ManageEventPage.js, near your other functions
-const navigateToEventEditPage = () => {
-  navigate(`/events/edit-page/${eventId}/1`);
-};
+  const navigateToEventEditPage = () => {
+    navigate(`/events/edit-page/${eventId}/1`);
+  };
+
+  const navigateToPublishStep = () => {
+    if (!eventId || !canPublishFromManage) return;
+    navigate(`/events/create/${eventId}/8`);
+    if (window.innerWidth <= 768 && isManageSidebarOpen) {
+      setIsManageSidebarOpen(false);
+    }
+  };
 
   const eventStatus = eventData?.isPublished
     ? getPublishedEventTimingStatus(eventData)
@@ -124,6 +134,9 @@ const navigateToEventEditPage = () => {
           sectionStatus={{}} // sectionStatus can be implemented later
           navigateToSection={navigateToManageSection}
           navigateToEventEditPage={navigateToEventEditPage}
+          navigateToPublishStep={navigateToPublishStep}
+          canPublish={canPublishFromManage}
+          isPublished={!!eventData?.isPublished}
           eventId={eventId}
           isMobileSidebarOpen={isManageSidebarOpen}
           toggleMobileSidebar={() => setIsManageSidebarOpen(!isManageSidebarOpen)}

@@ -5,7 +5,8 @@
   gap: 2.5rem;
   padding: 2.5rem 1.5rem;
   background-color: #F9FAFB;
-  // min-height: 100vh;
+  min-height: 100vh;
+  box-sizing: border-box;
 
   @media (max-width: 768px) {
     padding: 1.5rem 1rem;
@@ -38,6 +39,38 @@
       font-size: 1.5rem;
       margin-bottom: 1.5rem;
     }
+  }
+}
+
+.eventSelectorRow {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.eventSelectorLabel {
+  font-size: 0.9rem;
+  color: #4B5563;
+  font-weight: 600;
+}
+
+.eventSelector {
+  flex: 1;
+  min-width: 0;
+  height: 40px;
+  border: 1px solid #D1D5DB;
+  border-radius: 8px;
+  padding: 0 0.75rem;
+  background-color: #FFFFFF;
+  color: #111827;
+  font-size: 0.95rem;
+
+  &:focus {
+    outline: none;
+    border-color: #7C3AED;
+    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15);
   }
 }
 
@@ -169,6 +202,12 @@
   cursor: pointer;
   border: none;
   transition: all 0.2s ease-in-out;
+}
+
+.openButton:disabled {
+  background-color: #D1D5DB;
+  color: #6B7280;
+  cursor: not-allowed;
 }
 
 .openButton {
