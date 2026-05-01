@@ -19,7 +19,7 @@ const formatDateTimeForAPI = (dateString, timeString) => {
   return dateTime.toISOString();
 };
 
-const TicketSection = () => {
+const TicketSection = ({ onCommitSuccess = () => {} }) => {
   const { eventId } = useParams();
   const [eventData, setEventData] = useState({ tickets: [], dateTime: {} });
   const [isLoading, setIsLoading] = useState(true);
@@ -226,6 +226,7 @@ const TicketSection = () => {
         : ticketsToSave;
 
       setEventData((prev) => ({ ...prev, tickets: savedTickets }));
+      onCommitSuccess();
       return savedTickets;
     } catch (err) {
       console.error("Failed to save ticket:", err);

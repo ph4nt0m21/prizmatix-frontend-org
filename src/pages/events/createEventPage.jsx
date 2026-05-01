@@ -404,15 +404,136 @@ const CreateEventPage = () => {
       if (eventId) {
         try {
           setIsLoading((prev) => ({ ...prev, fetchEvent: true }));
-          const response = await GetEventAPI(eventId);
+          const [eventResponse, ticketStructuresResponse, discountCodesResponse] =
+            await Promise.all([
+              GetEventAPI(eventId),
+              GetEventTicketStructuresAPI(eventId),
+              GetEventDiscountCodesAPI(eventId),
+            ]);
+
+          const eventPayload = eventResponse?.data || {};
+          const mappedTickets = Array.isArray(ticketStructuresResponse?.data)
+            ? ticketStructuresResponse.data
+                .filter((ticket) => ticket?.isDeleted !== true)
+                .map(mapTicketStructureToStepTicket)
+            : [];
+          const discountPayload =
+            discountCodesResponse?.data?.discountCodes ||
+            discountCodesResponse?.data ||
+            [];
+          const mappedDiscountCodes = Array.isArray(discountPayload)
+            ? discountPayload
+                .filter((discount) => discount?.isDeleted !== true)
+                .map(mapApiDiscountToStepDiscount)
+            : [];
+          const locationPayload = eventPayload?.location || {};
+          const locationTypeFromApi =
+            locationPayload.locationType ||
+            locationPayload.eventLocationType ||
+            eventPayload?.eventLocationType ||
+            (locationPayload.isToBeAnnounced ? "tba" : "physical");
+          const locationFromApi = {
+            locationType: locationTypeFromApi,
+            isToBeAnnounced:
+              locationPayload.isToBeAnnounced != null
+                ? Boolean(locationPayload.isToBeAnnounced)
+                : locationTypeFromApi === "tba",
+            isPrivateLocation:
+              locationPayload.isPrivateLocation != null
+                ? Boolean(locationPayload.isPrivateLocation)
+                : locationTypeFromApi === "private",
+            googleMapLink:
+              locationPayload.googleMapLink ||
+              locationPayload.mapLink ||
+              eventPayload?.googleMapLink ||
+              "",
+            venue:
+              locationPayload.venue ||
+              locationPayload.venueName ||
+              locationPayload.eventLocationName ||
+              eventPayload?.eventLocationName ||
+              "",
+            street:
+              locationPayload.street ||
+              locationPayload.addressLine1 ||
+              eventPayload?.street ||
+              "",
+            streetNumber:
+              locationPayload.streetNumber ||
+              locationPayload.streetNo ||
+              eventPayload?.streetNo ||
+              "",
+            city: locationPayload.city || eventPayload?.city || "",
+            postalCode:
+              locationPayload.postalCode ||
+              locationPayload.zipCode ||
+              eventPayload?.postalCode ||
+              "",
+            state:
+              locationPayload.state ||
+              locationPayload.province ||
+              eventPayload?.state ||
+              "",
+            country: locationPayload.country || eventPayload?.country || "",
+            additionalInfo:
+              locationPayload.additionalInfo ||
+              eventPayload?.additionalInfo ||
+              "",
+            latitude:
+              locationPayload.latitude ||
+              locationPayload.lat ||
+              eventPayload?.latitude ||
+              "",
+            longitude:
+              locationPayload.longitude ||
+              locationPayload.lng ||
+              eventPayload?.longitude ||
+              "",
+            formattedAddress:
+              locationPayload.formattedAddress ||
+              locationPayload.address ||
+              eventPayload?.address ||
+              "",
+          };
+          const dateTimeFromApi = {
+            startDate:
+              eventPayload?.dateTime?.startDate || eventPayload?.startDate || "",
+            startTime: normalizeApiTime(
+              eventPayload?.dateTime?.startTime || eventPayload?.startTime
+            ),
+            endDate: eventPayload?.dateTime?.endDate || eventPayload?.endDate || "",
+            endTime: normalizeApiTime(
+              eventPayload?.dateTime?.endTime || eventPayload?.endTime
+            ),
+          };
+
+          const mergedEventData = {
+            ...eventPayload,
+            eventType: eventPayload.private ? "private" : "public",
+            location: locationFromApi,
+            dateTime: dateTimeFromApi,
+            art: {
+              ...(eventPayload.art || {}),
+              // Rehydrate already-uploaded images when opening create flow from manage flow.
+              bannerUrl:
+                eventPayload?.art?.bannerUrl ||
+                eventPayload?.bannerImage ||
+                null,
+              thumbnailUrl:
+                eventPayload?.art?.thumbnailUrl ||
+                eventPayload?.thumbnailImage ||
+                null,
+            },
+            tickets: mappedTickets,
+            discountCodes: mappedDiscountCodes,
+          };
 
           setEventData((prevData) => ({
             ...prevData,
-            ...response.data,
-            eventType: response.data.private ? "private" : "public",
+            ...mergedEventData,
           }));
 
-          updateStepStatusFromData(response.data);
+          updateStepStatusFromData(mergedEventData);
         } catch (error) {
           console.error("Error fetching event data:", error);
           setError("Failed to load event data. Please try again.");
@@ -766,6 +887,21 @@ const validateDiscountCodes = () => {
     const dateTime = new Date(`${dateString} ${paddedTime}`);
     if (Number.isNaN(dateTime.getTime())) return null;
     return dateTime.toISOString();
+  };
+
+  const normalizeApiTime = (timeValue) => {
+    if (!timeValue) return "";
+    if (typeof timeValue === "string") {
+      return timeValue.slice(0, 5);
+    }
+    if (typeof timeValue === "object") {
+      const hour = String(timeValue.hour ?? "").padStart(2, "0");
+      const minute = String(timeValue.minute ?? "").padStart(2, "0");
+      if (hour.trim() && minute.trim()) {
+        return `${hour}:${minute}`;
+      }
+    }
+    return "";
   };
 
   const mapStepTicketToApiPayload = (ticket) => {
