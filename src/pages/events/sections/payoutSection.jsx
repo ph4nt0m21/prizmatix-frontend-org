@@ -46,7 +46,13 @@ const PayoutSection = ({ eventId, dashboardData, tableOnly = false }) => {
   const [submitError, setSubmitError] = useState(null);
 
   const fetchPayoutData = useCallback(async () => {
-    if (!eventId) return;
+    if (!eventId) {
+      setLoading(false);
+      setError(null);
+      setEligibility(null);
+      setRequests([]);
+      return;
+    }
     try {
       setLoading(true);
       setError(null);

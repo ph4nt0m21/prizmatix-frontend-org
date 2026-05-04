@@ -25,9 +25,7 @@ const Toolbar = ({ activeTab, searchQuery, setSearchQuery, data, currentFilters,
   const isOrdersTab = activeTab === 'Orders';
 
 
-  const searchPlaceholder = isOrdersTab
-    ? "Search by Order ID, Name, or Mail..."
-    : "Search by Attendee Name...";
+  const searchPlaceholder = '';
 
   const handleExportPDF = () => {
     const doc = new jsPDF({ orientation: 'landscape' });

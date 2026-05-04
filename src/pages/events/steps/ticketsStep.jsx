@@ -208,7 +208,6 @@ const TicketsStep = ({
                         name="name"
                         type="text"
                         className={styles.ticketInput}
-                        placeholder="e.g. General Admission"
                         value={ticket.name || ''}
                         onChange={(e) => handleTicketRowChange(e, index)}
                       />
@@ -218,7 +217,6 @@ const TicketsStep = ({
                         name="quantity"
                         type="number"
                         className={styles.ticketInput}
-                        placeholder="100"
                         value={ticket.quantity === 'No Limit' ? '' : ticket.quantity || ''}
                         onChange={(e) => handleTicketRowChange(e, index)}
                       />
@@ -231,7 +229,6 @@ const TicketsStep = ({
                           type="number"
                           step="0.01"
                           className={styles.ticketInput}
-                          placeholder="25.00"
                           value={ticket.price || ''}
                           onChange={(e) => handleTicketRowChange(e, index)}
                         />
@@ -242,7 +239,6 @@ const TicketsStep = ({
                         name="maxPurchaseAmount"
                         type="number"
                         className={styles.ticketInput}
-                        placeholder="10"
                         value={ticket.maxPurchaseAmount === 'No Limit' ? '' : ticket.maxPurchaseAmount || ''}
                         onChange={(e) => handleTicketRowChange(e, index)}
                       />

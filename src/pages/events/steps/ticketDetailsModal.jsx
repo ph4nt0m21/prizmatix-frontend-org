@@ -213,7 +213,6 @@ const TicketDetailsModal = ({
                     id="name"
                     name="name"
                     className={styles.formInput}
-                    placeholder="e.g., Early Bird"
                     value={localTicket.name || ''}
                     onChange={handleInputChange}
                   />
@@ -231,7 +230,6 @@ const TicketDetailsModal = ({
                       name="price"
                       step="0.01"
                       className={styles.formInput}
-                      placeholder="25.00"
                       value={localTicket.price || ''}
                       onChange={handleInputChange}
                     />
@@ -266,7 +264,6 @@ const TicketDetailsModal = ({
                         id="quantity"
                         name="quantity"
                         className={styles.formInput}
-                        placeholder="Enter quantity"
                         value={localTicket.quantity === 'No Limit' ? '' : (localTicket.quantity || '')}
                         onChange={handleInputChange}
                       />
@@ -287,7 +284,6 @@ const TicketDetailsModal = ({
                     id="maxPurchaseAmount"
                     name="maxPurchaseAmount"
                     className={styles.formInput}
-                    placeholder="e.g., 10"
                     value={localTicket.maxPurchaseAmount === 'No Limit' ? '' : localTicket.maxPurchaseAmount || ''}
                     onChange={handleInputChange}
                   />
@@ -307,7 +303,7 @@ const TicketDetailsModal = ({
                     </div>
                     <textarea
                       id="description" name="description"
-                      className={styles.editorContent} placeholder="Enter ticket description..."
+                      className={styles.editorContent}
                       value={localTicket.description || ''} onChange={handleInputChange}
                     ></textarea>
                   </div>
@@ -351,7 +347,6 @@ const TicketDetailsModal = ({
                           showTimeSelect
                           dateFormat="MM/dd/yyyy h:mm aa"
                           className={styles.formInput}
-                          placeholderText="Select start date and time"
                           isClearable
                         />
                       </div>
@@ -364,7 +359,6 @@ const TicketDetailsModal = ({
                           showTimeSelect
                           dateFormat="MM/dd/yyyy h:mm aa"
                           className={styles.formInput}
-                          placeholderText="Select end date and time"
                           isClearable
                         />
                       </div>

@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import PropTypes from 'prop-types';
 import styles from './overviewSection.module.scss';
 import Chart from 'react-apexcharts';
-import { format, startOfWeek, startOfMonth, startOfYear } from 'date-fns';
+import { format, startOfWeek, startOfMonth, startOfYear, isValid } from 'date-fns';
 import RecentOrdersModal from './recentOrdersModal';
 import { getPublishedEventTimingStatus } from '../eventStatusUtils';
 
@@ -18,8 +18,10 @@ const OverviewSection = ({ dashboardData, eventData }) => {
 
     const aggregationMap = new Map();
 
-    sales.forEach(sale => {
+    sales.forEach((sale) => {
       const date = new Date(sale.date);
+      if (!isValid(date)) return;
+
       let key;
 
       switch (salesTimeframe) {
@@ -34,24 +36,29 @@ const OverviewSection = ({ dashboardData, eventData }) => {
           break;
         case 'Daily':
         default:
-          key = sale.date;
+          key = format(date, 'yyyy-MM-dd');
           break;
       }
       aggregationMap.set(key, (aggregationMap.get(key) || 0) + sale.amount);
     });
-    
-    const sortedData = (salesTimeframe === 'Daily'
-      ? Array.from(aggregationMap.entries()).sort((a, b) => new Date(a[0]) - new Date(b[0])).slice(-30)
-      : Array.from(aggregationMap.entries()).sort((a, b) => new Date(a[0]) - new Date(b[0]))
+
+    const sortedData = Array.from(aggregationMap.entries()).sort(
+      (a, b) => new Date(a[0]) - new Date(b[0])
     );
-    
+
     const categories = sortedData.map(([dateKey]) => {
       const date = new Date(dateKey);
       switch (salesTimeframe) {
-        case 'Weekly': return format(date, 'MMM dd');
-        case 'Monthly': return format(date, 'MMM yyyy');
-        case 'Yearly': return format(date, 'yyyy');
-        default: return format(date, 'MMM dd');
+        case 'Weekly':
+          return format(date, 'MMM d');
+        case 'Monthly':
+          return format(date, 'MMM yyyy');
+        case 'Yearly':
+          return format(date, 'yyyy');
+        case 'Daily':
+          return format(date, 'MMM d');
+        default:
+          return format(date, 'MMM d');
       }
     });
 
@@ -59,6 +66,83 @@ const OverviewSection = ({ dashboardData, eventData }) => {
 
     return { categories, data };
   }, [dashboardData?.salesOverview, salesTimeframe]);
+
+  const salesChartHeight = salesTimeframe === 'Daily' ? 340 : 250;
+
+  const chartOptions = useMemo(() => {
+    const isDaily = salesTimeframe === 'Daily';
+    return {
+      chart: { type: 'bar', height: salesChartHeight, toolbar: { show: false } },
+      plotOptions: {
+        bar: {
+          columnWidth: isDaily ? '55%' : '45%',
+          distributed: false,
+          borderRadius: 4,
+        },
+      },
+      dataLabels: { enabled: false },
+      legend: { show: false },
+      xaxis: {
+        categories: aggregatedSalesData.categories,
+        labels: {
+          style: { colors: '#6B7280', fontSize: isDaily ? '10px' : '12px' },
+          ...(isDaily
+            ? {
+                rotate: -45,
+                rotateAlways: true,
+                hideOverlappingLabels: false,
+                trim: false,
+              }
+            : {}),
+        },
+      },
+      yaxis: {
+        labels: {
+          style: { colors: '#6B7280', fontSize: '12px' },
+          formatter: (val) => `$${val.toFixed(0)}`,
+        },
+      },
+      fill: { colors: ['#A78BFA'] },
+      grid: {
+        borderColor: '#F3F4F6',
+        padding: { bottom: isDaily ? 12 : 0, left: 4, right: 8 },
+      },
+      tooltip: {
+        enabled: true,
+        custom: function ({ series, seriesIndex, dataPointIndex, w }) {
+          const value = series[seriesIndex][dataPointIndex];
+          const formattedValue = new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: 'USD',
+          }).format(value);
+          const label = w.globals?.categoryLabels?.[dataPointIndex] ?? '';
+          const title = label
+            ? `<div style="font-size:12px;color:#6B7280;margin-bottom:6px">${label}</div>`
+            : '';
+          return `
+          <div style="
+            padding: 8px 12px;
+            background-color: #FFFFFF;
+            color: #111827;
+            border: 1px solid #E5E7EB;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 14px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+          ">
+            ${title}
+            <span>${formattedValue}</span>
+          </div>
+        `;
+        },
+      },
+    };
+  }, [aggregatedSalesData, salesTimeframe]);
+
+  const chartSeries = useMemo(
+    () => [{ name: 'Sales', data: aggregatedSalesData.data }],
+    [aggregatedSalesData.data]
+  );
 
   // --- Early return for loading state now happens *after* all hooks ---
   if (!dashboardData || !eventData) {
@@ -87,53 +171,6 @@ const OverviewSection = ({ dashboardData, eventData }) => {
   const locationString = [eventData.location?.city, eventData.location?.country].filter(Boolean).join(', ');
   const dateString = formatDate(eventData.startDate);
   const eventMetaString = [locationString, dateString === 'N/A' ? null : dateString].filter(Boolean).join(' · ');
-
-
-  // --- Chart Configuration ---
-  const chartOptions = {
-    chart: { type: 'bar', height: 250, toolbar: { show: false } },
-    plotOptions: { bar: { columnWidth: '45%', distributed: false, borderRadius: 4 } },
-    dataLabels: { enabled: false },
-    legend: { show: false },
-    xaxis: {
-      categories: aggregatedSalesData.categories,
-      labels: { style: { colors: '#6B7280', fontSize: '12px' } }
-    },
-    yaxis: {
-      labels: {
-        style: { colors: '#6B7280', fontSize: '12px' },
-        formatter: (val) => `$${val.toFixed(0)}`
-      }
-    },
-    fill: { colors: ['#A78BFA'] },
-    grid: { borderColor: '#F3F4F6' },
-    tooltip: {
-      enabled: true,
-      custom: function({ series, seriesIndex, dataPointIndex, w }) {
-        const value = series[seriesIndex][dataPointIndex];
-        const formattedValue = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
-        
-        return `
-          <div style="
-            padding: 8px 12px;
-            background-color: #FFFFFF;
-            color: #111827;
-            border: 1px solid #E5E7EB;
-            border-radius: 6px;
-            font-family: inherit;
-            font-size: 14px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-          ">
-            <span>${formattedValue}</span>
-          </div>
-        `;
-      }
-    }
-  };
-  const chartSeries = [{
-    name: 'Sales',
-    data: aggregatedSalesData.data
-  }];
 
   return (
     <>
@@ -259,7 +296,7 @@ const OverviewSection = ({ dashboardData, eventData }) => {
           </div>
           <div className={styles.chartContainer}>
             <div className={styles.chartValue}>{formatCurrency(dashboardData.revenue)}</div>
-            <Chart options={chartOptions} series={chartSeries} type="bar" height="250" />
+            <Chart options={chartOptions} series={chartSeries} type="bar" height={salesChartHeight} />
           </div>
         </div>
       </div>

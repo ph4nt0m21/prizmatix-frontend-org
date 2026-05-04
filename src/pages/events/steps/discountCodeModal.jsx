@@ -226,7 +226,6 @@ const DiscountCodeModal = ({
                     id="code"
                     name="code"
                     className={styles.formInput}
-                    placeholder="e.g. EARLY10"
                     value={localDiscountCode.code || ""}
                     onChange={handleInputChange}
                   />
@@ -259,7 +258,6 @@ const DiscountCodeModal = ({
                     min="0"
                     step="0.01"
                     className={styles.formInput}
-                    placeholder="e.g. 10"
                     value={localDiscountCode.value || ""}
                     onChange={handleInputChange}
                   />
@@ -275,7 +273,6 @@ const DiscountCodeModal = ({
                     name="usageLimit"
                     min="0"
                     className={styles.formInput}
-                    placeholder="e.g. 100"
                     value={localDiscountCode.usageLimit || ""}
                     onChange={handleInputChange}
                   />
@@ -347,7 +344,6 @@ const DiscountCodeModal = ({
                     showTimeSelect
                     dateFormat="MM/dd/yyyy h:mm aa"
                     className={styles.formInput}
-                    placeholderText="Select start date and time"
                     isClearable
                   />
                 </div>
@@ -360,7 +356,6 @@ const DiscountCodeModal = ({
                     showTimeSelect
                     dateFormat="MM/dd/yyyy h:mm aa"
                     className={styles.formInput}
-                    placeholderText="Select end date and time"
                     isClearable
                   />
                 </div>

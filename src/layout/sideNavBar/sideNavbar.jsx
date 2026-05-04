@@ -128,7 +128,7 @@ const SideNavBar = ({ isMobileSidebarOpen, toggleMobileSidebar }) => {
           },
           {
             id: 'reports',
-            path: '/reports/87',
+            path: '/reports',
             label: 'Reports',
             defaultIcon: ReportsDefault,
             hoverIcon: ReportsHover,

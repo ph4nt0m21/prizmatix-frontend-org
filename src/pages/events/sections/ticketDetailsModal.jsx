@@ -260,7 +260,6 @@ const TicketDetailsModal = ({
                     id="name"
                     name="name"
                     className={styles.formInput}
-                    placeholder="Early Bird"
                     value={localTicket.name || ""}
                     onChange={handleInputChange}
                   />
@@ -277,7 +276,6 @@ const TicketDetailsModal = ({
                       id="price"
                       name="price"
                       className={styles.formInput}
-                      placeholder="0.00"
                       value={localTicket.price || ""}
                       onChange={handleInputChange}
                     />
@@ -316,7 +314,6 @@ const TicketDetailsModal = ({
                         id="quantity"
                         name="quantity"
                         className={styles.formInput}
-                        placeholder="Enter quantity"
                         value={
                           localTicket.quantity === "No Limit"
                             ? ""
@@ -363,7 +360,6 @@ const TicketDetailsModal = ({
                         id="maxPurchaseAmount"
                         name="maxPurchaseAmount" // CORRECTED: Renamed from "purchaseLimit"
                         className={styles.formInput}
-                        placeholder="Maximum tickets per order"
                         value={localTicket.maxPurchaseAmount || ""}
                         onChange={handleInputChange}
                       />
@@ -398,7 +394,6 @@ const TicketDetailsModal = ({
                       id="description"
                       name="description"
                       className={styles.editorContent}
-                      placeholder="Enter ticket description"
                       value={localTicket.description || ""}
                       onChange={handleInputChange}
                     ></textarea>
@@ -457,7 +452,6 @@ const TicketDetailsModal = ({
                               id="salesStartDate"
                               name="salesStartDate"
                               className={styles.formInput}
-                              placeholder="MM/DD/YYYY"
                               value={localTicket.salesStartDate || ""}
                               onChange={handleInputChange}
                             />
@@ -475,7 +469,6 @@ const TicketDetailsModal = ({
                               id="salesStartTime"
                               name="salesStartTime"
                               className={styles.formInput}
-                              placeholder="HH:MM AM/PM"
                               value={localTicket.salesStartTime || ""}
                               onChange={handleInputChange}
                             />
@@ -499,7 +492,6 @@ const TicketDetailsModal = ({
                               id="salesEndDate"
                               name="salesEndDate"
                               className={styles.formInput}
-                              placeholder="MM/DD/YYYY"
                               value={localTicket.salesEndDate || ""}
                               onChange={handleInputChange}
                             />
@@ -517,7 +509,6 @@ const TicketDetailsModal = ({
                               id="salesEndTime"
                               name="salesEndTime"
                               className={styles.formInput}
-                              placeholder="HH:MM AM/PM"
                               value={localTicket.salesEndTime || ""}
                               onChange={handleInputChange}
                             />
