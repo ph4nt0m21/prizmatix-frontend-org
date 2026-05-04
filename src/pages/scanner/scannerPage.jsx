@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import QrScanner from 'react-qr-scanner';
 import styles from './scannerPage.module.scss';
 import { FiXCircle, FiCheckCircle, FiMaximize, FiUsers } from 'react-icons/fi';
 import AttendeesTable from './components/attendeesTable';
+import Toolbar from '../reports/components/toolbar';
 import {
   GetAllOrganizationEventsAPI,
   GetEventAttendeesAPI,
@@ -11,6 +12,7 @@ import {
   VerifyQrCodeAPI,
 } from '../../services/allApis';
 import { getUserData } from '../../utils/authUtil';
+import EventCombobox from '../../components/common/eventCombobox/eventCombobox';
 
 const ScannerPage = () => {
   const [isScannerOpen, setIsScannerOpen] = useState(false);
@@ -23,6 +25,13 @@ const ScannerPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isEventLoading, setIsEventLoading] = useState(true);
   const [hasScanned, setHasScanned] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [attendeeFilters, setAttendeeFilters] = useState({
+    ticketType: 'All',
+    status: 'All',
+    startDate: '',
+    endDate: '',
+  });
 
   useEffect(() => {
     const fetchOrganizationEvents = async () => {
@@ -40,7 +49,6 @@ const ScannerPage = () => {
         const response = await GetAllOrganizationEventsAPI(orgId);
         const list = Array.isArray(response.data) ? response.data : response.data?.content || [];
         setEvents(list);
-        setSelectedEventId(list[0]?.id ? String(list[0].id) : '');
       } catch (err) {
         console.error('Failed to fetch organization events:', err);
         setError('Could not load organization events.');
@@ -70,6 +78,9 @@ const ScannerPage = () => {
           ticketType: a.ticketType || 'N/A',
           isCheckedIn: !!a.checkedIn,
           checkedInAt: a.checkedInAt || null,
+          orderDate: a.orderDate,
+          orderId: a.orderId != null ? `#${a.orderId}` : '',
+          email: a.attendeeEmail || '',
         }));
         setAttendees(formatted);
       } catch (err) {
@@ -82,6 +93,50 @@ const ScannerPage = () => {
 
     fetchAttendeesForEvent();
   }, [selectedEventId]);
+
+  const filteredAttendees = useMemo(() => {
+    return attendees.filter((attendee) => {
+      const q = searchQuery.trim().toLowerCase();
+      const searchMatch =
+        !q ||
+        (attendee.name && attendee.name.toLowerCase().includes(q)) ||
+        (attendee.ticketType && attendee.ticketType.toLowerCase().includes(q)) ||
+        (attendee.email && attendee.email.toLowerCase().includes(q)) ||
+        (attendee.orderId && String(attendee.orderId).toLowerCase().includes(q));
+
+      const ticketTypeMatch =
+        attendeeFilters.ticketType === 'All' || attendee.ticketType === attendeeFilters.ticketType;
+
+      const statusMatch =
+        attendeeFilters.status === 'All' ||
+        (attendeeFilters.status === 'Checked In' && attendee.isCheckedIn) ||
+        (attendeeFilters.status === 'Not Checked In' && !attendee.isCheckedIn);
+
+      let dateMatch = true;
+      if (attendeeFilters.startDate || attendeeFilters.endDate) {
+        const od = attendee.orderDate ? new Date(attendee.orderDate) : null;
+        if (!od || Number.isNaN(od.getTime())) {
+          dateMatch = false;
+        } else {
+          if (attendeeFilters.startDate) {
+            dateMatch = dateMatch && od >= new Date(attendeeFilters.startDate);
+          }
+          if (attendeeFilters.endDate) {
+            const endDate = new Date(attendeeFilters.endDate);
+            endDate.setHours(23, 59, 59, 999);
+            dateMatch = dateMatch && od <= endDate;
+          }
+        }
+      }
+
+      return searchMatch && ticketTypeMatch && statusMatch && dateMatch;
+    });
+  }, [attendees, searchQuery, attendeeFilters]);
+
+  const ticketTypes = useMemo(() => {
+    const types = [...new Set(attendees.map((a) => a.ticketType).filter(Boolean))];
+    return ['All', ...types];
+  }, [attendees]);
 
   const handleScan = async (data) => {
     if (data) {
@@ -102,6 +157,9 @@ const ScannerPage = () => {
           ticketType: a.ticketType || 'N/A',
           isCheckedIn: !!a.checkedIn,
           checkedInAt: a.checkedInAt || null,
+          orderDate: a.orderDate,
+          orderId: a.orderId != null ? `#${a.orderId}` : '',
+          email: a.attendeeEmail || '',
         }));
         const scannedById = new Map(scannedAttendees.map((a) => [a.id, a]));
         setAttendees((current) =>
@@ -158,7 +216,7 @@ const ScannerPage = () => {
   // ✅ NEW FUNCTION — Check in all currently filtered attendees
   const handleCheckInAll = async () => {
     try {
-      const unchecked = attendees.filter((a) => !a.isCheckedIn);
+      const unchecked = filteredAttendees.filter((a) => !a.isCheckedIn);
       if (unchecked.length === 0) {
         setSuccessMessage('All attendees are already checked in.');
         return;
@@ -189,28 +247,28 @@ const ScannerPage = () => {
           <label htmlFor="event-selector" className={styles.eventSelectorLabel}>
             Event
           </label>
-          <select
+          <EventCombobox
             id="event-selector"
-            className={styles.eventSelector}
-            value={selectedEventId}
-            onChange={(e) => {
-              setSelectedEventId(e.target.value);
+            events={events}
+            valueId={selectedEventId}
+            onChange={(id) => {
+              setSelectedEventId(id);
               setHasScanned(false);
               setSuccessMessage(null);
               setError(null);
+              setSearchQuery('');
+              setAttendeeFilters({
+                ticketType: 'All',
+                status: 'All',
+                startDate: '',
+                endDate: '',
+              });
             }}
             disabled={isEventLoading || events.length === 0}
-          >
-            {events.length === 0 ? (
-              <option value="">No events available</option>
-            ) : (
-              events.map((event) => (
-                <option key={event.id} value={event.id}>
-                  {event.name}
-                </option>
-              ))
-            )}
-          </select>
+            loading={isEventLoading}
+            placeholder=""
+            emptyListMessage="No events available"
+          />
         </div>
         {isScannerOpen ? (
           <div className={styles.scannerActive}>
@@ -258,10 +316,10 @@ const ScannerPage = () => {
           <h2>Attendee List</h2>
           {/* ✅ NEW BUTTON */}
           {hasScanned && attendees.length > 0 && (
-  <button className={styles.checkInAllButton} onClick={handleCheckInAll}>
-    Check In All
-  </button>
-)}
+            <button className={styles.checkInAllButton} onClick={handleCheckInAll}>
+              Check In All
+            </button>
+          )}
         </div>
 
         {isLoading ? (
@@ -269,7 +327,20 @@ const ScannerPage = () => {
         ) : !selectedEventId ? (
           <p className={styles.loadingText}>Select an event to see attendees.</p>
         ) : (
-          <AttendeesTable attendees={attendees} onToggleCheckIn={handleToggleCheckIn} />
+          <>
+            <div className={styles.toolbarRow}>
+              <Toolbar
+                activeTab="Attendees"
+                searchQuery={searchQuery}
+                setSearchQuery={setSearchQuery}
+                data={filteredAttendees}
+                currentFilters={attendeeFilters}
+                onApplyFilters={setAttendeeFilters}
+                ticketTypes={ticketTypes}
+              />
+            </div>
+            <AttendeesTable attendees={filteredAttendees} onToggleCheckIn={handleToggleCheckIn} />
+          </>
         )}
       </div>
     </div>

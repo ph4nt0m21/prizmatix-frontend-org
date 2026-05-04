@@ -254,7 +254,6 @@ const DiscountCodesStep = ({
                       <input
                         type="text"
                         name="code"
-                        placeholder="e.g. BUZZ25"
                         value={code.code || ''}
                         onChange={(e) => handleDiscountCodeRowChange(e, index)}
                         className={styles.inlineInput}
@@ -275,7 +274,6 @@ const DiscountCodesStep = ({
                       <input
                         type="number"
                         name="value"
-                        placeholder="25"
                         step="0.01"
                         value={code.value || ''}
                         onChange={(e) => handleDiscountCodeRowChange(e, index)}
@@ -286,7 +284,6 @@ const DiscountCodesStep = ({
                       <input
                         type="number"
                         name="usageLimit"
-                        placeholder="100"
                         value={code.usageLimit || ''}
                         onChange={(e) => handleDiscountCodeRowChange(e, index)}
                         className={styles.inlineInput}

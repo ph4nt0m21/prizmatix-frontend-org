@@ -15,12 +15,17 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  background-color: #FFFFFF;
+  background-color: #ffffff;
   border-radius: 8px;
-  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   z-index: 1001;
-  width: 100%;
+  box-sizing: border-box;
+  width: calc(
+    100vw - 40px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)
+  );
   max-width: 500px;
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
 }
 
 .header {

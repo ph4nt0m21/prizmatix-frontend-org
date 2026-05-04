@@ -13,6 +13,7 @@ import OrdersTable from './components/ordersTable';
 import AttendeesTable from './components/attendeesTable';
 import OrderDetailsModal from './components/orderDetailsModal';
 import PayoutSection from '../events/sections/payoutSection';
+import EventCombobox from '../../components/common/eventCombobox/eventCombobox';
 
 const ReportsPage = () => {
   const { eventId } = useParams();
@@ -27,6 +28,7 @@ const ReportsPage = () => {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false);
   const [events, setEvents] = useState([]);
+  const [isEventsLoading, setIsEventsLoading] = useState(true);
   const [filters, setFilters] = useState({
     ticketType: 'All',
     status: 'All',
@@ -38,6 +40,7 @@ const ReportsPage = () => {
   useEffect(() => {
     const fetchEvents = async () => {
       try {
+        setIsEventsLoading(true);
         const userData = getUserData();
         const orgId = userData?.organizationId;
         if (orgId) {
@@ -47,12 +50,30 @@ const ReportsPage = () => {
         }
       } catch (err) {
         console.error('Failed to fetch events:', err);
+      } finally {
+        setIsEventsLoading(false);
       }
     };
     fetchEvents();
   }, []);
 
   useEffect(() => {
+    if (events.length === 0) return;
+    setFilters((prev) => {
+      const urlMatch = eventId && events.some((e) => String(e.id) === String(eventId));
+      const prevValid = prev.eventId && events.some((e) => String(e.id) === String(prev.eventId));
+      if (prevValid) return prev;
+      if (urlMatch) return { ...prev, eventId: String(eventId) };
+      return { ...prev, eventId: '' };
+    });
+  }, [events, eventId]);
+
+  useEffect(() => {
+    if (activeTab === 'Payout') {
+      setIsLoading(false);
+      return;
+    }
+
     const fetchEventSpecificData = async (targetEventId) => {
       setIsLoading(true);
       setError(null);
@@ -77,7 +98,7 @@ const ReportsPage = () => {
             id: attendee.ticketId || `att-${index}`,
             name: attendee.attendeeName,
             ticketType: attendee.ticketType,
-            isCheckedIn: false,
+            isCheckedIn: !!attendee.checkedIn,
           }));
           setAttendees(formattedAttendees);
         }
@@ -93,7 +114,7 @@ const ReportsPage = () => {
     if (targetEventId) {
       fetchEventSpecificData(targetEventId);
     } else {
-      setError("Please select an event or ensure Event ID is in the URL.");
+      setError('Select an event to view reports.');
       setIsLoading(false);
     }
   }, [activeTab, eventId, filters.eventId]);
@@ -154,6 +175,23 @@ const ReportsPage = () => {
       <div className={styles.reportsContainer}>
         <div className={styles.headerSection}>
           <h1 className={styles.mainHeader}>Reports</h1>
+          <div className={styles.eventSelectorRow}>
+            <label htmlFor="reports-event-selector" className={styles.eventSelectorLabel}>
+              Event
+            </label>
+            <EventCombobox
+              id="reports-event-selector"
+              events={events}
+              valueId={filters.eventId || ''}
+              onChange={(nextId) => {
+                setFilters((prev) => ({ ...prev, eventId: nextId }));
+                setSearchQuery('');
+              }}
+              disabled={isEventsLoading || events.length === 0}
+              loading={isEventsLoading}
+              placeholder=""
+            />
+          </div>
           <div className={styles.tabsContainer}>
             <button
               className={`${styles.tabButton} ${activeTab === 'Orders' ? styles.active : ''}`}
@@ -197,7 +235,6 @@ const ReportsPage = () => {
                   isOpen={isFilterPanelOpen}
                   onApplyFilters={(f) => setFilters(prev => ({ ...prev, ...f }))}
                   currentFilters={filters}
-                  events={events}
                 />
               )}
               {activeTab === 'Attendees' && (
@@ -205,7 +242,6 @@ const ReportsPage = () => {
                   isOpen={isFilterPanelOpen}
                   onApplyFilters={(f) => setFilters(prev => ({ ...prev, ...f }))}
                   currentFilters={filters}
-                  events={events}
                 />
               )}
               <div className={styles.tableSection}>
@@ -215,7 +251,13 @@ const ReportsPage = () => {
           )}
           {activeTab === 'Payout' && (
             <div className={styles.tableSection}>
-              <PayoutSection eventId={filters.eventId || eventId} tableOnly={true} />
+              {!(filters.eventId || eventId) ? (
+                <div className={styles.placeholder}>
+                  <p>Select an event to view payout requests.</p>
+                </div>
+              ) : (
+                <PayoutSection eventId={filters.eventId || eventId} tableOnly={true} />
+              )}
             </div>
           )}
         </div>

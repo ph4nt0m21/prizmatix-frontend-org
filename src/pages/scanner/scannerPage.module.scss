@@ -56,24 +56,6 @@
   font-weight: 600;
 }
 
-.eventSelector {
-  flex: 1;
-  min-width: 0;
-  height: 40px;
-  border: 1px solid #D1D5DB;
-  border-radius: 8px;
-  padding: 0 0.75rem;
-  background-color: #FFFFFF;
-  color: #111827;
-  font-size: 0.95rem;
-
-  &:focus {
-    outline: none;
-    border-color: #7C3AED;
-    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15);
-  }
-}
-
 .checkInAllButton {
   background-color: #b042ff;
   /* Primary purple tone */
@@ -146,6 +128,12 @@
     font-weight: 600;
     margin: 0;
   }
+}
+
+.toolbarRow {
+  padding-bottom: 1rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid #e5e7eb;
 }
 
 .loadingText {
