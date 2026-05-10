@@ -29,11 +29,17 @@ const isPublishReadyFromEventData = (event = {}, dashboard = {}) => {
 
   const isTba =
     event?.location?.isToBeAnnounced === true || event?.eventLocationType === "tba";
-  const hasLocation = isTba || Boolean(
-    event?.location?.venue ||
-      event?.eventLocationName ||
-      (event?.location?.city && (event?.location?.country || event?.country))
-  );
+  const isOnline =
+    event?.eventLocationType === "online" ||
+    event?.location?.locationType === "online";
+  const hasLocation =
+    isTba ||
+    isOnline ||
+    Boolean(
+      event?.location?.venue ||
+        event?.eventLocationName ||
+        (event?.location?.city && (event?.location?.country || event?.country))
+    );
 
   const hasTickets =
     Number(dashboard?.totalTicketCapacity || 0) > 0 ||

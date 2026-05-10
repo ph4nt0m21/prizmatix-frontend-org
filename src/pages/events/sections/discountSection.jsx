@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import { toast } from "react-toastify";
 import styles from "./discountSection.module.scss";
 import DiscountCodesStep from "../steps/discountCodesStep";
 import LoadingSpinner from "../../../components/common/loadingSpinner/loadingSpinner";
@@ -217,6 +218,15 @@ const DiscountSection = ({ onCommitSuccess = () => {} }) => {
     }
   };
 
+  const handleSaveDiscountsClick = async () => {
+    const ok = await onDiscountCodesCommit();
+    if (ok) {
+      toast.success("Coupon codes saved successfully.");
+    }
+  };
+
+  const canSaveDiscountCodes = validateDiscountCodes(eventData.discountCodes);
+
   return (
     <div className={styles.discountSectionContainer}>
       {isLoading ? (
@@ -233,6 +243,16 @@ const DiscountSection = ({ onCommitSuccess = () => {} }) => {
             stepStatus={{ visited: true }}
             fetchAvailableTickets={() => GetEventTicketStructuresAPI(eventId)}
           />
+          <div className={styles.saveActions}>
+            <button
+              type="button"
+              className={styles.saveButton}
+              onClick={handleSaveDiscountsClick}
+              disabled={isSavingDiscountCodes || !canSaveDiscountCodes}
+            >
+              {isSavingDiscountCodes ? "Saving…" : "Save changes"}
+            </button>
+          </div>
         </>
       )}
     </div>

@@ -108,6 +108,217 @@ export const clearEventDataOnLogout = () => {
 };
 
 /**
+ * Maps GetEvent API payload (nested `location` and/or flat `eventLocation*` fields) into
+ * the shape expected by LocationStep — used by create and edit flows.
+ * @param {Object} eventPayload - response.data from GetEventAPI
+ * @returns {Object} Form location state
+ */
+export const mapEventApiPayloadToLocationForm = (eventPayload = {}) => {
+  const locationPayload = eventPayload?.location || {};
+  const ep = eventPayload;
+
+  const firstString = (...vals) => {
+    for (const v of vals) {
+      if (v !== undefined && v !== null && String(v).trim() !== "") {
+        return String(v);
+      }
+    }
+    return "";
+  };
+
+  const firstCoord = (...vals) => {
+    for (const v of vals) {
+      if (v !== undefined && v !== null && v !== "") {
+        return String(v);
+      }
+    }
+    return "";
+  };
+
+  const rawLocationType =
+    locationPayload.locationType ||
+    locationPayload.eventLocationType ||
+    ep?.eventLocationType ||
+    (locationPayload.isToBeAnnounced ? "tba" : "physical");
+
+  const normalizedType = String(rawLocationType || "physical").toLowerCase();
+  let locationTypeFromApi = "physical";
+  if (normalizedType === "to_be_announced" || normalizedType === "tba") {
+    locationTypeFromApi = "tba";
+  } else if (normalizedType === "online") {
+    locationTypeFromApi = "online";
+  } else if (normalizedType === "private") {
+    locationTypeFromApi = "private";
+  } else if (normalizedType === "physical") {
+    locationTypeFromApi = "physical";
+  }
+
+  const mergedDescriptionFromApi = firstString(
+    locationPayload.additionalInfo,
+    ep?.additionalInfo,
+    ep?.eventLocationAdditionalInfo
+  );
+
+  const isOnlineType = String(locationTypeFromApi).toLowerCase() === "online";
+
+  /**
+   * Backend stores one `description` on EventLocation for online events, built from
+   * onlineEventDescription + "\n\n" + additionalInfo when both exist. GET exposes it as
+   * eventLocationAdditionalInfo only — so we split / route back into the two form fields.
+   */
+  const routeSingleSegmentOnlineBlob = (text) => {
+    const t = String(text).trim();
+    if (!t) return { join: "", extra: "" };
+    const looksLikePrimaryJoin =
+      /^https?:\/\//i.test(t) ||
+      /\b(zoom\.us|meet\.google|teams\.microsoft|webex\.com|whereby\.com)\b/i.test(
+        t
+      );
+    if (looksLikePrimaryJoin) return { join: t, extra: "" };
+    return { join: "", extra: t };
+  };
+
+  const parseOnlineLocationBlob = (combined) => {
+    if (!combined || !String(combined).trim()) {
+      return { join: "", extra: "" };
+    }
+    const s = String(combined);
+    const idx = s.indexOf("\n\n");
+    if (idx >= 0) {
+      return {
+        join: s.slice(0, idx).trim(),
+        extra: s.slice(idx + 2).trim(),
+      };
+    }
+    return routeSingleSegmentOnlineBlob(s);
+  };
+
+  const explicitOnlineDesc = firstString(
+    locationPayload.onlineEventDescription,
+    ep?.onlineEventDescription
+  );
+  const explicitAdditionalOnline = firstString(
+    locationPayload.additionalInfo,
+    ep?.additionalInfo
+  );
+
+  const combinedOnlineBlob = firstString(
+    ep?.eventLocationAdditionalInfo,
+    locationPayload.eventLocationAdditionalInfo,
+    locationPayload.description
+  );
+
+  let onlineJoinField = "";
+  let onlineExtraField = "";
+
+  if (isOnlineType) {
+    if (explicitOnlineDesc !== "" || explicitAdditionalOnline !== "") {
+      onlineJoinField = explicitOnlineDesc;
+      onlineExtraField = explicitAdditionalOnline;
+    } else {
+      const parsed = parseOnlineLocationBlob(combinedOnlineBlob);
+      onlineJoinField = parsed.join;
+      onlineExtraField = parsed.extra;
+    }
+  }
+
+  return {
+    locationType: locationTypeFromApi,
+    isToBeAnnounced:
+      locationPayload.isToBeAnnounced != null
+        ? Boolean(locationPayload.isToBeAnnounced)
+        : locationTypeFromApi === "tba",
+    isPrivateLocation:
+      locationPayload.isPrivateLocation != null
+        ? Boolean(locationPayload.isPrivateLocation)
+        : locationTypeFromApi === "private",
+    googleMapLink: firstString(
+      locationPayload.googleMapLink,
+      locationPayload.mapLink,
+      ep?.googleMapLink,
+      ep?.eventLocationGoogleMapLink
+    ),
+    venue: isOnlineType
+      ? firstString(
+          locationPayload.venue,
+          locationPayload.venueName,
+          ep?.eventLocationName,
+          "Online Event"
+        )
+      : firstString(
+          locationPayload.venue,
+          locationPayload.venueName,
+          locationPayload.eventLocationName,
+          ep?.eventLocationName
+        ),
+    street: firstString(
+      locationPayload.street,
+      locationPayload.addressLine1,
+      ep?.street,
+      ep?.eventLocationStreet
+    ),
+    streetNumber: firstString(
+      locationPayload.streetNumber,
+      locationPayload.streetNo,
+      ep?.streetNo,
+      ep?.eventLocationStreetNumber
+    ),
+    city: firstString(
+      locationPayload.city,
+      ep?.city,
+      ep?.eventLocationCity
+    ),
+    postalCode: firstString(
+      locationPayload.postalCode,
+      locationPayload.zipCode,
+      ep?.postalCode,
+      ep?.eventLocationPostalCode
+    ),
+    state: firstString(
+      locationPayload.state,
+      locationPayload.province,
+      ep?.state,
+      ep?.eventLocationState
+    ),
+    country: firstString(
+      locationPayload.country,
+      ep?.country,
+      ep?.eventLocationCountry
+    ),
+    additionalInfo: isOnlineType ? onlineExtraField : mergedDescriptionFromApi,
+    onlineEventUrl: isOnlineType
+      ? firstString(
+          locationPayload.onlineEventUrl,
+          ep?.eventLocationAddress,
+          locationPayload.address,
+          ep?.address
+        )
+      : "",
+    onlineEventDescription: isOnlineType ? onlineJoinField : "",
+    latitude: firstCoord(
+      locationPayload.latitude,
+      locationPayload.lat,
+      ep?.latitude,
+      ep?.eventLocationLatitude
+    ),
+    longitude: firstCoord(
+      locationPayload.longitude,
+      locationPayload.lng,
+      ep?.longitude,
+      ep?.eventLocationLongitude
+    ),
+    formattedAddress: isOnlineType
+      ? ""
+      : firstString(
+          locationPayload.formattedAddress,
+          locationPayload.address,
+          ep?.address,
+          ep?.eventLocationAddress
+        ),
+  };
+};
+
+/**
  * Prepare location data for API submission
  * @param {Object} locationData - Location data from the form
  * @returns {Object} Formatted location data for API
@@ -115,9 +326,35 @@ export const clearEventDataOnLogout = () => {
 export const prepareLocationDataForAPI = (locationData) => {
   const userData = getUserData();
   const eventData = getEventData();
+  const eventId = eventData?.eventId || 0;
+  const updatedBy = userData?.id || eventData?.createdBy || 0;
+  const lt = String(locationData.locationType || "physical").toLowerCase();
+
+  if (lt === "online") {
+    return {
+      id: eventId,
+      locationType: "online",
+      eventLocationId: null,
+      venueName: "",
+      address: "",
+      latitude: 0,
+      longitude: 0,
+      streetNo: "",
+      street: "",
+      city: "",
+      state: "",
+      country: "",
+      postalCode: "",
+      googleMapLink: "",
+      onlineEventUrl: (locationData.onlineEventUrl || "").trim(),
+      onlineEventDescription: (locationData.onlineEventDescription || "").trim(),
+      additionalInfo: (locationData.additionalInfo || "").trim(),
+      updatedBy,
+    };
+  }
 
   return {
-    id: eventData?.eventId || 0,
+    id: eventId,
     locationType: locationData.locationType || "physical",
     eventLocationId: null, // This would be filled in on update
     venueName: locationData.venue || "",
@@ -131,10 +368,10 @@ export const prepareLocationDataForAPI = (locationData) => {
     country: locationData.country || "", // Country is now hardcoded
     postalCode: locationData.postalCode || "",
     googleMapLink: locationData.googleMapLink || "",
-    onlineEventUrl: "", // Not used in current implementation
-    onlineEventDescription: "", // Not used in current implementation
+    onlineEventUrl: "",
+    onlineEventDescription: "",
     additionalInfo: locationData.additionalInfo || "",
-    updatedBy: userData?.id || eventData?.createdBy || 0,
+    updatedBy,
   };
 };
 

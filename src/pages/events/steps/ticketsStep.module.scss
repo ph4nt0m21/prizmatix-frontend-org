@@ -174,10 +174,28 @@
   // This container is now a layout component for the scrolling wrapper and the add button
 }
 
+// Shared grid: header + rows use identical columns so labels line up with inputs
+$ticket-grid-columns:
+  32px
+  minmax(0, 2fr)
+  minmax(88px, 1fr)
+  minmax(96px, 1fr)
+  minmax(96px, 1fr)
+  minmax(80px, 96px);
+
+.tableContent {
+  .ticketTableHeader,
+  .ticketItem {
+    display: grid;
+    align-items: center;
+    column-gap: 12px;
+    padding: 12px 16px;
+    grid-template-columns: $ticket-grid-columns;
+  }
+}
+
 // Header row of the table
 .ticketTableHeader {
-  display: flex;
-  padding: 12px 16px;
   background-color: #f3f4f6;
   border-bottom: 1px solid #e5e7eb;
   border-radius: 8px 8px 0 0;
@@ -185,13 +203,24 @@
   font-weight: 600;
   color: #4b5563;
   text-transform: uppercase;
+
+  .ticketName {
+    text-align: left;
+  }
+
+  .ticketCount,
+  .ticketPrice {
+    text-align: center;
+  }
+
+  .ticketActions {
+    text-align: center;
+    justify-self: center;
+  }
 }
 
 // A single ticket row item
 .ticketItem {
-  display: flex;
-  align-items: center;
-  padding: 12px 16px;
   border-bottom: 1px solid #e5e7eb;
   transition: background-color 0.2s ease;
 
@@ -206,41 +235,50 @@
 
 // Drag handle icon
 .ticketDrag {
-  width: 24px;
+  width: 100%;
+  max-width: 32px;
+  justify-self: start;
   display: flex;
   align-items: center;
+  justify-content: center;
   color: #9ca3af;
   cursor: move;
-  margin-right: 8px;
 }
 
-// Column styles
-.ticketName {
-  flex: 2;
+// Column cells — min-width 0 lets inputs shrink inside grid tracks
+.ticketName,
+.ticketCount,
+.ticketPrice,
+.ticketActions {
   color: #333;
-  padding: 0 8px;
+  min-width: 0;
+}
+
+.ticketName {
+  padding: 0;
 }
 
 .ticketCount {
-  flex: 1;
-  color: #333;
-  padding: 0 8px;
+  padding: 0;
   text-align: center;
 }
 
 .ticketPrice {
-  flex: 1;
-  color: #333;
-  padding: 0 8px;
+  padding: 0;
   text-align: center;
 }
 
 .ticketActions {
-  flex: 0 0 80px;
-  color: #333;
   display: flex;
   justify-content: center;
-  padding: 0 8px;
+  align-items: center;
+  padding: 0;
+  min-width: 0;
+  justify-self: center;
+
+  .actionMenuContainer {
+    justify-content: center;
+  }
 }
 
 // Action buttons (Settings, More)
@@ -262,24 +300,31 @@
   }
 }
 
-// Inline input fields within the table
+// Inline input fields — visible field chrome so cells read as distinct controls
 .ticketInput {
   width: 100%;
-  padding: 8px;
-  border: 1px solid transparent;
-  border-radius: 4px;
-  background-color: transparent;
-  transition: all 0.2s ease;
+  padding: 8px 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background-color: #ffffff;
+  box-shadow: inset 0 1px 2px rgba(17, 24, 39, 0.04);
+  color: #111827;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
   text-align: inherit;
 
+  &::placeholder {
+    color: #9ca3af;
+  }
+
   &:hover {
-    border-color: #e5e7eb;
+    border-color: #d1d5db;
   }
 
   &:focus {
     outline: none;
-    border-color: #7C3AED;
-    background-color: white;
+    border-color: #7c3aed;
+    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15);
+    background-color: #ffffff;
   }
 }
 
@@ -287,19 +332,49 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 6px;
+  padding: 0 10px;
+  min-height: 38px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background-color: #ffffff;
+  box-shadow: inset 0 1px 2px rgba(17, 24, 39, 0.04);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+  &:hover {
+    border-color: #d1d5db;
+  }
+
+  &:focus-within {
+    border-color: #7c3aed;
+    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15);
+  }
 
   .prefix {
     color: #6b7280;
     font-size: 14px;
+    font-weight: 500;
     flex-shrink: 0;
   }
 
   .ticketInput {
-    padding-left: 2px;
+    padding: 6px 4px 6px 0;
+    border: none;
+    box-shadow: none;
     width: auto;
-    flex: 0 1 auto;
+    flex: 1 1 auto;
     min-width: 40px;
-    max-width: 80px;
+    max-width: 100%;
+
+    &:hover,
+    &:focus {
+      border: none;
+      box-shadow: none;
+    }
+
+    &:focus {
+      outline: none;
+    }
   }
 }
 
@@ -351,17 +426,21 @@
   }
 
   .tableContent {
-    min-width: 600px;
+    min-width: 640px;
   }
 
-  // Ensure header and row use the same padding so columns align
-  .ticketTableHeader,
-  .ticketItem {
-    padding: 12px 16px;
-    gap: 0;
+  .tableContent .ticketTableHeader,
+  .tableContent .ticketItem {
+    column-gap: 10px;
+    padding: 12px;
   }
 
-  .ticketInput {
+  .ticketCount .ticketInput,
+  .ticketPrice .ticketInput {
+    text-align: center;
+  }
+
+  .ticketName .ticketInput {
     text-align: left;
   }
 }

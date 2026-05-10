@@ -9,6 +9,49 @@
   width: 100%;
 }
 
+.errorMessage {
+  padding: 12px 14px;
+  margin-bottom: 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #b91c1c;
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+}
+
+.saveActions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.saveButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 22px;
+  background-color: #7c3aed;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+
+  &:hover:not(:disabled) {
+    background-color: #6d28d9;
+  }
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+}
+
 .header {
   display: flex;
   justify-content: space-between;
@@ -151,6 +194,16 @@
   .createDiscountButton {
     width: 100%;
     justify-content: center;
+  }
+
+  .saveActions {
+    justify-content: stretch;
+    margin-top: 20px;
+    padding-top: 16px;
+  }
+
+  .saveButton {
+    width: 100%;
   }
 
   .discountsList {

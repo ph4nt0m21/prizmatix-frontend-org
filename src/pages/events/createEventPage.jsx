@@ -42,6 +42,7 @@ import {
   prepareArtDataForAPI,
   prepareTicketsDataForAPI,
   preparePublishEventDataForAPI,
+  mapEventApiPayloadToLocationForm,
 } from "../../utils/eventUtil";
 
 /**
@@ -87,6 +88,7 @@ const CreateEventPage = () => {
 
     // Location (Step 2)
     location: {
+      locationType: "physical",
       isToBeAnnounced: false,
       isPrivateLocation: false,
       googleMapLink: "",
@@ -98,6 +100,8 @@ const CreateEventPage = () => {
       state: "",
       country: "",
       additionalInfo: "",
+      onlineEventUrl: "",
+      onlineEventDescription: "",
       latitude: "",
       longitude: "",
     },
@@ -426,75 +430,8 @@ const CreateEventPage = () => {
                 .filter((discount) => discount?.isDeleted !== true)
                 .map(mapApiDiscountToStepDiscount)
             : [];
-          const locationPayload = eventPayload?.location || {};
-          const locationTypeFromApi =
-            locationPayload.locationType ||
-            locationPayload.eventLocationType ||
-            eventPayload?.eventLocationType ||
-            (locationPayload.isToBeAnnounced ? "tba" : "physical");
-          const locationFromApi = {
-            locationType: locationTypeFromApi,
-            isToBeAnnounced:
-              locationPayload.isToBeAnnounced != null
-                ? Boolean(locationPayload.isToBeAnnounced)
-                : locationTypeFromApi === "tba",
-            isPrivateLocation:
-              locationPayload.isPrivateLocation != null
-                ? Boolean(locationPayload.isPrivateLocation)
-                : locationTypeFromApi === "private",
-            googleMapLink:
-              locationPayload.googleMapLink ||
-              locationPayload.mapLink ||
-              eventPayload?.googleMapLink ||
-              "",
-            venue:
-              locationPayload.venue ||
-              locationPayload.venueName ||
-              locationPayload.eventLocationName ||
-              eventPayload?.eventLocationName ||
-              "",
-            street:
-              locationPayload.street ||
-              locationPayload.addressLine1 ||
-              eventPayload?.street ||
-              "",
-            streetNumber:
-              locationPayload.streetNumber ||
-              locationPayload.streetNo ||
-              eventPayload?.streetNo ||
-              "",
-            city: locationPayload.city || eventPayload?.city || "",
-            postalCode:
-              locationPayload.postalCode ||
-              locationPayload.zipCode ||
-              eventPayload?.postalCode ||
-              "",
-            state:
-              locationPayload.state ||
-              locationPayload.province ||
-              eventPayload?.state ||
-              "",
-            country: locationPayload.country || eventPayload?.country || "",
-            additionalInfo:
-              locationPayload.additionalInfo ||
-              eventPayload?.additionalInfo ||
-              "",
-            latitude:
-              locationPayload.latitude ||
-              locationPayload.lat ||
-              eventPayload?.latitude ||
-              "",
-            longitude:
-              locationPayload.longitude ||
-              locationPayload.lng ||
-              eventPayload?.longitude ||
-              "",
-            formattedAddress:
-              locationPayload.formattedAddress ||
-              locationPayload.address ||
-              eventPayload?.address ||
-              "",
-          };
+          const locationFromApi =
+            mapEventApiPayloadToLocationForm(eventPayload);
           const dateTimeFromApi = {
             startDate:
               eventPayload?.dateTime?.startDate || eventPayload?.startDate || "",
@@ -578,6 +515,7 @@ const CreateEventPage = () => {
     if (data.location) {
       const locationComplete =
         data.location.isToBeAnnounced ||
+        data.location.locationType === "online" ||
         (data.location.venue &&
           data.location.street &&
           data.location.city &&
@@ -717,6 +655,9 @@ const CreateEventPage = () => {
       return true;
     }
     const location = eventData.location || {};
+    if (location.locationType === "online") {
+      return true;
+    }
     if (
       !location.venue ||
       !location.street ||
@@ -864,8 +805,12 @@ const validateDiscountCodes = () => {
     if (!eventData.name) {
       return false;
     }
-    if (!eventData.location.isToBeAnnounced &&
-      (!eventData.location.venue || !eventData.location.city || !eventData.location.country)) {
+    const loc = eventData.location || {};
+    if (
+      !loc.isToBeAnnounced &&
+      loc.locationType !== "online" &&
+      (!loc.venue || !loc.city || !loc.country)
+    ) {
       return false;
     }
     if (!eventData.dateTime.startDate || !eventData.dateTime.startTime ||
@@ -1697,11 +1642,15 @@ const validateDiscountCodes = () => {
     isLoading.saveDiscountCodes;
   const canPreview = Object.values(stepStatus).some((step) => step.completed);
 
+  /** Route params may omit id on `/events/create`; prefer saved draft id so breadcrumb never links to `/manage/null/`. */
+  const headerEventId = eventId || getEventData()?.eventId;
+
   return (
     <div className={styles.pageContainer}>
       <EventHeaderNav
         currentStep={getCurrentStepName()}
         eventName={eventData.name || "new event"}
+        eventId={headerEventId}
         isDraft={true}
         canPreview={canPreview}
         toggleMobileSidebar={toggleMobileSidebar}

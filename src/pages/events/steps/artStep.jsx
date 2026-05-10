@@ -1,10 +1,69 @@
 import React, { useState, useRef, useEffect } from 'react';
 import PropTypes from 'prop-types';
+import { toast } from 'react-toastify';
 import styles from './artStep.module.scss';
 // --- [NEW] Import the cropping library and its CSS ---
 import ReactCrop, { centerCrop, makeAspectCrop } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
 import { createCroppedJpegFile } from '../../../utils/imageCropUtil';
+import { loadPuter } from '../../../utils/puterLoader';
+
+async function htmlImageElementToFile(img, baseName) {
+  const res = await fetch(img.src);
+  const blob = await res.blob();
+  const ext = blob.type.includes('png') ? 'png' : 'jpeg';
+  return new File([blob], `${baseName}.${ext}`, { type: blob.type || 'image/png' });
+}
+
+function withTimeout(promise, ms, message = 'Request timed out') {
+  return new Promise((resolve, reject) => {
+    const id = setTimeout(() => reject(new Error(message)), ms);
+    promise.then(
+      (value) => {
+        clearTimeout(id);
+        resolve(value);
+      },
+      (err) => {
+        clearTimeout(id);
+        reject(err);
+      }
+    );
+  });
+}
+
+const TXT2IMG_TIMEOUT_MS = 120000;
+
+/**
+ * Puter's Together image backend often fails from the client; prefer OpenAI default, then Gemini.
+ */
+async function generateImageWithPuter(puter, fullPrompt, target) {
+  const ratioOpts =
+    target === 'thumbnail'
+      ? { ratio: { w: 1, h: 1 } }
+      : { ratio: { w: 16, h: 6 } };
+
+  try {
+    return await withTimeout(
+      puter.ai.txt2img(fullPrompt, {
+        model: 'gpt-image-1-mini',
+        quality: 'low',
+      }),
+      TXT2IMG_TIMEOUT_MS,
+      'Image generation timed out. Try again or upload a file.'
+    );
+  } catch (primaryErr) {
+    console.warn('Puter txt2img (OpenAI) failed, trying Gemini', primaryErr);
+    return await withTimeout(
+      puter.ai.txt2img(fullPrompt, {
+        provider: 'gemini',
+        quality: '1K',
+        ...ratioOpts,
+      }),
+      TXT2IMG_TIMEOUT_MS,
+      'Image generation timed out. Try again or upload a file.'
+    );
+  }
+}
 
 
 /**
@@ -51,6 +110,11 @@ const ArtStep = ({
   const [crop, setCrop] = useState(); // The crop selection state
   const [completedCrop, setCompletedCrop] = useState(null); // The completed crop data
   const imgRef = useRef(null); // Ref to the image element in the cropper
+
+  const [aiModalOpen, setAiModalOpen] = useState(false);
+  const [aiTargetType, setAiTargetType] = useState(null);
+  const [aiPrompt, setAiPrompt] = useState('');
+  const [aiGenerating, setAiGenerating] = useState(false);
 
   const supportedTypes = ['.jpg', '.jpeg', '.png', '.webp'];
   const maxSizes = {
@@ -210,6 +274,61 @@ const isFileSizeValid = (file, maxSizeMB) => {
     }
   };
 
+  const openAiModal = (type) => {
+    setAiTargetType(type);
+    const name = eventData?.name?.trim();
+    setAiPrompt(name ? `Promotional artwork for: ${name}` : '');
+    setAiModalOpen(true);
+  };
+
+  const closeAiModal = () => {
+    if (aiGenerating) return;
+    setAiModalOpen(false);
+    setAiTargetType(null);
+    setAiPrompt('');
+  };
+
+  const handleAiGenerate = async () => {
+    if (!aiTargetType || !aiPrompt.trim()) return;
+    const target = aiTargetType;
+    const promptText = aiPrompt.trim();
+    setAiGenerating(true);
+    try {
+      const puter = await loadPuter();
+      const eventName = eventData?.name?.trim();
+      const styleHint =
+        target === 'thumbnail'
+          ? 'Square composition, eye-catching, suitable as a small event listing thumbnail, professional graphic design, no tiny illegible text.'
+          : 'Wide cinematic banner, atmospheric, suitable for top of event page; leave visual breathing room for titles.';
+      const fullPrompt = [promptText, eventName && `Event title: ${eventName}.`, styleHint]
+        .filter(Boolean)
+        .join(' ');
+
+      const imageEl = await generateImageWithPuter(puter, fullPrompt, target);
+      const file = await htmlImageElementToFile(
+        imageEl,
+        target === 'thumbnail' ? 'ai-thumbnail' : 'ai-banner'
+      );
+
+      setAiModalOpen(false);
+      setAiTargetType(null);
+      setAiPrompt('');
+      handleFileChange(target, file);
+      toast.success(
+        `${target === 'thumbnail' ? 'Thumbnail' : 'Banner'} generated. Crop or replace if needed.`
+      );
+    } catch (err) {
+      console.error(err);
+      const msg =
+        typeof err?.message === 'string' && err.message.trim()
+          ? err.message
+          : 'Image generation failed. Try again, or upload an image instead.';
+      toast.error(msg);
+    } finally {
+      setAiGenerating(false);
+    }
+  };
+
   const removeFile = (type) => {
     if (previews[type]) {
       releaseFilePreviewUrl(previews[type]);
@@ -363,6 +482,17 @@ const isFileSizeValid = (file, maxSizeMB) => {
                   accept=".jpg,.jpeg,.png,.webp"
                   onChange={(e) => handleFileInputChange(e, 'thumbnail')}
                 />
+                <button
+                  type="button"
+                  className={styles.generateAiButton}
+                  onClick={() => openAiModal('thumbnail')}
+                  disabled={aiGenerating}
+                >
+                  Generate with AI
+                </button>
+                <p className={styles.puterNote}>
+                  Uses Puter.js (you may be asked to sign in to Puter for AI).
+                </p>
               </div>
             )}
           </div>
@@ -450,6 +580,17 @@ const isFileSizeValid = (file, maxSizeMB) => {
                   accept=".jpg,.jpeg,.png,.webp"
                   onChange={(e) => handleFileInputChange(e, 'banner')}
                 />
+                <button
+                  type="button"
+                  className={styles.generateAiButton}
+                  onClick={() => openAiModal('banner')}
+                  disabled={aiGenerating}
+                >
+                  Generate with AI
+                </button>
+                <p className={styles.puterNote}>
+                  Uses Puter.js (you may be asked to sign in to Puter for AI).
+                </p>
               </div>
             )}
           </div>
@@ -519,6 +660,46 @@ const isFileSizeValid = (file, maxSizeMB) => {
             <div className={styles.cropModalActions}>
               <button type="button" onClick={handleCancelCrop} className={styles.cancelButton}>Cancel</button>
               <button type="button" onClick={handleCropComplete} className={styles.doneButton}>Done</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {aiModalOpen && (
+        <div
+          className={styles.aiModalBackdrop}
+          onClick={(e) => e.target === e.currentTarget && closeAiModal()}
+          role="presentation"
+        >
+          <div className={styles.aiModalContent} role="dialog" aria-modal="true" aria-labelledby="ai-generate-title">
+            <h2 id="ai-generate-title" className={styles.aiModalTitle}>
+              {aiTargetType === 'banner' ? 'Generate banner' : 'Generate thumbnail'}
+            </h2>
+            <p className={styles.aiModalDescription}>
+              Describe the image you want. It will open in the crop tool so you can fine-tune it.
+            </p>
+            <label className={styles.aiLabel} htmlFor="ai-prompt-input">Prompt</label>
+            <textarea
+              id="ai-prompt-input"
+              className={styles.aiTextarea}
+              value={aiPrompt}
+              onChange={(e) => setAiPrompt(e.target.value)}
+              rows={4}
+              placeholder="e.g. warm jazz club stage, spotlights, crowd silhouettes"
+              disabled={aiGenerating}
+            />
+            <div className={styles.aiModalActions}>
+              <button type="button" onClick={closeAiModal} className={styles.cancelButton} disabled={aiGenerating}>
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleAiGenerate}
+                className={styles.doneButton}
+                disabled={aiGenerating || !aiPrompt.trim()}
+              >
+                {aiGenerating ? 'Generating…' : 'Generate'}
+              </button>
             </div>
           </div>
         </div>
