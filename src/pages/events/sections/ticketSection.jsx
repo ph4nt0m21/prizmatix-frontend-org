@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
+import { toast } from "react-toastify";
 import styles from "./ticketSection.module.scss";
 import TicketsStep from "../steps/ticketsStep";
 import LoadingSpinner from "../../../components/common/loadingSpinner/loadingSpinner";
@@ -239,6 +240,16 @@ const TicketSection = ({ onCommitSuccess = () => {} }) => {
     }
   };
 
+  const handleSaveTicketsClick = async () => {
+    const ok = await onTicketsCommit();
+    if (ok) {
+      toast.success("Tickets saved successfully.");
+    }
+  };
+
+  const canSaveTickets =
+    eventData.tickets?.length > 0 && validateTickets(eventData.tickets);
+
   return (
     <div className={styles.ticketSectionContainer}>
       {isLoading ? (
@@ -256,6 +267,16 @@ const TicketSection = ({ onCommitSuccess = () => {} }) => {
             isValid={validateTickets(eventData.tickets)}
             stepStatus={{ visited: true }}
           />
+          <div className={styles.saveActions}>
+            <button
+              type="button"
+              className={styles.saveButton}
+              onClick={handleSaveTicketsClick}
+              disabled={isSavingTickets || !canSaveTickets}
+            >
+              {isSavingTickets ? "Saving…" : "Save changes"}
+            </button>
+          </div>
         </>
       )}
     </div>

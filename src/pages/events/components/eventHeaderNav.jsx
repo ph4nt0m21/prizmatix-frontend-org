@@ -86,6 +86,9 @@ const navigate = useNavigate();
     setIsActionMenuOpen(false);
   };
 
+  const hasManageTarget =
+    eventId != null && eventId !== '' && String(eventId) !== 'undefined';
+
   return (
     <>
       <nav className={styles.eventNav}>
@@ -110,7 +113,11 @@ const navigate = useNavigate();
               <div className={styles.breadcrumb}>
                 <Link to="/events" className={styles.breadcrumbLink}>Events</Link>
                 <span className={styles.breadcrumbSeparator}><ArrowIcon /></span>
-                <Link to={`/events/manage/${eventId}/overview`} className={styles.breadcrumbLink}>{eventName}</Link>
+                {hasManageTarget ? (
+                  <Link to={`/events/manage/${eventId}/overview`} className={styles.breadcrumbLink}>{eventName}</Link>
+                ) : (
+                  <span className={styles.breadcrumbCurrent}>{eventName}</span>
+                )}
                 <span className={styles.breadcrumbDraft}>
                   {isDraft ? 'DRAFT' : eventStatus}
                 </span>

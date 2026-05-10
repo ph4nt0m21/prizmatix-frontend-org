@@ -29,6 +29,7 @@ import {
   prepareLocationDataForAPI,
   prepareDateTimeDataForAPI,
   prepareDescriptionDataForAPI,
+  mapEventApiPayloadToLocationForm,
 } from '../../utils/eventUtil';
 import { getUserData } from '../../utils/authUtil';
 
@@ -155,23 +156,7 @@ const EventEditPage = () => {
           category: fetchedData.category || '',
           searchTags: fetchedData.keywords ? fetchedData.keywords.split(',').map(tag => tag.trim()) : [],
           
-          location: {
-            // The API response does not provide full address details, so we map what's available.
-            locationType: fetchedData.eventLocationType || 'physical',
-            isToBeAnnounced: fetchedData.eventLocationType === 'tba',
-            venue: fetchedData.eventLocationName || '', // Use eventLocationName for the venue
-            // Other fields are not provided by this API, so they will be empty initially.
-            street: '',
-            streetNumber: '',
-            city: '',
-            postalCode: '',
-            state: '',
-            country: '',
-            googleMapLink: '',
-            additionalInfo: '',
-            latitude: '',
-            longitude: '',
-          },
+          location: mapEventApiPayloadToLocationForm(fetchedData),
           
           dateTime: {
             startDate: fetchedData.dateTime?.startDate || fetchedData.startDate || '',
@@ -237,7 +222,13 @@ const EventEditPage = () => {
         break;
       case 'location':
         const loc = eventData.location;
-        isValid = loc?.isToBeAnnounced || (!!loc?.venue); // Simplified validation since we only have venue name
+        isValid =
+          loc?.isToBeAnnounced ||
+          loc?.locationType === "online" ||
+          (!!loc?.venue &&
+            !!loc?.street &&
+            !!loc?.city &&
+            !!loc?.state);
         break;
       case 'dateTime':
         const dt = eventData.dateTime;

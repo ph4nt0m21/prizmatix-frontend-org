@@ -139,6 +139,7 @@ const PublishStep = ({
   // Helper function to get location string
   const getLocation = () => {
     if (localEventData.location?.isToBeAnnounced) return 'To be announced';
+    if (localEventData.location?.locationType === 'online') return 'Online event';
     const { city, country } = localEventData.location || {};
     if (city && country) return `${city}, ${country}`;
     return city || country || 'Location not set';
@@ -146,7 +147,11 @@ const PublishStep = ({
 
   // Helper function to get venue address
   const getVenueAddress = () => {
-    const { street, city, state, country } = localEventData.location || {};
+    const loc = localEventData.location || {};
+    if (loc.locationType === 'online') {
+      return loc.onlineEventUrl?.trim() || 'Online event — link shared with attendees';
+    }
+    const { street, city, state, country } = loc;
     if (street && city && state && country) return `${street}, ${city}, ${state}, ${country}`;
     return getLocation();
   };
@@ -240,11 +245,17 @@ const PublishStep = ({
               <div className={styles.eventSection}>
                 <h2 className={styles.sectionTitle}>Venue</h2>
                 <div className={styles.venueInfo}>
-                  <h3 className={styles.venueName}>{localEventData.location?.venue}</h3>
+                  <h3 className={styles.venueName}>
+                    {localEventData.location?.venue ||
+                      (localEventData.location?.locationType === 'online'
+                        ? 'Online Event'
+                        : '')}
+                  </h3>
                   <p className={styles.venueAddress}>{getVenueAddress()}</p>
 
                   {/* --- MODIFIED: This section now renders the dynamic map --- */}
-                  {!localEventData.location?.isToBeAnnounced && (
+                  {!localEventData.location?.isToBeAnnounced &&
+                    localEventData.location?.locationType !== 'online' && (
                   <div className={styles.venueMap}>
                     <div ref={mapRef} style={{ width: '100%', height: '100%' }}>
                       {/* If lat/lng are missing, show a placeholder message */}

@@ -34,6 +34,8 @@ const LocationStep = ({
     state: locationData.state || '',
     country: locationData.country || '',
     additionalInfo: locationData.additionalInfo || '',
+    onlineEventUrl: locationData.onlineEventUrl || '',
+    onlineEventDescription: locationData.onlineEventDescription || '',
     latitude: locationData.latitude || '',
     longitude: locationData.longitude || '',
     formattedAddress: locationData.formattedAddress || ''
@@ -209,10 +211,12 @@ const extractCoordsFromUrl = (url) => {
   };
 
   const handleLocationTypeChange = (type) => {
-    let updatedLocation = { ...location, locationType: type };
-    updatedLocation.isToBeAnnounced = type === 'tba';
-    updatedLocation.isPrivateLocation = type === 'private';
-    setLocation(updatedLocation);
+    setLocation((prev) => ({
+      ...prev,
+      locationType: type,
+      isToBeAnnounced: type === 'tba',
+      isPrivateLocation: type === 'private',
+    }));
   };
   
   const handleFieldChange = (e) => {
@@ -246,12 +250,12 @@ const extractCoordsFromUrl = (url) => {
           
           <div className={styles.locationOptions}>
             <div 
-              className={`${styles.locationOption} ${location.locationType === 'physical' && !location.isToBeAnnounced ? styles.selected : ''}`}
+              className={`${styles.locationOption} ${location.locationType === 'physical' ? styles.selected : ''}`}
               onClick={() => handleLocationTypeChange('physical')}
             >
               <div className={styles.locationIcon}>
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9C9.5 7.62 10.62 6.5 12 6.5C13.38 6.5 14.5 7.62 14.5 9C14.5 10.38 13.38 11.5 12 11.5Z" fill={location.locationType === 'physical' && !location.isToBeAnnounced ? "#7C3AED" : "#666666"}/>
+                  <path d="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9C9.5 7.62 10.62 6.5 12 6.5C13.38 6.5 14.5 7.62 14.5 9C14.5 10.38 13.38 11.5 12 11.5Z" fill={location.locationType === 'physical' ? "#7C3AED" : "#666666"}/>
                 </svg>
               </div>
               <div className={styles.locationContent}>
@@ -261,7 +265,7 @@ const extractCoordsFromUrl = (url) => {
                 </p>
               </div>
               <div className={styles.locationSelector}>
-                {location.locationType === 'physical' && !location.isToBeAnnounced && (
+                {location.locationType === 'physical' && (
                   <div className={styles.selectedDot}></div>
                 )}
               </div>
@@ -312,11 +316,88 @@ const extractCoordsFromUrl = (url) => {
                 )}
               </div>
             </div>
+
+            <div
+              className={`${styles.locationOption} ${location.locationType === 'online' ? styles.selected : ''}`}
+              onClick={() => handleLocationTypeChange('online')}
+            >
+              <div className={styles.locationIcon}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M4 6C4 4.89543 4.89543 4 6 4H18C19.1046 4 20 4.89543 20 6V18C20 19.1046 19.1046 20 18 20H6C4.89543 20 4 19.1046 4 18V6Z" stroke={location.locationType === 'online' ? '#7C3AED' : '#666666'} strokeWidth="1.5"/>
+                  <path d="M9 10L12 13L15 10" stroke={location.locationType === 'online' ? '#7C3AED' : '#666666'} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M8 15H16" stroke={location.locationType === 'online' ? '#7C3AED' : '#666666'} strokeWidth="1.5" strokeLinecap="round"/>
+                </svg>
+              </div>
+              <div className={styles.locationContent}>
+                <h3 className={styles.locationTitle}>Online</h3>
+                <p className={styles.locationDescription}>
+                  Virtual event — share a join link and optional details for attendees
+                </p>
+              </div>
+              <div className={styles.locationSelector}>
+                {location.locationType === 'online' && (
+                  <div className={styles.selectedDot}></div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
+
+        {/* Online event details */}
+        {location.locationType === 'online' && (
+          <div className={styles.formGroup}>
+            <label className={styles.formLabel}>Online event details</label>
+            <p className={styles.formDescription}>
+              Meeting or stream link is stored securely and shown to attendees as appropriate.
+            </p>
+            <div className={styles.formGroup}>
+              <label htmlFor="onlineEventUrl" className={styles.formLabel}>
+                Event link (URL)
+              </label>
+              <input
+                type="url"
+                id="onlineEventUrl"
+                name="onlineEventUrl"
+                className={styles.formInput}
+                placeholder="https://example.com/your-meeting-link"
+                value={location.onlineEventUrl}
+                onChange={handleFieldChange}
+                autoComplete="off"
+              />
+            </div>
+            <div className={styles.formGroup}>
+              <label htmlFor="onlineEventDescription" className={styles.formLabel}>
+                How to join / platform notes
+              </label>
+              <textarea
+                id="onlineEventDescription"
+                name="onlineEventDescription"
+                className={styles.formTextarea}
+                placeholder="e.g. Zoom meeting ID, password in email, or streaming instructions"
+                value={location.onlineEventDescription}
+                onChange={handleFieldChange}
+                rows={4}
+              />
+            </div>
+            <div className={styles.formGroup}>
+              <label htmlFor="additionalInfoOnline" className={styles.formLabel}>
+                Additional information
+              </label>
+              <textarea
+                id="additionalInfoOnline"
+                name="additionalInfo"
+                className={styles.formTextarea}
+                placeholder="Any extra details (optional)"
+                value={location.additionalInfo}
+                onChange={handleFieldChange}
+                rows={3}
+              />
+            </div>
+          </div>
+        )}
         
-        {/* Location Details Section - Only show if not TBA */}
-        {!location.isToBeAnnounced && (
+        {/* Location Details Section - physical / private venue only */}
+        {!location.isToBeAnnounced && location.locationType !== 'online' && (
           <div className={styles.formGroup}>
             <label className={styles.formLabel}>
               Location Details

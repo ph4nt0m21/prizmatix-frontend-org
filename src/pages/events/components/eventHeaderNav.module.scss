@@ -55,7 +55,8 @@
   font-size: 14px;
   min-width: 0; // Prevent flex blowout
   
-  a.breadcrumbLink:nth-of-type(2) {
+  a.breadcrumbLink:nth-of-type(2),
+  .breadcrumbCurrent {
     color: #8b5cf6;
     font-weight: 700;
   }
@@ -102,6 +103,20 @@
   &:hover {
     color: #8b5cf6;
     text-decoration: underline;
+  }
+}
+
+/* Event title when there is no event id yet (e.g. create flow step 1) — not a link to manage. */
+.breadcrumbCurrent {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
+  display: inline-block;
+  vertical-align: middle;
+
+  @media (max-width: 480px) {
+    max-width: 100px;
   }
 }
 
