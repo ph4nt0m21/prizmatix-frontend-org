@@ -294,6 +294,14 @@ export const mapEventApiPayloadToLocationForm = (eventPayload = {}) => {
           ep?.address
         )
       : "",
+    /** Hybrid / in-person + virtual: stored in API `onlineEventUrl` when location type is public/private */
+    virtualMeetingUrl: !isOnlineType
+      ? firstString(
+          locationPayload.virtualMeetingUrl,
+          locationPayload.onlineEventUrl,
+          ep?.onlineEventUrl
+        )
+      : "",
     onlineEventDescription: isOnlineType ? onlineJoinField : "",
     latitude: firstCoord(
       locationPayload.latitude,
@@ -368,7 +376,7 @@ export const prepareLocationDataForAPI = (locationData) => {
     country: locationData.country || "", // Country is now hardcoded
     postalCode: locationData.postalCode || "",
     googleMapLink: locationData.googleMapLink || "",
-    onlineEventUrl: "",
+    onlineEventUrl: (locationData.virtualMeetingUrl || "").trim(),
     onlineEventDescription: "",
     additionalInfo: locationData.additionalInfo || "",
     updatedBy,
@@ -679,4 +687,176 @@ export const isCreationReadyForPublish = (statusData) => {
       step7Completed &&
       !step8Completed
   );
+};
+
+/**
+ * Same checks as manage-event publish fallback: enough data on the event + dashboard
+ * to publish without relying on wizard step flags.
+ * @param {Object} event
+ * @param {Object} dashboard
+ * @returns {boolean}
+ */
+export const isPublishReadyFromEventData = (event = {}, dashboard = {}) => {
+  const hasName = Boolean(event?.name && String(event.name).trim().length > 0);
+  const hasDescription = Boolean(
+    event?.description && String(event.description).trim().length > 0
+  );
+
+  const startDate = event?.dateTime?.startDate || event?.startDate;
+  const startTime = event?.dateTime?.startTime || event?.startTime;
+  const endDate = event?.dateTime?.endDate || event?.endDate;
+  const endTime = event?.dateTime?.endTime || event?.endTime;
+  const hasDateTime = Boolean(startDate && startTime && endDate && endTime);
+
+  const isTba =
+    event?.location?.isToBeAnnounced === true || event?.eventLocationType === "tba";
+  const isOnline =
+    event?.eventLocationType === "online" ||
+    event?.location?.locationType === "online";
+  const hasLocation =
+    isTba ||
+    isOnline ||
+    Boolean(
+      event?.location?.venue ||
+        event?.eventLocationName ||
+        (event?.location?.city && (event?.location?.country || event?.country))
+    );
+
+  const hasTickets =
+    Number(dashboard?.totalTicketCapacity || 0) > 0 ||
+    (Array.isArray(event?.tickets) && event.tickets.length > 0);
+
+  return hasName && hasDescription && hasDateTime && hasLocation && hasTickets;
+};
+
+const WIZARD_STEP_CHECKS = [
+  { flag: "step1Completed", label: "Basic information" },
+  { flag: "step2Completed", label: "Location" },
+  { flag: "step3Completed", label: "Date and time" },
+  { flag: "step4Completed", label: "Description" },
+  { flag: "step5Completed", label: "Thumbnail and banner" },
+  { flag: "step6Completed", label: "Tickets" },
+  { flag: "step7Completed", label: "Discount codes" },
+];
+
+/**
+ * Human-readable gaps for event+dashboard publish prerequisites (manage flow).
+ * @param {Object} event
+ * @param {Object} dashboard
+ * @returns {string[]}
+ */
+export const getEventPublishMissingItems = (event = {}, dashboard = {}) => {
+  const missing = [];
+
+  if (!event?.name || String(event.name).trim().length === 0) {
+    missing.push("Add an event name (open Event Page from the sidebar).");
+  }
+
+  if (!event?.description || String(event.description).trim().length === 0) {
+    missing.push("Add an event description in the editor.");
+  }
+
+  const startDate = event?.dateTime?.startDate || event?.startDate;
+  const startTime = event?.dateTime?.startTime || event?.startTime;
+  const endDate = event?.dateTime?.endDate || event?.endDate;
+  const endTime = event?.dateTime?.endTime || event?.endTime;
+  if (!(startDate && startTime && endDate && endTime)) {
+    missing.push("Set start and end date and time.");
+  }
+
+  const isTba =
+    event?.location?.isToBeAnnounced === true || event?.eventLocationType === "tba";
+  const isOnline =
+    event?.eventLocationType === "online" ||
+    event?.location?.locationType === "online";
+  const hasLocation =
+    isTba ||
+    isOnline ||
+    Boolean(
+      event?.location?.venue ||
+        event?.eventLocationName ||
+        (event?.location?.city && (event?.location?.country || event?.country))
+    );
+  if (!hasLocation) {
+    missing.push("Add a location, or choose Online / To be announced.");
+  }
+
+  const hasTickets =
+    Number(dashboard?.totalTicketCapacity || 0) > 0 ||
+    (Array.isArray(event?.tickets) && event.tickets.length > 0);
+  if (!hasTickets) {
+    missing.push("Add at least one ticket with capacity under Tickets.");
+  }
+
+  return missing;
+};
+
+/**
+ * Steps not yet marked complete by the API (creation wizard).
+ * @param {Object|null|undefined} statusData
+ * @returns {string[]}
+ */
+export const getIncompleteWizardStepHints = (statusData) => {
+  if (!statusData) {
+    return [];
+  }
+  return WIZARD_STEP_CHECKS.filter(({ flag }) => !statusData[flag]).map(
+    ({ label }) =>
+      `Finish "${label}" in the event editor (sidebar → Event Page).`
+  );
+};
+
+/**
+ * Manage-event publish gate: enabled if wizard steps 1–7 are done OR event payload is complete.
+ * When disabled, lists concrete blockers for the UI.
+ * @param {Object} params
+ * @param {Object|null} params.statusData - GetEventStatusAPI payload
+ * @param {Object|null} params.eventData
+ * @param {Object|null} params.dashboardData
+ * @param {boolean} params.isPublished
+ * @returns {{ canPublish: boolean, blockers: string[], isPublishedLive: boolean }}
+ */
+export const getManagePublishGate = ({
+  statusData,
+  eventData,
+  dashboardData,
+  isPublished,
+}) => {
+  if (isPublished) {
+    return { canPublish: false, blockers: [], isPublishedLive: true };
+  }
+
+  const creationReady = isCreationReadyForPublish(statusData);
+  const eventReady = isPublishReadyFromEventData(eventData || {}, dashboardData || {});
+  const canPublish = creationReady || eventReady;
+
+  if (canPublish) {
+    return { canPublish: true, blockers: [], isPublishedLive: false };
+  }
+
+  const blockers = [];
+
+  if (!eventReady) {
+    blockers.push(...getEventPublishMissingItems(eventData || {}, dashboardData || {}));
+  }
+
+  if (!creationReady) {
+    const wizardHints = getIncompleteWizardStepHints(statusData);
+    if (wizardHints.length > 0) {
+      blockers.push(...wizardHints);
+    } else if (!statusData) {
+      blockers.push(
+        "Could not load editor progress — refresh the page, then complete all steps in Event Page."
+      );
+    }
+  }
+
+  const seen = new Set();
+  const unique = blockers.filter((line) => {
+    if (seen.has(line)) return false;
+    seen.add(line);
+    return true;
+  });
+
+  return { canPublish: false, blockers: unique, isPublishedLive: false };
 };

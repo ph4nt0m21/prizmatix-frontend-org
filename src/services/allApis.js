@@ -27,14 +27,21 @@ export const LoginAPI = async (data) => {
   return await apiClient.post("/login", data);
 };
 
-// API for forgot password
-export const ForgotPasswordAPI = async (data) => {
-  return await apiClient.post("/forgot-password", data);
+// Forgot password (public — no auth header required by backend)
+export const ForgotPasswordInitiateAPI = async (data) => {
+  return await apiClient.post("/api/auth/forgot-password/initiate", data);
 };
 
-// API for reset password
-export const ResetPasswordAPI = async (data) => {
-  return await apiClient.post("/reset-password", data);
+export const ForgotPasswordVerifyOtpAPI = async (data) => {
+  return await apiClient.post("/api/auth/forgot-password/verify-otp", data);
+};
+
+export const ForgotPasswordResetAPI = async (data) => {
+  return await apiClient.post("/api/auth/forgot-password/reset", data);
+};
+
+export const ForgotPasswordResendOtpAPI = async (data) => {
+  return await apiClient.post("/api/auth/forgot-password/resend-otp", data);
 };
 
 // Change password (authenticated admin)

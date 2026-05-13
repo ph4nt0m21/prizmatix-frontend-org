@@ -102,6 +102,7 @@ const CreateEventPage = () => {
       additionalInfo: "",
       onlineEventUrl: "",
       onlineEventDescription: "",
+      virtualMeetingUrl: "",
       latitude: "",
       longitude: "",
     },

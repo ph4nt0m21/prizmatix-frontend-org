@@ -9,7 +9,8 @@
   padding: 24px 32px 32px;
   box-sizing: border-box;
   column-gap: 24px;
-  overflow: hidden; /* Only mainContent should scroll */
+  /* visible so publish-requirements popover is not clipped by this flex row */
+  overflow: visible;
   
   @media (max-width: 768px) {
     height: auto;

@@ -36,6 +36,7 @@ const LocationStep = ({
     additionalInfo: locationData.additionalInfo || '',
     onlineEventUrl: locationData.onlineEventUrl || '',
     onlineEventDescription: locationData.onlineEventDescription || '',
+    virtualMeetingUrl: locationData.virtualMeetingUrl || '',
     latitude: locationData.latitude || '',
     longitude: locationData.longitude || '',
     formattedAddress: locationData.formattedAddress || ''
@@ -426,6 +427,25 @@ const extractCoordsFromUrl = (url) => {
                   </svg>
                 )}
               </div> */}
+            </div>
+
+            <div className={styles.formGroup}>
+              <label htmlFor="virtualMeetingUrl" className={styles.formLabel}>
+                Virtual meeting URL (optional)
+              </label>
+              <p className={styles.formDescription}>
+                For hybrid events: Zoom, Google Meet, Teams, or other link for people joining remotely.
+              </p>
+              <input
+                type="url"
+                id="virtualMeetingUrl"
+                name="virtualMeetingUrl"
+                className={styles.formInput}
+                placeholder="https://example.com/your-meeting-link"
+                value={location.virtualMeetingUrl}
+                onChange={handleFieldChange}
+                autoComplete="off"
+              />
             </div>
             
             {/* Map Container */}

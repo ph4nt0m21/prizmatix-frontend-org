@@ -7,6 +7,11 @@ import ReactCrop, { centerCrop, makeAspectCrop } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
 import { createCroppedJpegFile } from '../../../utils/imageCropUtil';
 import { loadPuter } from '../../../utils/puterLoader';
+import {
+  ART_PLACEHOLDER_BANNER,
+  ART_PLACEHOLDER_THUMBNAIL,
+  applyArtImageFallback,
+} from '../../../constants/artImagePlaceholders';
 
 async function htmlImageElementToFile(img, baseName) {
   const res = await fetch(img.src);
@@ -440,6 +445,9 @@ const isFileSizeValid = (file, maxSizeMB) => {
                   src={previews.thumbnail}
                   alt="Thumbnail Preview"
                   className={styles.previewImage}
+                  onError={(e) =>
+                    applyArtImageFallback(e, ART_PLACEHOLDER_THUMBNAIL)
+                  }
                 />
                 <div className={styles.fileInfo}>
                   <span className={styles.fileName}>{files.thumbnail?.name || artData.thumbnailName || 'Current thumbnail'}</span>
@@ -540,6 +548,9 @@ const isFileSizeValid = (file, maxSizeMB) => {
                   src={previews.banner}
                   alt="Banner Preview"
                   className={styles.previewImage}
+                  onError={(e) =>
+                    applyArtImageFallback(e, ART_PLACEHOLDER_BANNER)
+                  }
                 />
                 <div className={styles.fileInfo}>
                   <span className={styles.fileName}>{files.banner?.name || artData.bannerName || 'Current banner'}</span>
@@ -653,6 +664,14 @@ const isFileSizeValid = (file, maxSizeMB) => {
                     alt="Crop Preview"
                     onLoad={onImageLoad}
                     style={{ maxHeight: '70vh' }}
+                    onError={(e) =>
+                      applyArtImageFallback(
+                        e,
+                        croppingType === 'banner'
+                          ? ART_PLACEHOLDER_BANNER
+                          : ART_PLACEHOLDER_THUMBNAIL
+                      )
+                    }
                   />
                 </ReactCrop>
               )}

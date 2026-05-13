@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useId, useState, useEffect, useRef } from "react";
 import PropTypes from "prop-types";
+import { createPortal } from "react-dom";
 import styles from "./eventManageSidebar.module.scss";
 
 /**
@@ -23,11 +24,62 @@ const EventManageSidebar = ({
   navigateToEventEditPage,
   navigateToPublishStep,
   canPublish = false,
+  publishBlockers = [],
   isPublished = false,
   eventId,
   isMobileSidebarOpen,
   toggleMobileSidebar
 }) => {
+  const publishRequirementsTooltipId = useId();
+  const publishHintWrapRef = useRef(null);
+  const publishRequirementsPanelRef = useRef(null);
+  const [publishHintHover, setPublishHintHover] = useState(false);
+  const [publishHintPinned, setPublishHintPinned] = useState(false);
+  const [isMobileViewport, setIsMobileViewport] = useState(() =>
+    typeof window !== "undefined" &&
+    window.matchMedia("(max-width: 768px)").matches
+  );
+
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 768px)");
+    const apply = () => setIsMobileViewport(mq.matches);
+    apply();
+    mq.addEventListener("change", apply);
+    return () => mq.removeEventListener("change", apply);
+  }, []);
+
+  const showPublishRequirements =
+    !canPublish &&
+    publishBlockers.length > 0 &&
+    (publishHintHover || publishHintPinned);
+
+  useEffect(() => {
+    if (canPublish) {
+      setPublishHintPinned(false);
+      setPublishHintHover(false);
+    }
+  }, [canPublish]);
+
+  useEffect(() => {
+    if (!showPublishRequirements) return undefined;
+
+    const handlePointerDown = (event) => {
+      const target = event.target;
+      if (
+        publishHintWrapRef.current?.contains(target) ||
+        publishRequirementsPanelRef.current?.contains(target)
+      ) {
+        return;
+      }
+      setPublishHintPinned(false);
+      setPublishHintHover(false);
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown, true);
+    return () =>
+      document.removeEventListener("pointerdown", handlePointerDown, true);
+  }, [showPublishRequirements]);
+
   const sections = [
     // Manage Event section
     {
@@ -163,6 +215,19 @@ const EventManageSidebar = ({
     }
   };
 
+  const publishRequirementsBody = (
+    <>
+      <span className={styles.publishRequirementsTitle}>
+        Before you can publish
+      </span>
+      <ul className={styles.publishRequirementsList}>
+        {publishBlockers.map((line, idx) => (
+          <li key={idx}>{line}</li>
+        ))}
+      </ul>
+    </>
+  );
+
   return (
     <div className={`${styles.sidebar} ${isMobileSidebarOpen ? styles.open : ''}`}>
       {/* <div className={styles.sidebarHeader}>
@@ -239,35 +304,78 @@ const EventManageSidebar = ({
       {/* Publish draft — same gate as create wizard (steps 1–7); opens step 8 preview + Publish. Hidden once live. */}
       {!isPublished && (
       <div className={styles.publishActionWrap}>
-        <button
-          type="button"
-          className={styles.publishDraftButton}
-          disabled={!canPublish}
-          title={
-            canPublish
-              ? 'Open publish preview and publish your event'
-              : 'Finish every Create Event step (through discount codes), then you can publish here'
-          }
-          onClick={() => {
-            if (!canPublish || !navigateToPublishStep) return;
-            navigateToPublishStep();
-          }}
+        <div
+          ref={publishHintWrapRef}
+          className={styles.publishButtonWithHint}
+          onMouseEnter={() => setPublishHintHover(true)}
+          onMouseLeave={() => setPublishHintHover(false)}
         >
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            aria-hidden
+          <button
+            type="button"
+            className={styles.publishDraftButton}
+            aria-disabled={!canPublish}
+            aria-expanded={showPublishRequirements}
+            aria-describedby={
+              showPublishRequirements ? publishRequirementsTooltipId : undefined
+            }
+            title={
+              canPublish
+                ? "Open publish preview and publish your event"
+                : publishBlockers.length > 0
+                  ? "Hover or tap to see what is required before publishing"
+                  : "Complete requirements to publish"
+            }
+            onClick={() => {
+              if (canPublish && navigateToPublishStep) {
+                navigateToPublishStep();
+                return;
+              }
+              if (!canPublish && publishBlockers.length > 0) {
+                setPublishHintPinned((prev) => !prev);
+              }
+            }}
           >
-            <path
-              d="M5 16h14v2H5v-2zm5.5-14H14v6h5l-7 7-7-7h5V2z"
-              fill="currentColor"
-            />
-          </svg>
-          Publish event
-        </button>
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              aria-hidden
+            >
+              <path
+                d="M5 16h14v2H5v-2zm5.5-14H14v6h5l-7 7-7-7h5V2z"
+                fill="currentColor"
+              />
+            </svg>
+            Publish event
+          </button>
+          {showPublishRequirements &&
+            (isMobileViewport && typeof document !== "undefined"
+              ? createPortal(
+                  <div
+                    ref={publishRequirementsPanelRef}
+                    id={publishRequirementsTooltipId}
+                    className={`${styles.publishRequirementsPanel} ${styles.publishRequirementsPanelMobileFloat}`}
+                    role="region"
+                    aria-label="Requirements before you can publish"
+                  >
+                    {publishRequirementsBody}
+                  </div>,
+                  document.body
+                )
+              : !isMobileViewport ? (
+                  <div
+                    ref={publishRequirementsPanelRef}
+                    id={publishRequirementsTooltipId}
+                    className={styles.publishRequirementsPanel}
+                    role="region"
+                    aria-label="Requirements before you can publish"
+                  >
+                    {publishRequirementsBody}
+                  </div>
+                ) : null)}
+        </div>
       </div>
       )}
 
@@ -317,6 +425,7 @@ EventManageSidebar.propTypes = {
   navigateToEventEditPage: PropTypes.func.isRequired,
   navigateToPublishStep: PropTypes.func,
   canPublish: PropTypes.bool,
+  publishBlockers: PropTypes.arrayOf(PropTypes.string),
   isPublished: PropTypes.bool,
   eventId: PropTypes.string,
   isMobileSidebarOpen: PropTypes.bool.isRequired,

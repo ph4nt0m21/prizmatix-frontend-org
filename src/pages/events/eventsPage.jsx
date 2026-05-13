@@ -7,6 +7,10 @@ import EventHeaderNav from '../../pages/events/components/eventHeaderNav'; // Ad
 import styles from './eventsPage.module.scss';
 import { getUserData } from '../../utils/authUtil';
 import { getPublishedEventTimingStatus } from './eventStatusUtils';
+import {
+  ART_PLACEHOLDER_THUMBNAIL,
+  applyArtImageFallback,
+} from '../../constants/artImagePlaceholders';
 
 const EventsPage = () => {
   const navigate = useNavigate();
@@ -293,8 +297,11 @@ const EventsPage = () => {
                           <div className={styles.eventInfoCell}>
                             <div className={styles.eventThumbnail}>
                               <img 
-                                src={event.bannerImage || `https://placehold.co/48x48/0f1520/6b7280?text=${encodeURIComponent(event.name?.charAt(0) || 'E')}`} 
-                                alt={event.name} 
+                                src={event.bannerImage || ART_PLACEHOLDER_THUMBNAIL} 
+                                alt={event.name}
+                                onError={(e) =>
+                                  applyArtImageFallback(e, ART_PLACEHOLDER_THUMBNAIL)
+                                }
                               />
                             </div>
                             <div className={styles.eventDetails}>
@@ -386,8 +393,11 @@ const EventsPage = () => {
                     <div className={styles.cardHeader}>
                       <div className={styles.cardThumbnail}>
                         <img 
-                          src={event.bannerImage || `https://placehold.co/56x56/0f1520/6b7280?text=${encodeURIComponent(event.name?.charAt(0) || 'E')}`} 
-                          alt={event.name} 
+                          src={event.bannerImage || ART_PLACEHOLDER_THUMBNAIL} 
+                          alt={event.name}
+                          onError={(e) =>
+                            applyArtImageFallback(e, ART_PLACEHOLDER_THUMBNAIL)
+                          }
                         />
                       </div>
                       <div className={styles.cardInfo}>

@@ -1,4 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
+import {
+  ART_PLACEHOLDER_BANNER,
+  ART_PLACEHOLDER_THUMBNAIL,
+  applyArtImageFallback,
+} from '../../../constants/artImagePlaceholders';
 import PropTypes from 'prop-types';
 import styles from './publishStep.module.scss';
 import { getEventData } from '../../../utils/eventUtil';
@@ -181,25 +186,29 @@ const PublishStep = ({
       </div>
 
       <div className={styles.eventPreview}>
-        <div
-          className={styles.eventBanner}
-          style={{
-            backgroundImage: localEventData.art?.bannerUrl
-              ? `url(${localEventData.art.bannerUrl})`
-              : undefined,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center center',
-          }}
-        >
+        <div className={styles.eventBanner}>
+          <img
+            className={styles.eventBannerImage}
+            src={
+              localEventData.art?.bannerUrl || ART_PLACEHOLDER_BANNER
+            }
+            alt=""
+            onError={(e) => applyArtImageFallback(e, ART_PLACEHOLDER_BANNER)}
+          />
         </div>
 
         <div className={styles.eventContent}>
           <div className={styles.eventImageColumn}>
             <div className={styles.eventImage}>
               <img
-                src={localEventData.art?.thumbnailUrl || "/images/event-placeholder.jpg"}
+                src={
+                  localEventData.art?.thumbnailUrl ||
+                  ART_PLACEHOLDER_THUMBNAIL
+                }
                 alt={localEventData.name || "Event Thumbnail"}
-                onError={(e) => { e.target.onerror = null; e.target.src = "/images/event-placeholder.jpg"; }}
+                onError={(e) =>
+                  applyArtImageFallback(e, ART_PLACEHOLDER_THUMBNAIL)
+                }
               />
             </div>
             <div className={styles.ticketCta}>
