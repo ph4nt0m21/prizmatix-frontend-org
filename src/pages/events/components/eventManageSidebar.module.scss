@@ -16,6 +16,9 @@
   padding: 20px;
   flex-shrink: 0;
   height: 100%;
+  min-height: 0;
+  /* Popovers extend outside the card; scroll lives on .sectionsList */
+  overflow: visible;
 
   @media (max-width: 768px) {
     position: fixed;
@@ -24,13 +27,16 @@
     transform: translateX(0);
     width: 280px;
     height: 100vh;
+    max-height: 100vh;
     z-index: 1001;
     transition: transform 0.3s ease-in-out;
     box-shadow: 2px 0 5px rgba(0, 0, 0, 0.5);
     padding-top: 20px;
     padding-bottom: 20px;
-    justify-content: space-between;
+    justify-content: flex-start;
     margin: 0;
+    overflow: visible;
+    -webkit-overflow-scrolling: touch;
   }
 
   &.open {
@@ -70,6 +76,10 @@
   flex-direction: column;
   width: 100%;
   padding: 16px 0;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .sectionGroup {
@@ -199,12 +209,18 @@
   width: 100%;
 }
 
+.publishButtonWithHint {
+  position: relative;
+  width: 100%;
+}
+
 .publishDraftButton {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
   width: 100%;
+  min-width: 0;
   padding: 10px 12px;
   border-radius: 8px;
   font-size: 14px;
@@ -215,17 +231,94 @@
   background-color: #7c3aed;
   color: #fff;
 
-  &:hover:not(:disabled) {
+  &:hover:not(:disabled):not([aria-disabled="true"]) {
     background-color: #6d28d9;
     border-color: #6d28d9;
   }
 
-  &:disabled {
+  &:disabled,
+  &[aria-disabled="true"] {
     opacity: 0.45;
     cursor: not-allowed;
     background-color: #e5e7eb;
     border-color: #e5e7eb;
     color: #9ca3af;
+  }
+}
+
+/*
+ * Publish requirements panel — visibility controlled in JS (hover + tap).
+ * Desktop: absolutely positioned to the right of the publish button (sidebar overflow is visible).
+ * Mobile: portaled to document.body — see .publishRequirementsPanelMobileFloat (fixed bottom sheet).
+ */
+.publishRequirementsPanel {
+  padding: 12px 14px;
+  box-sizing: border-box;
+  border-radius: 10px;
+  background-color: #181d27;
+  color: #f9fafb;
+  font-size: 13px;
+  line-height: 1.5;
+  box-shadow:
+    0 12px 16px rgba(10, 13, 18, 0.08),
+    0 4px 6px rgba(10, 13, 18, 0.03);
+  max-height: min(50vh, 320px);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (min-width: 769px) {
+  .publishRequirementsPanel {
+    position: absolute;
+    left: calc(100% + 12px);
+    top: 50%;
+    transform: translateY(-50%);
+    margin-top: 0;
+    width: min(300px, calc(100vw - 120px));
+    max-height: min(380px, 70vh);
+    z-index: 10050;
+  }
+}
+
+/*
+ * Portaled on mobile (fixed is not broken by sidebar transform).
+ * Same width / max-height as the desktop popover (769px+ rules above).
+ */
+.publishRequirementsPanelMobileFloat {
+  position: fixed;
+  left: 50%;
+  bottom: max(16px, env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  width: min(300px, calc(100vw - 120px));
+  max-height: min(380px, 70vh);
+  margin: 0;
+  z-index: 10050;
+  box-shadow:
+    0 12px 16px rgba(10, 13, 18, 0.08),
+    0 4px 6px rgba(10, 13, 18, 0.03);
+}
+
+.publishRequirementsTitle {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #d1d5db;
+  margin-bottom: 10px;
+}
+
+.publishRequirementsList {
+  margin: 0;
+  padding-left: 1.2rem;
+  color: #f9fafb;
+
+  li {
+    margin-bottom: 8px;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
   }
 }
 

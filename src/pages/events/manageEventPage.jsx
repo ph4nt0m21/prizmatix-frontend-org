@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import EventHeaderNav from "./components/eventHeaderNav";
 import EventManageSidebar from "./components/eventManageSidebar";
@@ -13,40 +13,7 @@ import PayoutSection from "./sections/payoutSection";
 import TicketSection from "./sections/ticketSection";
 import DiscountSection from "./sections/discountSection";
 import { getPublishedEventTimingStatus } from "./eventStatusUtils";
-import { isCreationReadyForPublish } from "../../utils/eventUtil";
-
-const isPublishReadyFromEventData = (event = {}, dashboard = {}) => {
-  const hasName = Boolean(event?.name && String(event.name).trim().length > 0);
-  const hasDescription = Boolean(
-    event?.description && String(event.description).trim().length > 0
-  );
-
-  const startDate = event?.dateTime?.startDate || event?.startDate;
-  const startTime = event?.dateTime?.startTime || event?.startTime;
-  const endDate = event?.dateTime?.endDate || event?.endDate;
-  const endTime = event?.dateTime?.endTime || event?.endTime;
-  const hasDateTime = Boolean(startDate && startTime && endDate && endTime);
-
-  const isTba =
-    event?.location?.isToBeAnnounced === true || event?.eventLocationType === "tba";
-  const isOnline =
-    event?.eventLocationType === "online" ||
-    event?.location?.locationType === "online";
-  const hasLocation =
-    isTba ||
-    isOnline ||
-    Boolean(
-      event?.location?.venue ||
-        event?.eventLocationName ||
-        (event?.location?.city && (event?.location?.country || event?.country))
-    );
-
-  const hasTickets =
-    Number(dashboard?.totalTicketCapacity || 0) > 0 ||
-    (Array.isArray(event?.tickets) && event.tickets.length > 0);
-
-  return hasName && hasDescription && hasDateTime && hasLocation && hasTickets;
-};
+import { getManagePublishGate } from "../../utils/eventUtil";
 
 const EventManagePage = () => {
   const navigate = useNavigate();
@@ -57,8 +24,21 @@ const EventManagePage = () => {
   const [error, setError] = useState(null);
   const [dashboardData, setDashboardData] = useState(null);
   const [eventData, setEventData] = useState(null);
-  const [canPublishFromManage, setCanPublishFromManage] = useState(false);
+  const [eventStatusFromApi, setEventStatusFromApi] = useState(null);
   const [currentSection, setCurrentSection] = useState("overview");
+
+  const publishGate = useMemo(
+    () =>
+      getManagePublishGate({
+        statusData: eventStatusFromApi,
+        eventData,
+        dashboardData,
+        isPublished: !!eventData?.isPublished,
+      }),
+    [eventStatusFromApi, eventData, dashboardData]
+  );
+
+  const canPublishFromManage = publishGate.canPublish;
 
   const fetchEventData = useCallback(
     async ({ showLoader = true } = {}) => {
@@ -81,11 +61,7 @@ const EventManagePage = () => {
         };
         setDashboardData(dashboardRes.data);
         setEventData(mergedEventData);
-        setCanPublishFromManage(
-          isCreationReadyForPublish(statusRes.data) ||
-            (!isPublished &&
-              isPublishReadyFromEventData(mergedEventData, dashboardRes.data))
-        );
+        setEventStatusFromApi(statusRes.data ?? null);
         setError(null);
       } catch (fetchError) {
         console.error("Error fetching event data:", fetchError);
@@ -178,6 +154,7 @@ const EventManagePage = () => {
           navigateToEventEditPage={navigateToEventEditPage}
           navigateToPublishStep={navigateToPublishStep}
           canPublish={canPublishFromManage}
+          publishBlockers={publishGate.blockers}
           isPublished={!!eventData?.isPublished}
           eventId={eventId}
           isMobileSidebarOpen={isManageSidebarOpen}

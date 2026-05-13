@@ -1,189 +1,414 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import Cookies from 'js-cookie';
-import { ForgotPasswordAPI } from '../../services/allApis'; // Assuming this path is correct
+import Cookies from "js-cookie";
+import { toast } from "react-toastify";
+import {
+  ForgotPasswordInitiateAPI,
+  ForgotPasswordVerifyOtpAPI,
+  ForgotPasswordResetAPI,
+  ForgotPasswordResendOtpAPI,
+} from "../../services/allApis";
 
-// Import styling from the login page for consistent design
 import styles from "./loginPage.module.scss";
+import fpStyles from "./forgotPasswordPage.module.scss";
 
-// Import SVG components
 import { ReactComponent as MailIcon } from "../../assets/icons/mail-icon.svg";
+import { ReactComponent as LockIcon } from "../../assets/icons/lock-icon.svg";
 import { ReactComponent as ArrowIcon } from "../../assets/icons/arrow-icon.svg";
 
-// Import images
-import wallpaperBg from "../../assets/images/auth-bg.jpg"; // Re-using login page background
+import eyeIcon from "../../assets/icons/eye-icon.svg";
+import eyeOffIcon from "../../assets/icons/eye-off-icon.svg";
+
+import wallpaperBg from "../../assets/images/auth-bg.jpg";
 import logoImage from "../../assets/images/logo.svg";
 
+const STEPS = {
+  EMAIL: "email",
+  OTP: "otp",
+  PASSWORD: "password",
+};
+
+/** Same neutral copy whether or not the email exists (security UX). */
+const NEUTRAL_EMAIL_SENT =
+  "If an account exists with this email, we've sent a 6-digit code. It expires in about 10 minutes.";
+
+function getApiErrorMessage(err, fallback = "Something went wrong. Please try again.") {
+  const msg = err.response?.data?.message;
+  return typeof msg === "string" && msg.trim() ? msg.trim() : fallback;
+}
+
 /**
- * ForgotPasswordPage component
- * Allows users to request a password reset link via email
- *
- * @returns {JSX.Element} The ForgotPasswordPage component
+ * Forgot password — multi-step flow aligned with backend:
+ * initiate → verify OTP → reset password → login.
  */
 const ForgotPasswordPage = () => {
   const navigate = useNavigate();
 
-  // Form state
+  const [step, setStep] = useState(STEPS.EMAIL);
   const [email, setEmail] = useState("");
+  const [otp, setOtp] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
 
-  // UI states
   const [isLoading, setIsLoading] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [successMessage, setSuccessMessage] = useState(""); // Keeping for potential future use, though not in image
+  const [infoBanner, setInfoBanner] = useState("");
 
-  // Check if user is already authenticated (re-using logic from original)
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
   useEffect(() => {
-    const checkToken = () => {
-      const token = Cookies.get('token');
-      if (token) {
-        // Redirect to home if token exists
-        navigate("/", { replace: true });
-      }
-    };
-
-    checkToken();
-
-    // Clear messages when component unmounts
-    return () => {
-      setError(null);
-      setSuccessMessage("");
-    };
+    const token = Cookies.get("token");
+    if (token) {
+      navigate("/", { replace: true });
+    }
   }, [navigate]);
 
-  /**
-   * Shows error message in UI
-   * @param {string} message - Error message to display
-   * @param {string} type - Type of error (error, warning, info)
-   */
   const showError = (message, type = "error") => {
     setError({ message, type });
-
-    // Auto-clear error after 5 seconds
-    setTimeout(() => {
-      setError(null);
-    }, 5000);
+    setTimeout(() => setError(null), 6000);
   };
 
-  /**
-   * Handle form submission
-   * @param {Event} e - Form submission event
-   */
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleBack = () => {
+    setError(null);
+    if (step === STEPS.OTP) {
+      setStep(STEPS.EMAIL);
+      setOtp("");
+      setInfoBanner("");
+    } else if (step === STEPS.PASSWORD) {
+      setStep(STEPS.OTP);
+      setNewPassword("");
+      setConfirmPassword("");
+    }
+  };
 
-    // Form validation
-    if (!email) {
+  const handleInitiate = async (e) => {
+    e.preventDefault();
+    if (!email.trim()) {
       showError("Please enter your email address", "warning");
       return;
     }
-
-    if (!/\S+@\S+\.\S+/.test(email)) {
+    if (!/\S+@\S+\.\S+/.test(email.trim())) {
       showError("Please enter a valid email address", "warning");
       return;
     }
 
-    // Clear previous errors
-    setError(null);
-    setSuccessMessage(""); // Clear success message on new submission
-
-    // Set loading state
     setIsLoading(true);
-
+    setError(null);
     try {
-      // Simulate API call with timeout as per original code
-      setTimeout(() => {
-        // In a real application, you would call:
-        // const response = await ForgotPasswordAPI({ email });
-
-        // Navigate to the reset link sent page on simulated success
-        navigate("/reset-link-sent", { state: { email } });
-
-      }, 1500);
+      await ForgotPasswordInitiateAPI({ email: email.trim() });
+      setInfoBanner(NEUTRAL_EMAIL_SENT);
+      setStep(STEPS.OTP);
     } catch (err) {
-      console.error("Forgot password request failed:", err);
-
-      // Extract error message from response
-      const errorMessage = err.response?.data?.message || "Failed to send reset link. Please try again later.";
-      showError(errorMessage);
+      console.error("Forgot password initiate:", err);
+      showError(getApiErrorMessage(err));
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Render error message if exists
+  const handleVerifyOtp = async (e) => {
+    e.preventDefault();
+    const code = otp.trim();
+    if (code.length !== 6 || !/^\d{6}$/.test(code)) {
+      showError("Enter the 6-digit code from your email.", "warning");
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+    try {
+      await ForgotPasswordVerifyOtpAPI({
+        email: email.trim(),
+        otp: code,
+      });
+      setInfoBanner("");
+      setStep(STEPS.PASSWORD);
+    } catch (err) {
+      console.error("Verify OTP:", err);
+      showError(getApiErrorMessage(err));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleResend = async () => {
+    if (!email.trim()) return;
+    setResendLoading(true);
+    try {
+      await ForgotPasswordResendOtpAPI({ email: email.trim() });
+      toast.info(NEUTRAL_EMAIL_SENT, { autoClose: 6000 });
+    } catch (err) {
+      console.error("Resend OTP:", err);
+      showError(getApiErrorMessage(err));
+    } finally {
+      setResendLoading(false);
+    }
+  };
+
+  const handleResetPassword = async (e) => {
+    e.preventDefault();
+    if (!newPassword) {
+      showError("Please enter a new password", "warning");
+      return;
+    }
+    if (newPassword.length < 8) {
+      showError("Password must be at least 8 characters long", "warning");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      showError("Passwords do not match", "warning");
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+    try {
+      await ForgotPasswordResetAPI({
+        email: email.trim(),
+        newPassword,
+      });
+      toast.success(
+        "Password updated. Sign in with your email and new password.",
+        { autoClose: 5000 }
+      );
+      navigate("/login", { replace: true });
+    } catch (err) {
+      console.error("Reset password:", err);
+      showError(getApiErrorMessage(err));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const renderErrorMessage = () => {
     if (!error) return null;
-
-    const className = `${styles.errorMessage} ${error.type === "warning" ? styles.warningMessage : ''}`;
+    const className = `${styles.errorMessage} ${
+      error.type === "warning" ? styles.warningMessage : ""
+    }`;
     return <div className={className}>{error.message}</div>;
   };
 
-  // Render success message if exists (not used in current UI but kept for functionality)
-  const renderSuccessMessage = () => {
-    if (!successMessage) return null;
-    return <div className={styles.infoMessage}>{successMessage}</div>; // Assuming infoMessage style exists
+  const titleSubtitle = () => {
+    if (step === STEPS.EMAIL) {
+      return {
+        title: "Forgot password?",
+        subtitle:
+          "Enter your account email. If an account exists, we'll email you a code to reset your password.",
+      };
+    }
+    if (step === STEPS.OTP) {
+      return {
+        title: "Enter verification code",
+        subtitle:
+          "We've sent a 6-digit code to your email. It is valid for about 10 minutes.",
+      };
+    }
+    return {
+      title: "Choose a new password",
+      subtitle: "Use a strong password you have not used elsewhere.",
+    };
   };
 
+  const { title, subtitle } = titleSubtitle();
+
   return (
-    <div className={styles.loginPanel}> {/* Re-using loginPanel class */}
-      {/* Left Panel with background */}
-      <div className={styles.leftPanel}> {/* Re-using leftPanel class */}
-        <img className={styles.wallpaper} alt="Background" src={wallpaperBg} /> {/* Re-using wallpaper class */}
+    <div className={styles.loginPanel}>
+      <div className={styles.leftPanel}>
+        <img className={styles.wallpaper} alt="" src={wallpaperBg} />
       </div>
 
-      {/* Right Panel with form */}
-      <div className={styles.rightPanel}> {/* Re-using rightPanel class */}
-        <div className={styles.header}> {/* Re-using header class */}
-          {/* Back button/link as seen in the image */}
-          <Link to="/login" className={styles.backButton} aria-label="Return to Login">
-            <ArrowIcon className={styles.backIcon} />
-            <span className={styles.backButtonText}>Return to Login</span> {/* New span for text */}
-          </Link>
-          <div className={styles.logoContainer}> {/* Re-using logoContainer class */}
-            <img src={logoImage} alt="Prizmatix Logo" className={styles.logo} /> {/* Re-using logo class */}
+      <div className={styles.rightPanel}>
+        <div className={styles.header}>
+          {step === STEPS.EMAIL ? (
+            <Link to="/login" className={styles.backButton} aria-label="Return to Login">
+              <ArrowIcon className={styles.backIcon} />
+              <span className={styles.backButtonText}>Return to Login</span>
+            </Link>
+          ) : (
+            <button
+              type="button"
+              className={styles.backButton}
+              onClick={handleBack}
+              aria-label="Go back"
+            >
+              <ArrowIcon className={styles.backIcon} />
+              <span className={styles.backButtonText}>Back</span>
+            </button>
+          )}
+          <div className={styles.logoContainer}>
+            <img src={logoImage} alt="Prizmatix Logo" className={styles.logo} />
           </div>
         </div>
 
-        <div className={styles.formContainer}> {/* Re-using formContainer class */}
-          <div className={styles.welcomeSection}> {/* Re-using welcomeSection class */}
-            <h1 className={styles.welcomeTitle}>Forgot password?</h1>
-            <p className={styles.welcomeSubtitle}>
-              Don't worry. Enter your account's email address and we'll send you a link to reset your password.
-            </p>
+        <div className={styles.formContainer}>
+          <div className={styles.welcomeSection}>
+            <h1 className={styles.welcomeTitle}>{title}</h1>
+            <p className={styles.welcomeSubtitle}>{subtitle}</p>
           </div>
+
+          {infoBanner && step === STEPS.OTP && (
+            <div className={fpStyles.neutralBanner} role="status">
+              {infoBanner}
+            </div>
+          )}
 
           {renderErrorMessage()}
-          {renderSuccessMessage()} {/* Still render if successMessage is set */}
 
-          <form onSubmit={handleSubmit} className={styles.form}> {/* Re-using form class */}
-            <div className={styles.inputGroup}> {/* Re-using inputGroup class */}
-              <div className={styles.inputField}> {/* Re-using inputField class */}
-                <MailIcon className={styles.fieldIcon} /> {/* Re-using fieldIcon class */}
-                <input
-                  type="email"
-                  placeholder="Email"
-                  className={styles.input}
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  disabled={isLoading}
-                />
+          {step === STEPS.EMAIL && (
+            <form onSubmit={handleInitiate} className={styles.form}>
+              <div className={styles.inputGroup}>
+                <div className={styles.inputField}>
+                  <MailIcon className={styles.fieldIcon} />
+                  <input
+                    type="email"
+                    placeholder="Email"
+                    className={styles.input}
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    disabled={isLoading}
+                    autoComplete="email"
+                  />
+                </div>
               </div>
-            </div>
+              <button
+                type="submit"
+                className={styles.signInButton}
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <div className={styles.spinner} />
+                ) : (
+                  "Send reset code"
+                )}
+              </button>
+            </form>
+          )}
 
-            <button
-              type="submit"
-              className={styles.signInButton}
-              disabled={isLoading}
-            >
-              {isLoading ? <div className={styles.spinner}></div> : "Send reset link"} {/* Re-using spinner class */}
-            </button>
-          </form>
+          {step === STEPS.OTP && (
+            <form onSubmit={handleVerifyOtp} className={styles.form}>
+              <p className={fpStyles.emailHint}>
+                Code sent to <strong>{email.trim()}</strong>
+              </p>
+              <div className={styles.inputGroup}>
+                <div className={styles.inputField}>
+                  <MailIcon className={styles.fieldIcon} />
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    placeholder="6-digit code"
+                    className={`${styles.input} ${fpStyles.otpInput}`}
+                    value={otp}
+                    onChange={(e) =>
+                      setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))
+                    }
+                    disabled={isLoading}
+                  />
+                </div>
+              </div>
+              <button
+                type="submit"
+                className={styles.signInButton}
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <div className={styles.spinner} />
+                ) : (
+                  "Verify code"
+                )}
+              </button>
+              <div className={fpStyles.resendRow}>
+                <span>Did not receive a code?</span>
+                <button
+                  type="button"
+                  className={fpStyles.resendButton}
+                  onClick={handleResend}
+                  disabled={resendLoading || isLoading}
+                >
+                  {resendLoading ? "Sending…" : "Resend code"}
+                </button>
+              </div>
+            </form>
+          )}
 
-          <div className={styles.signupPrompt}> {/* Re-using signupPrompt class */}
-            Remember your password? <Link to="/login" className={styles.signupLink}>Return to Login</Link> {/* Re-using signupLink class */}
+          {step === STEPS.PASSWORD && (
+            <form onSubmit={handleResetPassword} className={styles.form}>
+              <div className={styles.inputGroup}>
+                <div className={styles.inputField}>
+                  <LockIcon className={styles.fieldIcon} />
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    name="newPassword"
+                    placeholder="New password"
+                    className={styles.input}
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    disabled={isLoading}
+                    autoComplete="new-password"
+                  />
+                  <button
+                    type="button"
+                    className={styles.passwordToggle}
+                    onClick={() => setShowPassword(!showPassword)}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                  >
+                    <img src={showPassword ? eyeOffIcon : eyeIcon} alt="" />
+                  </button>
+                </div>
+              </div>
+              <div className={styles.inputGroup}>
+                <div className={styles.inputField}>
+                  <LockIcon className={styles.fieldIcon} />
+                  <input
+                    type={showConfirmPassword ? "text" : "password"}
+                    name="confirmPassword"
+                    placeholder="Confirm new password"
+                    className={styles.input}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    disabled={isLoading}
+                    autoComplete="new-password"
+                  />
+                  <button
+                    type="button"
+                    className={styles.passwordToggle}
+                    onClick={() =>
+                      setShowConfirmPassword(!showConfirmPassword)
+                    }
+                    aria-label={
+                      showConfirmPassword ? "Hide password" : "Show password"
+                    }
+                  >
+                    <img
+                      src={showConfirmPassword ? eyeOffIcon : eyeIcon}
+                      alt=""
+                    />
+                  </button>
+                </div>
+              </div>
+              <button
+                type="submit"
+                className={styles.signInButton}
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <div className={styles.spinner} />
+                ) : (
+                  "Reset password"
+                )}
+              </button>
+            </form>
+          )}
+
+          <div className={styles.signupPrompt}>
+            Remember your password?{" "}
+            <Link to="/login" className={styles.signupLink}>
+              Return to Login
+            </Link>
           </div>
         </div>
-
       </div>
     </div>
   );

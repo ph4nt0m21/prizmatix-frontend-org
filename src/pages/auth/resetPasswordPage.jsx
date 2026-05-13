@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import Cookies from 'js-cookie';
-import { ResetPasswordAPI } from '../../services/allApis';
 import styles from "./authPages.module.scss";
 
 /**
