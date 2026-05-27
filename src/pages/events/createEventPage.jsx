@@ -43,6 +43,9 @@ import {
   prepareTicketsDataForAPI,
   preparePublishEventDataForAPI,
   mapEventApiPayloadToLocationForm,
+  isEventLocationComplete,
+  getCreationWizardPublishBlockers,
+  formatPublishBlockersAlertMessage,
 } from "../../utils/eventUtil";
 
 /**
@@ -154,18 +157,6 @@ const CreateEventPage = () => {
     discountCodes: { completed: false, valid: false, visited: false },
     publish: { completed: false, valid: false, visited: false },
   });
-
-  const areAllPreviousStepsCompleted = () => {
-    return (
-      stepStatus.basicInfo.completed &&
-      stepStatus.location.completed &&
-      stepStatus.dateTime.completed &&
-      stepStatus.description.completed &&
-      stepStatus.art.completed &&
-      stepStatus.tickets.completed &&
-      stepStatus.discountCodes.completed 
-    );
-  };
 
   // Current step state (default to 1 if not specified)
   const [currentStep, setCurrentStep] = useState(1);
@@ -369,21 +360,27 @@ const CreateEventPage = () => {
           return;
         }
 
-        if (stepNumber === 8 && !areAllPreviousStepsCompleted()) {
-          let firstIncompleteStep = 1;
-          if (!stepStatus.basicInfo.completed) firstIncompleteStep = 1;
-          else if (!stepStatus.location.completed) firstIncompleteStep = 2;
-          else if (!stepStatus.dateTime.completed) firstIncompleteStep = 3;
-          else if (!stepStatus.description.completed) firstIncompleteStep = 4;
-          else if (!stepStatus.art.completed) firstIncompleteStep = 5;
-          else if (!stepStatus.tickets.completed) firstIncompleteStep = 6;
-          else if (!stepStatus.discountCodes.completed) firstIncompleteStep = 7;
+        if (stepNumber === 8) {
+          const publishBlockers = getCreationWizardPublishBlockers(
+            eventData,
+            stepStatus
+          );
+          if (publishBlockers.length > 0) {
+            let firstIncompleteStep = 1;
+            if (!stepStatus.basicInfo.completed) firstIncompleteStep = 1;
+            else if (!stepStatus.location.completed) firstIncompleteStep = 2;
+            else if (!stepStatus.dateTime.completed) firstIncompleteStep = 3;
+            else if (!stepStatus.description.completed) firstIncompleteStep = 4;
+            else if (!stepStatus.art.completed) firstIncompleteStep = 5;
+            else if (!stepStatus.tickets.completed) firstIncompleteStep = 6;
+            else if (!stepStatus.discountCodes.completed) firstIncompleteStep = 7;
 
-          alert("Please complete all previous steps before publishing.");
+            alert(formatPublishBlockersAlertMessage(publishBlockers));
 
-          navigate(`/events/create/${eventId}/${firstIncompleteStep}`);
-          setCurrentStep(firstIncompleteStep);
-          return;
+            navigate(`/events/create/${eventId}/${firstIncompleteStep}`);
+            setCurrentStep(firstIncompleteStep);
+            return;
+          }
         }
 
         setCurrentStep(stepNumber);
@@ -513,22 +510,12 @@ const CreateEventPage = () => {
       newStepStatus.basicInfo = { completed: true, valid: true, visited: true };
     }
 
-    if (data.location) {
-      const locationComplete =
-        data.location.isToBeAnnounced ||
-        data.location.locationType === "online" ||
-        (data.location.venue &&
-          data.location.street &&
-          data.location.city &&
-          data.location.state);
-
-      if (locationComplete) {
-        newStepStatus.location = {
-          completed: true,
-          valid: true,
-          visited: true,
-        };
-      }
+    if (data.location && isEventLocationComplete({ location: data.location })) {
+      newStepStatus.location = {
+        completed: true,
+        valid: true,
+        visited: true,
+      };
     }
 
     if (data.dateTime) {
@@ -651,24 +638,7 @@ const CreateEventPage = () => {
     return eventData.name.trim() !== "";
   };
 
-  const validateLocation = () => {
-    if (eventData.location?.isToBeAnnounced) {
-      return true;
-    }
-    const location = eventData.location || {};
-    if (location.locationType === "online") {
-      return true;
-    }
-    if (
-      !location.venue ||
-      !location.street ||
-      !location.city ||
-      !location.state
-    ) {
-      return false;
-    }
-    return true;
-  };
+  const validateLocation = () => isEventLocationComplete(eventData);
 
   const validateDateTime = () => {
     const dateTime = eventData.dateTime || {};
@@ -806,12 +776,7 @@ const validateDiscountCodes = () => {
     if (!eventData.name) {
       return false;
     }
-    const loc = eventData.location || {};
-    if (
-      !loc.isToBeAnnounced &&
-      loc.locationType !== "online" &&
-      (!loc.venue || !loc.city || !loc.country)
-    ) {
+    if (!isEventLocationComplete(eventData)) {
       return false;
     }
     if (!eventData.dateTime.startDate || !eventData.dateTime.startTime ||
@@ -1509,8 +1474,12 @@ const validateDiscountCodes = () => {
 
   const navigateToStep = (stepNumber) => {
     if (stepNumber === 8) {
-      if (!areAllPreviousStepsCompleted()) {
-        alert("Please complete all previous steps before publishing.");
+      const publishBlockers = getCreationWizardPublishBlockers(
+        eventData,
+        stepStatus
+      );
+      if (publishBlockers.length > 0) {
+        alert(formatPublishBlockersAlertMessage(publishBlockers));
         return;
       }
     }
@@ -1663,6 +1632,7 @@ const validateDiscountCodes = () => {
         <EventCreationSidebar
           currentStep={currentStep}
           stepStatus={stepStatus}
+          eventData={eventData}
           navigateToStep={navigateToStep}
           eventId={eventId}
           onStatusUpdate={(updatedStatus) => {

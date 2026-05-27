@@ -2,7 +2,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
 import styles from './eventCreationSidebar.module.scss';
 import { GetEventStatusAPI } from '../../../services/allApis';
-import { getEventData } from '../../../utils/eventUtil';
+import {
+  getEventData,
+  getCreationWizardPublishBlockers,
+  formatPublishBlockersAlertMessage,
+} from '../../../utils/eventUtil';
 
 // Import SVG components
 import { ReactComponent as BasicInfoIcon } from '../../../assets/icons/basic-info-icon.svg';
@@ -23,6 +27,7 @@ import { ReactComponent as PublishIcon } from '../../../assets/icons/publish-ico
  * @param {Object} props.stepStatus - Object containing completion status for each step.
  * @param {Function} props.navigateToStep - Function to navigate to a specific step.
  * @param {string} [props.eventId] - The ID of the event being created (optional).
+ * @param {Object} [props.eventData] - Current event form data for field-level publish checks.
  * @param {Function} [props.onStatusUpdate] - Callback to update parent's step status.
  * @param {boolean} props.isMobileSidebarOpen - Controls if the sidebar is open on mobile.
  * @param {Function} props.toggleMobileSidebar - Function to toggle mobile sidebar visibility.
@@ -33,6 +38,7 @@ const EventCreationSidebar = ({
   stepStatus,
   navigateToStep,
   eventId,
+  eventData = {},
   onStatusUpdate,
   isMobileSidebarOpen,
   toggleMobileSidebar
@@ -142,17 +148,12 @@ const EventCreationSidebar = ({
 
     // Special case for publish step (step 8)
     if (step.number === 8) {
-      const areAllPreviousCompleted =
-        (stepStatus.basicInfo?.completed || false) &&
-        (stepStatus.location?.completed || false) &&
-        (stepStatus.dateTime?.completed || false) &&
-        (stepStatus.description?.completed || false) &&
-        (stepStatus.art?.completed || false) &&
-        (stepStatus.tickets?.completed || false) &&
-        (stepStatus.discountCodes?.completed || false);
-
-      if (!areAllPreviousCompleted) {
-        alert("Please complete all previous steps before publishing.");
+      const publishBlockers = getCreationWizardPublishBlockers(
+        eventData,
+        stepStatus
+      );
+      if (publishBlockers.length > 0) {
+        alert(formatPublishBlockersAlertMessage(publishBlockers));
         return;
       }
     }
@@ -229,6 +230,7 @@ EventCreationSidebar.propTypes = {
   stepStatus: PropTypes.object.isRequired,
   navigateToStep: PropTypes.func.isRequired,
   eventId: PropTypes.string,
+  eventData: PropTypes.object,
   onStatusUpdate: PropTypes.func,
   isMobileSidebarOpen: PropTypes.bool.isRequired,
   toggleMobileSidebar: PropTypes.func.isRequired,

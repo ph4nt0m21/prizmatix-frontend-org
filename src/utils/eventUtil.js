@@ -659,6 +659,91 @@ export const preparePublishEventDataForAPI = (eventId = null) => {
   };
 };
 
+const PHYSICAL_LOCATION_FIELDS = [
+  { key: "venue", label: "Venue name" },
+  { key: "street", label: "Street address" },
+  { key: "city", label: "City" },
+  { key: "state", label: "State/Province" },
+  { key: "country", label: "Country" },
+];
+
+/**
+ * Merges nested `location` with flat GetEventAPI `eventLocation*` fields.
+ * @param {Object} event
+ * @returns {Object}
+ */
+export const getEffectiveEventLocation = (event = {}) => {
+  const nested = event?.location || {};
+  const firstString = (...vals) => {
+    for (const v of vals) {
+      if (v !== undefined && v !== null && String(v).trim() !== "") {
+        return String(v);
+      }
+    }
+    return "";
+  };
+
+  return {
+    ...nested,
+    locationType: firstString(
+      nested.locationType,
+      event.eventLocationType
+    ) || "physical",
+    isToBeAnnounced:
+      nested.isToBeAnnounced === true || event.eventLocationType === "tba",
+    venue: firstString(nested.venue, event.eventLocationName),
+    street: firstString(nested.street, event.eventLocationStreet),
+    city: firstString(nested.city, event.eventLocationCity),
+    state: firstString(nested.state, event.eventLocationState),
+    country: firstString(
+      nested.country,
+      event.eventLocationCountry,
+      event.country
+    ),
+  };
+};
+
+/**
+ * @param {Object} event
+ * @returns {'physical'|'online'|'tba'}
+ */
+export const getEventLocationMode = (event = {}) => {
+  const location = getEffectiveEventLocation(event);
+  if (location.isToBeAnnounced) {
+    return "tba";
+  }
+  if (location.locationType === "online") {
+    return "online";
+  }
+  return "physical";
+};
+
+/**
+ * @param {Object} location
+ * @returns {string[]}
+ */
+export const getPhysicalLocationMissingFieldLabels = (location = {}) => {
+  return PHYSICAL_LOCATION_FIELDS.filter(
+    ({ key }) => !String(location?.[key] ?? "").trim()
+  ).map(({ label }) => label);
+};
+
+/**
+ * Physical venues need venue, street, city, state, and country.
+ * @param {Object} event
+ * @returns {boolean}
+ */
+export const isEventLocationComplete = (event = {}) => {
+  const mode = getEventLocationMode(event);
+  if (mode === "tba" || mode === "online") {
+    return true;
+  }
+  return (
+    getPhysicalLocationMissingFieldLabels(getEffectiveEventLocation(event))
+      .length === 0
+  );
+};
+
 /**
  * True when all creation steps 1–7 are done and step 8 (publish) is not completed yet.
  * Matches backend flags from GetEventStatusAPI.
@@ -708,19 +793,7 @@ export const isPublishReadyFromEventData = (event = {}, dashboard = {}) => {
   const endTime = event?.dateTime?.endTime || event?.endTime;
   const hasDateTime = Boolean(startDate && startTime && endDate && endTime);
 
-  const isTba =
-    event?.location?.isToBeAnnounced === true || event?.eventLocationType === "tba";
-  const isOnline =
-    event?.eventLocationType === "online" ||
-    event?.location?.locationType === "online";
-  const hasLocation =
-    isTba ||
-    isOnline ||
-    Boolean(
-      event?.location?.venue ||
-        event?.eventLocationName ||
-        (event?.location?.city && (event?.location?.country || event?.country))
-    );
+  const hasLocation = isEventLocationComplete(event);
 
   const hasTickets =
     Number(dashboard?.totalTicketCapacity || 0) > 0 ||
@@ -764,21 +837,18 @@ export const getEventPublishMissingItems = (event = {}, dashboard = {}) => {
     missing.push("Set start and end date and time.");
   }
 
-  const isTba =
-    event?.location?.isToBeAnnounced === true || event?.eventLocationType === "tba";
-  const isOnline =
-    event?.eventLocationType === "online" ||
-    event?.location?.locationType === "online";
-  const hasLocation =
-    isTba ||
-    isOnline ||
-    Boolean(
-      event?.location?.venue ||
-        event?.eventLocationName ||
-        (event?.location?.city && (event?.location?.country || event?.country))
+  if (!isEventLocationComplete(event)) {
+    const mode = getEventLocationMode(event);
+    const missingFields = getPhysicalLocationMissingFieldLabels(
+      getEffectiveEventLocation(event)
     );
-  if (!hasLocation) {
-    missing.push("Add a location, or choose Online / To be announced.");
+    if (mode === "physical" && missingFields.length > 0) {
+      missing.push(
+        `Location — add: ${missingFields.join(", ")} (Event Page → Location).`
+      );
+    } else {
+      missing.push("Add a location, or choose Online / To be announced.");
+    }
   }
 
   const hasTickets =
@@ -806,9 +876,124 @@ export const getIncompleteWizardStepHints = (statusData) => {
   );
 };
 
+const getDateTimeMissingFieldLabels = (event = {}) => {
+  const dateTime = event?.dateTime || {};
+  const startDate = dateTime.startDate || event.startDate;
+  const startTime = dateTime.startTime || event.startTime;
+  const endDate = dateTime.endDate || event.endDate;
+  const endTime = dateTime.endTime || event.endTime;
+  const missing = [];
+  if (!startDate) missing.push("Start date");
+  if (!startTime) missing.push("Start time");
+  if (!endDate) missing.push("End date");
+  if (!endTime) missing.push("End time");
+  if (startDate && startTime && endDate && endTime) {
+    const start = new Date(`${startDate}T${startTime}`);
+    const end = new Date(`${endDate}T${endTime}`);
+    if (!Number.isNaN(start.getTime()) && !Number.isNaN(end.getTime()) && end <= start) {
+      missing.push("End must be after start");
+    }
+  }
+  return missing;
+};
+
 /**
- * Manage-event publish gate: enabled if wizard steps 1–7 are done OR event payload is complete.
- * When disabled, lists concrete blockers for the UI.
+ * Missing required fields per creation step (steps 1–7), for publish-step gating.
+ * @param {Object} event
+ * @param {Object} stepStatus
+ * @returns {string[]}
+ */
+export const getCreationWizardPublishBlockers = (event = {}, stepStatus = {}) => {
+  const blockers = [];
+  const stepChecks = [
+    {
+      key: "basicInfo",
+      label: "Basic Info",
+      getMissing: () =>
+        !event?.name?.trim() ? ["Event name"] : [],
+    },
+    {
+      key: "location",
+      label: "Location",
+      getMissing: () => {
+        const mode = getEventLocationMode(event);
+        if (mode === "tba" || mode === "online") return [];
+        return getPhysicalLocationMissingFieldLabels(event.location);
+      },
+    },
+    {
+      key: "dateTime",
+      label: "Date and time",
+      getMissing: () => getDateTimeMissingFieldLabels(event),
+    },
+    {
+      key: "description",
+      label: "Description",
+      getMissing: () =>
+        !event?.description?.trim() ? ["Event description"] : [],
+    },
+    {
+      key: "art",
+      label: "Art",
+      getMissing: () => [],
+    },
+    {
+      key: "tickets",
+      label: "Tickets",
+      getMissing: () => {
+        const tickets = event?.tickets;
+        if (!Array.isArray(tickets) || tickets.length === 0) {
+          return ["At least one ticket"];
+        }
+        const hasInvalid = tickets.some(
+          (ticket) =>
+            !ticket?.name?.trim() ||
+            ticket.price === null ||
+            ticket.price === "" ||
+            Number.isNaN(parseFloat(ticket.price)) ||
+            parseFloat(ticket.price) < 0
+        );
+        return hasInvalid ? ["Valid ticket name and price for each ticket"] : [];
+      },
+    },
+    {
+      key: "discountCodes",
+      label: "Discount codes",
+      getMissing: () => [],
+    },
+  ];
+
+  for (const { key, label, getMissing } of stepChecks) {
+    const missing = getMissing();
+    const markedComplete = Boolean(stepStatus?.[key]?.completed);
+    if (missing.length > 0) {
+      blockers.push(`${label}: ${missing.join(", ")}`);
+    } else if (!markedComplete) {
+      blockers.push(`Complete the ${label} step`);
+    }
+  }
+
+  return blockers;
+};
+
+/**
+ * @param {string[]} blockers
+ * @returns {string}
+ */
+export const formatPublishBlockersAlertMessage = (blockers = []) => {
+  if (!blockers.length) {
+    return "Please complete all previous steps before publishing.";
+  }
+  return [
+    "Please complete the following before publishing:",
+    "",
+    ...blockers.map((line) => `• ${line}`),
+  ].join("\n");
+};
+
+/**
+ * Manage-event publish gate: enabled only when event payload meets publish prerequisites.
+ * When disabled, lists concrete blockers (including specific missing location fields).
  * @param {Object} params
  * @param {Object|null} params.statusData - GetEventStatusAPI payload
  * @param {Object|null} params.eventData
@@ -826,29 +1011,24 @@ export const getManagePublishGate = ({
     return { canPublish: false, blockers: [], isPublishedLive: true };
   }
 
-  const creationReady = isCreationReadyForPublish(statusData);
-  const eventReady = isPublishReadyFromEventData(eventData || {}, dashboardData || {});
-  const canPublish = creationReady || eventReady;
+  const eventReady = isPublishReadyFromEventData(
+    eventData || {},
+    dashboardData || {}
+  );
 
-  if (canPublish) {
+  if (eventReady) {
     return { canPublish: true, blockers: [], isPublishedLive: false };
   }
 
-  const blockers = [];
+  const blockers = getEventPublishMissingItems(
+    eventData || {},
+    dashboardData || {}
+  );
 
-  if (!eventReady) {
-    blockers.push(...getEventPublishMissingItems(eventData || {}, dashboardData || {}));
-  }
-
-  if (!creationReady) {
-    const wizardHints = getIncompleteWizardStepHints(statusData);
-    if (wizardHints.length > 0) {
-      blockers.push(...wizardHints);
-    } else if (!statusData) {
-      blockers.push(
-        "Could not load editor progress — refresh the page, then complete all steps in Event Page."
-      );
-    }
+  if (!statusData && blockers.length === 0) {
+    blockers.push(
+      "Could not load event data — refresh the page, then complete required fields."
+    );
   }
 
   const seen = new Set();
