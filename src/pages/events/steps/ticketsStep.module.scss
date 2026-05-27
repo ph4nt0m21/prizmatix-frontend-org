@@ -1,5 +1,6 @@
 @import '../../../styles/variables';
 @import '../../../styles/mixins';
+@import './inlineTableShared';
 
 // Core step container styles
 .stepContainer {
@@ -77,28 +78,31 @@
   top: 100%;
   right: 0;
   background-color: white;
-  border: 1px solid #e0e0e0;
-  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   min-width: 120px;
-  padding: 4px 0;
-  z-index: 10;
+  padding: 6px;
+  z-index: 30;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
+  margin-top: 4px;
 
   button {
     background: none;
     border: none;
-    padding: 8px 12px;
+    padding: 10px 12px;
+    min-height: 36px;
     text-align: left;
     cursor: pointer;
     width: 100%;
     font-size: 14px;
     color: #333;
+    border-radius: 4px;
 
     &:hover {
-      background-color: #f5f5f5;
+      background-color: #f3f4f6;
     }
   }
 }
@@ -171,7 +175,8 @@
   border: 1px solid #e5e7eb;
   border-radius: 8px;
   margin-bottom: 20px;
-  // This container is now a layout component for the scrolling wrapper and the add button
+  @include inline-table-container;
+  @include inline-table-action-menu;
 }
 
 // Shared grid: header + rows use identical columns so labels line up with inputs
@@ -188,9 +193,12 @@ $ticket-grid-columns:
   .ticketItem {
     display: grid;
     align-items: center;
-    column-gap: 12px;
-    padding: 12px 16px;
     grid-template-columns: $ticket-grid-columns;
+    @include inline-table-row-spacing;
+  }
+
+  .ticketItem {
+    @include inline-table-row-cell;
   }
 }
 
@@ -283,8 +291,8 @@ $ticket-grid-columns:
 
 // Action buttons (Settings, More)
 .ticketActionButton {
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -431,8 +439,9 @@ $ticket-grid-columns:
 
   .tableContent .ticketTableHeader,
   .tableContent .ticketItem {
-    column-gap: 10px;
-    padding: 12px;
+    column-gap: 12px;
+    padding: 14px 12px;
+    min-height: 52px;
   }
 
   .ticketCount .ticketInput,

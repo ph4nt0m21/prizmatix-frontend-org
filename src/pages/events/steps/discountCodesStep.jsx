@@ -2,6 +2,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
 import DiscountCodeModal from './discountCodeModal';
+import AnchoredActionMenu, {
+  anchoredActionMenuStyles,
+} from '../../../components/common/anchoredActionMenu/anchoredActionMenu';
 import styles from './discountCodesStep.module.scss';
 
 /**
@@ -34,6 +37,7 @@ const DiscountCodesStep = ({
   const [openDropdownIndex, setOpenDropdownIndex] = useState(null);
   const [isLoadingTickets, setIsLoadingTickets] = useState(false);
   const ticketsFetched = useRef(false);
+  const menuAnchorRefs = useRef({});
   const isPersistedDiscountCode = (discountCode) =>
     discountCode?.id != null &&
     discountCode?.id !== "" &&
@@ -44,18 +48,16 @@ const DiscountCodesStep = ({
   }, [discountCodes, handleInputChange]);
 
   useEffect(() => {
-    if (openMenuIndex === null && openDropdownIndex === null) return undefined;
+    if (openDropdownIndex === null) return undefined;
 
     const handlePointerDown = (e) => {
       const inTicketDropdown = e.target.closest(`.${styles.customDropdown}`);
-      const inActionMenu = e.target.closest(`.${styles.actionMenuContainer}`);
       if (!inTicketDropdown) setOpenDropdownIndex(null);
-      if (!inActionMenu) setOpenMenuIndex(null);
     };
 
     document.addEventListener('mousedown', handlePointerDown);
     return () => document.removeEventListener('mousedown', handlePointerDown);
-  }, [openMenuIndex, openDropdownIndex]);
+  }, [openDropdownIndex]);
 
   useEffect(() => {
     const hasSelectedTickets = discountCodes.some(
@@ -344,15 +346,50 @@ const DiscountCodesStep = ({
                     </div>
                     <div className={styles.discountActions}>
                       <div className={styles.actionMenuContainer}>
-                        <button type="button" className={styles.discountActionButton} onClick={(e) => { e.stopPropagation(); setOpenDropdownIndex(null); setOpenMenuIndex(openMenuIndex === index ? null : index); }} aria-label="Actions">
+                        <button
+                          type="button"
+                          ref={(el) => {
+                            menuAnchorRefs.current[index] = el;
+                          }}
+                          className={styles.discountActionButton}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setOpenDropdownIndex(null);
+                            setOpenMenuIndex(openMenuIndex === index ? null : index);
+                          }}
+                          aria-label="Actions"
+                          aria-expanded={openMenuIndex === index}
+                        >
                           <svg width="4" height="16" viewBox="0 0 4 16" fill="#6B7280" xmlns="http://www.w3.org/2000/svg"><path d="M2 4C3.1 4 4 3.1 4 2s-.9-2-2-2-2 .9-2 2 .9 4 2 4zm0 6c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 6c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z" /></svg>
                         </button>
-                        {openMenuIndex === index && (
-                          <div className={styles.actionMenu}>
-                            <button type="button" onClick={(e) => { e.stopPropagation(); handleEditDiscountCode(index); setOpenMenuIndex(null); }}>Edit</button>
-                            <button type="button" onClick={(e) => { e.stopPropagation(); handleDeleteDiscountCode(index); setOpenMenuIndex(null); }} className={styles.deleteAction}>Delete</button>
-                          </div>
-                        )}
+                        <AnchoredActionMenu
+                          open={openMenuIndex === index}
+                          anchorEl={menuAnchorRefs.current[index]}
+                          onClose={() => setOpenMenuIndex(null)}
+                        >
+                          <button
+                            type="button"
+                            className={anchoredActionMenuStyles.menuItem}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEditDiscountCode(index);
+                              setOpenMenuIndex(null);
+                            }}
+                          >
+                            Edit
+                          </button>
+                          <button
+                            type="button"
+                            className={anchoredActionMenuStyles.menuItem}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteDiscountCode(index);
+                              setOpenMenuIndex(null);
+                            }}
+                          >
+                            Delete
+                          </button>
+                        </AnchoredActionMenu>
                       </div>
                     </div>
                   </div>
