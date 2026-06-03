@@ -714,7 +714,6 @@ const EmailCampaignsPage = () => {
   const [subjectCursorPosition, setSubjectCursorPosition] = useState(0);
   const [isSaved, setIsSaved] = useState(false);
   const [campaignSavedId, setCampaignSavedId] = useState(null);
-  const [showDecoratorsInfo, setShowDecoratorsInfo] = useState(false);
 
   const MAX_FILE_SIZE_MB = 5;
 
@@ -1112,23 +1111,22 @@ const EmailCampaignsPage = () => {
             />
           </div>
           <div className={styles.formGroup}>
-  <div className={styles.labelWithInfo}>
-    <label>Message</label>
+            <label htmlFor="message">Message</label>
+            <p className={styles.decoratorHint}>
+              <span className={styles.decoratorHintLabel}>Type @ to insert:</span>
+              {DECORATORS.map((decorator, index) => (
+                <span key={decorator}>
+                  {index > 0 ? ', ' : ' '}
+                  <code>{decorator}</code>
+                </span>
+              ))}
+            </p>
 
-    <div
-      className={styles.infoIcon}
-      onClick={() => setShowDecoratorsInfo(true)}
-      title="Available decorators"
-    >
-      i
-    </div>
-  </div>
-
-  <div className={styles.richTextEditorWrapper}>
-    <Toolbar editor={editor} />
-    <EditorContent editor={editor} />
-  </div>
-</div>
+            <div className={styles.richTextEditorWrapper}>
+              <Toolbar editor={editor} />
+              <EditorContent editor={editor} />
+            </div>
+          </div>
 
           <h2 className={styles.formSubheading}>Attachments</h2>
           <p className={styles.fileSizeNote}>
@@ -1291,26 +1289,6 @@ const EmailCampaignsPage = () => {
           </div>
         </div>
       )}
-      {showDecoratorsInfo && (
-  <div className={styles.decoratorOverlay}>
-    <div className={styles.decoratorModal}>
-      <h3>Available Decorators</h3>
-
-      <ul>
-        {DECORATORS.map((d) => (
-          <li key={d}>{d}</li>
-        ))}
-      </ul>
-
-      <button
-        className={styles.primaryButton}
-        onClick={() => setShowDecoratorsInfo(false)}
-      >
-        Close
-      </button>
-    </div>
-  </div>
-)}
     </div>
   );
 };
