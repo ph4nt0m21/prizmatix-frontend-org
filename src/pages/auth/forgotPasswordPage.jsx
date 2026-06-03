@@ -34,7 +34,18 @@ const NEUTRAL_EMAIL_SENT =
 
 function getApiErrorMessage(err, fallback = "Something went wrong. Please try again.") {
   const msg = err.response?.data?.message;
-  return typeof msg === "string" && msg.trim() ? msg.trim() : fallback;
+  const status = err.response?.status;
+  if (typeof msg === "string" && msg.trim()) {
+    const trimmed = msg.trim();
+    if (
+      status === 401 &&
+      (/authorization header/i.test(trimmed) || /malformed jwt/i.test(trimmed))
+    ) {
+      return "Password reset is not available right now. Please try again later or contact support.";
+    }
+    return trimmed;
+  }
+  return fallback;
 }
 
 /**

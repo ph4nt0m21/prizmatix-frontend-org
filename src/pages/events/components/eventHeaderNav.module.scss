@@ -8,14 +8,40 @@
   background: #FFF;
   box-shadow: 0px 2px 4px 0px rgba(0, 0, 0, 0.05);
   align-self: stretch;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
 
   @media (max-width: 768px) {
-    padding: 12px 16px 16px 16px;
-    justify-content: space-between;
-    gap: 8px;
-    flex-wrap: wrap;
+    &:has(.breadcrumbContainer) {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      grid-template-areas: 'menu breadcrumb actions';
+      align-items: center;
+      column-gap: 8px;
+      row-gap: 8px;
+    }
+
+    &:not(:has(.breadcrumbContainer)) {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px;
+    }
+
+    padding: 12px 12px 16px;
     height: auto;
     min-height: 48px;
+  }
+
+  @media (max-width: 400px) {
+    padding: 10px 10px 14px;
+    column-gap: 6px;
+
+    &:not(:has(.breadcrumbContainer)) {
+      gap: 8px;
+    }
   }
 }
 
@@ -41,6 +67,9 @@
 
   @media (max-width: 768px) {
     display: block;
+    grid-area: menu;
+    flex-shrink: 0;
+    margin-right: 0;
   }
 }
 
@@ -54,11 +83,15 @@
   align-items: center;
   font-size: 14px;
   min-width: 0; // Prevent flex blowout
-  
-  a.breadcrumbLink:nth-of-type(2),
-  .breadcrumbCurrent {
-    color: #8b5cf6;
-    font-weight: 700;
+  flex: 1;
+  overflow: hidden;
+
+  @media (max-width: 768px) {
+    font-size: 13px;
+  }
+
+  @media (max-width: 400px) {
+    font-size: 12px;
   }
 }
 .breadcrumbContainer {
@@ -66,6 +99,12 @@
   align-items: center;
   gap: 8px; // space between back and "Events"
   min-width: 0; // Keep containment
+  flex: 1;
+
+  @media (max-width: 768px) {
+    grid-area: breadcrumb;
+    overflow: hidden;
+  }
 }
 
 .backButton {
@@ -78,6 +117,7 @@
   background: none;
   cursor: pointer;
   color: #6b7280;
+  flex-shrink: 0;
 
   &:hover {
     color: #111827;
@@ -97,13 +137,23 @@
   vertical-align: middle;
 
   @media (max-width: 480px) {
-    max-width: 100px;
+    max-width: 88px;
+  }
+
+  @media (max-width: 400px) {
+    max-width: 72px;
   }
 
   &:hover {
     color: #8b5cf6;
     text-decoration: underline;
   }
+}
+
+a.breadcrumbLink:nth-of-type(2),
+.breadcrumbCurrent {
+  color: #8b5cf6;
+  font-weight: 700;
 }
 
 /* Event title when there is no event id yet (e.g. create flow step 1) — not a link to manage. */
@@ -116,7 +166,11 @@
   vertical-align: middle;
 
   @media (max-width: 480px) {
-    max-width: 100px;
+    max-width: 88px;
+  }
+
+  @media (max-width: 400px) {
+    max-width: 72px;
   }
 }
 
@@ -135,14 +189,25 @@
   font-size: 12px;
   font-weight: 500;
   border-radius: 4px;
+  flex-shrink: 0;
+  white-space: nowrap;
+
+  @media (max-width: 400px) {
+    margin-left: 4px;
+    padding: 2px 6px;
+    font-size: 10px;
+  }
 }
 
 .actionButtonsContainer {
   position: relative;
   margin-left: auto;
+  flex-shrink: 0;
 
   @media (max-width: 768px) {
+    grid-area: actions;
     margin-left: 0;
+    justify-self: end;
   }
 }
 
@@ -215,6 +280,7 @@
 
   @media (max-width: 768px) {
     display: none;
+    position: absolute;
     top: calc(100% + 8px);
     right: 0;
     flex-direction: column;
@@ -225,7 +291,7 @@
     box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     padding: 8px;
     z-index: 100;
-    width: 220px;
+    width: min(220px, calc(100vw - 24px));
 
     &.active {
       display: flex;
@@ -256,6 +322,13 @@
   &:hover {
     background-color: #7C3AED;
     border-color: #7C3AED;
+  }
+
+  @media (max-width: 768px) {
+    width: 100%;
+    justify-content: flex-start;
+    font-size: 13px;
+    padding: 10px 12px;
   }
 }
 
