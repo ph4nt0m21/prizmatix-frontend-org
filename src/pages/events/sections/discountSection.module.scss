@@ -206,17 +206,4 @@
     width: 100%;
   }
 
-  .discountsList {
-    min-width: 900px;
-  }
-
-  .discountCell {
-    &.cellCode { min-width: 120px; }
-    &.cellType { min-width: 100px; }
-    &.cellValue { min-width: 80px; }
-    &.cellUsage { min-width: 120px; }
-    &.cellTickets { min-width: 200px; }
-    &.cellStatus { min-width: 100px; }
-    &.cellActions { min-width: 80px; justify-content: center; }
-  }
 }
