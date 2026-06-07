@@ -196,7 +196,7 @@ const TicketsStep = ({
                         <path d="M7 2a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 5a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 8a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm-3 3a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm-3 3a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0z" />
                       </svg>
                     </div>
-                    <div className={styles.ticketName}>
+                    <div className={styles.ticketName} data-label="Name">
                       <input
                         name="name"
                         type="text"
@@ -205,7 +205,7 @@ const TicketsStep = ({
                         onChange={(e) => handleTicketRowChange(e, index)}
                       />
                     </div>
-                    <div className={styles.ticketCount}>
+                    <div className={styles.ticketCount} data-label="Quantity">
                       <input
                         name="quantity"
                         type="number"
@@ -214,7 +214,7 @@ const TicketsStep = ({
                         onChange={(e) => handleTicketRowChange(e, index)}
                       />
                     </div>
-                    <div className={styles.ticketPrice}>
+                    <div className={styles.ticketPrice} data-label="Price">
                       <div className={styles.inputWithPrefix}>
                         <span className={styles.prefix}>$</span>
                         <input
@@ -227,7 +227,7 @@ const TicketsStep = ({
                         />
                       </div>
                     </div>
-                    <div className={styles.ticketCount}>
+                    <div className={styles.ticketCount} data-label="Max Purchase">
                       <input
                         name="maxPurchaseAmount"
                         type="number"
@@ -236,7 +236,7 @@ const TicketsStep = ({
                         onChange={(e) => handleTicketRowChange(e, index)}
                       />
                     </div>
-                    <div className={styles.ticketActions}>
+                    <div className={styles.ticketActions} data-label="Action">
                       <div className={styles.actionMenuContainer}>
                         <button type="button" className={styles.ticketActionButton} onClick={() => handleEditTicket(index)} aria-label="Advanced settings">
                           <svg width="16" height="16" viewBox="0 0 24 24" fill="#6B7280" xmlns="http://www.w3.org/2000/svg"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.69-1.62-.92L14.4 2.25C14.34 2.02 14.12 1.87 13.88 1.87H10.12c-.25 0-.47.15-.53.38L9.2 4.87c-.58.23-1.12.54-1.62.92L5.19 4.81c-.22-.08-.47 0-.59.22L2.69 8.35c-.11.2-.06.47.12.61l2.03 1.58c-.05.32-.07.64-.07.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.69 1.62.92l.39 2.62c.06.23.28.38.53.38h3.75c.25 0 .47-.15.53-.38l.39-2.62c.58.23 1.12.54 1.62-.92l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.11-.2-.06-.47-.12-.61l-2.03-1.58zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z" /></svg>

@@ -420,36 +420,88 @@ $ticket-grid-columns:
   }
 }
 
-// ===================================
-// ===== Mobile Responsive Styles ====
-// ===================================
 @media (max-width: 768px) {
   .stepContainer {
     padding: 0;
   }
 
+  .ticketsContainer {
+    border: none;
+    border-radius: 0;
+    background: transparent;
+  }
+
   .tableWrapper {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
+    overflow-x: visible;
   }
 
   .tableContent {
-    min-width: 640px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-width: 0;
+
+    .ticketTableHeader {
+      display: none;
+    }
+
+    .ticketItem {
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      grid-template-columns: unset;
+      column-gap: 0;
+      gap: 0;
+      margin: 0;
+      padding: 12px;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      background: #fff;
+      min-height: unset;
+
+      &:last-child {
+        border-bottom: 1px solid #e5e7eb;
+      }
+
+      &:hover {
+        background-color: #fff;
+      }
+
+      > .ticketDrag {
+        display: none;
+      }
+
+      > [data-label] {
+        @include inline-table-labelled-row;
+      }
+    }
   }
 
-  .tableContent .ticketTableHeader,
-  .tableContent .ticketItem {
-    column-gap: 12px;
-    padding: 14px 12px;
-    min-height: 52px;
+  .addTicketRow {
+    margin-top: 16px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
   }
 
-  .ticketCount .ticketInput,
-  .ticketPrice .ticketInput {
-    text-align: center;
-  }
+  .ticketItem {
+    .ticketName,
+    .ticketCount,
+    .ticketPrice,
+    .ticketActions {
+      justify-self: unset;
+      padding: 0;
+    }
 
-  .ticketName .ticketInput {
-    text-align: left;
+    .ticketInput,
+    .inputWithPrefix {
+      text-align: left;
+    }
+
+    .ticketActions {
+      .actionMenuContainer {
+        flex: 0 0 auto;
+        justify-content: flex-end;
+      }
+    }
   }
 }

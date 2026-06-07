@@ -252,7 +252,7 @@ const DiscountCodesStep = ({
 
                 {discountCodes.map((code, index) => (
                   <div key={index} className={styles.discountCodeItem}>
-                    <div className={styles.discountCode}>
+                    <div className={styles.discountCode} data-label="Code">
                       <input
                         type="text"
                         name="code"
@@ -261,7 +261,7 @@ const DiscountCodesStep = ({
                         className={styles.inlineInput}
                       />
                     </div>
-                    <div className={styles.discountType}>
+                    <div className={styles.discountType} data-label="Type">
                       <select
                         name="type"
                         value={code.type || 'percentage'}
@@ -272,7 +272,7 @@ const DiscountCodesStep = ({
                         <option value="fixed">Fixed ($)</option>
                       </select>
                     </div>
-                    <div className={styles.discountValue}>
+                    <div className={styles.discountValue} data-label="Value">
                       <input
                         type="number"
                         name="value"
@@ -282,7 +282,7 @@ const DiscountCodesStep = ({
                         className={styles.inlineInput}
                       />
                     </div>
-                    <div className={styles.discountUsageLimit}>
+                    <div className={styles.discountUsageLimit} data-label="Usage Limit">
                       <input
                         type="number"
                         name="usageLimit"
@@ -291,7 +291,7 @@ const DiscountCodesStep = ({
                         className={styles.inlineInput}
                       />
                     </div>
-                    <div className={styles.ticketsApplicable}>
+                    <div className={styles.ticketsApplicable} data-label="Applicable Tickets">
                       <div className={styles.customDropdown}>
                         <button
                           type="button"
@@ -323,7 +323,7 @@ const DiscountCodesStep = ({
                         )}
                       </div>
                     </div>
-                    <div className={styles.discountStatus}>
+                    <div className={styles.discountStatus} data-label="Status">
                       <label className={styles.toggleSwitch}>
                         <input
                           type="checkbox"
@@ -344,7 +344,7 @@ const DiscountCodesStep = ({
                         <span className={styles.slider}></span>
                       </label>
                     </div>
-                    <div className={styles.discountActions}>
+                    <div className={styles.discountActions} data-label="Action">
                       <div className={styles.actionMenuContainer}>
                         <button
                           type="button"

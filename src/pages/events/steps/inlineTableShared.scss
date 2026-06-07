@@ -59,3 +59,36 @@ $inline-table-menu-z: 30;
     min-height: 40px;
   }
 }
+
+// Vertical labelled rows on mobile — use inside a CSS module file so class names are hashed.
+@mixin inline-table-labelled-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid #f3f4f6;
+  min-width: 0;
+  width: 100%;
+  text-align: left;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &::before {
+    content: attr(data-label);
+    font-size: 11px;
+    color: #6b7280;
+    text-transform: uppercase;
+    font-weight: 600;
+    flex-shrink: 0;
+    min-width: 96px;
+    max-width: 40%;
+  }
+
+  > * {
+    flex: 1;
+    min-width: 0;
+  }
+}
