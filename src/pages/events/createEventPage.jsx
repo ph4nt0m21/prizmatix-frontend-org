@@ -847,9 +847,9 @@ const validateDiscountCodes = () => {
       listingEndTime:
         formatDateTimeForAPI(ticket.salesEndDate, ticket.salesEndTime) || eventEndTime,
       startsAfterTicketStructureId,
+      soldOutOverride: Boolean(ticket.soldOutOverride),
       isActive: true,
       isDeleted: false,
-      soldOut: false,
     };
   };
 
@@ -877,6 +877,7 @@ const validateDiscountCodes = () => {
           ? ticket.startsAfterTicketStructureId
           : null,
       description: ticket.description || "",
+      soldOutOverride: Boolean(ticket.soldOutOverride),
       isAdvance: false,
       advanceAmount: "",
     };

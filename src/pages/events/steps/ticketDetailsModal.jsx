@@ -67,6 +67,7 @@ const TicketDetailsModal = ({
       advanceAmount: '',
       description: '',
       startsAfterTicketStructureId: null,
+      soldOutOverride: false,
       ...ticket, // Overwrite defaults with any passed ticket data
     };
     setLocalTicket(initialState);
@@ -293,6 +294,22 @@ const TicketDetailsModal = ({
             ) : (
               // Advance Details Panel
               <>
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>Sold out override</label>
+                  <p className={styles.formHelper}>
+                    When enabled, this ticket shows as sold out on the public event page regardless of remaining capacity.
+                  </p>
+                  <label className={styles.toggleSwitch}>
+                    <input
+                      type="checkbox"
+                      name="soldOutOverride"
+                      checked={Boolean(localTicket.soldOutOverride)}
+                      onChange={handleInputChange}
+                    />
+                    <span className={styles.slider} />
+                  </label>
+                </div>
+
                 <div className={styles.formGroup}>
                   <label htmlFor="description" className={styles.formLabel}>
                     Description
