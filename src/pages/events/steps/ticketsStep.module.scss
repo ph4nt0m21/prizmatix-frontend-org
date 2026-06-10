@@ -264,22 +264,6 @@ $ticket-grid-columns:
 
 .ticketName {
   padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.soldOutOverrideBadge {
-  align-self: flex-start;
-  font-size: 10px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: #b91c1c;
-  background: #fef2f2;
-  border: 1px solid #fecaca;
-  border-radius: 4px;
-  padding: 2px 6px;
 }
 
 .ticketCount {

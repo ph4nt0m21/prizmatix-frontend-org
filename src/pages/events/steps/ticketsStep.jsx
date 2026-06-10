@@ -216,9 +216,6 @@ const TicketsStep = ({
                         value={ticket.name || ''}
                         onChange={(e) => handleTicketRowChange(e, index)}
                       />
-                      {ticket.soldOutOverride && (
-                        <span className={styles.soldOutOverrideBadge}>Sold out</span>
-                      )}
                     </div>
                     <div className={styles.ticketCount} data-label="Quantity">
                       <input
