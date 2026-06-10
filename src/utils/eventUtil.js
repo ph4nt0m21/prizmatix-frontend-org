@@ -573,6 +573,7 @@ export const prepareTicketsDataForAPI = (tickets, eventId = null) => {
         listingStartTime: listingStartTime,
         listingEndTime: listingEndTime,
         startsAfterTicketStructureId,
+        soldOutOverride: Boolean(ticket.soldOutOverride),
         toBeDeleted: false,
       };
     }),

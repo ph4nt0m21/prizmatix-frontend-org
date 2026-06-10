@@ -20,6 +20,7 @@ const TicketsStep = ({
   eventData = {},
   handleInputChange = () => { },
   onTicketsCommit = null,
+  onSoldOutOverrideToggle = null,
   isSavingTickets = false,
   isValid = false,
   stepStatus = { visited: false }
@@ -83,6 +84,17 @@ const TicketsStep = ({
     setIsModalOpen(false);
     setCurrentTicket(null);
     setCurrentTicketIndex(null);
+  };
+
+  const handleSoldOutOverrideMenuToggle = async (index) => {
+    const ticket = tickets[index];
+    if (!onSoldOutOverrideToggle || !isPersistedTicket(ticket)) return;
+    const nextValue = !Boolean(ticket.soldOutOverride);
+    const savedTickets = await onSoldOutOverrideToggle(ticket.id, nextValue);
+    if (savedTickets) {
+      setTickets(savedTickets);
+    }
+    setOpenMenuIndex(null);
   };
 
   /**
@@ -204,6 +216,9 @@ const TicketsStep = ({
                         value={ticket.name || ''}
                         onChange={(e) => handleTicketRowChange(e, index)}
                       />
+                      {ticket.soldOutOverride && (
+                        <span className={styles.soldOutOverrideBadge}>Sold out</span>
+                      )}
                     </div>
                     <div className={styles.ticketCount} data-label="Quantity">
                       <input
@@ -281,6 +296,16 @@ const TicketsStep = ({
                           >
                             Edit
                           </button>
+                          {onSoldOutOverrideToggle && isPersistedTicket(ticket) && (
+                            <button
+                              type="button"
+                              className={anchoredActionMenuStyles.menuItem}
+                              onClick={() => handleSoldOutOverrideMenuToggle(index)}
+                              disabled={isSavingTickets}
+                            >
+                              {ticket.soldOutOverride ? 'Remove sold out override' : 'Mark as sold out'}
+                            </button>
+                          )}
                           <button
                             type="button"
                             className={anchoredActionMenuStyles.menuItem}
@@ -339,6 +364,7 @@ TicketsStep.propTypes = {
   eventData: PropTypes.object,
   handleInputChange: PropTypes.func,
   onTicketsCommit: PropTypes.func,
+  onSoldOutOverrideToggle: PropTypes.func,
   isSavingTickets: PropTypes.bool,
   isValid: PropTypes.bool,
   stepStatus: PropTypes.object

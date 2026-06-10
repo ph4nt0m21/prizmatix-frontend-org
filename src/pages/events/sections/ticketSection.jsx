@@ -51,6 +51,7 @@ const TicketSection = ({ onCommitSuccess = () => {} }) => {
           ? ticket.startsAfterTicketStructureId
           : null,
       description: ticket.description || "",
+      soldOutOverride: Boolean(ticket.soldOutOverride),
       isAdvance: false,
       advanceAmount: "",
     };
@@ -85,9 +86,9 @@ const TicketSection = ({ onCommitSuccess = () => {} }) => {
       listingEndTime:
         formatDateTimeForAPI(ticket.salesEndDate, ticket.salesEndTime) || eventEndTime,
       startsAfterTicketStructureId,
+      soldOutOverride: Boolean(ticket.soldOutOverride),
       isActive: true,
       isDeleted: false,
-      soldOut: false,
     };
   };
 
@@ -240,6 +241,37 @@ const TicketSection = ({ onCommitSuccess = () => {} }) => {
     }
   };
 
+  const handleSoldOutOverrideToggle = async (ticketId, nextValue) => {
+    const ticket = eventData.tickets.find((t) => String(t.id) === String(ticketId));
+    if (!ticket) return false;
+
+    try {
+      setError(null);
+      setIsSavingTickets(true);
+      const payload = {
+        ...mapStepTicketToApiPayload(ticket, eventData.dateTime),
+        id: parseInt(ticketId, 10),
+        eventId: parseInt(eventId, 10),
+        soldOutOverride: nextValue,
+      };
+      await UpdateTicketStructureAPI(ticketId, payload);
+      const savedTicketsResponse = await GetEventTicketStructuresAPI(eventId);
+      const savedTickets = Array.isArray(savedTicketsResponse?.data)
+        ? savedTicketsResponse.data
+            .filter((t) => t?.isDeleted !== true)
+            .map(mapTicketStructureToStepTicket)
+        : [];
+      setEventData((prev) => ({ ...prev, tickets: savedTickets }));
+      return savedTickets;
+    } catch (err) {
+      console.error("Failed to update sold out override:", err);
+      setError(err.response?.data?.message || "Failed to update sold out override.");
+      return false;
+    } finally {
+      setIsSavingTickets(false);
+    }
+  };
+
   const handleSaveTicketsClick = async () => {
     const ok = await onTicketsCommit();
     if (ok) {
@@ -263,6 +295,7 @@ const TicketSection = ({ onCommitSuccess = () => {} }) => {
             eventData={eventData}
             handleInputChange={handleInputChange}
             onTicketsCommit={onTicketsCommit}
+            onSoldOutOverrideToggle={handleSoldOutOverrideToggle}
             isSavingTickets={isSavingTickets}
             isValid={validateTickets(eventData.tickets)}
             stepStatus={{ visited: true }}
