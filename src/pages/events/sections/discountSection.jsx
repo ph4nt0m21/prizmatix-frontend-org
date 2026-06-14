@@ -10,6 +10,12 @@ import {
   GetEventTicketStructuresAPI,
   GetEventAPI,
 } from "../../../services/allApis";
+import {
+  parseUsageLimitForAPI,
+  formatUsageLimitForUI,
+  filterBlankDiscountCodes,
+  validateDiscountCodesList,
+} from "../../../utils/eventUtil";
 
 const formatTimeObject = (timeValue) => {
   if (typeof timeValue === "string") {
@@ -48,7 +54,7 @@ const mapApiDiscountToStepDiscount = (code = {}) => {
     code: code.code || "",
     type: code.type || "percentage",
     value: code.value ?? "",
-    usageLimit: code.usageLimit ?? "",
+    usageLimit: formatUsageLimitForUI(code.usageLimit),
     validFromDate: validFrom.date,
     validFromTime: validFrom.time,
     validUntilDate: validUntil.date,
@@ -115,20 +121,13 @@ const DiscountSection = ({ onCommitSuccess = () => {} }) => {
     setEventData((prev) => ({ ...prev, discountCodes: value || [] }));
   };
 
-  const validateDiscountCodes = (codesToCheck) => {
-    if (!codesToCheck || codesToCheck.length === 0) return true;
-    const invalid = codesToCheck.filter((code) => {
-      if (!code.code || code.code.trim() === "") return true;
-      if (!code.type || (code.type !== "fixed" && code.type !== "percentage")) return true;
-      if (code.value === null || code.value === "" || Number.isNaN(parseFloat(code.value)) || parseFloat(code.value) < 0) return true;
-      if (code.usageLimit && (Number.isNaN(parseInt(code.usageLimit, 10)) || parseInt(code.usageLimit, 10) < 0)) return true;
-      return false;
-    });
-    return invalid.length === 0;
-  };
+  const validateDiscountCodes = (codesToCheck) =>
+    validateDiscountCodesList(codesToCheck);
 
   const onDiscountCodesCommit = async (codesOverride = null) => {
-    const codesToSave = codesOverride || eventData.discountCodes;
+    const codesToSave = filterBlankDiscountCodes(
+      codesOverride ?? eventData.discountCodes ?? []
+    );
     if (!validateDiscountCodes(codesToSave)) {
       setError("Please complete valid coupon details before saving.");
       return false;
@@ -143,10 +142,9 @@ const DiscountSection = ({ onCommitSuccess = () => {} }) => {
       const existingCodes = Array.isArray(existingData) ? existingData : [];
 
       const fallbackValidFrom = new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString();
-      const fallbackValidUntil = formatToISO(
-        eventData.dateTime?.startDate,
-        eventData.dateTime?.startTime
-      );
+      const fallbackValidUntil =
+        formatToISO(eventData.dateTime?.endDate, eventData.dateTime?.endTime) ||
+        formatToISO(eventData.dateTime?.startDate, eventData.dateTime?.startTime);
       const activePayloadIds = new Set(
         codesToSave
           .map((code) => parseInt(code.id, 10))
@@ -166,7 +164,7 @@ const DiscountSection = ({ onCommitSuccess = () => {} }) => {
           value: parseFloat(code.value) || 0,
           validFrom: code.validFrom || fallbackValidFrom,
           validUntil: code.validUntil || fallbackValidUntil,
-          usageLimit: parseInt(code.usageLimit, 10) || 0,
+          usageLimit: parseUsageLimitForAPI(code.usageLimit),
           isActive: code.isActive !== false,
           isDeleted: true,
           ticketsApplicable: (code.ticketsApplicable || [])
@@ -185,7 +183,7 @@ const DiscountSection = ({ onCommitSuccess = () => {} }) => {
               formatToISO(code.validFromDate, code.validFromTime) || fallbackValidFrom,
             validUntil:
               formatToISO(code.validUntilDate, code.validUntilTime) || fallbackValidUntil,
-            usageLimit: parseInt(code.usageLimit, 10) || 0,
+            usageLimit: parseUsageLimitForAPI(code.usageLimit),
             isActive: code.isActive !== false,
             isDeleted: code.isDeleted === true,
             ticketsApplicable: (code.ticketsApplicable || [])

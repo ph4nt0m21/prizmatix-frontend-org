@@ -65,3 +65,78 @@
   color: #b91c1c;
   border: 1px solid #fecaca;
 }
+
+.deleteModalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(17, 24, 39, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 3000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.deleteModal {
+  width: 90%;
+  max-width: 420px;
+  background: #ffffff;
+  padding: 32px;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(2, 6, 23, 0.18);
+  text-align: center;
+
+  h3 {
+    margin: 0 0 8px 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #111827;
+  }
+
+  p {
+    color: #6b7280;
+    margin-bottom: 24px;
+    line-height: 1.5;
+  }
+}
+
+.deleteModalActions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.cancelButton,
+.confirmDeleteButton {
+  height: 40px;
+  padding: 0 18px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.cancelButton {
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  color: #374151;
+
+  &:hover:not(:disabled) {
+    background-color: #f9fafb;
+  }
+}
+
+.confirmDeleteButton {
+  background: #dc2626;
+  color: #fff;
+  border: none;
+
+  &:hover:not(:disabled) {
+    background: #b91c1c;
+  }
+}

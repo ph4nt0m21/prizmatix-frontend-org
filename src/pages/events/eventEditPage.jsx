@@ -283,7 +283,7 @@ const EventEditPage = () => {
           break;
         }
         case 'location': {
-          const payload = prepareLocationDataForAPI(eventData.location);
+          const payload = prepareLocationDataForAPI(eventData.location, eventData.id);
           await UpdateEventLocationAPI(eventData.id, payload);
           break;
         }
@@ -394,6 +394,7 @@ const EventEditPage = () => {
         eventName={eventData.name || 'Loading Event...'}
         context="edit"
         eventId={paramEventId}
+        eventSlug={eventData.slug}
         toggleMobileSidebar={toggleEditSidebar} // Pass the local toggle function to EventHeaderNav
       />
       <div className={styles.content}>

@@ -42,10 +42,16 @@ import {
   prepareArtDataForAPI,
   prepareTicketsDataForAPI,
   preparePublishEventDataForAPI,
+  mapTicketStructureToStepTicket,
+  mapStepTicketToApiPayload,
   mapEventApiPayloadToLocationForm,
   isEventLocationComplete,
   getCreationWizardPublishBlockers,
   formatPublishBlockersAlertMessage,
+  parseUsageLimitForAPI,
+  formatUsageLimitForUI,
+  filterBlankDiscountCodes,
+  validateDiscountCodesList,
 } from "../../utils/eventUtil";
 
 /**
@@ -735,42 +741,8 @@ const CreateEventPage = () => {
 
 // src/pages/createEventPage.jsx
 
-const validateDiscountCodes = () => {
-  if (!eventData.discountCodes || eventData.discountCodes.length === 0) {
-    return true;
-  }
-
-  console.log("--- Running Discount Code Validation ---");
-
-  const invalidDiscountCodes = eventData.discountCodes.filter((code, index) => {
-    console.log(`[${index}] Validating code object:`, code);
-
-    if (!code.code || code.code.trim() === "") {
-      console.log(`[${index}] FAILED: Code name is missing.`);
-      return true;
-    }
-    if (!code.type || (code.type !== 'fixed' && code.type !== 'percentage')) {
-      console.log(`[${index}] FAILED: Type is invalid.`);
-      return true;
-    }
-    if (code.value === null || code.value === '' || isNaN(parseFloat(code.value)) || parseFloat(code.value) < 0) {
-      console.log(`[${index}] FAILED: Value is invalid.`);
-      return true;
-    }
-    if (code.usageLimit && (isNaN(parseInt(code.usageLimit, 10)) || parseInt(code.usageLimit, 10) < 0)) {
-      console.log(`[${index}] FAILED: Usage Limit is invalid.`);
-      return true;
-    }
-
-    console.log(`[${index}] PASSED: All checks for this code are valid.`);
-    return false;
-  });
-
-  const isStepValid = invalidDiscountCodes.length === 0;
-  console.log(`--- Validation Result: ${isStepValid ? 'VALID' : 'INVALID'} ---`);
-
-  return isStepValid;
-};
+const validateDiscountCodes = () =>
+  validateDiscountCodesList(eventData.discountCodes);
 
   const validatePublish = () => {
     if (!eventData.name) {
@@ -813,74 +785,6 @@ const validateDiscountCodes = () => {
       }
     }
     return "";
-  };
-
-  const mapStepTicketToApiPayload = (ticket) => {
-    const fallbackListingStartTime = new Date(
-      Date.now() - 12 * 60 * 60 * 1000
-    ).toISOString();
-    const eventEndTime = formatDateTimeForAPI(
-      eventData.dateTime?.endDate,
-      eventData.dateTime?.endTime
-    );
-
-    const depRaw = ticket.startsAfterTicketStructureId;
-    const startsAfterTicketStructureId =
-      depRaw != null && depRaw !== "" && Number.isFinite(Number(depRaw))
-        ? parseInt(depRaw, 10)
-        : null;
-
-    return {
-      name: ticket.name,
-      price: parseFloat(ticket.price),
-      finalPrice: parseFloat(ticket.price),
-      ticketCapacity: ticket.quantity === "No Limit" ? 0 : parseInt(ticket.quantity, 10),
-      maxPurchasePerOrder: ticket.maxPurchaseAmount
-        ? parseInt(ticket.maxPurchaseAmount, 10)
-        : 0,
-      currency: "NZD",
-      limitedQuantity: ticket.quantity !== "No Limit",
-      description: ticket.description || null,
-      listingStartTime:
-        formatDateTimeForAPI(ticket.salesStartDate, ticket.salesStartTime) ||
-        fallbackListingStartTime,
-      listingEndTime:
-        formatDateTimeForAPI(ticket.salesEndDate, ticket.salesEndTime) || eventEndTime,
-      startsAfterTicketStructureId,
-      soldOutOverride: Boolean(ticket.soldOutOverride),
-      isActive: true,
-      isDeleted: false,
-    };
-  };
-
-  const mapTicketStructureToStepTicket = (ticket = {}) => {
-    const startIso = ticket.listingStartTime ? new Date(ticket.listingStartTime) : null;
-    const endIso = ticket.listingEndTime ? new Date(ticket.listingEndTime) : null;
-    const isValidStart = startIso && !Number.isNaN(startIso.getTime());
-    const isValidEnd = endIso && !Number.isNaN(endIso.getTime());
-
-    return {
-      id: ticket.id,
-      name: ticket.name || "",
-      price: ticket.price ?? "",
-      quantity: ticket.limitedQuantity ? ticket.ticketCapacity : "No Limit",
-      maxPurchaseAmount:
-        ticket.maxPurchasePerOrder && ticket.maxPurchasePerOrder > 0
-          ? ticket.maxPurchasePerOrder
-          : "",
-      salesStartDate: isValidStart ? startIso.toISOString().split("T")[0] : "",
-      salesStartTime: isValidStart ? startIso.toISOString().split("T")[1].slice(0, 5) : "",
-      salesEndDate: isValidEnd ? endIso.toISOString().split("T")[0] : "",
-      salesEndTime: isValidEnd ? endIso.toISOString().split("T")[1].slice(0, 5) : "",
-      startsAfterTicketStructureId:
-        ticket.startsAfterTicketStructureId != null
-          ? ticket.startsAfterTicketStructureId
-          : null,
-      description: ticket.description || "",
-      soldOutOverride: Boolean(ticket.soldOutOverride),
-      isAdvance: false,
-      advanceAmount: "",
-    };
   };
 
   const saveTicketsStepToBackend = async (ticketsOverride = null) => {
@@ -994,7 +898,7 @@ const validateDiscountCodes = () => {
       code: code.code || "",
       type: code.type || "percentage",
       value: code.value ?? "",
-      usageLimit: code.usageLimit ?? "",
+      usageLimit: formatUsageLimitForUI(code.usageLimit),
       validFromDate: validFrom.date,
       validFromTime: validFrom.time,
       validUntilDate: validUntil.date,
@@ -1009,23 +913,20 @@ const validateDiscountCodes = () => {
     };
   };
 
-  const saveDiscountCodesStepToBackend = async (codesOverride = null) => {
+  const saveDiscountCodesStepToBackend = async (
+    codesOverride = null,
+    { skipped = false } = {}
+  ) => {
     if (!eventId) {
       setError("Please create the event first before saving discount codes.");
       return false;
     }
 
-    const codesToSave = codesOverride || eventData.discountCodes;
-    if (!codesToSave) return false;
+    const codesToSave = filterBlankDiscountCodes(
+      codesOverride ?? eventData.discountCodes ?? []
+    );
 
-    const invalidCodes = codesToSave.filter((code) => {
-      if (!code.code || code.code.trim() === "") return true;
-      if (!code.type || (code.type !== "fixed" && code.type !== "percentage")) return true;
-      if (code.value === null || code.value === "" || Number.isNaN(parseFloat(code.value)) || parseFloat(code.value) < 0) return true;
-      if (code.usageLimit && (Number.isNaN(parseInt(code.usageLimit, 10)) || parseInt(code.usageLimit, 10) < 0)) return true;
-      return false;
-    });
-    if (invalidCodes.length > 0) {
+    if (!validateDiscountCodesList(codesToSave)) {
       setError("Please complete valid coupon details before saving.");
       return false;
     }
@@ -1046,10 +947,9 @@ const validateDiscountCodes = () => {
       const existingCodes = Array.isArray(existingData) ? existingData : [];
 
       const fallbackValidFrom = new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString();
-      const fallbackValidUntil = formatToISO(
-        eventData.dateTime?.startDate,
-        eventData.dateTime?.startTime
-      );
+      const fallbackValidUntil =
+        formatToISO(eventData.dateTime?.endDate, eventData.dateTime?.endTime) ||
+        formatToISO(eventData.dateTime?.startDate, eventData.dateTime?.startTime);
       const activePayloadIds = new Set(
         codesToSave
           .map((code) => parseInt(code.id, 10))
@@ -1069,7 +969,7 @@ const validateDiscountCodes = () => {
           value: parseFloat(code.value) || 0,
           validFrom: code.validFrom || fallbackValidFrom,
           validUntil: code.validUntil || fallbackValidUntil,
-          usageLimit: parseInt(code.usageLimit, 10) || 0,
+          usageLimit: parseUsageLimitForAPI(code.usageLimit),
           isActive: code.isActive !== false,
           isDeleted: true,
           ticketsApplicable: (code.ticketsApplicable || [])
@@ -1088,7 +988,7 @@ const validateDiscountCodes = () => {
               formatToISO(code.validFromDate, code.validFromTime) || fallbackValidFrom,
             validUntil:
               formatToISO(code.validUntilDate, code.validUntilTime) || fallbackValidUntil,
-            usageLimit: parseInt(code.usageLimit, 10) || 0,
+            usageLimit: parseUsageLimitForAPI(code.usageLimit),
             isActive: code.isActive !== false,
             isDeleted: code.isDeleted === true,
             ticketsApplicable: (code.ticketsApplicable || [])
@@ -1112,7 +1012,11 @@ const validateDiscountCodes = () => {
         ...currentEventData,
         discountCodes: mappedSavedCodes,
       });
-      setSuccessMessage("Discount codes saved successfully.");
+      setSuccessMessage(
+        skipped || codesToSave.length === 0
+          ? "No discount codes added. You can add them later from event settings."
+          : "Discount codes saved successfully."
+      );
       return mappedSavedCodes;
     } catch (error) {
       console.error("Error saving discount codes:", error);
@@ -1178,8 +1082,9 @@ const validateDiscountCodes = () => {
     }
   };
 
-  const handleNextStep = async () => {
+  const handleNextStep = async ({ skipDiscountStep = false } = {}) => {
     const isValid = validateCurrentStep();
+    const canAdvance = isValid || (skipDiscountStep && currentStep === 7);
     if (currentStep === 1 && !isValid) {
       alert("Please complete the Basic Info step first to create your event.");
       return;
@@ -1188,7 +1093,7 @@ const validateDiscountCodes = () => {
       await handlePublishEvent();
       return;
     }
-    if (isValid) {
+    if (canAdvance) {
       setIsLoading((prev) => ({ ...prev, saveEvent: true }));
     }
     try {
@@ -1240,21 +1145,32 @@ const validateDiscountCodes = () => {
       }
 
       if (eventId) {
-        if (isValid) {
+        if (canAdvance) {
           if (currentStep === 2) {
             try {
               const locationData = prepareLocationDataForAPI(
-                eventData.location
+                eventData.location,
+                eventId
               );
               const response = await UpdateEventLocationAPI(
                 eventId,
                 locationData
               );
               console.log("Location update successful:", response);
+              const refreshResponse = await GetEventAPI(eventId);
+              const refreshedPayload = refreshResponse?.data || {};
+              const locationFromApi =
+                mapEventApiPayloadToLocationForm(refreshedPayload);
+              setEventData((prev) => ({
+                ...prev,
+                ...refreshedPayload,
+                location: locationFromApi,
+              }));
               const currentEventData = getEventData();
               saveEventData({
                 ...currentEventData,
-                location: eventData.location,
+                ...refreshedPayload,
+                location: locationFromApi,
               });
             } catch (error) {
               console.error("Error updating location:", error);
@@ -1381,7 +1297,20 @@ const validateDiscountCodes = () => {
             );
             await UpdateEventTicketsAPI(eventId, ticketsData);
           } else if (currentStep === 7) {
-            const didSave = await saveDiscountCodesStepToBackend();
+            const filteredCodes = skipDiscountStep
+              ? []
+              : filterBlankDiscountCodes(eventData.discountCodes || []);
+
+            if (
+              !skipDiscountStep &&
+              filteredCodes.length !== (eventData.discountCodes?.length || 0)
+            ) {
+              setEventData((prev) => ({ ...prev, discountCodes: filteredCodes }));
+            }
+
+            const didSave = await saveDiscountCodesStepToBackend(filteredCodes, {
+              skipped: skipDiscountStep || filteredCodes.length === 0,
+            });
             if (!didSave) {
               setIsLoading((prev) => ({ ...prev, saveEvent: false }));
               return;
@@ -1564,8 +1493,8 @@ const validateDiscountCodes = () => {
             isSavingDiscountCodes={isLoading.saveDiscountCodes}
             isValid={validateDiscountCodes()}
             stepStatus={stepStatus.discountCodes}
-            // Pass the API call to fetch tickets as a prop
             fetchAvailableTickets={() => GetEventTicketStructuresAPI(eventId)}
+            onSkipStep={() => handleNextStep({ skipDiscountStep: true })}
           />
         );
       case 8:
@@ -1598,7 +1527,7 @@ const validateDiscountCodes = () => {
       case 6:
         return "Tickets";
       case 7:
-        return "Discount Codes";
+        return "Discount Codes (optional)";
       case 8:
         return "Publish";
       default:
@@ -1622,6 +1551,7 @@ const validateDiscountCodes = () => {
         currentStep={getCurrentStepName()}
         eventName={eventData.name || "new event"}
         eventId={headerEventId}
+        eventSlug={eventData.slug}
         isDraft={true}
         canPreview={canPreview}
         toggleMobileSidebar={toggleMobileSidebar}
@@ -1690,7 +1620,7 @@ const validateDiscountCodes = () => {
             {currentStep < 8 ? (
               <button
                 type="button"
-                onClick={handleNextStep}
+                onClick={() => handleNextStep()}
                 className={styles.nextButton}
               >
                 {isLoading.saveEvent ? "Saving..." : "Next"}
@@ -1698,7 +1628,7 @@ const validateDiscountCodes = () => {
             ) : (
               <button
                 type="button"
-                onClick={handleNextStep}
+                onClick={() => handleNextStep()}
                 disabled={isNextDisabled || isLoading.publishEvent}
                 className={`${styles.nextButton} ${styles.publishButton}`}
               >

@@ -5,6 +5,7 @@ import Cookies from 'js-cookie';
 import { LoginAPI } from '../../services/allApis';
 import styles from './sideNavBar.module.scss';
 import { getUserData, clearUserData } from '../../utils/authUtil';
+import { getProfileInitials } from '../../utils/profileUtil';
 import { clearEventDataOnLogout } from '../../utils/eventUtil';
 import { useAuth } from '../../context/authContext';
 
@@ -172,16 +173,14 @@ const SideNavBar = ({ isMobileSidebarOpen, toggleMobileSidebar }) => {
       : []),
   ];
 
-  const getUserInitials = () => {
-    if (currentUser?.name) {
-      const nameParts = currentUser.name.split(' ');
-      if (nameParts.length >= 2) {
-        return (nameParts[0][0] + nameParts[1][0]).toUpperCase();
-      }
-      return currentUser.name.substring(0, 2).toUpperCase();
-    }
-    return 'Sa';
-  };
+  const getUserInitials = () => getProfileInitials(currentUser || getUserData() || {});
+
+  const renderProfileAvatar = () => (
+    <>
+      <ProfileIcon className={styles.profileSvg} />
+      <span className={styles.profileInitials}>{getUserInitials()}</span>
+    </>
+  );
 
   // Helper to choose icon src for image-based icons.
   const chooseIconSrc = ({ defaultIcon, hoverIcon, activeIcon, id, isActive }) => {
@@ -301,10 +300,7 @@ const SideNavBar = ({ isMobileSidebarOpen, toggleMobileSidebar }) => {
                 aria-label="Toggle Profile Menu"
               >
                 <div className={styles.profileIcon}>
-                  <ProfileIcon className={styles.profileSvg} />
-                  <span className={styles.profileInitials}>
-                    {getUserInitials()}
-                  </span>
+                  {renderProfileAvatar()}
                 </div>
                 <div className={styles.tooltip}>Profile</div>
               </button>
@@ -313,8 +309,8 @@ const SideNavBar = ({ isMobileSidebarOpen, toggleMobileSidebar }) => {
                 <div className={styles.profileDropdown}>
                   <div className={styles.profileInfo}>
                     <div className={styles.profileAvatar}>
-  <ProfileIcon className={styles.profileAvatarSvg} />
-</div>
+                      <ProfileIcon className={styles.profileAvatarSvg} />
+                    </div>
 
                     <div className={styles.profileDetails}>
                       <div className={styles.profileName}>{currentUser?.name || 'Sarath Babu John'}</div>

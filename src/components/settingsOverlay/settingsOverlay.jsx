@@ -1,19 +1,63 @@
-// src/components/settingsOverlay/settingsOverlay.jsx
-import React, { useState, useEffect } from 'react';
-import styles from './settingsOverlay.module.scss';
-import { getUserData } from '../../utils/authUtil';
-import PropTypes from 'prop-types';
-import { toast } from 'react-toastify';
-import { ChangePasswordAPI } from '../../services/allApis';
+import React, { useState, useEffect } from "react";
+import PropTypes from "prop-types";
+import { toast } from "react-toastify";
+import styles from "./settingsOverlay.module.scss";
+import ProfilePhotoField from "../common/profilePhotoField/profilePhotoField";
+import OptionalLabel from "../common/optionalLabel/optionalLabel";
+import { useAuth } from "../../context/authContext";
+import {
+  GetOrganizerProfileAPI,
+  UpdateBasicDetailsAPI,
+  UpdateOrganizationProfileAPI,
+  UploadOrganizerProfilePhotoAPI,
+  ChangePasswordAPI,
+} from "../../services/allApis";
+import { mapProfileResponseToUserData, notifyProfileUpdated } from "../../utils/profileUtil";
 
-// Icon placeholders (replace with actual SVGs from your assets if available)
-const GeneralIcon = (props) => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}><path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 4C16.41 4 20 7.59 20 12C20 16.41 16.41 20 12 20C7.59 20 4 16.41 4 12C4 7.59 7.59 4 12 4ZM13 17H11V15H13V17ZM13 13H11V7H13V13Z" fill="currentColor"/></svg>;
-const OrganisationIcon = (props) => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}><path d="M19 11H5C3.89543 11 3 11.8954 3 13V20C3 21.1046 3.89543 22 5 22H19C20.1046 22 21 21.1046 21 20V13C21 11.8954 20.1046 11 19 11ZM19 20H5V13H19V20ZM12 17H17V15H12V17ZM12 10C14.7614 10 17 7.76142 17 5C17 2.23858 14.7614 0 12 0C9.23858 0 7 2.23858 7 5C7 7.76142 9.23858 10 12 10ZM12 8C10.8954 8 10 7.10457 10 6C10 4.89543 10.8954 4 12 4C13.1046 4 14 4.89543 14 6C14 7.10457 13.1046 8 12 8Z" fill="currentColor"/></svg>;
-const CloseIcon = (props) => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}><path d="M19 6.41L17.59 5L12 10.59L6.41 5L5 6.41L10.59 12L5 17.59L6.41 19L12 13.41L17.59 19L19 17.59L13.41 12L19 6.41Z" fill="currentColor"/></svg>;
-const EyeIcon = (props) => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>;
-const EyeOffIcon = (props) => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>;
+import { ReactComponent as WebsiteIcon } from "../../assets/icons/globe-icon.svg";
+import { ReactComponent as FacebookIcon } from "../../assets/icons/facebook-icon.svg";
+import { ReactComponent as InstagramIcon } from "../../assets/icons/instagram-icon.svg";
+import { ReactComponent as TwitterIcon } from "../../assets/icons/twitter-icon.svg";
+import { ReactComponent as TikTokIcon } from "../../assets/icons/tiktok-icon.svg";
+import { ReactComponent as OtherIcon } from "../../assets/icons/plus-circle-icon.svg";
 
-// Password validation criteria (same as organization registration)
+const GeneralIcon = (props) => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
+    <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 4C16.41 4 20 7.59 20 12C20 16.41 16.41 20 12 20C7.59 20 4 16.41 4 12C4 7.59 7.59 4 12 4ZM13 17H11V15H13V17ZM13 13H11V7H13V13Z" fill="currentColor" />
+  </svg>
+);
+const OrganisationIcon = (props) => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
+    <path d="M19 11H5C3.89543 11 3 11.8954 3 13V20C3 21.1046 3.89543 22 5 22H19C20.1046 22 21 21.1046 21 20V13C21 11.8954 20.1046 11 19 11ZM19 20H5V13H19V20ZM12 17H17V15H12V17ZM12 10C14.7614 10 17 7.76142 17 5C17 2.23858 14.7614 0 12 0C9.23858 0 7 2.23858 7 5C7 7.76142 9.23858 10 12 10ZM12 8C10.8954 8 10 7.10457 10 6C10 4.89543 10.8954 4 12 4C13.1046 4 14 4.89543 14 6C14 7.10457 13.1046 8 12 8Z" fill="currentColor" />
+  </svg>
+);
+const CloseIcon = (props) => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
+    <path d="M19 6.41L17.59 5L12 10.59L6.41 5L5 6.41L10.59 12L5 17.59L6.41 19L12 13.41L17.59 19L19 17.59L13.41 12L19 6.41Z" fill="currentColor" />
+  </svg>
+);
+const EyeIcon = (props) => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}>
+    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+    <circle cx="12" cy="12" r="3" />
+  </svg>
+);
+const EyeOffIcon = (props) => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}>
+    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+    <line x1="1" y1="1" x2="23" y2="23" />
+  </svg>
+);
+
+const SOCIAL_PLATFORMS = [
+  { id: "website", name: "Website", icon: <WebsiteIcon /> },
+  { id: "facebook", name: "Facebook", icon: <FacebookIcon /> },
+  { id: "instagram", name: "Instagram", icon: <InstagramIcon /> },
+  { id: "twitter", name: "X (Twitter)", icon: <TwitterIcon /> },
+  { id: "tiktok", name: "TikTok", icon: <TikTokIcon /> },
+  { id: "other", name: "Other", icon: <OtherIcon /> },
+];
+
 const validateNewPassword = (password) => ({
   length: password.length >= 8,
   uppercase: /[A-Z]/.test(password),
@@ -25,27 +69,81 @@ const isNewPasswordValid = (validation) =>
   validation.length && validation.uppercase && validation.lowercase && validation.number && validation.special;
 
 const SettingsOverlay = ({ isOpen, onClose }) => {
-  const [activeSection, setActiveSection] = useState('general');
-  const [currentUserData, setCurrentUserData] = useState(null);
+  const { refreshProfile } = useAuth();
+  const [activeSection, setActiveSection] = useState("general");
+  const [isLoadingProfile, setIsLoadingProfile] = useState(false);
+  const [isSavingBasic, setIsSavingBasic] = useState(false);
+  const [isSavingOrganization, setIsSavingOrganization] = useState(false);
 
-  // Change password form state
+  const [basicDetails, setBasicDetails] = useState({
+    firstName: "",
+    lastName: "",
+    mobileNumber: "",
+    email: "",
+  });
+  const [organizationDetails, setOrganizationDetails] = useState({
+    organizationName: "",
+    bio: "",
+    profilePhotoUrl: "",
+    socialMediaLinks: [],
+  });
+
+  const [photoPreview, setPhotoPreview] = useState({ url: "", name: "", file: null });
+  const [removePhoto, setRemovePhoto] = useState(false);
+
   const [showChangePasswordForm, setShowChangePasswordForm] = useState(false);
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [newPasswordFocused, setNewPasswordFocused] = useState(false);
   const [confirmTouched, setConfirmTouched] = useState(false);
-  const [passwordValidation, setPasswordValidation] = useState(validateNewPassword(''));
-  const [changePasswordError, setChangePasswordError] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [passwordValidation, setPasswordValidation] = useState(validateNewPassword(""));
+  const [changePasswordError, setChangePasswordError] = useState("");
+  const [isSubmittingPassword, setIsSubmittingPassword] = useState(false);
+
+  const [showAddSocialModal, setShowAddSocialModal] = useState(false);
+  const [activeSocialPlatform, setActiveSocialPlatform] = useState(null);
+  const [socialInputValue, setSocialInputValue] = useState("");
+
+  const applyProfileToState = (profile) => {
+    setBasicDetails({
+      firstName: profile.firstName || "",
+      lastName: profile.lastName || "",
+      mobileNumber: profile.mobileNumber || "",
+      email: profile.email || "",
+    });
+    setOrganizationDetails({
+      organizationName: profile.organizationName || "",
+      bio: profile.bio || "",
+      profilePhotoUrl: profile.profilePhotoUrl || "",
+      socialMediaLinks: profile.socialMediaLinks || [],
+    });
+    setPhotoPreview({ url: "", name: "", file: null });
+    setRemovePhoto(false);
+  };
+
+  const loadProfile = async () => {
+    setIsLoadingProfile(true);
+    try {
+      const response = await GetOrganizerProfileAPI();
+      const profile = response?.data?.data;
+      if (profile) {
+        applyProfileToState(mapProfileResponseToUserData(profile));
+      }
+    } catch (err) {
+      console.error("Failed to load profile:", err);
+      toast.error("Could not load profile settings.");
+    } finally {
+      setIsLoadingProfile(false);
+    }
+  };
 
   useEffect(() => {
     if (isOpen) {
-      const user = getUserData();
-      setCurrentUserData(user || { name: 'User Name', email: 'user@example.com' });
+      loadProfile();
     }
   }, [isOpen]);
 
@@ -53,21 +151,97 @@ const SettingsOverlay = ({ isOpen, onClose }) => {
     setPasswordValidation(validateNewPassword(newPassword));
   }, [newPassword]);
 
-  const passwordsMatch = newPassword && confirmPassword && newPassword === confirmPassword;
-
   if (!isOpen) return null;
 
-  const handleProfilePhotoUpload = () => {
-    alert('Upload new picture functionality (Not implemented)');
+  const passwordsMatch = newPassword && confirmPassword && newPassword === confirmPassword;
+  const currentPhotoPreview = removePhoto
+    ? ""
+    : photoPreview.url || organizationDetails.profilePhotoUrl;
+
+  const handlePhotoReady = ({ url, name, file }) => {
+    if (photoPreview.url?.startsWith("blob:")) {
+      URL.revokeObjectURL(photoPreview.url);
+    }
+    setPhotoPreview({ url, name, file });
+    setRemovePhoto(false);
+  };
+
+  const handlePhotoRemove = () => {
+    if (photoPreview.url?.startsWith("blob:")) {
+      URL.revokeObjectURL(photoPreview.url);
+    }
+    setPhotoPreview({ url: "", name: "", file: null });
+    setRemovePhoto(true);
+  };
+
+  const syncProfile = async (profile) => {
+    const mapped = mapProfileResponseToUserData(profile);
+    applyProfileToState(mapped);
+    await refreshProfile();
+    notifyProfileUpdated();
+  };
+
+  const handleSaveBasicDetails = async () => {
+    if (!basicDetails.firstName.trim() || !basicDetails.lastName.trim() || !basicDetails.mobileNumber.trim()) {
+      toast.error("First name, last name, and mobile number are required.");
+      return;
+    }
+
+    setIsSavingBasic(true);
+    try {
+      const response = await UpdateBasicDetailsAPI({
+        firstName: basicDetails.firstName.trim(),
+        lastName: basicDetails.lastName.trim(),
+        mobileNumber: basicDetails.mobileNumber.trim(),
+      });
+      const latestProfile = response?.data?.data;
+      if (latestProfile) {
+        await syncProfile(latestProfile);
+      }
+      toast.success("Basic details saved.");
+    } catch (err) {
+      console.error("Failed to save basic details:", err);
+      toast.error(err.response?.data?.message || "Could not save basic details.");
+    } finally {
+      setIsSavingBasic(false);
+    }
+  };
+
+  const handleSaveOrganizationDetails = async () => {
+    setIsSavingOrganization(true);
+    try {
+      let latestProfile = null;
+
+      if (photoPreview.file) {
+        const photoResponse = await UploadOrganizerProfilePhotoAPI(photoPreview.file);
+        latestProfile = photoResponse?.data?.data;
+      }
+
+      const response = await UpdateOrganizationProfileAPI({
+        bio: organizationDetails.bio || "",
+        description: organizationDetails.bio || "",
+        socialMediaLinks: organizationDetails.socialMediaLinks,
+      });
+      latestProfile = response?.data?.data || latestProfile;
+      if (latestProfile) {
+        await syncProfile(latestProfile);
+      }
+      toast.success("Organization details saved.");
+    } catch (err) {
+      console.error("Failed to save organization details:", err);
+      toast.error(err.response?.data?.message || "Could not save organization details.");
+    } finally {
+      setIsSavingOrganization(false);
+    }
   };
 
   const toggleChangePasswordForm = () => {
     setShowChangePasswordForm((prev) => !prev);
     if (showChangePasswordForm) {
-      setCurrentPassword('');
-      setNewPassword('');
-      setConfirmPassword('');
-      setChangePasswordError('');
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+      setChangePasswordError("");
       setConfirmTouched(false);
       setNewPasswordFocused(false);
     }
@@ -75,237 +249,299 @@ const SettingsOverlay = ({ isOpen, onClose }) => {
 
   const handleChangePasswordSubmit = async (e) => {
     e.preventDefault();
-    setChangePasswordError('');
+    setChangePasswordError("");
 
     if (!currentPassword.trim()) {
-      setChangePasswordError('Current password is required');
-      return;
-    }
-    if (!newPassword.trim()) {
-      setChangePasswordError('New password is required');
+      setChangePasswordError("Current password is required");
       return;
     }
     if (!isNewPasswordValid(passwordValidation)) {
-      setChangePasswordError('New password does not meet requirements');
+      setChangePasswordError("New password does not meet requirements");
       return;
     }
     if (newPassword !== confirmPassword) {
-      setChangePasswordError('New password and confirm password do not match');
+      setChangePasswordError("New password and confirm password do not match");
       return;
     }
 
-    setIsSubmitting(true);
+    setIsSubmittingPassword(true);
     try {
       await ChangePasswordAPI({
         currentPassword: currentPassword.trim(),
         newPassword: newPassword.trim(),
       });
-      toast.success('Password changed successfully. You can use your new password on next login.');
-      setCurrentPassword('');
-      setNewPassword('');
-      setConfirmPassword('');
+      toast.success("Password changed successfully.");
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
       setShowChangePasswordForm(false);
-      setConfirmTouched(false);
-      setNewPasswordFocused(false);
     } catch (err) {
-      const status = err.response?.status;
-      const message = err.response?.data?.message;
-      if (status === 400 && message) {
-        setChangePasswordError(message);
-      } else if (status === 401) {
-        toast.error('Session expired. Please log in again.');
-        onClose();
-      } else if (status === 404 || status === 500) {
-        setChangePasswordError('Something went wrong. Please try again later.');
-      } else {
-        setChangePasswordError(message || 'Something went wrong. Please try again later.');
-      }
+      setChangePasswordError(err.response?.data?.message || "Could not change password.");
     } finally {
-      setIsSubmitting(false);
+      setIsSubmittingPassword(false);
     }
   };
 
-  const renderContent = () => {
-    switch (activeSection) {
-      case 'general':
-        return (
-          <div className={styles.sectionContent}>
-            <h3 className={styles.contentTitle}>Basic Details</h3>
+  const handleSocialButtonClick = (platformId) => {
+    setActiveSocialPlatform(platformId);
+    setSocialInputValue("");
+    setShowAddSocialModal(true);
+  };
+
+  const handleAddSocialLink = () => {
+    if (!socialInputValue.trim()) return;
+    setOrganizationDetails((prev) => ({
+      ...prev,
+      socialMediaLinks: [
+        ...prev.socialMediaLinks.filter((link) => link.platform !== activeSocialPlatform),
+        { platform: activeSocialPlatform, url: socialInputValue.trim() },
+      ],
+    }));
+    setShowAddSocialModal(false);
+    setActiveSocialPlatform(null);
+    setSocialInputValue("");
+  };
+
+  const handleRemoveSocialLink = (index) => {
+    setOrganizationDetails((prev) => ({
+      ...prev,
+      socialMediaLinks: prev.socialMediaLinks.filter((_, i) => i !== index),
+    }));
+  };
+
+  const renderGeneralSection = () => (
+    <div className={styles.sectionContent}>
+      <h3 className={styles.contentTitle}>Basic Details</h3>
+
+      <div className={styles.formRow}>
+        <div className={styles.formGroup}>
+          <label htmlFor="firstName" className={styles.label}>First Name</label>
+          <input
+            id="firstName"
+            className={styles.input}
+            value={basicDetails.firstName}
+            onChange={(e) => setBasicDetails((prev) => ({ ...prev, firstName: e.target.value }))}
+            disabled={isSavingBasic || isLoadingProfile}
+          />
+        </div>
+        <div className={styles.formGroup}>
+          <label htmlFor="lastName" className={styles.label}>Last Name</label>
+          <input
+            id="lastName"
+            className={styles.input}
+            value={basicDetails.lastName}
+            onChange={(e) => setBasicDetails((prev) => ({ ...prev, lastName: e.target.value }))}
+            disabled={isSavingBasic || isLoadingProfile}
+          />
+        </div>
+      </div>
+
+      <div className={styles.formGroup}>
+        <label htmlFor="mobileNumber" className={styles.label}>Mobile Number</label>
+        <input
+          id="mobileNumber"
+          className={styles.input}
+          value={basicDetails.mobileNumber}
+          onChange={(e) => setBasicDetails((prev) => ({ ...prev, mobileNumber: e.target.value }))}
+          disabled={isSavingBasic || isLoadingProfile}
+        />
+      </div>
+
+      <div className={styles.formGroup}>
+        <label htmlFor="email" className={styles.label}>Email</label>
+        <input id="email" className={`${styles.input} ${styles.readOnlyInput}`} value={basicDetails.email} readOnly />
+        <p className={styles.formHelper}>Email cannot be changed here.</p>
+      </div>
+
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Password</label>
+        <button type="button" className={styles.changePasswordButton} onClick={toggleChangePasswordForm}>
+          {showChangePasswordForm ? "Cancel" : "Change Password"}
+        </button>
+        {showChangePasswordForm && (
+          <form className={styles.changePasswordForm} onSubmit={handleChangePasswordSubmit}>
             <div className={styles.formGroup}>
-              <label className={styles.label}>Profile Photo</label>
-              <div className={styles.profilePhotoArea}>
-                <div className={styles.profileAvatarLarge}>{currentUserData?.name ? currentUserData.name.substring(0, 2).toUpperCase() : 'UN'}</div>
-                <div className={styles.photoInfo}>
-                  <span>Recommended size: 300 x 300</span>
-                  <button className={styles.uploadButton} onClick={handleProfilePhotoUpload}>
-                    Upload new picture
-                  </button>
-                </div>
+              <label htmlFor="currentPassword" className={styles.label}>Current password</label>
+              <div className={styles.inputWithIcon}>
+                <input
+                  type={showCurrentPassword ? "text" : "password"}
+                  id="currentPassword"
+                  className={styles.input}
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  disabled={isSubmittingPassword}
+                />
+                <button type="button" className={styles.iconButton} onClick={() => setShowCurrentPassword((p) => !p)}>
+                  {showCurrentPassword ? <EyeOffIcon /> : <EyeIcon />}
+                </button>
               </div>
             </div>
-
             <div className={styles.formGroup}>
-              <label htmlFor="userName" className={styles.label}>Name</label>
-              <input
-                type="text"
-                id="userName"
-                className={styles.input}
-                value={currentUserData?.name || ''}
-                onChange={(e) => setCurrentUserData({ ...currentUserData, name: e.target.value })}
-              />
+              <label htmlFor="newPassword" className={styles.label}>New password</label>
+              <div className={styles.inputWithIcon}>
+                <input
+                  type={showNewPassword ? "text" : "password"}
+                  id="newPassword"
+                  className={styles.input}
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  onFocus={() => setNewPasswordFocused(true)}
+                  disabled={isSubmittingPassword}
+                />
+                <button type="button" className={styles.iconButton} onClick={() => setShowNewPassword((p) => !p)}>
+                  {showNewPassword ? <EyeOffIcon /> : <EyeIcon />}
+                </button>
+              </div>
             </div>
-
+            {newPasswordFocused && (
+              <div className={styles.passwordRequirements}>
+                {Object.entries({
+                  length: "At least 8 characters",
+                  lowercase: "One lowercase letter",
+                  uppercase: "One uppercase letter",
+                  special: "One special character",
+                  number: "One number",
+                }).map(([key, label]) => (
+                  <span key={key} className={styles.requirementItem}>
+                    <span className={`${styles.checkIcon} ${passwordValidation[key] ? styles.validIcon : ""}`}>●</span>
+                    <span className={passwordValidation[key] ? styles.validText : ""}>{label}</span>
+                  </span>
+                ))}
+              </div>
+            )}
             <div className={styles.formGroup}>
-              <label htmlFor="userEmail" className={styles.label}>Email</label>
-              <input
-                type="email"
-                id="userEmail"
-                className={styles.input}
-                value={currentUserData?.email || ''}
-                onChange={(e) => setCurrentUserData({ ...currentUserData, email: e.target.value })}
-              />
-            </div>
-
-            <div className={styles.formGroup}>
-              <label htmlFor="userPassword" className={styles.label}>Password</label>
-              <button
-                type="button"
-                className={styles.changePasswordButton}
-                onClick={toggleChangePasswordForm}
-              >
-                {showChangePasswordForm ? 'Cancel' : 'Change Password'}
-              </button>
-              {showChangePasswordForm && (
-                <form className={styles.changePasswordForm} onSubmit={handleChangePasswordSubmit}>
-                  <div className={styles.formGroup}>
-                    <label htmlFor="currentPassword" className={styles.label}>Current password</label>
-                    <div className={styles.inputWithIcon}>
-                      <input
-                        type={showCurrentPassword ? 'text' : 'password'}
-                        id="currentPassword"
-                        className={styles.input}
-                        value={currentPassword}
-                        onChange={(e) => setCurrentPassword(e.target.value)}
-                        placeholder="Enter current password"
-                        autoComplete="current-password"
-                        disabled={isSubmitting}
-                      />
-                      <button
-                        type="button"
-                        className={styles.iconButton}
-                        onClick={() => setShowCurrentPassword((p) => !p)}
-                        aria-label={showCurrentPassword ? 'Hide password' : 'Show password'}
-                      >
-                        {showCurrentPassword ? <EyeOffIcon /> : <EyeIcon />}
-                      </button>
-                    </div>
-                  </div>
-                  <div className={styles.formGroup}>
-                    <label htmlFor="newPassword" className={styles.label}>New password</label>
-                    <div className={styles.inputWithIcon}>
-                      <input
-                        type={showNewPassword ? 'text' : 'password'}
-                        id="newPassword"
-                        className={styles.input}
-                        value={newPassword}
-                        onChange={(e) => setNewPassword(e.target.value)}
-                        onFocus={() => setNewPasswordFocused(true)}
-                        onBlur={() => setNewPasswordFocused(!!newPassword)}
-                        placeholder="Enter new password"
-                        autoComplete="new-password"
-                        disabled={isSubmitting}
-                      />
-                      <button
-                        type="button"
-                        className={styles.iconButton}
-                        onClick={() => setShowNewPassword((p) => !p)}
-                        aria-label={showNewPassword ? 'Hide password' : 'Show password'}
-                      >
-                        {showNewPassword ? <EyeOffIcon /> : <EyeIcon />}
-                      </button>
-                    </div>
-                  </div>
-                  {newPasswordFocused && (
-                    <div className={styles.passwordRequirements}>
-                      <span className={styles.requirementItem}>
-                        <span className={`${styles.checkIcon} ${passwordValidation.length ? styles.validIcon : ''}`}>●</span>
-                        <span className={passwordValidation.length ? styles.validText : ''}>At least 8 characters</span>
-                      </span>
-                      <span className={styles.requirementItem}>
-                        <span className={`${styles.checkIcon} ${passwordValidation.lowercase ? styles.validIcon : ''}`}>●</span>
-                        <span className={passwordValidation.lowercase ? styles.validText : ''}>One lowercase letter</span>
-                      </span>
-                      <span className={styles.requirementItem}>
-                        <span className={`${styles.checkIcon} ${passwordValidation.uppercase ? styles.validIcon : ''}`}>●</span>
-                        <span className={passwordValidation.uppercase ? styles.validText : ''}>One uppercase letter</span>
-                      </span>
-                      <span className={styles.requirementItem}>
-                        <span className={`${styles.checkIcon} ${passwordValidation.special ? styles.validIcon : ''}`}>●</span>
-                        <span className={passwordValidation.special ? styles.validText : ''}>One special character</span>
-                      </span>
-                      <span className={styles.requirementItem}>
-                        <span className={`${styles.checkIcon} ${passwordValidation.number ? styles.validIcon : ''}`}>●</span>
-                        <span className={passwordValidation.number ? styles.validText : ''}>One number</span>
-                      </span>
-                    </div>
-                  )}
-                  <div className={styles.formGroup}>
-                    <label htmlFor="confirmPassword" className={styles.label}>Confirm new password</label>
-                    <div className={styles.inputWithIcon}>
-                      <input
-                        type={showConfirmPassword ? 'text' : 'password'}
-                        id="confirmPassword"
-                        className={styles.input}
-                        value={confirmPassword}
-                        onChange={(e) => { setConfirmPassword(e.target.value); setConfirmTouched(true); }}
-                        placeholder="Confirm new password"
-                        autoComplete="new-password"
-                        disabled={isSubmitting}
-                      />
-                      <button
-                        type="button"
-                        className={styles.iconButton}
-                        onClick={() => setShowConfirmPassword((p) => !p)}
-                        aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
-                      >
-                        {showConfirmPassword ? <EyeOffIcon /> : <EyeIcon />}
-                      </button>
-                    </div>
-                    {confirmTouched && confirmPassword && (
-                      <span className={passwordsMatch ? styles.matchText : styles.fieldError}>
-                        {passwordsMatch ? 'Passwords match' : 'Passwords do not match'}
-                      </span>
-                    )}
-                  </div>
-                  {changePasswordError && (
-                    <div className={styles.fieldError} role="alert">{changePasswordError}</div>
-                  )}
-                  <div className={styles.changePasswordActions}>
-                    <button
-                      type="submit"
-                      className={styles.saveChangesButton}
-                      disabled={isSubmitting || !currentPassword || !isNewPasswordValid(passwordValidation) || !passwordsMatch}
-                    >
-                      {isSubmitting ? 'Updating…' : 'Update password'}
-                    </button>
-                  </div>
-                </form>
+              <label htmlFor="confirmPassword" className={styles.label}>Confirm new password</label>
+              <div className={styles.inputWithIcon}>
+                <input
+                  type={showConfirmPassword ? "text" : "password"}
+                  id="confirmPassword"
+                  className={styles.input}
+                  value={confirmPassword}
+                  onChange={(e) => {
+                    setConfirmPassword(e.target.value);
+                    setConfirmTouched(true);
+                  }}
+                  disabled={isSubmittingPassword}
+                />
+                <button type="button" className={styles.iconButton} onClick={() => setShowConfirmPassword((p) => !p)}>
+                  {showConfirmPassword ? <EyeOffIcon /> : <EyeIcon />}
+                </button>
+              </div>
+              {confirmTouched && confirmPassword && (
+                <span className={passwordsMatch ? styles.matchText : styles.fieldError}>
+                  {passwordsMatch ? "Passwords match" : "Passwords do not match"}
+                </span>
               )}
             </div>
+            {changePasswordError && <div className={styles.fieldError}>{changePasswordError}</div>}
+            <button
+              type="submit"
+              className={styles.saveChangesButton}
+              disabled={isSubmittingPassword || !currentPassword || !isNewPasswordValid(passwordValidation) || !passwordsMatch}
+            >
+              {isSubmittingPassword ? "Updating…" : "Update password"}
+            </button>
+          </form>
+        )}
+      </div>
+
+      <div className={styles.tabFooter}>
+        <button
+          type="button"
+          className={styles.saveTabButton}
+          onClick={handleSaveBasicDetails}
+          disabled={isSavingBasic || isLoadingProfile}
+        >
+          {isSavingBasic ? "Saving…" : "Save basic details"}
+        </button>
+      </div>
+    </div>
+  );
+
+  const renderOrganizationSection = () => (
+    <div className={styles.sectionContent}>
+      <h3 className={styles.contentTitle}>Organization Details</h3>
+
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Profile Photo<OptionalLabel /></label>
+        <ProfilePhotoField
+          previewUrl={currentPhotoPreview}
+          fileName={photoPreview.name}
+          onPhotoReady={handlePhotoReady}
+          onRemove={handlePhotoRemove}
+          disabled={isSavingOrganization || isLoadingProfile}
+        />
+      </div>
+
+      <div className={styles.formGroup}>
+        <label htmlFor="organizationName" className={styles.label}>Organization Name</label>
+        <input
+          id="organizationName"
+          className={`${styles.input} ${styles.readOnlyInput}`}
+          value={organizationDetails.organizationName}
+          readOnly
+        />
+        <p className={styles.formHelper}>Organization name cannot be changed here.</p>
+      </div>
+
+      <div className={styles.formGroup}>
+        <label htmlFor="bio" className={styles.label}>Bio<OptionalLabel /></label>
+        <textarea
+          id="bio"
+          className={styles.textarea}
+          rows={4}
+          placeholder="Tell something about your organization"
+          value={organizationDetails.bio}
+          onChange={(e) => setOrganizationDetails((prev) => ({ ...prev, bio: e.target.value }))}
+          disabled={isSavingOrganization || isLoadingProfile}
+        />
+      </div>
+
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Social Media Links<OptionalLabel /></label>
+        {organizationDetails.socialMediaLinks.length > 0 && (
+          <div className={styles.socialLinksList}>
+            {organizationDetails.socialMediaLinks.map((link, index) => (
+              <div key={`${link.platform}-${index}`} className={styles.socialLinkItem}>
+                <div className={styles.socialLinkContent}>
+                  {SOCIAL_PLATFORMS.find((p) => p.id === link.platform)?.icon}
+                  <span>{link.url}</span>
+                </div>
+                <button type="button" className={styles.removeSocialBtn} onClick={() => handleRemoveSocialLink(index)}>
+                  ×
+                </button>
+              </div>
+            ))}
           </div>
-        );
-      case 'organisation':
-        return (
-          <div className={styles.sectionContent}>
-            <h3 className={styles.contentTitle}>Organization Settings</h3>
-            <p>Details about your organization can be managed here.</p>
-            {/* Add organization specific fields here */}
-          </div>
-        );
-      default:
-        return null;
-    }
-  };
+        )}
+        <div className={styles.socialGrid}>
+          {SOCIAL_PLATFORMS.map((platform) => (
+            <button
+              key={platform.id}
+              type="button"
+              className={styles.socialGridItem}
+              onClick={() => handleSocialButtonClick(platform.id)}
+              disabled={isSavingOrganization || isLoadingProfile}
+            >
+              <span className={styles.socialIcon}>{platform.icon}</span>
+              <span>{platform.name}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className={styles.tabFooter}>
+        <button
+          type="button"
+          className={styles.saveTabButton}
+          onClick={handleSaveOrganizationDetails}
+          disabled={isSavingOrganization || isLoadingProfile}
+        >
+          {isSavingOrganization ? "Saving…" : "Save organization details"}
+        </button>
+      </div>
+    </div>
+  );
 
   return (
     <div className={styles.overlay}>
@@ -319,19 +555,47 @@ const SettingsOverlay = ({ isOpen, onClose }) => {
         <div className={styles.contentWrapper}>
           <nav className={styles.sidebar}>
             <ul>
-              <li className={activeSection === 'general' ? styles.active : ''} onClick={() => setActiveSection('general')}>
-                <GeneralIcon className={styles.navIcon} /> General
+              <li className={activeSection === "general" ? styles.active : ""} onClick={() => setActiveSection("general")}>
+                <GeneralIcon className={styles.navIcon} /> Basic Details
               </li>
-              {/* <li className={activeSection === 'organisation' ? styles.active : ''} onClick={() => setActiveSection('organisation')}>
-                <OrganisationIcon className={styles.navIcon} /> Organisation
-              </li> */}
+              <li className={activeSection === "organisation" ? styles.active : ""} onClick={() => setActiveSection("organisation")}>
+                <OrganisationIcon className={styles.navIcon} /> Organization
+              </li>
             </ul>
           </nav>
           <div className={styles.mainContent}>
-            {renderContent()}
+            {isLoadingProfile ? (
+              <div className={styles.loadingState}>Loading profile…</div>
+            ) : activeSection === "general" ? (
+              renderGeneralSection()
+            ) : (
+              renderOrganizationSection()
+            )}
           </div>
         </div>
       </div>
+
+      {showAddSocialModal && (
+        <div className={styles.socialModalBackdrop}>
+          <div className={styles.socialModal}>
+            <h3>Add {SOCIAL_PLATFORMS.find((p) => p.id === activeSocialPlatform)?.name} link</h3>
+            <input
+              className={styles.input}
+              value={socialInputValue}
+              onChange={(e) => setSocialInputValue(e.target.value)}
+              placeholder="Enter URL"
+            />
+            <div className={styles.socialModalActions}>
+              <button type="button" className={styles.cancelButton} onClick={() => setShowAddSocialModal(false)}>
+                Cancel
+              </button>
+              <button type="button" className={styles.doneButton} onClick={handleAddSocialLink}>
+                Add
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -5,6 +5,7 @@ import AnchoredActionMenu, {
   anchoredActionMenuStyles,
 } from '../../../components/common/anchoredActionMenu/anchoredActionMenu';
 import styles from './ticketsStep.module.scss';
+import OptionalLabel from '../../../components/common/optionalLabel/optionalLabel';
 
 /**
  * TicketsStep component - Sixth step of event creation
@@ -196,7 +197,7 @@ const TicketsStep = ({
                   <div className={styles.ticketName}>Name</div>
                   <div className={styles.ticketCount}>Quantity</div>
                   <div className={styles.ticketPrice}>Price</div>
-                  <div className={styles.ticketCount}>Max Purchase</div>
+                  <div className={styles.ticketCount}>Max Purchase<OptionalLabel /></div>
                   <div className={styles.ticketActions}>Action</div>
                 </div>
 

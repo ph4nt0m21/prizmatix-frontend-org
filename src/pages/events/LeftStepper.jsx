@@ -19,7 +19,7 @@ const steps = [
   { id: 4, label: 'Description', icon: imgDescription },
   { id: 5, label: 'Art', icon: imgArt },
   { id: 6, label: 'Tickets', icon: imgTickets },
-  { id: 7, label: 'Discount Codes', icon: imgDiscount },
+    { id: 7, label: 'Discount Codes (optional)', icon: imgDiscount },
   { id: 8, label: 'Publish', icon: imgPublish },
 ];
 

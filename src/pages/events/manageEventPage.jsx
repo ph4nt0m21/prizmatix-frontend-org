@@ -1,12 +1,20 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import Cookies from "js-cookie";
+import { toast } from "react-toastify";
 import EventHeaderNav from "./components/eventHeaderNav";
 import EventManageSidebar from "./components/eventManageSidebar";
 import LoadingSpinner from "../../components/common/loadingSpinner/loadingSpinner";
 import styles from "./manageEventPage.module.scss";
 
 // Import API and section components
-import { GetEventDashboardAPI, GetEventAPI, GetEventStatusAPI } from "../../services/allApis";
+import {
+  GetEventDashboardAPI,
+  GetEventAPI,
+  GetEventStatusAPI,
+  DeleteEventAPI,
+} from "../../services/allApis";
+import { getUserData } from "../../utils/authUtil";
 import OverviewSection from "./sections/overviewSection";
 import OrdersAndAttendeesSection from "./sections/ordersAndAttendeesSection/ordersAndAttendeesSection";
 import PayoutSection from "./sections/payoutSection";
@@ -26,6 +34,8 @@ const EventManagePage = () => {
   const [eventData, setEventData] = useState(null);
   const [eventStatusFromApi, setEventStatusFromApi] = useState(null);
   const [currentSection, setCurrentSection] = useState("overview");
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const publishGate = useMemo(
     () =>
@@ -100,6 +110,33 @@ const EventManagePage = () => {
     }
   };
 
+  const confirmDeleteEvent = async () => {
+    if (!eventId) return;
+
+    const currentUserId = getUserData()?.id || Cookies.get("userId");
+    if (!currentUserId) {
+      toast.error("User ID not found. Cannot delete event.");
+      setShowDeleteConfirm(false);
+      return;
+    }
+
+    try {
+      setIsDeleting(true);
+      await DeleteEventAPI(eventId, currentUserId);
+      toast.success("Event deleted successfully.");
+      setShowDeleteConfirm(false);
+      navigate("/events");
+    } catch (deleteError) {
+      console.error("Failed to delete event:", deleteError);
+      toast.error(
+        deleteError.response?.data?.message || "Failed to delete the event."
+      );
+      setShowDeleteConfirm(false);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   const eventStatus = eventData?.isPublished
     ? getPublishedEventTimingStatus(eventData)
     : 'DRAFT';
@@ -141,6 +178,7 @@ const EventManagePage = () => {
         eventStatus={eventStatus}
         toggleMobileSidebar={() => setIsManageSidebarOpen(!isManageSidebarOpen)}
         eventId={eventId}
+        eventSlug={eventData?.slug}
         showActions={true}
       />
       <div className={styles.contentWrapper}>
@@ -157,6 +195,7 @@ const EventManagePage = () => {
           publishBlockers={publishGate.blockers}
           isPublished={!!eventData?.isPublished}
           eventId={eventId}
+          onDeleteClick={() => setShowDeleteConfirm(true)}
           isMobileSidebarOpen={isManageSidebarOpen}
           toggleMobileSidebar={() => setIsManageSidebarOpen(!isManageSidebarOpen)}
         />
@@ -164,6 +203,35 @@ const EventManagePage = () => {
           {renderCurrentSection()}
         </main>
       </div>
+      {showDeleteConfirm && (
+        <div className={styles.deleteModalOverlay}>
+          <div className={styles.deleteModal}>
+            <h3>Confirm Deletion</h3>
+            <p>
+              Are you sure you want to delete the event &quot;{eventData?.name}&quot;?
+              This action cannot be undone.
+            </p>
+            <div className={styles.deleteModalActions}>
+              <button
+                type="button"
+                onClick={() => setShowDeleteConfirm(false)}
+                className={styles.cancelButton}
+                disabled={isDeleting}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={confirmDeleteEvent}
+                className={styles.confirmDeleteButton}
+                disabled={isDeleting}
+              >
+                {isDeleting ? "Deleting…" : "Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };

@@ -12,7 +12,8 @@
   padding: 0 12px;
   background-color: #ffffff;
   color: #111827;
-  font-size: 15px;
+  /* 16px minimum prevents iOS Safari from auto-zooming on focus */
+  font-size: 16px;
   box-sizing: border-box;
 
   &:focus {
@@ -45,8 +46,8 @@
 }
 
 .item {
-  padding: 8px 12px;
-  font-size: 15px;
+  padding: 10px 12px;
+  font-size: 16px;
   color: #111827;
   cursor: pointer;
 

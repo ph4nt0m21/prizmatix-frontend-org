@@ -1,38 +1,60 @@
-import React, { createContext, useState, useEffect, useContext } from 'react';
+import React, { createContext, useState, useEffect, useContext, useCallback } from 'react';
 import Cookies from 'js-cookie';
-// Correctly import OrganizationRegisterInitiateAPI instead of the non-existent RegisterAPI
 import {
   LoginAPI,
   OrganizationRegisterInitiateAPI,
-  ProfileAPI
+  GetOrganizerProfileAPI,
 } from '../services/allApis';
+import { getUserData, setUserData } from '../utils/authUtil';
+import { mapProfileResponseToUserData, notifyProfileUpdated } from '../utils/profileUtil';
 
-// Create the auth context
 const AuthContext = createContext();
 
-// Helper hook to use the auth context
 export const useAuth = () => {
   return useContext(AuthContext);
 };
 
-// Auth provider component
 export const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Check user's auth status on initial load
+  const refreshProfile = useCallback(async () => {
+    const token = Cookies.get('token');
+    if (!token) {
+      return null;
+    }
+
+    try {
+      const response = await GetOrganizerProfileAPI();
+      const profile = response?.data?.data;
+      if (!profile) {
+        return getUserData();
+      }
+
+      const mergedUser = mapProfileResponseToUserData(profile, getUserData() || {});
+      setUserData(mergedUser);
+      setCurrentUser(mergedUser);
+      notifyProfileUpdated();
+      return mergedUser;
+    } catch (err) {
+      console.error('Failed to refresh profile:', err);
+      return getUserData();
+    }
+  }, []);
+
   useEffect(() => {
     const checkAuthStatus = async () => {
       setIsLoading(true);
       const token = Cookies.get('token');
       if (token) {
-        const storedUserData = localStorage.getItem('userData');
+        const storedUserData = getUserData();
         if (storedUserData) {
-          setCurrentUser(JSON.parse(storedUserData));
+          setCurrentUser(storedUserData);
         }
         setIsAuthenticated(true);
+        await refreshProfile();
       } else {
         setIsAuthenticated(false);
         setCurrentUser(null);
@@ -41,13 +63,8 @@ export const AuthProvider = ({ children }) => {
     };
 
     checkAuthStatus();
-  }, []);
+  }, [refreshProfile]);
 
-  /**
-   * Logs in the user and handles session persistence.
-   * @param {object} credentials - The user's login credentials { username, password }.
-   * @param {boolean} rememberMe - If true, sets a longer cookie expiration.
-   */
   const login = async (credentials, rememberMe = false) => {
     setIsLoading(true);
     setError(null);
@@ -62,14 +79,17 @@ export const AuthProvider = ({ children }) => {
         id: response.data.id || response.data.userId,
         organizationId: response.data.organizationId,
         organizationName: response.data.organizationName,
-        name: response.data.name || `${response.data.firstName} ${response.data.lastName}`,
+        firstName: response.data.firstName || '',
+        lastName: response.data.lastName || '',
+        name: response.data.name || `${response.data.firstName || ''} ${response.data.lastName || ''}`.trim(),
         email: response.data.email || credentials.username,
         role: response.data.roles && response.data.roles.length > 0 ? response.data.roles[0] : null,
       };
-      localStorage.setItem('userData', JSON.stringify(userData));
-
+      setUserData(userData);
       setCurrentUser(userData);
       setIsAuthenticated(true);
+
+      await refreshProfile();
 
       return response.data;
     } catch (err) {
@@ -83,15 +103,10 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  /**
-   * Registers a new user/organization.
-   * @param {object} userData - The data for the new user.
-   */
   const register = async (userData) => {
     setIsLoading(true);
     setError(null);
     try {
-      // Call the correct, existing API function
       const response = await OrganizationRegisterInitiateAPI(userData);
 
       const token = response.data.token || response.data.accessToken;
@@ -103,8 +118,7 @@ export const AuthProvider = ({ children }) => {
       if (!user.name) {
         user.name = `${userData.firstName} ${userData.lastName}`;
       }
-      localStorage.setItem('userData', JSON.stringify(user));
-
+      setUserData(user);
       setCurrentUser(user);
       setIsAuthenticated(true);
       return response.data;
@@ -120,9 +134,6 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  /**
-   * Logs out the current user.
-   */
   const logout = () => {
     Cookies.remove('token');
     localStorage.removeItem('userData');
@@ -130,9 +141,6 @@ export const AuthProvider = ({ children }) => {
     setIsAuthenticated(false);
   };
 
-  /**
-   * Clears any existing auth errors.
-   */
   const clearError = () => {
     setError(null);
   };
@@ -146,6 +154,7 @@ export const AuthProvider = ({ children }) => {
     register,
     logout,
     clearError,
+    refreshProfile,
   };
 
   return (

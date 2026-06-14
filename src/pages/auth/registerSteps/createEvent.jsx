@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import { Link } from 'react-router-dom';
 import styles from './createEvent.module.scss';
+import OptionalLabel from '../../../components/common/optionalLabel/optionalLabel';
 
 // Import SVG components
 import { ReactComponent as ArrowIcon } from "../../../assets/icons/arrow-icon.svg";
@@ -106,7 +107,7 @@ const CreateEvent = ({
             <h1 className={styles.welcomeTitle}>
               Create Event
             </h1>
-            <p className={styles.welcomeSubtitle}>Enter your details to create an account</p>
+            <p className={styles.welcomeSubtitle}>Enter your event details below to continue.</p>
           </div>
           
           {renderErrorMessage()}
@@ -115,7 +116,7 @@ const CreateEvent = ({
             {/* Event Name */}
             <div className={styles.formGroup}>
               <label htmlFor="eventName" className={styles.inputLabel}>
-                Event Name
+                Event Name<OptionalLabel />
               </label>
               <p className={styles.eventHint}>
                 Enter the official name of your event that will be displayed to attendees
@@ -125,7 +126,7 @@ const CreateEvent = ({
                 id="eventName"
                 name="eventName"
                 className={styles.input}
-                placeholder="eg. johndoe@gmail.com"
+                placeholder="e.g. 2024 Art and Music Festival for Beginners"
                 value={formData.eventName || ''}
                 onChange={handleChange}
                 disabled={isLoading}

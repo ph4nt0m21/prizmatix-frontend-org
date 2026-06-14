@@ -3,6 +3,7 @@ import PropTypes from "prop-types";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import styles from "./discountCodeModal.module.scss";
+import OptionalLabel from "../../../components/common/optionalLabel/optionalLabel";
 
 /**
  * Helper function to create a Date object from date and time strings.
@@ -242,8 +243,8 @@ const DiscountCodeModal = ({
                     value={localDiscountCode.type || "percentage"}
                     onChange={handleInputChange}
                   >
-                    <option value="percentage">Percentage (%)</option>
-                    <option value="fixed">Fixed ($)</option>
+                    <option value="percentage">Percentage</option>
+                    <option value="fixed">Fixed</option>
                   </select>
                 </div>
 
@@ -265,8 +266,9 @@ const DiscountCodeModal = ({
                 
                 <div className={styles.formGroup}>
                   <label htmlFor="usageLimit" className={styles.formLabel}>
-                    Usage Limit
+                    Usage Limit<OptionalLabel />
                   </label>
+                  <p className={styles.formHelper}>Optional. Leave blank for unlimited uses.</p>
                   <input
                     type="number"
                     id="usageLimit"
@@ -300,7 +302,7 @@ const DiscountCodeModal = ({
 
                 <div className={styles.formGroup}>
                   <label className={styles.formLabel}>
-                    Applicable Tickets
+                    Applicable Tickets<OptionalLabel />
                   </label>
                   <p className={styles.formHelper}>Select the tickets to which this coupon code will apply.</p>
                   <div className={styles.customDropdown}>
@@ -337,7 +339,7 @@ const DiscountCodeModal = ({
               // Advance Details Panel
               <>
                 <div className={styles.formGroup}>
-                  <label className={styles.formLabel}>Valid From</label>
+                  <label className={styles.formLabel}>Valid From<OptionalLabel /></label>
                   <DatePicker
                     selected={combineDateAndTime(localDiscountCode.validFromDate, localDiscountCode.validFromTime)}
                     onChange={date => handleDateChange(date, 'validFromDate', 'validFromTime')}
@@ -349,7 +351,7 @@ const DiscountCodeModal = ({
                 </div>
 
                 <div className={styles.formGroup}>
-                  <label className={styles.formLabel}>Valid Until</label>
+                  <label className={styles.formLabel}>Valid Until<OptionalLabel /></label>
                   <DatePicker
                     selected={combineDateAndTime(localDiscountCode.validUntilDate, localDiscountCode.validUntilTime)}
                     onChange={date => handleDateChange(date, 'validUntilDate', 'validUntilTime')}

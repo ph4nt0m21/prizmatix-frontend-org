@@ -55,7 +55,7 @@ const EventCreationSidebar = ({
     { number: 4, key: 'description', label: 'Description', icon: DescriptionIcon },
     { number: 5, key: 'art', label: 'Art', icon: ArtIcon },
     { number: 6, key: 'tickets', label: 'Tickets', icon: TicketsIcon },
-    { number: 7, key: 'discountCodes', label: 'Discount Codes', icon: DiscountIcon },
+    { number: 7, key: 'discountCodes', label: 'Discount Codes (optional)', icon: DiscountIcon },
     { number: 8, key: 'publish', label: 'Publish', icon: PublishIcon }
   ];
 

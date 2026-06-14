@@ -1,6 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
+import { toast } from 'react-toastify';
 import styles from './locationStep.module.scss';
+import OptionalLabel from '../../../components/common/optionalLabel/optionalLabel';
+import {
+  buildLocationFormState,
+  serializeLocationFormState,
+} from '../../../utils/eventUtil';
 
 /**
  * LocationStep component - Second step of event creation
@@ -14,33 +20,17 @@ const LocationStep = ({
 }) => {
   // Extract location data from eventData or use defaults
   const locationData = eventData.location || {};
+  const parentLocationKey = serializeLocationFormState(locationData);
   
   // Map and Marker references
   const mapRef = useRef(null);
   const googleMapRef = useRef(null);
   const markerRef = useRef(null);
+  const skipParentSyncRef = useRef(true);
+  const lastSyncedToParentRef = useRef('');
   
   // Local state for form management
-  const [location, setLocation] = useState({
-    locationType: locationData.locationType || 'physical',
-    isToBeAnnounced: locationData.isToBeAnnounced || false,
-    isPrivateLocation: locationData.isPrivateLocation || false,
-    googleMapLink: locationData.googleMapLink || '',
-    venue: locationData.venue || '',
-    street: locationData.street || '',
-    streetNumber: locationData.streetNumber || '',
-    city: locationData.city || '',
-    postalCode: locationData.postalCode || '',
-    state: locationData.state || '',
-    country: locationData.country || '',
-    additionalInfo: locationData.additionalInfo || '',
-    onlineEventUrl: locationData.onlineEventUrl || '',
-    onlineEventDescription: locationData.onlineEventDescription || '',
-    virtualMeetingUrl: locationData.virtualMeetingUrl || '',
-    latitude: locationData.latitude || '',
-    longitude: locationData.longitude || '',
-    formattedAddress: locationData.formattedAddress || ''
-  });
+  const [location, setLocation] = useState(() => buildLocationFormState(locationData));
   
   // State for map UI
   const [isLoadingMap, setIsLoadingMap] = useState(false);
@@ -132,12 +122,18 @@ const LocationStep = ({
    * @param {string} url - The Google Maps URL
    */
 const extractCoordsFromUrl = (url) => {
+  const trimmedUrl = String(url || '').trim();
+  if (!trimmedUrl) {
+    return null;
+  }
+
   setIsLoadingMap(true);
   try {
-    let lat, lng;
+    let lat;
+    let lng;
 
     // Pattern 1: @lat,lng
-    let match = url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+    let match = trimmedUrl.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
     if (match && match.length >= 3) {
       lat = parseFloat(match[1]);
       lng = parseFloat(match[2]);
@@ -145,41 +141,68 @@ const extractCoordsFromUrl = (url) => {
 
     // Pattern 2: !3d<lat>!4d<lng> (fallback)
     if (!lat || !lng) {
-      match = url.match(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/);
+      match = trimmedUrl.match(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/);
       if (match && match.length >= 3) {
         lat = parseFloat(match[1]);
         lng = parseFloat(match[2]);
       }
     }
 
+    // Pattern 3: query params ll=lat,lng
     if (!lat || !lng) {
-      alert('Could not find coordinates in the provided link. Please use a valid Google Maps URL.');
-      return;
+      match = trimmedUrl.match(/[?&]ll=(-?\d+\.\d+),(-?\d+\.\d+)/);
+      if (match && match.length >= 3) {
+        lat = parseFloat(match[1]);
+        lng = parseFloat(match[2]);
+      }
     }
 
-    // Update state
-    setLocation(prevLocation => ({
+    setLocation((prevLocation) => ({
       ...prevLocation,
-      latitude: lat,
-      longitude: lng,
-      googleMapLink: url,
+      googleMapLink: trimmedUrl,
+      ...(lat && lng
+        ? { latitude: lat, longitude: lng }
+        : {}),
     }));
+
+    if (!lat || !lng) {
+      toast.info(
+        'Map link saved. Coordinates could not be extracted — address fields will still be saved.'
+      );
+      return null;
+    }
+
+    return { lat, lng };
   } catch (error) {
     console.error('Error parsing URL:', error);
-    alert('An unexpected error occurred while parsing the URL.');
+    toast.error('Could not process the map link. You can still save address fields.');
+    setLocation((prevLocation) => ({
+      ...prevLocation,
+      googleMapLink: trimmedUrl,
+    }));
+    return null;
   } finally {
     setTimeout(() => setIsLoadingMap(false), 500);
   }
 };
 
   /**
-   * Handle Google Maps link pasting
+   * Handle Google Maps link pasting — always keep the URL even if coords fail.
    * @param {Event} e - Paste event
    */
   const handlePasteMapLink = (e) => {
-    e.preventDefault();
     const pastedText = e.clipboardData.getData('text');
+    if (!pastedText?.trim()) {
+      return;
+    }
+    e.preventDefault();
     extractCoordsFromUrl(pastedText);
+  };
+
+  const handleMapLinkBlur = () => {
+    if (location.googleMapLink?.trim()) {
+      extractCoordsFromUrl(location.googleMapLink);
+    }
   };
 
   /**
@@ -196,11 +219,37 @@ const extractCoordsFromUrl = (url) => {
   }, [location.latitude, location.longitude]);
 
   /**
-   * Effect to propagate all location changes to the parent component
+   * Hydrate local form state when parent loads saved/API location data.
    */
   useEffect(() => {
+    const nextLocation = buildLocationFormState(locationData);
+    setLocation((prev) => {
+      if (serializeLocationFormState(prev) === serializeLocationFormState(nextLocation)) {
+        return prev;
+      }
+      skipParentSyncRef.current = true;
+      return nextLocation;
+    });
+  }, [parentLocationKey]);
+
+  /**
+   * Propagate local edits to parent — skip first run to avoid wiping fetched data.
+   */
+  useEffect(() => {
+    if (skipParentSyncRef.current) {
+      skipParentSyncRef.current = false;
+      lastSyncedToParentRef.current = serializeLocationFormState(location);
+      return;
+    }
+
+    const serialized = serializeLocationFormState(location);
+    if (serialized === lastSyncedToParentRef.current) {
+      return;
+    }
+
+    lastSyncedToParentRef.current = serialized;
     handleInputChange({ ...location }, 'location');
-  }, [location]);
+  }, [location, handleInputChange]);
   
   // --- Other handlers and JSX remain the same ---
 
@@ -353,7 +402,7 @@ const extractCoordsFromUrl = (url) => {
             </p>
             <div className={styles.formGroup}>
               <label htmlFor="onlineEventUrl" className={styles.formLabel}>
-                Event link (URL)
+                Event link (URL)<OptionalLabel />
               </label>
               <input
                 type="url"
@@ -368,7 +417,7 @@ const extractCoordsFromUrl = (url) => {
             </div>
             <div className={styles.formGroup}>
               <label htmlFor="onlineEventDescription" className={styles.formLabel}>
-                How to join / platform notes
+                How to join / platform notes<OptionalLabel />
               </label>
               <textarea
                 id="onlineEventDescription"
@@ -382,13 +431,13 @@ const extractCoordsFromUrl = (url) => {
             </div>
             <div className={styles.formGroup}>
               <label htmlFor="additionalInfoOnline" className={styles.formLabel}>
-                Additional information
+                Additional information<OptionalLabel />
               </label>
               <textarea
                 id="additionalInfoOnline"
                 name="additionalInfo"
                 className={styles.formTextarea}
-                placeholder="Any extra details (optional)"
+                placeholder="Any extra details"
                 value={location.additionalInfo}
                 onChange={handleFieldChange}
                 rows={3}
@@ -407,16 +456,20 @@ const extractCoordsFromUrl = (url) => {
               The exact location to showcase on your event page and calendar events
             </p>
             
-            {/* Google Maps Link Field */}
+            <label htmlFor="googleMapLink" className={styles.formLabel}>
+              Google Maps link<OptionalLabel />
+            </label>
             <div className={styles.searchContainer}>
               <input
           type="text"
+          id="googleMapLink"
           name="googleMapLink"
           className={styles.searchInput}
           placeholder="Paste Google Maps link here"
           value={location.googleMapLink}
-          onChange={handleFieldChange} // Allow manual changes
-          onPaste={handlePasteMapLink} // Handle paste event
+          onChange={handleFieldChange}
+          onPaste={handlePasteMapLink}
+          onBlur={handleMapLinkBlur}
         />
               {/* <div className={styles.searchButton}>
                 {isLoadingMap ? (
@@ -431,7 +484,7 @@ const extractCoordsFromUrl = (url) => {
 
             <div className={styles.formGroup}>
               <label htmlFor="virtualMeetingUrl" className={styles.formLabel}>
-                Virtual meeting URL (optional)
+                Virtual meeting URL<OptionalLabel />
               </label>
               <p className={styles.formDescription}>
                 For hybrid events: Zoom, Google Meet, Teams, or other link for people joining remotely.
@@ -534,7 +587,7 @@ const extractCoordsFromUrl = (url) => {
               </div>
               <div className={styles.formGroup}>
                 <label htmlFor="streetNumber" className={styles.formLabel}>
-                  Street No.
+                  Street No.<OptionalLabel />
                 </label>
                 <div className={styles.dropdownInput}>
                   <input
@@ -583,7 +636,7 @@ const extractCoordsFromUrl = (url) => {
               </div>
               <div className={styles.formGroup}>
                 <label htmlFor="postalCode" className={styles.formLabel}>
-                  Postal Code
+                  Postal Code<OptionalLabel />
                 </label>
                 <div className={styles.dropdownInput}>
                   <input
@@ -608,7 +661,7 @@ const extractCoordsFromUrl = (url) => {
             <div className={styles.formRow}>
               <div className={styles.formGroup}>
                 <label htmlFor="state" className={styles.formLabel}>
-                  State/Province
+                  State/Province<OptionalLabel />
                 </label>
                 <div className={styles.dropdownInput}>
                   <input
@@ -656,7 +709,7 @@ const extractCoordsFromUrl = (url) => {
             {/* Additional Information */}
             <div className={styles.formGroup}>
               <label htmlFor="additionalInfo" className={styles.formLabel}>
-                Additional Information
+                Additional Information<OptionalLabel />
               </label>
               <textarea
                 id="additionalInfo"
