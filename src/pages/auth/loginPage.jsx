@@ -63,6 +63,13 @@ const LoginPage = () => {
     }, 5000);
   };
 
+  useEffect(() => {
+    if (location.state?.notice) {
+      showError(location.state.notice, "info");
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location.pathname, location.state, navigate]);
+
   /**
    * Handles the form submission for login.
    * @param {Event} e - The form submission event.
@@ -100,7 +107,13 @@ const LoginPage = () => {
   // Render error message if it exists
   const renderErrorMessage = () => {
     if (!error) return null;
-    const className = `${styles.errorMessage} ${error.type === "warning" ? styles.warningMessage : ''}`;
+    const className = `${styles.errorMessage} ${
+      error.type === "warning"
+        ? styles.warningMessage
+        : error.type === "info"
+          ? styles.infoMessage
+          : ""
+    }`;
     return <div className={className}>{error.message}</div>;
   };
 

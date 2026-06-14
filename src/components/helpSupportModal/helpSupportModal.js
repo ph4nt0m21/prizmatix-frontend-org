@@ -197,6 +197,7 @@ import React, { useState, useRef } from 'react';
 import PropTypes from 'prop-types';
 import styles from './helpSupportModal.module.scss';
 import { toast } from 'react-toastify';
+import OptionalLabel from '../common/optionalLabel/optionalLabel';
 import { CreateSupportTicketAPI } from '../../services/allApis';
 
 // --- SVG Icons ---
@@ -466,7 +467,7 @@ const HelpSupportModal = ({ isOpen, onClose }) => {
               </div>
 
               <div className={styles.formGroup}>
-                <label htmlFor="attachments">Attachments</label>
+                <label htmlFor="attachments">Attachments<OptionalLabel /></label>
                 <div
                   className={styles.attachmentBox}
                   onClick={() =>

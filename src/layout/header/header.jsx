@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
 import { getUserData } from '../../utils/authUtil';
+import { getProfileInitials } from '../../utils/profileUtil';
 import styles from './header.module.scss';
 import PropTypes from 'prop-types'
 // Import Hamburger Icon
@@ -20,6 +21,7 @@ const Header = ({ toggleMobileSidebar }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const [userData, setUserData] = useState(null);
+  const [profilePhotoUrl, setProfilePhotoUrl] = useState('');
 
   // Check if authenticated directly using cookies
   const isAuthenticated = !!Cookies.get('token');
@@ -39,9 +41,22 @@ const Header = ({ toggleMobileSidebar }) => {
       const userInfo = getUserData();
       if (userInfo) {
         setUserData(userInfo);
+        setProfilePhotoUrl(userInfo.profilePhotoUrl || '');
       }
     }
   }, [isAuthenticated]);
+
+  useEffect(() => {
+    const syncProfilePhoto = () => {
+      const userInfo = getUserData();
+      if (userInfo) {
+        setUserData(userInfo);
+        setProfilePhotoUrl(userInfo.profilePhotoUrl || '');
+      }
+    };
+    window.addEventListener('profile-updated', syncProfilePhoto);
+    return () => window.removeEventListener('profile-updated', syncProfilePhoto);
+  }, []);
 
   // Handler for the Create Event button
   const handleCreateEvent = () => {
@@ -49,16 +64,7 @@ const Header = ({ toggleMobileSidebar }) => {
   };
 
   // Get organization initials for logo
-  const getOrgInitials = () => {
-    if (userData?.organizationName) {
-      const nameParts = userData.organizationName.split(' ');
-      if (nameParts.length >= 2) {
-        return (nameParts[0][0] + nameParts[1][0]).toUpperCase();
-      }
-      return userData.organizationName.substring(0, 2).toUpperCase();
-    }
-    return 'TM'; // Default fallback
-  };
+  const getOrgInitials = () => getProfileInitials(userData || {});
 
   return (
     <header className={styles.header}>
@@ -69,7 +75,11 @@ const Header = ({ toggleMobileSidebar }) => {
 
       <div className={styles.orgInfo}>
         <div className={styles.orgLogo}>
-          <span>{getOrgInitials()}</span>
+          {profilePhotoUrl ? (
+            <img src={profilePhotoUrl} alt="Organization profile" className={styles.orgLogoImage} />
+          ) : (
+            <span>{getOrgInitials()}</span>
+          )}
         </div>
         <div className={styles.orgDetails}>
           <span className={styles.orgLabel}>Organisation</span>

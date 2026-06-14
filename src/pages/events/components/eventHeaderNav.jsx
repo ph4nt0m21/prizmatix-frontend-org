@@ -47,6 +47,7 @@ const ChevronDownIcon = () => (
 const EventHeaderNav = ({
   eventName,
   eventId,
+  eventSlug,
   isDraft,
   eventStatus,
   toggleMobileSidebar,
@@ -71,7 +72,9 @@ const navigate = useNavigate();
   }, []);
 
   const handleCopyLink = () => {
-    const eventLink = `https://www.prizmatix.nz/events/${eventId}`;
+    const publicPath = eventSlug || eventId;
+    if (!publicPath) return;
+    const eventLink = `https://www.prizmatix.nz/events/${publicPath}`;
     navigator.clipboard.writeText(eventLink).then(() => {
       setIsCopied(true);
       setTimeout(() => setIsCopied(false), 2500);
@@ -168,6 +171,7 @@ const navigate = useNavigate();
 EventHeaderNav.propTypes = {
   eventName: PropTypes.string,
   eventId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  eventSlug: PropTypes.string,
   isDraft: PropTypes.bool,
   eventStatus: PropTypes.oneOf(['LIVE', 'PAST', 'DRAFT']),
   toggleMobileSidebar: PropTypes.func,
@@ -178,6 +182,7 @@ EventHeaderNav.propTypes = {
 EventHeaderNav.defaultProps = {
   eventName: '',
   eventId: null,
+  eventSlug: null,
   isDraft: true,
   eventStatus: 'DRAFT',
   toggleMobileSidebar: () => {},

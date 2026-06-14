@@ -49,6 +49,24 @@ export const ChangePasswordAPI = async (data) => {
   return await apiClient.post("/admin/change-password", data);
 };
 
+export const GetOrganizerProfileAPI = async () => {
+  return await apiClient.get("/admin/profile");
+};
+
+export const UpdateBasicDetailsAPI = async (data) => {
+  return await apiClient.put("/admin/profile/basic-details", data);
+};
+
+export const UpdateOrganizationProfileAPI = async (data) => {
+  return await apiClient.put("/admin/profile/organization", data);
+};
+
+export const UploadOrganizerProfilePhotoAPI = async (photoFile) => {
+  const formData = new FormData();
+  formData.append("photoFile", photoFile);
+  return await apiClient.put("/admin/profile/photo", formData);
+};
+
 // Profile API
 export const ProfileAPI = async () => {
   return await apiClient.get("/user/profile");

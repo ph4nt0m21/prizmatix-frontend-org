@@ -6,6 +6,7 @@ import styles from './artStep.module.scss';
 import ReactCrop, { centerCrop, makeAspectCrop } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
 import { createCroppedJpegFile } from '../../../utils/imageCropUtil';
+import OptionalLabel from '../../../components/common/optionalLabel/optionalLabel';
 import { loadPuter } from '../../../utils/puterLoader';
 import {
   ART_PLACEHOLDER_BANNER,
@@ -426,7 +427,7 @@ const isFileSizeValid = (file, maxSizeMB) => {
         {/* Thumbnail Upload Section */}
         <div className={styles.formGroup}>
           <label className={styles.formLabel}>
-            Thumbnail
+            Thumbnail<OptionalLabel />
           </label>
           <p className={styles.formDescription}>
             A square image that will be displayed in event listings and search results
@@ -529,7 +530,7 @@ const isFileSizeValid = (file, maxSizeMB) => {
         {/* Banner Upload Section */}
         <div className={styles.formGroup}>
           <label className={styles.formLabel}>
-            Banner
+            Banner<OptionalLabel />
           </label>
           <p className={styles.formDescription}>
             A wide image that will be displayed at the top of your event page

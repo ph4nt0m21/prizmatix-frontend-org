@@ -57,6 +57,11 @@
     height: 32px;
     object-fit: contain;
   }
+
+  .logoPhoto {
+    border-radius: 50%;
+    object-fit: cover;
+  }
 }
 
 .navList {
@@ -258,6 +263,13 @@
   font-weight: 600;
   line-height: 1;
   user-select: none;
+}
+
+.profilePhoto {
+  width: 100%;
+  height: 100%;
+  border-radius: 8px;
+  object-fit: cover;
 }
 
 .profileDropdown {

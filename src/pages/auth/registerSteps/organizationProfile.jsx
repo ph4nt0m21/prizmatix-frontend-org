@@ -1,15 +1,11 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
 import PropTypes from 'prop-types';
-import { Link } from 'react-router-dom';
 import styles from './organizationProfile.module.scss';
-import ReactCrop, { centerCrop, makeAspectCrop } from 'react-image-crop';
-import 'react-image-crop/dist/ReactCrop.css';
-import { createCroppedJpegFile } from '../../../utils/imageCropUtil';
+import ProfilePhotoField from '../../../components/common/profilePhotoField/profilePhotoField';
+import OptionalLabel from '../../../components/common/optionalLabel/optionalLabel';
 
 // Import SVG components
 import { ReactComponent as ArrowIcon } from "../../../assets/icons/arrow-icon.svg";
-import { ReactComponent as UploadIcon } from "../../../assets/icons/upload-icon.svg";
 import { ReactComponent as WebsiteIcon } from "../../../assets/icons/globe-icon.svg";
 import { ReactComponent as FacebookIcon } from "../../../assets/icons/facebook-icon.svg";
 import { ReactComponent as InstagramIcon } from "../../../assets/icons/instagram-icon.svg";
@@ -31,12 +27,12 @@ import logoImage from "../../../assets/images/logo2.svg";
  * @param {Function} props.nextStep - Function to proceed to next step
  * @param {Object} props.errors - Validation errors
  * @param {boolean} props.isLoading - Loading state
- * @param {Function} props.handleFileUpload - Function to handle file upload
  * @param {Object} props.uploadedLogo - Uploaded logo data
  * @param {Function} props.setUploadedLogo - Function to set uploaded logo
  * @param {Array} props.socialLinks - Social links array
  * @param {Function} props.setSocialLinks - Function to set social links
  * @param {Function} props.onGoBack - Function to handle going back
+ * @param {Function} props.completeRegistration - Completes registration and signs the user in
  * @returns {JSX.Element} OrganizationProfile component
  */
 const OrganizationProfile = ({ 
@@ -45,24 +41,13 @@ const OrganizationProfile = ({
   nextStep, 
   errors, 
   isLoading,
-  handleFileUpload,
   uploadedLogo,
   setUploadedLogo,
   socialLinks,
   setSocialLinks,
-  onGoBack
+  onGoBack,
+  completeRegistration
 }) => {
-  // File input ref
-  const fileInputRef = useRef(null);
-  
-  // Crop modal state
-  const [showCropModal, setShowCropModal] = useState(false);
-  const [selectedImage, setSelectedImage] = useState(null);
-  const [originalFile, setOriginalFile] = useState(null);
-  const [crop, setCrop] = useState();
-  const [completedCrop, setCompletedCrop] = useState(null);
-  const imgRef = useRef(null);
-  
   // Social links state
   const [showAddSocialModal, setShowAddSocialModal] = useState(false);
   const [activeSocialPlatform, setActiveSocialPlatform] = useState(null);
@@ -78,145 +63,25 @@ const OrganizationProfile = ({
     { id: 'other', name: 'Other', icon: <OtherIcon /> }
   ];
 
-  const navigate = useNavigate();
-  const supportedTypes = ['.jpg', '.jpeg', '.png', '.webp'];
-  const maxFileSizeMB = 100;
-  const isFileSizeValid = (file, maxSizeMB) => {
-    if (!file?.size) return false;
-    return file.size <= maxSizeMB * 1024 * 1024;
-  };
-
-
-  const releaseFilePreviewUrl = (url) => {
-    if (url && url.startsWith('blob:')) {
-      URL.revokeObjectURL(url);
-    }
-  };
-
-  const isFileTypeSupported = (file) => {
-    if (!file?.name) return false;
-    const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
-    return supportedTypes.includes(fileExtension);
-  };
-
   /**
    * Handle form submission
    * @param {Event} e - Form submission event
    */
-  const handleSubmit = (e) => {
+  const onFormSubmit = (e) => {
+    e.preventDefault();
     nextStep();
   };
 
-  /**
-   * Trigger file input click
-   */
-  const triggerFileInput = () => {
-    fileInputRef.current.click();
-  };
-
-  /**
-   * Handle logo file selection
-   * @param {Event} e - File input change event
-   */
-  const handleLogoUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      if (!isFileTypeSupported(file)) {
-        alert(`Unsupported file type. Please use ${supportedTypes.join(', ')}`);
-        return;
-      }
-
-      if (!isFileSizeValid(file, maxFileSizeMB)) {
-        alert(`File size exceeds the ${maxFileSizeMB} MB limit.`);
-        return;
-      }
-
-      setOriginalFile(file);
-      const reader = new FileReader();
-      reader.onload = () => {
-        setSelectedImage(reader.result);
-        setShowCropModal(true);
-      };
-      reader.readAsDataURL(file);
-      e.target.value = null;
+  const handlePhotoReady = ({ url, name, file }) => {
+    if (uploadedLogo?.url?.startsWith('blob:')) {
+      URL.revokeObjectURL(uploadedLogo.url);
     }
+    setUploadedLogo({ url, name, file });
   };
 
-  const onImageLoad = (e) => {
-    const { width, height } = e.currentTarget;
-
-    setCrop(
-      centerCrop(
-        makeAspectCrop(
-          {
-            unit: '%',
-            width: 90,
-          },
-          1,
-          width,
-          height
-        ),
-        width,
-        height
-      )
-    );
-  };
-
-  /**
-   * Apply crop and save uploaded logo
-   */
-  const handleCropConfirm = async () => {
-    if (!completedCrop?.width || !completedCrop?.height || !imgRef.current || !originalFile) {
-      return;
-    }
-
-    try {
-      const croppedFile = await createCroppedJpegFile({
-        image: imgRef.current,
-        crop: completedCrop,
-        fileName: originalFile.name,
-        quality: 0.85,
-      });
-
-      if (uploadedLogo?.url) {
-        releaseFilePreviewUrl(uploadedLogo.url);
-      }
-
-      const previewUrl = URL.createObjectURL(croppedFile);
-
-      setUploadedLogo({
-        url: previewUrl,
-        name: croppedFile.name,
-        file: croppedFile,
-      });
-
-      if (handleFileUpload) {
-        handleFileUpload(croppedFile);
-      }
-
-      handleCropCancel();
-    } catch (error) {
-      console.error('Failed to crop logo image:', error);
-    }
-  };
-
-  /**
-   * Cancel crop operation
-   */
-  const handleCropCancel = () => {
-    setShowCropModal(false);
-    setSelectedImage(null);
-    setOriginalFile(null);
-    setCompletedCrop(null);
-    setCrop(undefined);
-  };
-
-  /**
-   * Remove uploaded logo
-   */
   const handleRemoveLogo = () => {
-    if (uploadedLogo?.url) {
-      releaseFilePreviewUrl(uploadedLogo.url);
+    if (uploadedLogo?.url?.startsWith('blob:')) {
+      URL.revokeObjectURL(uploadedLogo.url);
     }
     setUploadedLogo(null);
   };
@@ -266,22 +131,10 @@ const OrganizationProfile = ({
    * Handle skipping the organization profile step
    */
   const handleSkip = () => {
-    // Log that the step is being skipped
-    console.log('Organization profile step skipped, using default values and submitting registration');
-    
-    // Create a complete form data object with default values for organization profile
-    const completeFormData = {
-      ...formData,
+    completeRegistration({
       name: `${formData.firstName}'s Organization`,
-      description: "Organization description",
-      bio: ""
-    };
-    
-    console.log('Skipping with default values:', completeFormData);
-    
-    // Call handleSubmit directly with the complete form data
-    // This will make the API call and complete registration
-    handleSubmit(completeFormData);
+      bio: "",
+    });
   };
 
   // Render error message if exists
@@ -335,51 +188,26 @@ const OrganizationProfile = ({
           
           {renderErrorMessage()}
           
-          <form onSubmit={handleSubmit} className={styles.form}>
+          <form onSubmit={onFormSubmit} className={styles.form}>
             {/* Profile Photo */}
             <div className={styles.formGroup}>
               <label className={styles.inputLabel}>
-                Profile Photo
+                Profile Photo<OptionalLabel />
               </label>
-              <p className={styles.photoSizeHint}>Recommended size: 300 × 300</p>
-              
-              {!uploadedLogo ? (
-                <div className={styles.uploadContainer} onClick={triggerFileInput}>
-                  <input 
-                    type="file" 
-                    ref={fileInputRef} 
-                    className={styles.fileInput} 
-                    onChange={handleLogoUpload}
-                    accept="image/*"
-                  />
-                  <div className={styles.uploadIconContainer}>
-                    <UploadIcon className={styles.uploadIcon} />
-                  </div>
-                </div>
-              ) : (
-                <div className={styles.uploadedContainer}>
-                  <div className={styles.uploadedPreview}>
-                    <img src={uploadedLogo.url} alt="Profile" className={styles.previewImage} />
-                    <div className={styles.previewInfo}>
-                      <span className={styles.previewTitle}>Profile Photo</span>
-                      <span className={styles.previewFilename}>{uploadedLogo.name}</span>
-                    </div>
-                  </div>
-                  <button 
-                    type="button" 
-                    className={styles.removeButton}
-                    onClick={handleRemoveLogo}
-                  >
-                    ×
-                  </button>
-                </div>
-              )}
+              <ProfilePhotoField
+                previewUrl={uploadedLogo?.url || ""}
+                fileName={uploadedLogo?.name || ""}
+                onPhotoReady={handlePhotoReady}
+                onRemove={handleRemoveLogo}
+                disabled={isLoading}
+                uploadLabel="Upload picture"
+              />
             </div>
             
             {/* Organization Name */}
             <div className={styles.formGroup}>
               <label htmlFor="name" className={styles.inputLabel}>
-                Organization Name
+                Organization Name<OptionalLabel />
               </label>
               <input
                 type="text"
@@ -398,15 +226,15 @@ const OrganizationProfile = ({
             
             {/* Bio */}
             <div className={styles.formGroup}>
-              <label htmlFor="description" className={styles.inputLabel}>
-                Bio
+              <label htmlFor="bio" className={styles.inputLabel}>
+                Bio<OptionalLabel />
               </label>
               <textarea
-                id="description"
-                name="description"
+                id="bio"
+                name="bio"
                 className={styles.textarea}
                 placeholder="Tell Something about your organization"
-                value={formData.description}
+                value={formData.bio || ""}
                 onChange={handleChange}
                 disabled={isLoading}
                 rows={4}
@@ -416,7 +244,7 @@ const OrganizationProfile = ({
             {/* Social Media Links */}
             <div className={styles.formGroup}>
               <label className={styles.inputLabel}>
-                Social Media Links
+                Social Media Links<OptionalLabel />
               </label>
               
               {/* Display added social links */}
@@ -486,54 +314,6 @@ const OrganizationProfile = ({
         
       </div>
 
-      {/* Image Crop Modal */}
-      {showCropModal && (
-        <div className={styles.cropModalBackdrop}>
-          <div className={styles.cropModalContent}>
-            <h2>Crop Image</h2>
-
-            <div className={styles.cropContainer}>
-              {selectedImage && (
-                <ReactCrop
-                  crop={crop}
-                  onChange={(_, percentCrop) => setCrop(percentCrop)}
-                  onComplete={(c) => setCompletedCrop(c)}
-                  aspect={1}
-                  minWidth={100}
-                  minHeight={100}
-                >
-                  <img
-                    ref={imgRef}
-                    src={selectedImage}
-                    alt="To crop"
-                    className={styles.cropImage}
-                    onLoad={onImageLoad}
-                    style={{ maxHeight: '70vh' }}
-                  />
-                </ReactCrop>
-              )}
-            </div>
-
-            <div className={styles.cropModalActions}>
-                <button
-                  type="button"
-                  className={styles.cancelButton}
-                  onClick={handleCropCancel}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  className={styles.doneButton}
-                  onClick={handleCropConfirm}
-                >
-                  Done
-                </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Add Social Link Modal */}
       {showAddSocialModal && (
         <div className={styles.modalOverlay}>
@@ -591,13 +371,12 @@ OrganizationProfile.propTypes = {
   nextStep: PropTypes.func.isRequired,
   errors: PropTypes.object,
   isLoading: PropTypes.bool,
-  handleFileUpload: PropTypes.func,
   uploadedLogo: PropTypes.object,
   setUploadedLogo: PropTypes.func,
   socialLinks: PropTypes.array,
   setSocialLinks: PropTypes.func,
   onGoBack: PropTypes.func.isRequired,
-  handleSubmit: PropTypes.func.isRequired
+  completeRegistration: PropTypes.func.isRequired
 };
 
 export default OrganizationProfile;

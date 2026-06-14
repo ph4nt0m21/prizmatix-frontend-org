@@ -13,6 +13,7 @@ import styles from "./eventManageSidebar.module.scss";
  * @param {Function} props.navigateToSection - Function to navigate to a specific section.
  * @param {Function} props.navigateToEventEditPage - Function to navigate to the event edit page.
  * @param {string} props.eventId - The ID of the event being managed.
+ * @param {Function} props.onDeleteClick - Opens delete confirmation for the current event.
  * @param {boolean} props.isMobileSidebarOpen - Controls if the sidebar is open on mobile.
  * @param {Function} props.toggleMobileSidebar - Function to toggle mobile sidebar visibility.
  * @returns {JSX.Element} EventManageSidebar component
@@ -27,6 +28,7 @@ const EventManageSidebar = ({
   publishBlockers = [],
   isPublished = false,
   eventId,
+  onDeleteClick,
   isMobileSidebarOpen,
   toggleMobileSidebar
 }) => {
@@ -398,7 +400,17 @@ const EventManageSidebar = ({
           </svg>
           Duplicate Event
         </button>
-        <button type="button" className={styles.deleteButton}>
+        <button
+          type="button"
+          className={styles.deleteButton}
+          onClick={() => {
+            if (!eventId) {
+              alert("Event ID is required to delete this event.");
+              return;
+            }
+            onDeleteClick?.();
+          }}
+        >
           <svg
             width="16"
             height="16"
@@ -428,6 +440,7 @@ EventManageSidebar.propTypes = {
   publishBlockers: PropTypes.arrayOf(PropTypes.string),
   isPublished: PropTypes.bool,
   eventId: PropTypes.string,
+  onDeleteClick: PropTypes.func,
   isMobileSidebarOpen: PropTypes.bool.isRequired,
   toggleMobileSidebar: PropTypes.func.isRequired,
 };

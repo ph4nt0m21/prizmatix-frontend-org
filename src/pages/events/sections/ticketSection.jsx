@@ -11,14 +11,10 @@ import {
   CreateTicketStructureAPI,
   GetEventAPI,
 } from "../../../services/allApis";
-
-const formatDateTimeForAPI = (dateString, timeString) => {
-  if (!dateString || !timeString) return null;
-  const paddedTime = timeString.includes(":") ? timeString : `${timeString}:00`;
-  const dateTime = new Date(`${dateString} ${paddedTime}`);
-  if (Number.isNaN(dateTime.getTime())) return null;
-  return dateTime.toISOString();
-};
+import {
+  mapTicketStructureToStepTicket,
+  mapStepTicketToApiPayload,
+} from "../../../utils/eventUtil";
 
 const TicketSection = ({ onCommitSuccess = () => {} }) => {
   const { eventId } = useParams();
@@ -26,71 +22,6 @@ const TicketSection = ({ onCommitSuccess = () => {} }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSavingTickets, setIsSavingTickets] = useState(false);
   const [error, setError] = useState(null);
-
-  const mapTicketStructureToStepTicket = (ticket = {}) => {
-    const startIso = ticket.listingStartTime ? new Date(ticket.listingStartTime) : null;
-    const endIso = ticket.listingEndTime ? new Date(ticket.listingEndTime) : null;
-    const isValidStart = startIso && !Number.isNaN(startIso.getTime());
-    const isValidEnd = endIso && !Number.isNaN(endIso.getTime());
-
-    return {
-      id: ticket.id,
-      name: ticket.name || "",
-      price: ticket.price ?? "",
-      quantity: ticket.limitedQuantity ? ticket.ticketCapacity : "No Limit",
-      maxPurchaseAmount:
-        ticket.maxPurchasePerOrder && ticket.maxPurchasePerOrder > 0
-          ? ticket.maxPurchasePerOrder
-          : "",
-      salesStartDate: isValidStart ? startIso.toISOString().split("T")[0] : "",
-      salesStartTime: isValidStart ? startIso.toISOString().split("T")[1].slice(0, 5) : "",
-      salesEndDate: isValidEnd ? endIso.toISOString().split("T")[0] : "",
-      salesEndTime: isValidEnd ? endIso.toISOString().split("T")[1].slice(0, 5) : "",
-      startsAfterTicketStructureId:
-        ticket.startsAfterTicketStructureId != null
-          ? ticket.startsAfterTicketStructureId
-          : null,
-      description: ticket.description || "",
-      soldOutOverride: Boolean(ticket.soldOutOverride),
-      isAdvance: false,
-      advanceAmount: "",
-    };
-  };
-
-  const mapStepTicketToApiPayload = (ticket, dateTime) => {
-    const fallbackListingStartTime = new Date(
-      Date.now() - 12 * 60 * 60 * 1000
-    ).toISOString();
-    const eventEndTime = formatDateTimeForAPI(dateTime?.endDate, dateTime?.endTime);
-
-    const depRaw = ticket.startsAfterTicketStructureId;
-    const startsAfterTicketStructureId =
-      depRaw != null && depRaw !== "" && Number.isFinite(Number(depRaw))
-        ? parseInt(depRaw, 10)
-        : null;
-
-    return {
-      name: ticket.name,
-      price: parseFloat(ticket.price),
-      finalPrice: parseFloat(ticket.price),
-      ticketCapacity: ticket.quantity === "No Limit" ? 0 : parseInt(ticket.quantity, 10),
-      maxPurchasePerOrder: ticket.maxPurchaseAmount
-        ? parseInt(ticket.maxPurchaseAmount, 10)
-        : 0,
-      currency: "NZD",
-      limitedQuantity: ticket.quantity !== "No Limit",
-      description: ticket.description || null,
-      listingStartTime:
-        formatDateTimeForAPI(ticket.salesStartDate, ticket.salesStartTime) ||
-        fallbackListingStartTime,
-      listingEndTime:
-        formatDateTimeForAPI(ticket.salesEndDate, ticket.salesEndTime) || eventEndTime,
-      startsAfterTicketStructureId,
-      soldOutOverride: Boolean(ticket.soldOutOverride),
-      isActive: true,
-      isDeleted: false,
-    };
-  };
 
   const fetchEventAndTickets = async () => {
     try {
@@ -205,7 +136,7 @@ const TicketSection = ({ onCommitSuccess = () => {} }) => {
       }
 
       for (const ticket of ticketsToSave) {
-        const payload = mapStepTicketToApiPayload(ticket, eventData.dateTime);
+        const payload = mapStepTicketToApiPayload(ticket);
         if (ticket.id) {
           await UpdateTicketStructureAPI(ticket.id, {
             ...payload,
@@ -249,7 +180,7 @@ const TicketSection = ({ onCommitSuccess = () => {} }) => {
       setError(null);
       setIsSavingTickets(true);
       const payload = {
-        ...mapStepTicketToApiPayload(ticket, eventData.dateTime),
+        ...mapStepTicketToApiPayload(ticket),
         id: parseInt(ticketId, 10),
         eventId: parseInt(eventId, 10),
         soldOutOverride: nextValue,

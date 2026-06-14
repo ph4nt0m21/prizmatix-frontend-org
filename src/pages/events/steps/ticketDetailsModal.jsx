@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import DatePicker from 'react-datepicker'; // IMPORTED
 import 'react-datepicker/dist/react-datepicker.css'; // IMPORTED
 import styles from './ticketDetailsModal.module.scss';
+import OptionalLabel from '../../../components/common/optionalLabel/optionalLabel';
 
 /**
  * Helper function to create a Date object from date and time strings.
@@ -278,7 +279,7 @@ const TicketDetailsModal = ({
                 
                 <div className={styles.formGroup}>
                   <label htmlFor="maxPurchaseAmount" className={styles.formLabel}>
-                    Max Purchase
+                    Max Purchase<OptionalLabel />
                   </label>
                   <input
                     type="number"
@@ -312,7 +313,7 @@ const TicketDetailsModal = ({
 
                 <div className={styles.formGroup}>
                   <label htmlFor="description" className={styles.formLabel}>
-                    Description
+                    Description<OptionalLabel />
                   </label>
                   <div className={styles.richTextEditor}>
                     <div className={styles.editorToolbar}>
@@ -328,7 +329,9 @@ const TicketDetailsModal = ({
                 
                 <div className={styles.formGroup}>
                   <label className={styles.formLabel}>Sale Start/End</label>
-                  <p className={styles.formHelper}>Set when tickets are available for purchase.</p>
+                  <p className={styles.formHelper}>
+                    Set when tickets are available for purchase. Leave blank to use defaults (on sale now until event end).
+                  </p>
                   
                   <div className={styles.saleTypeToggle}>
                     <button
@@ -357,25 +360,29 @@ const TicketDetailsModal = ({
                     // Custom sales dates using DatePicker
                     <>
                       <div className={styles.formGroup}>
-                        <label className={styles.formLabel}>Sales Start</label>
+                        <label className={styles.formLabel}>Sales Start<OptionalLabel /></label>
+                        <p className={styles.formHelper}>Optional. Defaults to on sale immediately.</p>
                          <DatePicker
                           selected={combineDateAndTime(localTicket.salesStartDate, localTicket.salesStartTime)}
                           onChange={date => handleDateChange(date, 'salesStartDate', 'salesStartTime')}
                           showTimeSelect
                           dateFormat="MM/dd/yyyy h:mm aa"
                           className={styles.formInput}
+                          placeholderText="Optional"
                           isClearable
                         />
                       </div>
                       
                       <div className={styles.formGroup}>
-                        <label className={styles.formLabel}>Sales End</label>
+                        <label className={styles.formLabel}>Sales End<OptionalLabel /></label>
+                        <p className={styles.formHelper}>Optional. Defaults to event end date.</p>
                         <DatePicker
                           selected={combineDateAndTime(localTicket.salesEndDate, localTicket.salesEndTime)}
                           onChange={date => handleDateChange(date, 'salesEndDate', 'salesEndTime')}
                           showTimeSelect
                           dateFormat="MM/dd/yyyy h:mm aa"
                           className={styles.formInput}
+                          placeholderText="Optional"
                           isClearable
                         />
                       </div>
@@ -383,7 +390,7 @@ const TicketDetailsModal = ({
                   ) : (
                     // Before/After sales
                     <div className={styles.formGroup}>
-                      <label className={styles.formLabel}>Sales After</label>
+                      <label className={styles.formLabel}>Sales After<OptionalLabel /></label>
                       <p className={`${styles.formHelper} ${styles.salesAfter}`}>
                         Start sales after the selected ticket is sold out.
                       </p>

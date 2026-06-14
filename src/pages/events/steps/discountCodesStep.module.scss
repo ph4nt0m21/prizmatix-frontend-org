@@ -64,6 +64,34 @@
   margin: 0 0 24px 0;
 }
 
+.emptyStateActions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  max-width: 280px;
+}
+
+.skipButton {
+  background: none;
+  border: none;
+  color: #7c3aed;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 8px;
+
+  &:hover:not(:disabled) {
+    text-decoration: underline;
+  }
+
+  &:disabled {
+    color: #a78bfa;
+    cursor: not-allowed;
+  }
+}
+
 .createCouponButton {
   display: flex;
   align-items: center;
@@ -124,11 +152,11 @@
 // Shared grid: header + rows share tracks so labels align with fields
 $discount-grid-columns:
   minmax(100px, 1.75fr)
-  minmax(92px, 1.05fr)
+  minmax(108px, 1.15fr)
   minmax(72px, 0.95fr)
   minmax(72px, 0.95fr)
   minmax(148px, 1.7fr)
-  76px
+  92px
   52px;
 
 .tableContent {
@@ -186,6 +214,7 @@ $discount-grid-columns:
 .discountUsageLimit,
 .ticketsApplicable {
   min-width: 0;
+  overflow: hidden;
 }
 
 .discountActions {
@@ -233,7 +262,8 @@ $discount-grid-columns:
 
 .inlineSelect {
   width: 100%;
-  padding: 8px 10px;
+  max-width: 100%;
+  padding: 8px 28px 8px 10px;
   border: 1px solid #e5e7eb;
   border-radius: 6px;
   background-color: #ffffff;
@@ -244,6 +274,9 @@ $discount-grid-columns:
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
   -webkit-appearance: menulist;
   appearance: menulist;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
 
   &:hover {
     border-color: #d1d5db;
@@ -349,6 +382,8 @@ $discount-grid-columns:
 .customDropdown {
   position: relative;
   width: 100%;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .dropdownButton {
@@ -356,6 +391,8 @@ $discount-grid-columns:
   justify-content: space-between;
   align-items: center;
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
   min-height: 40px;
   padding: 0 12px;
   border: 1px solid #e5e7eb;
@@ -367,6 +404,7 @@ $discount-grid-columns:
   color: #111827;
   cursor: pointer;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  overflow: hidden;
 
   &:hover {
     border-color: #d1d5db;
@@ -379,9 +417,16 @@ $discount-grid-columns:
   }
 
   span {
+    flex: 1;
+    min-width: 0;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+
+  svg {
+    flex-shrink: 0;
+    margin-left: 8px;
   }
 }
 
@@ -422,6 +467,24 @@ $discount-grid-columns:
 
 .discountStatus {
   text-align: center;
+}
+
+.statusControl {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.expiredLabel {
+  font-size: 11px;
+  font-weight: 500;
+  color: #991b1b;
+  background-color: #fef2f2;
+  padding: 2px 8px;
+  border-radius: 10px;
+  white-space: nowrap;
+  line-height: 1.4;
 }
 
 /* Toggle switch */
@@ -554,6 +617,11 @@ $discount-grid-columns:
     .discountStatus {
       justify-content: space-between;
 
+      .statusControl {
+        flex: 0 0 auto;
+        align-items: flex-end;
+      }
+
       .toggleSwitch {
         flex: 0 0 auto;
       }
@@ -568,16 +636,12 @@ $discount-grid-columns:
 
     .ticketsApplicable {
       align-items: flex-start;
+      overflow: visible;
 
       .customDropdown {
         width: 100%;
+        overflow: hidden;
       }
-    }
-
-    .dropdownMenu {
-      left: 0;
-      right: 0;
-      width: 100%;
     }
   }
 }

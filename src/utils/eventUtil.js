@@ -323,26 +323,60 @@ export const mapEventApiPayloadToLocationForm = (eventPayload = {}) => {
           ep?.address,
           ep?.eventLocationAddress
         ),
+    eventLocationId:
+      locationPayload.eventLocationId ??
+      ep?.eventLocationId ??
+      null,
   };
 };
+
+/** Default LocationStep form state from API or parent `eventData.location`. */
+export const buildLocationFormState = (data = {}) => ({
+  locationType: data.locationType || "physical",
+  isToBeAnnounced: Boolean(data.isToBeAnnounced),
+  isPrivateLocation: Boolean(data.isPrivateLocation),
+  eventLocationId: data.eventLocationId ?? null,
+  googleMapLink: data.googleMapLink || "",
+  venue: data.venue || "",
+  street: data.street || "",
+  streetNumber: data.streetNumber || "",
+  city: data.city || "",
+  postalCode: data.postalCode || "",
+  state: data.state || "",
+  country: data.country || "",
+  additionalInfo: data.additionalInfo || "",
+  onlineEventUrl: data.onlineEventUrl || "",
+  onlineEventDescription: data.onlineEventDescription || "",
+  virtualMeetingUrl: data.virtualMeetingUrl || "",
+  latitude: data.latitude ?? "",
+  longitude: data.longitude ?? "",
+  formattedAddress: data.formattedAddress || "",
+});
+
+export const serializeLocationFormState = (location = {}) =>
+  JSON.stringify(buildLocationFormState(location));
 
 /**
  * Prepare location data for API submission
  * @param {Object} locationData - Location data from the form
+ * @param {string|number|null} eventId - Optional event ID override
  * @returns {Object} Formatted location data for API
  */
-export const prepareLocationDataForAPI = (locationData) => {
+export const prepareLocationDataForAPI = (locationData, eventId = null) => {
   const userData = getUserData();
   const eventData = getEventData();
-  const eventId = eventData?.eventId || 0;
+  const resolvedEventId =
+    eventId || eventData?.eventId || eventData?.id || 0;
   const updatedBy = userData?.id || eventData?.createdBy || 0;
+  const eventLocationId =
+    locationData?.eventLocationId ?? eventData?.eventLocationId ?? null;
   const lt = String(locationData.locationType || "physical").toLowerCase();
 
   if (lt === "online") {
     return {
-      id: eventId,
+      id: resolvedEventId,
       locationType: "online",
-      eventLocationId: null,
+      eventLocationId,
       venueName: "",
       address: "",
       latitude: 0,
@@ -362,9 +396,9 @@ export const prepareLocationDataForAPI = (locationData) => {
   }
 
   return {
-    id: eventId,
+    id: resolvedEventId,
     locationType: locationData.locationType || "physical",
-    eventLocationId: null, // This would be filled in on update
+    eventLocationId,
     venueName: locationData.venue || "",
     address: formatAddress(locationData),
     latitude: parseFloat(locationData.latitude) || 0,
@@ -515,6 +549,87 @@ export const prepareArtDataForAPI = (
 };
 
 /**
+ * Format ticket sale date + time for API. Returns null when either part is missing.
+ */
+export const formatTicketDateTimeForAPI = (dateString, timeString) => {
+  if (!dateString || !timeString) return null;
+  const paddedTime = timeString.includes(":") ? timeString : `${timeString}:00`;
+  const dateTime = new Date(`${dateString}T${paddedTime}`);
+  if (Number.isNaN(dateTime.getTime())) return null;
+  return dateTime.toISOString();
+};
+
+/**
+ * Map API ticket structure to step/modal ticket shape.
+ * Empty sale fields mean the organizer did not set custom sale windows.
+ */
+export const mapTicketStructureToStepTicket = (ticket = {}) => {
+  const startIso = ticket.listingStartTime ? new Date(ticket.listingStartTime) : null;
+  const endIso = ticket.listingEndTime ? new Date(ticket.listingEndTime) : null;
+  const isValidStart = startIso && !Number.isNaN(startIso.getTime());
+  const isValidEnd = endIso && !Number.isNaN(endIso.getTime());
+
+  return {
+    id: ticket.id,
+    name: ticket.name || "",
+    price: ticket.price ?? "",
+    quantity: ticket.limitedQuantity ? ticket.ticketCapacity : "No Limit",
+    maxPurchaseAmount:
+      ticket.maxPurchasePerOrder && ticket.maxPurchasePerOrder > 0
+        ? ticket.maxPurchasePerOrder
+        : "",
+    salesStartDate: isValidStart ? startIso.toISOString().split("T")[0] : "",
+    salesStartTime: isValidStart ? startIso.toISOString().split("T")[1].slice(0, 5) : "",
+    salesEndDate: isValidEnd ? endIso.toISOString().split("T")[0] : "",
+    salesEndTime: isValidEnd ? endIso.toISOString().split("T")[1].slice(0, 5) : "",
+    startsAfterTicketStructureId:
+      ticket.startsAfterTicketStructureId != null
+        ? ticket.startsAfterTicketStructureId
+        : null,
+    description: ticket.description || "",
+    soldOutOverride: Boolean(ticket.soldOutOverride),
+    isAdvance: false,
+    advanceAmount: "",
+  };
+};
+
+/**
+ * Map step/modal ticket to API payload. Null listing times use platform defaults at purchase time.
+ */
+export const mapStepTicketToApiPayload = (ticket) => {
+  const depRaw = ticket.startsAfterTicketStructureId;
+  const startsAfterTicketStructureId =
+    depRaw != null && depRaw !== "" && Number.isFinite(Number(depRaw))
+      ? parseInt(depRaw, 10)
+      : null;
+
+  return {
+    name: ticket.name,
+    price: parseFloat(ticket.price),
+    finalPrice: parseFloat(ticket.price),
+    ticketCapacity: ticket.quantity === "No Limit" ? 0 : parseInt(ticket.quantity, 10),
+    maxPurchasePerOrder: ticket.maxPurchaseAmount
+      ? parseInt(ticket.maxPurchaseAmount, 10)
+      : 0,
+    currency: "NZD",
+    limitedQuantity: ticket.quantity !== "No Limit",
+    description: ticket.description || null,
+    listingStartTime: formatTicketDateTimeForAPI(
+      ticket.salesStartDate,
+      ticket.salesStartTime
+    ),
+    listingEndTime: formatTicketDateTimeForAPI(
+      ticket.salesEndDate,
+      ticket.salesEndTime
+    ),
+    startsAfterTicketStructureId,
+    soldOutOverride: Boolean(ticket.soldOutOverride),
+    isActive: true,
+    isDeleted: false,
+  };
+};
+
+/**
  * Prepare tickets data for API submission
  * @param {Array} tickets - Array of ticket objects
  * @param {string|number} eventId - Optional event ID to override stored value
@@ -527,58 +642,95 @@ export const prepareTicketsDataForAPI = (tickets, eventId = null) => {
   // Use provided eventId first, or fall back to stored eventId
   const eventDataId = eventId || eventData?.eventId || 0;
 
-  // Get the main event's date and time for fallback logic
-  const eventDateTime = eventData?.dateTime || {};
-
-  // ✅ Helper to format provided date & time into ISO string
-  const formatToISO = (date, time) => {
-    if (!date || !time) return null;
-    const paddedTime = time.includes(':') ? time : `${time}:00`;
-    return `${date}T${paddedTime}:00.000Z`;
-  };
-
-  // ✅ Fallback to 12 hours ago from now (current system time)
-  const fallbackListingStartTime = new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString();
-
   return {
     id: parseInt(eventDataId, 10),
     ticketStructures: tickets.map((ticket) => {
       const maxPurchase = parseInt(ticket.maxPurchaseAmount, 10);
-
-      const listingStartTime =
-        formatToISO(ticket.salesStartDate, ticket.salesStartTime) ||
-        fallbackListingStartTime;
-
-      const listingEndTime =
-        formatToISO(ticket.salesEndDate, ticket.salesEndTime) ||
-        formatToISO(eventDateTime.endDate, eventDateTime.endTime);
-
-      const depRaw = ticket.startsAfterTicketStructureId;
-      const startsAfterTicketStructureId =
-        depRaw != null && depRaw !== "" && Number.isFinite(Number(depRaw))
-          ? parseInt(depRaw, 10)
-          : null;
+      const apiTicket = mapStepTicketToApiPayload(ticket);
 
       return {
         id: ticket.id || null,
-        name: ticket.name,
-        price: parseFloat(ticket.price),
-        finalPrice: parseFloat(ticket.price),
-        ticketCapacity:
-        ticket.quantity === "No Limit" ? 0 : parseInt(ticket.quantity),
+        ...apiTicket,
+        ticketCapacity: apiTicket.ticketCapacity,
         maxPurchasePerOrder: !isNaN(maxPurchase) && maxPurchase > 0 ? maxPurchase : 0,
-        currency: "NZD",
-        limitedQuantity: ticket.quantity !== "No Limit",
-        description: ticket.description || null,
-        listingStartTime: listingStartTime,
-        listingEndTime: listingEndTime,
-        startsAfterTicketStructureId,
-        soldOutOverride: Boolean(ticket.soldOutOverride),
         toBeDeleted: false,
       };
     }),
     updatedBy: userData?.id || eventData?.createdBy || 0,
   };
+};
+
+/** Stored when organizers leave usage limit blank (unlimited redemptions). */
+export const UNLIMITED_DISCOUNT_USAGE = 2147483647;
+
+/**
+ * Parse organizer usage limit for API. Blank/zero means unlimited.
+ */
+export const parseUsageLimitForAPI = (usageLimit) => {
+  if (usageLimit === null || usageLimit === undefined || String(usageLimit).trim() === "") {
+    return null;
+  }
+  const parsed = parseInt(String(usageLimit), 10);
+  if (Number.isNaN(parsed) || parsed <= 0) return null;
+  return parsed;
+};
+
+/**
+ * Format API usage limit for UI. Unlimited values show as blank.
+ */
+export const formatUsageLimitForUI = (usageLimit) => {
+  if (
+    usageLimit === null ||
+    usageLimit === undefined ||
+    usageLimit === "" ||
+    Number(usageLimit) <= 0 ||
+    Number(usageLimit) >= UNLIMITED_DISCOUNT_USAGE
+  ) {
+    return "";
+  }
+  return String(usageLimit);
+};
+
+/** Row with no code name and no discount value — safe to drop when skipping or saving. */
+export const isBlankDiscountCodeRow = (code = {}) => {
+  const codeName = String(code.code ?? "").trim();
+  const value = code.value;
+  const hasValue =
+    value !== null &&
+    value !== undefined &&
+    value !== "" &&
+    !Number.isNaN(parseFloat(value));
+  return !codeName && !hasValue;
+};
+
+export const filterBlankDiscountCodes = (codes = []) =>
+  (Array.isArray(codes) ? codes : []).filter((code) => !isBlankDiscountCodeRow(code));
+
+export const validateDiscountCodesList = (codes = []) => {
+  const meaningfulCodes = filterBlankDiscountCodes(codes);
+  if (meaningfulCodes.length === 0) {
+    return true;
+  }
+
+  return meaningfulCodes.every((code) => {
+    if (!code.code || code.code.trim() === "") return false;
+    if (!code.type || (code.type !== "fixed" && code.type !== "percentage")) return false;
+    if (
+      code.value === null ||
+      code.value === "" ||
+      Number.isNaN(parseFloat(code.value)) ||
+      parseFloat(code.value) < 0
+    ) {
+      return false;
+    }
+    if (
+      code.usageLimit &&
+      (Number.isNaN(parseInt(code.usageLimit, 10)) || parseInt(code.usageLimit, 10) < 0)
+    ) {
+      return false;
+    }
+    return true;
+  });
 };
 
 /**
@@ -622,6 +774,7 @@ export const prepareDiscountCodesDataForAPI = (
       
       const validUntil =
         formatToISO(code.validUntilDate, code.validUntilTime) ||
+        formatToISO(eventDateTime.endDate, eventDateTime.endTime) ||
         formatToISO(eventDateTime.startDate, eventDateTime.startTime);
 
       return {
@@ -631,7 +784,7 @@ export const prepareDiscountCodesDataForAPI = (
         value: parseFloat(code.value),
         validFrom: validFrom,
         validUntil: validUntil,
-        usageLimit: parseInt(code.usageLimit, 10) || 0,
+        usageLimit: parseUsageLimitForAPI(code.usageLimit),
         isActive: true, 
         isDeleted: false,
         ticketsApplicable: ticketsApplicable,
@@ -664,7 +817,6 @@ const PHYSICAL_LOCATION_FIELDS = [
   { key: "venue", label: "Venue name" },
   { key: "street", label: "Street address" },
   { key: "city", label: "City" },
-  { key: "state", label: "State/Province" },
   { key: "country", label: "Country" },
 ];
 
@@ -730,7 +882,8 @@ export const getPhysicalLocationMissingFieldLabels = (location = {}) => {
 };
 
 /**
- * Physical venues need venue, street, city, state, and country.
+ * Physical venues need venue, street, city, and country.
+ * State/province and additional information are optional.
  * @param {Object} event
  * @returns {boolean}
  */
@@ -810,7 +963,7 @@ const WIZARD_STEP_CHECKS = [
   { flag: "step4Completed", label: "Description" },
   { flag: "step5Completed", label: "Thumbnail and banner" },
   { flag: "step6Completed", label: "Tickets" },
-  { flag: "step7Completed", label: "Discount codes" },
+  { flag: "step7Completed", label: "Discount codes (optional)" },
 ];
 
 /**
