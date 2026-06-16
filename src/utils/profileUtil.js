@@ -1,3 +1,7 @@
+const publicUrl = process.env.PUBLIC_URL || "";
+
+export const PROFILE_PLACEHOLDER_IMAGE = `${publicUrl}/images/profile-placeholder.svg`;
+
 export const mapProfileResponseToUserData = (profile = {}, existing = {}) => {
   const firstName = profile.firstName || existing.firstName || "";
   const lastName = profile.lastName || existing.lastName || "";

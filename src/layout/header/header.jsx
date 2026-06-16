@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
 import { getUserData } from '../../utils/authUtil';
-import { getProfileInitials } from '../../utils/profileUtil';
+import ProfileAvatar from '../../components/common/profileAvatar/profileAvatar';
 import styles from './header.module.scss';
 import PropTypes from 'prop-types'
 // Import Hamburger Icon
@@ -58,13 +58,9 @@ const Header = ({ toggleMobileSidebar }) => {
     return () => window.removeEventListener('profile-updated', syncProfilePhoto);
   }, []);
 
-  // Handler for the Create Event button
   const handleCreateEvent = () => {
     navigate('/events/create');
   };
-
-  // Get organization initials for logo
-  const getOrgInitials = () => getProfileInitials(userData || {});
 
   return (
     <header className={styles.header}>
@@ -75,11 +71,11 @@ const Header = ({ toggleMobileSidebar }) => {
 
       <div className={styles.orgInfo}>
         <div className={styles.orgLogo}>
-          {profilePhotoUrl ? (
-            <img src={profilePhotoUrl} alt="Organization profile" className={styles.orgLogoImage} />
-          ) : (
-            <span>{getOrgInitials()}</span>
-          )}
+          <ProfileAvatar
+            src={profilePhotoUrl}
+            alt="Organization profile"
+            className={styles.orgLogoImage}
+          />
         </div>
         <div className={styles.orgDetails}>
           <span className={styles.orgLabel}>Organisation</span>

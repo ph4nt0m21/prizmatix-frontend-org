@@ -8,18 +8,10 @@ import { useAuth } from "../../context/authContext";
 import {
   GetOrganizerProfileAPI,
   UpdateBasicDetailsAPI,
-  UpdateOrganizationProfileAPI,
   UploadOrganizerProfilePhotoAPI,
   ChangePasswordAPI,
 } from "../../services/allApis";
 import { mapProfileResponseToUserData, notifyProfileUpdated } from "../../utils/profileUtil";
-
-import { ReactComponent as WebsiteIcon } from "../../assets/icons/globe-icon.svg";
-import { ReactComponent as FacebookIcon } from "../../assets/icons/facebook-icon.svg";
-import { ReactComponent as InstagramIcon } from "../../assets/icons/instagram-icon.svg";
-import { ReactComponent as TwitterIcon } from "../../assets/icons/twitter-icon.svg";
-import { ReactComponent as TikTokIcon } from "../../assets/icons/tiktok-icon.svg";
-import { ReactComponent as OtherIcon } from "../../assets/icons/plus-circle-icon.svg";
 
 const GeneralIcon = (props) => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
@@ -49,15 +41,6 @@ const EyeOffIcon = (props) => (
   </svg>
 );
 
-const SOCIAL_PLATFORMS = [
-  { id: "website", name: "Website", icon: <WebsiteIcon /> },
-  { id: "facebook", name: "Facebook", icon: <FacebookIcon /> },
-  { id: "instagram", name: "Instagram", icon: <InstagramIcon /> },
-  { id: "twitter", name: "X (Twitter)", icon: <TwitterIcon /> },
-  { id: "tiktok", name: "TikTok", icon: <TikTokIcon /> },
-  { id: "other", name: "Other", icon: <OtherIcon /> },
-];
-
 const validateNewPassword = (password) => ({
   length: password.length >= 8,
   uppercase: /[A-Z]/.test(password),
@@ -83,9 +66,7 @@ const SettingsOverlay = ({ isOpen, onClose }) => {
   });
   const [organizationDetails, setOrganizationDetails] = useState({
     organizationName: "",
-    bio: "",
     profilePhotoUrl: "",
-    socialMediaLinks: [],
   });
 
   const [photoPreview, setPhotoPreview] = useState({ url: "", name: "", file: null });
@@ -104,10 +85,6 @@ const SettingsOverlay = ({ isOpen, onClose }) => {
   const [changePasswordError, setChangePasswordError] = useState("");
   const [isSubmittingPassword, setIsSubmittingPassword] = useState(false);
 
-  const [showAddSocialModal, setShowAddSocialModal] = useState(false);
-  const [activeSocialPlatform, setActiveSocialPlatform] = useState(null);
-  const [socialInputValue, setSocialInputValue] = useState("");
-
   const applyProfileToState = (profile) => {
     setBasicDetails({
       firstName: profile.firstName || "",
@@ -117,9 +94,7 @@ const SettingsOverlay = ({ isOpen, onClose }) => {
     });
     setOrganizationDetails({
       organizationName: profile.organizationName || "",
-      bio: profile.bio || "",
       profilePhotoUrl: profile.profilePhotoUrl || "",
-      socialMediaLinks: profile.socialMediaLinks || [],
     });
     setPhotoPreview({ url: "", name: "", file: null });
     setRemovePhoto(false);
@@ -208,28 +183,22 @@ const SettingsOverlay = ({ isOpen, onClose }) => {
   };
 
   const handleSaveOrganizationDetails = async () => {
+    if (!photoPreview.file) {
+      toast.info("No profile photo changes to save.");
+      return;
+    }
+
     setIsSavingOrganization(true);
     try {
-      let latestProfile = null;
-
-      if (photoPreview.file) {
-        const photoResponse = await UploadOrganizerProfilePhotoAPI(photoPreview.file);
-        latestProfile = photoResponse?.data?.data;
-      }
-
-      const response = await UpdateOrganizationProfileAPI({
-        bio: organizationDetails.bio || "",
-        description: organizationDetails.bio || "",
-        socialMediaLinks: organizationDetails.socialMediaLinks,
-      });
-      latestProfile = response?.data?.data || latestProfile;
+      const photoResponse = await UploadOrganizerProfilePhotoAPI(photoPreview.file);
+      const latestProfile = photoResponse?.data?.data;
       if (latestProfile) {
         await syncProfile(latestProfile);
       }
-      toast.success("Organization details saved.");
+      toast.success("Profile photo saved.");
     } catch (err) {
       console.error("Failed to save organization details:", err);
-      toast.error(err.response?.data?.message || "Could not save organization details.");
+      toast.error(err.response?.data?.message || "Could not save profile photo.");
     } finally {
       setIsSavingOrganization(false);
     }
@@ -280,33 +249,6 @@ const SettingsOverlay = ({ isOpen, onClose }) => {
     } finally {
       setIsSubmittingPassword(false);
     }
-  };
-
-  const handleSocialButtonClick = (platformId) => {
-    setActiveSocialPlatform(platformId);
-    setSocialInputValue("");
-    setShowAddSocialModal(true);
-  };
-
-  const handleAddSocialLink = () => {
-    if (!socialInputValue.trim()) return;
-    setOrganizationDetails((prev) => ({
-      ...prev,
-      socialMediaLinks: [
-        ...prev.socialMediaLinks.filter((link) => link.platform !== activeSocialPlatform),
-        { platform: activeSocialPlatform, url: socialInputValue.trim() },
-      ],
-    }));
-    setShowAddSocialModal(false);
-    setActiveSocialPlatform(null);
-    setSocialInputValue("");
-  };
-
-  const handleRemoveSocialLink = (index) => {
-    setOrganizationDetails((prev) => ({
-      ...prev,
-      socialMediaLinks: prev.socialMediaLinks.filter((_, i) => i !== index),
-    }));
   };
 
   const renderGeneralSection = () => (
@@ -484,60 +426,14 @@ const SettingsOverlay = ({ isOpen, onClose }) => {
         <p className={styles.formHelper}>Organization name cannot be changed here.</p>
       </div>
 
-      <div className={styles.formGroup}>
-        <label htmlFor="bio" className={styles.label}>Bio<OptionalLabel /></label>
-        <textarea
-          id="bio"
-          className={styles.textarea}
-          rows={4}
-          placeholder="Tell something about your organization"
-          value={organizationDetails.bio}
-          onChange={(e) => setOrganizationDetails((prev) => ({ ...prev, bio: e.target.value }))}
-          disabled={isSavingOrganization || isLoadingProfile}
-        />
-      </div>
-
-      <div className={styles.formGroup}>
-        <label className={styles.label}>Social Media Links<OptionalLabel /></label>
-        {organizationDetails.socialMediaLinks.length > 0 && (
-          <div className={styles.socialLinksList}>
-            {organizationDetails.socialMediaLinks.map((link, index) => (
-              <div key={`${link.platform}-${index}`} className={styles.socialLinkItem}>
-                <div className={styles.socialLinkContent}>
-                  {SOCIAL_PLATFORMS.find((p) => p.id === link.platform)?.icon}
-                  <span>{link.url}</span>
-                </div>
-                <button type="button" className={styles.removeSocialBtn} onClick={() => handleRemoveSocialLink(index)}>
-                  ×
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-        <div className={styles.socialGrid}>
-          {SOCIAL_PLATFORMS.map((platform) => (
-            <button
-              key={platform.id}
-              type="button"
-              className={styles.socialGridItem}
-              onClick={() => handleSocialButtonClick(platform.id)}
-              disabled={isSavingOrganization || isLoadingProfile}
-            >
-              <span className={styles.socialIcon}>{platform.icon}</span>
-              <span>{platform.name}</span>
-            </button>
-          ))}
-        </div>
-      </div>
-
       <div className={styles.tabFooter}>
         <button
           type="button"
           className={styles.saveTabButton}
           onClick={handleSaveOrganizationDetails}
-          disabled={isSavingOrganization || isLoadingProfile}
+          disabled={isSavingOrganization || isLoadingProfile || !photoPreview.file}
         >
-          {isSavingOrganization ? "Saving…" : "Save organization details"}
+          {isSavingOrganization ? "Saving…" : "Save profile photo"}
         </button>
       </div>
     </div>
@@ -575,27 +471,6 @@ const SettingsOverlay = ({ isOpen, onClose }) => {
         </div>
       </div>
 
-      {showAddSocialModal && (
-        <div className={styles.socialModalBackdrop}>
-          <div className={styles.socialModal}>
-            <h3>Add {SOCIAL_PLATFORMS.find((p) => p.id === activeSocialPlatform)?.name} link</h3>
-            <input
-              className={styles.input}
-              value={socialInputValue}
-              onChange={(e) => setSocialInputValue(e.target.value)}
-              placeholder="Enter URL"
-            />
-            <div className={styles.socialModalActions}>
-              <button type="button" className={styles.cancelButton} onClick={() => setShowAddSocialModal(false)}>
-                Cancel
-              </button>
-              <button type="button" className={styles.doneButton} onClick={handleAddSocialLink}>
-                Add
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
