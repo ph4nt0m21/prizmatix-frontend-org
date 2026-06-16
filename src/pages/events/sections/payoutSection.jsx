@@ -17,7 +17,7 @@ import {
 // PayoutStatus: "PENDING" | "CANCELLED" | "PAID"
 
 const PAYOUT_TYPE_LABEL = {
-  FULL: 'Full payment (25%)',
+  FULL: 'Standard payout (25% of revenue)',
   CUSTOM: 'Custom amount',
   ADVANCE: 'Advance payment',
 };
@@ -87,6 +87,9 @@ const PayoutSection = ({ eventId, dashboardData, tableOnly = false }) => {
 
   const fullAmount = Math.min(totalRevenue * 0.25, remainingPayoutable);
   const canRequestNew = remainingPayoutable > 0.01;
+  const pendingRequestsTotal = requests
+    .filter((request) => request?.status === 'PENDING')
+    .reduce((sum, request) => sum + (parseFloat(request?.amount) || 0), 0);
 
   const handleRequestPayoutClick = () => {
     setShowPayoutModal(true);
@@ -428,7 +431,15 @@ const PayoutSection = ({ eventId, dashboardData, tableOnly = false }) => {
           <h3 className={styles.cardTitle}>Remaining</h3>
           <p className={styles.cardValue}>{formatCurrency(remainingPayoutable)}</p>
         </div>
+        <div className={styles.infoCard}>
+          <h3 className={styles.cardTitle}>Pending requests</h3>
+          <p className={styles.cardValue}>{formatCurrency(pendingRequestsTotal)}</p>
+        </div>
       </div>
+      <p className={styles.summaryNote}>
+        Remaining amount decreases only after requests are marked as <strong>Paid</strong>. Pending
+        and cancelled requests are shown separately.
+      </p>
 
       {!canRequestNew && (
         <div className={styles.noPayoutMessage}>
@@ -498,7 +509,7 @@ const PayoutSection = ({ eventId, dashboardData, tableOnly = false }) => {
                       <span className={styles.radioCustom} />
                       <div className={styles.optionDetails}>
                         <span className={styles.optionLabel}>
-                          Full payment (25% of revenue)
+                          Standard payout (25% of revenue)
                         </span>
                         <span className={styles.optionDescription}>
                           Request 25% of total event revenue (capped by remaining).
@@ -562,7 +573,7 @@ const PayoutSection = ({ eventId, dashboardData, tableOnly = false }) => {
               {payoutStep === 'display' && (
                 <div className={styles.customAmountDisplaySection}>
                   <h4 className={styles.customAmountPrompt}>
-                    {payoutType === 'full' ? 'Full payment (25%)' : 'Custom amount'}
+                    {payoutType === 'full' ? 'Standard payout (25% of revenue)' : 'Custom amount'}
                   </h4>
                   <div className={styles.displayCard}>
                     <p className={styles.displayCardTitle}>Amount to request</p>

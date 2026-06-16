@@ -5,9 +5,9 @@ import Cookies from 'js-cookie';
 import { LoginAPI } from '../../services/allApis';
 import styles from './sideNavBar.module.scss';
 import { getUserData, clearUserData } from '../../utils/authUtil';
-import { getProfileInitials } from '../../utils/profileUtil';
 import { clearEventDataOnLogout } from '../../utils/eventUtil';
 import { useAuth } from '../../context/authContext';
+import ProfileAvatar from '../../components/common/profileAvatar/profileAvatar';
 
 // ---------------- ICON IMPORTS (3 states per item) ----------------
 // Overview Icons
@@ -50,8 +50,6 @@ import logoImage from '../../assets/images/small-logo.svg';
 // Overlay / Modal components
 import SettingsOverlay from '../../../src/components/settingsOverlay/settingsOverlay';
 import HelpSupportModal from '../../components/helpSupportModal/helpSupportModal';
-
-import { ReactComponent as ProfileIcon } from '../../assets/icons/profile-gradient.svg';
 
 const SideNavBar = ({ isMobileSidebarOpen, toggleMobileSidebar }) => {
   const navigate = useNavigate();
@@ -173,14 +171,7 @@ const SideNavBar = ({ isMobileSidebarOpen, toggleMobileSidebar }) => {
       : []),
   ];
 
-  const getUserInitials = () => getProfileInitials(currentUser || getUserData() || {});
-
-  const renderProfileAvatar = () => (
-    <>
-      <ProfileIcon className={styles.profileSvg} />
-      <span className={styles.profileInitials}>{getUserInitials()}</span>
-    </>
-  );
+  const profilePhotoUrl = currentUser?.profilePhotoUrl || getUserData()?.profilePhotoUrl || '';
 
   // Helper to choose icon src for image-based icons.
   const chooseIconSrc = ({ defaultIcon, hoverIcon, activeIcon, id, isActive }) => {
@@ -300,7 +291,11 @@ const SideNavBar = ({ isMobileSidebarOpen, toggleMobileSidebar }) => {
                 aria-label="Toggle Profile Menu"
               >
                 <div className={styles.profileIcon}>
-                  {renderProfileAvatar()}
+                  <ProfileAvatar
+                    src={profilePhotoUrl}
+                    alt="Profile"
+                    className={styles.profilePhoto}
+                  />
                 </div>
                 <div className={styles.tooltip}>Profile</div>
               </button>
@@ -309,12 +304,20 @@ const SideNavBar = ({ isMobileSidebarOpen, toggleMobileSidebar }) => {
                 <div className={styles.profileDropdown}>
                   <div className={styles.profileInfo}>
                     <div className={styles.profileAvatar}>
-                      <ProfileIcon className={styles.profileAvatarSvg} />
+                      <ProfileAvatar
+                        src={profilePhotoUrl}
+                        alt="Profile"
+                        className={styles.profileAvatarImage}
+                      />
                     </div>
 
                     <div className={styles.profileDetails}>
-                      <div className={styles.profileName}>{currentUser?.name || 'Sarath Babu John'}</div>
-                      <div className={styles.profileEmail}>{currentUser?.email || 'sarathbabujohn333@gmail.com'}</div>
+                      <div className={styles.profileName} title={currentUser?.name || ''}>
+                        {currentUser?.name || 'Sarath Babu John'}
+                      </div>
+                      <div className={styles.profileEmail} title={currentUser?.email || ''}>
+                        {currentUser?.email || 'sarathbabujohn333@gmail.com'}
+                      </div>
                     </div>
                   </div>
 

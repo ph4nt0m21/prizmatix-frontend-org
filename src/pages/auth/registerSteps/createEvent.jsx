@@ -126,7 +126,6 @@ const CreateEvent = ({
                 id="eventName"
                 name="eventName"
                 className={styles.input}
-                placeholder="e.g. 2024 Art and Music Festival for Beginners"
                 value={formData.eventName || ''}
                 onChange={handleChange}
                 disabled={isLoading}

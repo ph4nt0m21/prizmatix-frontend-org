@@ -4,6 +4,7 @@ import { toast } from "react-toastify";
 import ReactCrop, { centerCrop, makeAspectCrop } from "react-image-crop";
 import "react-image-crop/dist/ReactCrop.css";
 import { createCroppedJpegFile } from "../../../utils/imageCropUtil";
+import ProfileAvatar from "../profileAvatar/profileAvatar";
 import styles from "./profilePhotoField.module.scss";
 
 const SUPPORTED_TYPES = [".jpg", ".jpeg", ".png", ".webp"];
@@ -104,11 +105,11 @@ const ProfilePhotoField = ({
     <div className={styles.wrapper}>
       <div className={styles.photoRow}>
         <div className={styles.avatarPreview}>
-          {previewUrl ? (
-            <img src={previewUrl} alt="Profile" className={styles.avatarImage} />
-          ) : (
-            <span className={styles.avatarPlaceholder}>?</span>
-          )}
+          <ProfileAvatar
+            src={previewUrl}
+            alt="Profile"
+            className={styles.avatarImage}
+          />
         </div>
         <div className={styles.photoActions}>
           <span className={styles.hint}>Recommended size: 300 × 300</span>
