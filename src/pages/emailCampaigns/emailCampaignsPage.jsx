@@ -206,7 +206,7 @@
 //       scheduledAt: sendOption === "at" ? scheduledAt.toISOString() : null,
 //       eventIds: selectedEvents.map(Number),
 //       sent: isSent,
-//       replyTo: "noreply@prizmatix.nz",
+//       replyTo: userData?.email || "support@prizmatix.nz",
 //       recipientType: "EVENT_BUYERS",
 //       organizationId: userData?.organizationId,
 //       attachments: urls && urls.length > 0 ? urls : [],
@@ -238,7 +238,7 @@
 //           campaignName: campaignName || "Draft Campaign",
 //           subject: subject || "",
 //           message: "",
-//           replyTo: "noreply@prizmatix.nz",
+//           replyTo: userData?.email || "support@prizmatix.nz",
 //           recipientType: "EVENT_BUYERS",
 //           sent: false,
 //           eventIds: [],
@@ -777,7 +777,14 @@ const EmailCampaignsPage = () => {
         setMessage(data.message || "");
         if (data.message) editor?.commands?.setContent(data.message);
         setSelectedEvents(data.eventIds?.map(String) || []);
-        setSendOption(data.sendType?.toLowerCase() || "now");
+        setSendOption(
+          data.sendType &&
+            ["AT", "SCHEDULE", "SCHEDULED"].includes(
+              String(data.sendType).toUpperCase()
+            )
+            ? "at"
+            : "now"
+        );
         setScheduledAt(
           data.scheduledAt ? new Date(data.scheduledAt) : new Date()
         );
@@ -825,11 +832,11 @@ const EmailCampaignsPage = () => {
       message: cleanMessage,
       includeEventBanner: false,
       includeEventLocationAndDate: false,
-      sendType: sendOption.toUpperCase(),
+      sendType: sendOption === "at" ? "SCHEDULE" : "NOW",
       scheduledAt: sendOption === "at" ? scheduledAt.toISOString() : null,
       eventIds: selectedEvents.map(Number),
       sent: isSent,
-      replyTo: "noreply@prizmatix.nz",
+      replyTo: userData?.email || "support@prizmatix.nz",
       recipientType: "EVENT_BUYERS",
       organizationId: userData?.organizationId,
       attachments: urls && urls.length > 0 ? urls : [],
@@ -864,7 +871,7 @@ const EmailCampaignsPage = () => {
           campaignName: campaignName || "Draft Campaign",
           subject: subject || "",
           message: "",
-          replyTo: "noreply@prizmatix.nz",
+          replyTo: userData?.email || "support@prizmatix.nz",
           recipientType: "EVENT_BUYERS",
           sent: false,
           eventIds: [],
@@ -954,14 +961,36 @@ const EmailCampaignsPage = () => {
       if (!effectiveCampaignId)
         return toast.error("Please save the campaign before sending.");
 
-      await SendEmailCampaignAPI(effectiveCampaignId);
-      toast.success("Campaign sent successfully!");
+      if (sendOption === "at") {
+        if (scheduledAt <= new Date()) {
+          return toast.error("Please choose a future date and time for scheduling.");
+        }
+        await UpdateEmailCampaignAPI(
+          effectiveCampaignId,
+          createCampaignPayload(false)
+        );
+        toast.success(
+          `Campaign scheduled for ${scheduledAt.toLocaleString()}`
+        );
+      } else {
+        await UpdateEmailCampaignAPI(
+          effectiveCampaignId,
+          createCampaignPayload(false)
+        );
+        await SendEmailCampaignAPI(effectiveCampaignId);
+        toast.success("Campaign sent successfully!");
+      }
+
       clearCachedAttachments();
       clearDraftCampaignId();
       navigate("/campaigns");
     } catch (err) {
       console.error(err);
-      toast.error("Error sending campaign");
+      toast.error(
+        sendOption === "at"
+          ? "Error scheduling campaign"
+          : "Error sending campaign"
+      );
     } finally {
       setLoading(false);
     }
@@ -1218,7 +1247,13 @@ const EmailCampaignsPage = () => {
         onClick={handleSend}
         disabled={loading}
       >
-        {loading ? "Sending..." : "Send Campaign"}
+        {loading
+          ? sendOption === "at"
+            ? "Scheduling..."
+            : "Sending..."
+          : sendOption === "at"
+          ? "Schedule Campaign"
+          : "Send Campaign"}
       </button>
     </>
   )}

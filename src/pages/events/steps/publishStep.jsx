@@ -1,306 +1,299 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import PropTypes from 'prop-types';
 import {
   ART_PLACEHOLDER_BANNER,
   ART_PLACEHOLDER_THUMBNAIL,
   applyArtImageFallback,
 } from '../../../constants/artImagePlaceholders';
-import PropTypes from 'prop-types';
 import styles from './publishStep.module.scss';
 import { getEventData } from '../../../utils/eventUtil';
-import { getUserData } from '../../../utils/authUtil';
+import {
+  buildMapEmbedUrl,
+  buildMapExternalUrl,
+  displayVenueName,
+  formatEventLocationSummary,
+  formatPhysicalAddressLines,
+  formatSidebarDate,
+  formatSidebarTime,
+  formatTicketPriceLabel,
+  mapOrgLocationToPreviewFields,
+  normalizeLocationType,
+  venueSectionTitle,
+} from '../../../utils/eventPreviewUtil';
+import calendarIcon from '../../../assets/icons/event-preview-calendar.svg';
+import locationIcon from '../../../assets/icons/event-preview-location.svg';
 
-/**
- * PublishStep component - Final step of event creation.
- * Shows a preview of the event page with a dynamic map.
- */
-const PublishStep = ({
-  eventData = {},
-}) => {
+const PUBLIC_EVENT_BASE_URL = 'https://www.prizmatix.nz/events';
 
-  console.log('3. [PublishStep] Received props with location:', eventData.location);
-  // --- ADDED: useRef for the map container and to ensure map only initializes once ---
-  const mapRef = useRef(null);
-  const mapInitialized = useRef(false);
+const DummyBuyButton = ({ className, children }) => (
+  <button type="button" className={className} disabled aria-disabled="true" tabIndex={-1}>
+    {children}
+  </button>
+);
 
+const VenuePreviewSection = ({ locationFields }) => {
+  const type = normalizeLocationType(locationFields.eventLocationType);
+  const isTba = type === 'tba';
+  const isPrivate = type === 'private';
+  const isOnline = type === 'online';
+  const venueName = displayVenueName(locationFields);
+  const addressLines = formatPhysicalAddressLines(locationFields);
+  const mapEmbedUrl = buildMapEmbedUrl(locationFields);
+  const mapExternalUrl = buildMapExternalUrl(locationFields);
+
+  return (
+    <section className={styles.eventVenue}>
+      <h3>{venueSectionTitle(locationFields.eventLocationType)}</h3>
+
+      {isTba ? (
+        <p className={styles.tbaMessage}>Venue details will be announced soon.</p>
+      ) : isPrivate ? (
+        <p className={styles.tbaMessage}>
+          Location details will be shared with ticket holders after purchase.
+        </p>
+      ) : isOnline ? (
+        <div className={styles.venueDetails}>
+          {locationFields.eventLocationMeetingUrl?.trim() && (
+            <div className={styles.venueDetailBlock}>
+              <span className={styles.venueDetailLabel}>Meeting link</span>
+              <div className={styles.venueDetailValue}>
+                <span className={styles.venueLinkPreview}>
+                  {locationFields.eventLocationMeetingUrl.trim()}
+                </span>
+              </div>
+            </div>
+          )}
+          {locationFields.eventLocationJoinNotes?.trim() && (
+            <div className={styles.venueDetailBlock}>
+              <span className={styles.venueDetailLabel}>How to join</span>
+              <p className={styles.venueText}>{locationFields.eventLocationJoinNotes.trim()}</p>
+            </div>
+          )}
+          {locationFields.eventLocationAdditionalInfo?.trim() && (
+            <div className={styles.venueDetailBlock}>
+              <span className={styles.venueDetailLabel}>Additional information</span>
+              <p className={styles.venueText}>
+                {locationFields.eventLocationAdditionalInfo.trim()}
+              </p>
+            </div>
+          )}
+        </div>
+      ) : (
+        <>
+          {venueName && (
+            <p className={styles.venueName}>
+              <strong>{venueName}</strong>
+            </p>
+          )}
+
+          {addressLines.length > 0 && (
+            <div className={styles.venueAddress}>
+              {addressLines.map((line) => (
+                <p key={line}>{line}</p>
+              ))}
+            </div>
+          )}
+
+          {mapExternalUrl && (
+            <p className={styles.venueMapLink}>
+              <span>Open in Google Maps</span>
+            </p>
+          )}
+
+          {mapEmbedUrl ? (
+            <iframe
+              src={mapEmbedUrl}
+              width="100%"
+              height="200"
+              style={{ border: 0 }}
+              loading="lazy"
+              title="Event location map"
+              className={styles.venueMapFrame}
+            />
+          ) : (
+            <div className={styles.venueMapPlaceholder}>Map preview unavailable</div>
+          )}
+
+          {(locationFields.eventLocationMeetingUrl?.trim() ||
+            locationFields.eventLocationAdditionalInfo?.trim()) && (
+            <div className={styles.venueExtraDetails}>
+              {locationFields.eventLocationMeetingUrl?.trim() && (
+                <div className={styles.venueDetailBlock}>
+                  <span className={styles.venueDetailLabel}>Virtual meeting link (hybrid)</span>
+                  <span className={styles.venueLinkPreview}>
+                    {locationFields.eventLocationMeetingUrl.trim()}
+                  </span>
+                </div>
+              )}
+              {locationFields.eventLocationAdditionalInfo?.trim() && (
+                <div className={styles.venueDetailBlock}>
+                  <span className={styles.venueDetailLabel}>Additional information</span>
+                  <p className={styles.venueText}>
+                    {locationFields.eventLocationAdditionalInfo.trim()}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+        </>
+      )}
+    </section>
+  );
+};
+
+VenuePreviewSection.propTypes = {
+  locationFields: PropTypes.object.isRequired,
+};
+
+const PublishStep = ({ eventData = {} }) => {
   const [localEventData, setLocalEventData] = useState(eventData);
-  const [userData, setUserData] = useState(null);
-  const [showContactModal, setShowContactModal] = useState(false);
 
-  // --- MODIFIED: Load data ensuring props overwrite localStorage ---
   useEffect(() => {
     const storedEventData = getEventData();
-    // Prioritize fresh data from props over stale data from storage
     setLocalEventData({
       ...storedEventData,
       ...eventData,
     });
-    const userInfo = getUserData();
-    if (userInfo) {
-      setUserData(userInfo);
-    }
   }, [eventData]);
 
-  // --- ADDED: useEffect hook to initialize the dynamic Google Map ---
-  useEffect(() => {
-    const initializeMap = () => {
-      const location = localEventData.location;
-      console.log('4. [PublishStep] Attempting to initialize map with location:', location);
-      if (mapInitialized.current || !mapRef.current || !location?.latitude || !location?.longitude) {
-        return; // Exit if map is already created or if there's no container/coordinates
-      }
+  const bannerUrl = localEventData.art?.bannerUrl || ART_PLACEHOLDER_BANNER;
+  const thumbnailUrl = localEventData.art?.thumbnailUrl || ART_PLACEHOLDER_THUMBNAIL;
+  const locationFields = useMemo(
+    () => mapOrgLocationToPreviewFields(localEventData.location || {}),
+    [localEventData.location]
+  );
+  const locationSummary = formatEventLocationSummary(locationFields);
+  const ticketPriceLabel = formatTicketPriceLabel(localEventData.tickets || []);
+  const startDate = localEventData.dateTime?.startDate;
+  const startTime = localEventData.dateTime?.startTime;
+  const descriptionHtml =
+    localEventData.description ||
+    localEventData.shortDescription ||
+    '<p>No description provided.</p>';
+  const publicEventUrl = localEventData.slug
+    ? `${PUBLIC_EVENT_BASE_URL}/${localEventData.slug}`
+    : null;
 
-      const position = {
-        lat: parseFloat(location.latitude),
-        lng: parseFloat(location.longitude),
-      };
-
-      const map = new window.google.maps.Map(mapRef.current, {
-        center: position,
-        zoom: 15,
-        disableDefaultUI: true,
-        gestureHandling: 'cooperative',
-      });
-
-      new window.google.maps.Marker({
-        position,
-        map: map,
-      });
-
-      mapInitialized.current = true; // Mark map as initialized
-    };
-
-    if (window.google && window.google.maps) {
-      initializeMap();
-    } else {
-      const script = document.querySelector('script[src*="maps.googleapis.com"]');
-      if (script) {
-        script.addEventListener('load', initializeMap, { once: true });
-      }
+  const handleOpenPreview = () => {
+    if (publicEventUrl) {
+      window.open(publicEventUrl, '_blank', 'noopener,noreferrer');
     }
-  }, [localEventData.location]); // Re-run this effect if the location data changes
-
-// Helper function to create the new combined date-time string
-  const formatEventDateTimeRange = () => {
-    const { startDate, startTime, endDate, endTime } = localEventData.dateTime || {};
-    if (!startDate || !startTime) return 'Date and time not set';
-
-    try {
-      // Helper to format the date part (e.g., "Wed, 5 Mar")
-      const formatDate = (dateString, includeWeekday = true) => {
-        const options = {
-          weekday: includeWeekday ? 'short' : undefined,
-          day: 'numeric',
-          month: 'short',
-        };
-        return new Intl.DateTimeFormat('en-US', options).format(new Date(`${dateString}T00:00:00`));
-      };
-
-      // Helper to format the time part (e.g., "7:30pm")
-      const formatTime = (timeString) => {
-        const [hours, minutes] = timeString.split(':');
-        const date = new Date();
-        date.setHours(hours, minutes);
-        const options = { hour: 'numeric', minute: 'numeric', hour12: true };
-        return new Intl.DateTimeFormat('en-US', options).format(date).toLowerCase().replace(' ', '');
-      };
-
-      const formattedStartDate = formatDate(startDate);
-      const formattedStartTime = formatTime(startTime);
-
-      // Default end part is just the end time, for same-day events
-      let formattedEndPart = endTime ? formatTime(endTime) : '';
-
-      // If an end date exists and is different from the start date
-      if (endDate && endDate !== startDate) {
-        // Format the end date without the weekday and prepend it to the end time
-        const formattedEndDate = formatDate(endDate, false); // e.g., "6 Mar"
-        formattedEndPart = `${formattedEndDate}, ${formatTime(endTime)}`;
-      }
-      
-      return `${formattedStartDate}, ${formattedStartTime} - ${formattedEndPart}`;
-
-    } catch (e) {
-      console.error("Error formatting event date-time range:", e);
-      return "Invalid date or time";
-    }
-  };
-
-  // Helper function to format time range
-  const formatEventTime = () => {
-    if (!localEventData.dateTime?.startTime || !localEventData.dateTime?.endTime) return 'Time not set';
-    const formatTime = (timeStr) => {
-      const [hours, minutes] = timeStr.split(':');
-      const date = new Date();
-      date.setHours(hours, minutes);
-      return new Intl.DateTimeFormat('en-US', { hour: 'numeric', hour12: true }).format(date).toLowerCase().replace(' ', '');
-    }
-    try {
-      return `${formatTime(localEventData.dateTime.startTime)}-${formatTime(localEventData.dateTime.endTime)}`;
-    } catch (e) {
-      return 'Invalid Time';
-    }
-  };
-
-  // Helper function to get location string
-  const getLocation = () => {
-    if (localEventData.location?.isToBeAnnounced) return 'To be announced';
-    if (localEventData.location?.locationType === 'online') return 'Online event';
-    const { city, country } = localEventData.location || {};
-    if (city && country) return `${city}, ${country}`;
-    return city || country || 'Location not set';
-  };
-
-  // Helper function to get venue address
-  const getVenueAddress = () => {
-    const loc = localEventData.location || {};
-    if (loc.locationType === 'online') {
-      return loc.onlineEventUrl?.trim() || 'Online event — link shared with attendees';
-    }
-    const { street, city, state, country } = loc;
-    if (street && city && state && country) return `${street}, ${city}, ${state}, ${country}`;
-    return getLocation();
-  };
-
-  // Helper function to get the lowest ticket price
-  const getLowestTicketPrice = () => {
-    if (!localEventData.tickets || localEventData.tickets.length === 0) return 'N/A';
-    try {
-      const prices = localEventData.tickets.map(t => parseFloat(t.price)).filter(p => !isNaN(p));
-      if (prices.length === 0) return 'Free';
-      const minPrice = Math.min(...prices);
-      return minPrice === 0 ? 'Free' : `$${minPrice.toFixed(2)}`;
-    } catch (e) {
-      return 'N/A';
-    }
-  };
-
-  // Helper function to safely render description HTML
-  const getDescriptionContent = () => {
-    return localEventData.description || '<p>No description provided.</p>';
   };
 
   return (
     <div className={styles.pageContainer}>
       <div className={styles.previewHeader}>
-        <button className={styles.openNewTabButton}>Open in new tab</button>
+        <div className={styles.previewLabel}>Customer event page preview</div>
+        {publicEventUrl ? (
+          <button type="button" className={styles.openNewTabButton} onClick={handleOpenPreview}>
+            Open in new tab
+          </button>
+        ) : (
+          <span className={styles.previewHint}>Publish to get a public event link</span>
+        )}
       </div>
 
-      <div className={styles.eventPreview}>
-        <div className={styles.eventBanner}>
+      <div className={styles.eventPageWrapper}>
+        <div className={styles.bannerBg} aria-hidden="true">
           <img
-            className={styles.eventBannerImage}
-            src={
-              localEventData.art?.bannerUrl || ART_PLACEHOLDER_BANNER
-            }
+            src={bannerUrl}
             alt=""
+            className={styles.bannerBgImage}
             onError={(e) => applyArtImageFallback(e, ART_PLACEHOLDER_BANNER)}
           />
         </div>
 
-        <div className={styles.eventContent}>
-          <div className={styles.eventImageColumn}>
-            <div className={styles.eventImage}>
-              <img
-                src={
-                  localEventData.art?.thumbnailUrl ||
-                  ART_PLACEHOLDER_THUMBNAIL
-                }
-                alt={localEventData.name || "Event Thumbnail"}
-                onError={(e) =>
-                  applyArtImageFallback(e, ART_PLACEHOLDER_THUMBNAIL)
-                }
-              />
-            </div>
-            <div className={styles.ticketCta}>
-              <div className={styles.ticketCtaTop}>
-                <h3>Buy Tickets</h3>
-                <p>Tickets starting from {getLowestTicketPrice()}</p>
+        <div className={styles.eventBlurOverlay}>
+          <div
+            className={`${styles.eventContainer} ${
+              thumbnailUrl ? styles.eventContainerWithThumb : ''
+            }`}
+          >
+            <div className={styles.eventHeader}>
+              <div className={styles.bannerWrapper}>
+                <div className={styles.bannerWrapperCover}>
+                  <img
+                    src={bannerUrl}
+                    alt="Event banner"
+                    className={styles.bannerImage}
+                    onError={(e) => applyArtImageFallback(e, ART_PLACEHOLDER_BANNER)}
+                  />
+                </div>
+                {thumbnailUrl && (
+                  <div className={styles.mobileCoverThumbnail}>
+                    <img
+                      src={thumbnailUrl}
+                      alt={localEventData.name || 'Event thumbnail'}
+                      className={styles.mobileCoverThumbnailImg}
+                      onError={(e) => applyArtImageFallback(e, ART_PLACEHOLDER_THUMBNAIL)}
+                    />
+                  </div>
+                )}
               </div>
-              <button className={styles.ticketCtaButton}>Get Tickets</button>
+            </div>
+
+            <div className={styles.eventDetailLayout}>
+              <aside className={styles.eventSidebar}>
+                <div className={styles.eventSidebarPoster}>
+                  <img
+                    src={thumbnailUrl}
+                    alt={localEventData.name || 'Event thumbnail'}
+                    onError={(e) => applyArtImageFallback(e, ART_PLACEHOLDER_THUMBNAIL)}
+                  />
+                </div>
+
+                <div className={styles.sidebarMeta}>
+                  <div className={styles.metaItem}>
+                    <img src={calendarIcon} alt="" aria-hidden="true" />
+                    <span>
+                      {startDate ? (
+                        <>
+                          {formatSidebarDate(startDate)}
+                          {startTime ? `, ${formatSidebarTime(startTime)}` : ''}
+                        </>
+                      ) : (
+                        'Date and time not set'
+                      )}
+                    </span>
+                  </div>
+                  <div className={styles.metaItem}>
+                    <img src={locationIcon} alt="" aria-hidden="true" />
+                    <span>{locationSummary}</span>
+                  </div>
+                </div>
+
+                <DummyBuyButton className={styles.buyBtn}>Buy Tickets</DummyBuyButton>
+                <p className={styles.priceHint}>
+                  Ticket rate starting from ${ticketPriceLabel}
+                </p>
+              </aside>
+
+              <div className={styles.eventContent}>
+                <section className={styles.eventAbout}>
+                  <h1 className={styles.eventTitle}>{localEventData.name || 'Untitled Event'}</h1>
+                  <div className={styles.underline} />
+                  <h3>About</h3>
+                  <div
+                    className={styles.eventDescription}
+                    dangerouslySetInnerHTML={{ __html: descriptionHtml }}
+                  />
+                </section>
+
+                <VenuePreviewSection locationFields={locationFields} />
+              </div>
             </div>
           </div>
+        </div>
 
-          <div className={styles.eventDetailsColumn}>
-            <div className={styles.eventHeader}>
-              <h>{localEventData.name}</h>
-              <div className={styles.eventMeta}>
-                <div className={styles.eventMetaItem}>
-                  <div className={styles.eventMetaIcon}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="#7C3AED" xmlns="http://www.w3.org/2000/svg"><path d="M19 4H18V2H16V4H8V2H6V4H5C3.89 4 3.01 4.9 3.01 6L3 20C3 21.1 3.89 22 5 22H19C20.1 22 21 20.1 21 20V6C21 4.9 20.1 4 19 4ZM19 20H5V9H19V20Z" /></svg>
-                  </div>
-                  <div className={styles.eventMetaText}>{formatEventDateTimeRange()}</div>
-                </div>
-                {/* <div className={styles.eventMetaItem}>
-                  <div className={styles.eventMetaIcon}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="#7C3AED" xmlns="http://www.w3.org/2000/svg"><path d="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9C9.5 7.62 10.62 6.5 12 6.5C13.38 6.5 14.5 7.62 14.5 9C14.5 10.38 13.38 11.5 12 11.5Z" /></svg>
-                  </div>
-                  <div className={styles.eventMetaText}>{getLocation()}</div>
-                </div> */}
-              </div>
-              <div className={styles.organizerInfo}>
-                <div className={styles.organizerLogo}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 5C13.66 5 15 6.34 15 8C15 9.66 13.66 11 12 11C10.34 11 9 9.66 9 8C9 6.34 10.34 5 12 5ZM12 19.2C9.5 19.2 7.29 17.92 6 15.98C6.03 13.99 10 12.9 12 12.9C13.99 12.9 17.97 13.99 18 15.98C16.71 17.92 14.5 19.2 12 19.2Z" /></svg>
-                </div>
-                <div className={styles.organizerName}>{userData?.organizationName || 'Event Host'}</div>
-                <button className={styles.contactButton} onClick={() => setShowContactModal(true)}>Contact Host</button>
-              </div>
-            </div>
-
-            <div className={styles.eventSections}>
-              <div className={styles.eventSection}>
-                <h2 className={styles.sectionTitle}>About</h2>
-                <div className={styles.sectionContent} dangerouslySetInnerHTML={{ __html: getDescriptionContent() }} />
-              </div>
-              <div className={styles.eventSection}>
-                <h2 className={styles.sectionTitle}>Venue</h2>
-                <div className={styles.venueInfo}>
-                  <h3 className={styles.venueName}>
-                    {localEventData.location?.venue ||
-                      (localEventData.location?.locationType === 'online'
-                        ? 'Online Event'
-                        : '')}
-                  </h3>
-                  <p className={styles.venueAddress}>{getVenueAddress()}</p>
-
-                  {/* --- MODIFIED: This section now renders the dynamic map --- */}
-                  {!localEventData.location?.isToBeAnnounced &&
-                    localEventData.location?.locationType !== 'online' && (
-                  <div className={styles.venueMap}>
-                    <div ref={mapRef} style={{ width: '100%', height: '100%' }}>
-                      {/* If lat/lng are missing, show a placeholder message */}
-                      {(!localEventData.location?.latitude || !localEventData.location?.longitude) && (
-                        <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#e0e0e0', color: '#666' }}>
-                          Map data not available
-                        </div>
-                      )}
-                    </div>
-                    {/* <div className={styles.mapOverlay}>
-                      <div className={styles.mapLogo}><svg width="20" height="20" viewBox="0 0 24 24" fill="#4285F4" xmlns="http://www.w3.org/2000/svg"><path d="M12 11.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5ZM12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13C19 5.13 15.87 2 12 2Z" /></svg></div>
-                    </div> */}
-                  </div>)}
-
-                </div>
-              </div>
-            </div>
+        <div className={styles.mobileBuyBar}>
+          <div className={styles.buyBarInner}>
+            <span>
+              Ticket rate starting from <strong>${ticketPriceLabel}</strong>
+            </span>
+            <DummyBuyButton className={styles.mobileBuyBtn}>Buy Tickets</DummyBuyButton>
           </div>
         </div>
       </div>
-
-      {showContactModal && (
-        <div className={styles.modalOverlay} onClick={() => setShowContactModal(false)}>
-          <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
-            <div className={styles.modalHeader}>
-              <h3>Organizer Information</h3>
-              <button className={styles.closeButton} onClick={() => setShowContactModal(false)}>×</button>
-            </div>
-            <div className={styles.modalContent}>
-              <div className={styles.infoRow}><span className={styles.infoLabel}>Name:</span><span className={styles.infoValue}>{userData?.name || 'N/A'}</span></div>
-              <div className={styles.infoRow}><span className={styles.infoLabel}>Organization:</span><span className={styles.infoValue}>{userData?.organizationName || 'N/A'}</span></div>
-              <div className={styles.infoRow}><span className={styles.infoLabel}>Email:</span><span className={styles.infoValue}>{userData?.email || 'N/A'}</span></div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

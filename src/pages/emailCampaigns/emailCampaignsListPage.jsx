@@ -365,7 +365,7 @@ const EmailCampaignsListPage = () => {
     {
       id: 'createdAt',
       accessorFn: (row) => row.createdAt ?? '',
-      header: 'Order Date',
+      header: 'Created',
       enableSorting: true,
       sortingFn: (rowA, rowB) => {
         const a = new Date(rowA.original.createdAt ?? '').getTime();

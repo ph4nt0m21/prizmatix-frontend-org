@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import PropTypes from 'prop-types';
 import { toast } from 'react-toastify';
 import styles from './locationStep.module.scss';
 import OptionalLabel from '../../../components/common/optionalLabel/optionalLabel';
+import AddressAutocomplete from '../../../components/common/addressAutocomplete/addressAutocomplete';
 import {
   buildLocationFormState,
   serializeLocationFormState,
@@ -14,6 +15,10 @@ import {
   pickLocationModeFields,
   buildLocationStateForTypeChange,
 } from '../../../utils/eventUtil';
+import {
+  buildLocationSearchLabel,
+  geocodeAddressWithGeoapify,
+} from '../../../utils/geoapifyUtil';
 
 /**
  * LocationStep component - Second step of event creation
@@ -29,10 +34,6 @@ const LocationStep = ({
   const locationData = eventData.location || {};
   const parentLocationKey = serializeLocationFormState(locationData);
   
-  // Map and Marker references
-  const mapRef = useRef(null);
-  const googleMapRef = useRef(null);
-  const markerRef = useRef(null);
   const skipParentSyncRef = useRef(true);
   const lastSyncedToParentRef = useRef('');
   const locationDraftsRef = useRef(null);
@@ -44,91 +45,20 @@ const LocationStep = ({
   
   // Local state for form management
   const [location, setLocation] = useState(() => buildLocationFormState(locationData));
-  
-  // State for map UI
+
   const [isLoadingMap, setIsLoadingMap] = useState(false);
-  const [activeTab, setActiveTab] = useState('map');
 
-  /**
-   * Dynamically load the Google Maps API script
-   */
-  useEffect(() => {
-    if (!window.google || !window.google.maps) {
-      const script = document.createElement('script');
-      // IMPORTANT: Replace with your actual Google Maps API key
-      script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyBHHSaav_cnWo4E-KLj_GGboYwYtQ6gSsk&libraries=places`;
-      script.async = true;
-      script.defer = true;
-      script.onload = initializeMap;
-      script.onerror = () => {
-        console.error('Google Maps API failed to load');
-        alert('Could not load Google Maps. Please check your internet connection and try again.');
-      };
-      document.head.appendChild(script);
-      
-      return () => {
-        if (document.head.contains(script)) {
-          document.head.removeChild(script);
-        }
-      };
-    } else {
-      initializeMap();
-    }
+  const addressSearchLabel = useMemo(
+    () => buildLocationSearchLabel(location),
+    [location]
+  );
+
+  const handleAddressSelect = useCallback((patch) => {
+    setLocation((prev) => ({
+      ...prev,
+      ...patch,
+    }));
   }, []);
-
-  /**
-   * Initialize the Google Map, defaulting to Auckland, New Zealand
-   */
-  const initializeMap = () => {
-    if (!mapRef.current) return;
-    
-    const defaultPosition = { lat: -36.8485, lng: 174.7633 }; 
-    const position = location.latitude && location.longitude
-      ? { lat: parseFloat(location.latitude), lng: parseFloat(location.longitude) }
-      : defaultPosition;
-      
-    const mapOptions = {
-      center: position,
-      zoom: location.latitude ? 15 : 10,
-      mapTypeId: activeTab === 'map' ? 'roadmap' : 'satellite',
-      mapTypeControl: false,
-      streetViewControl: true,
-      fullscreenControl: true,
-      zoomControl: true,
-      gestureHandling: 'cooperative'
-    };
-    
-    const map = new window.google.maps.Map(mapRef.current, mapOptions);
-    googleMapRef.current = map;
-    
-    if (location.latitude && location.longitude) {
-      updateMapAndMarker(position);
-    }
-  };
-
-  /**
-   * Update map center and place a single marker
-   * @param {Object} position - The latitude and longitude for the marker.
-   */
-  const updateMapAndMarker = (position) => {
-    if (googleMapRef.current) {
-        googleMapRef.current.setCenter(position);
-        googleMapRef.current.setZoom(15);
-
-        if (markerRef.current) {
-            markerRef.current.setMap(null);
-        }
-
-        const newMarker = new window.google.maps.Marker({
-            position,
-            map: googleMapRef.current,
-            title: 'Selected Location'
-        });
-
-        markerRef.current = newMarker;
-    }
-  };
-  
   /**
    * Extracts latitude and longitude from a Google Maps URL (or address fields for short links).
    * Long search-bar URLs are normalized to a compact @lat,lng link before save.
@@ -170,13 +100,10 @@ const LocationStep = ({
       }
 
       const addressQuery = buildAddressGeocodeQuery(addressContext || location);
-      if (addressQuery && window.google?.maps?.Geocoder) {
-        const geocoder = new window.google.maps.Geocoder();
-        geocoder.geocode({ address: addressQuery }, (results, status) => {
-          if (status === 'OK' && results?.[0]?.geometry?.location) {
-            const geocodedLat = results[0].geometry.location.lat();
-            const geocodedLng = results[0].geometry.location.lng();
-            applyLinkAndCoords(geocodedLat, geocodedLng);
+      if (addressQuery) {
+        geocodeAddressWithGeoapify(addressQuery).then((coords) => {
+          if (coords) {
+            applyLinkAndCoords(coords.lat, coords.lng);
           } else {
             applyLinkAndCoords(null, null);
             if (!isShortGoogleMapLink(trimmedUrl)) {
@@ -230,19 +157,6 @@ const LocationStep = ({
   };
 
   /**
-   * Effect to update the map whenever coordinates change
-   */
-  useEffect(() => {
-    if (location.latitude && location.longitude && googleMapRef.current) {
-        const position = {
-            lat: parseFloat(location.latitude),
-            lng: parseFloat(location.longitude),
-        };
-        updateMapAndMarker(position);
-    }
-  }, [location.latitude, location.longitude]);
-
-  /**
    * Hydrate local form state when parent loads saved/API location data.
    */
   useEffect(() => {
@@ -276,15 +190,6 @@ const LocationStep = ({
     lastSyncedToParentRef.current = serialized;
     handleInputChange({ ...location }, 'location');
   }, [location, handleInputChange]);
-  
-  // --- Other handlers and JSX remain the same ---
-
-  const switchMapType = (type) => {
-    setActiveTab(type);
-    if (googleMapRef.current) {
-      googleMapRef.current.setMapTypeId(type === 'map' ? 'roadmap' : 'satellite');
-    }
-  };
 
   const handleLocationTypeChange = (type) => {
     if (type === 'physical' || type === 'private') {
@@ -506,6 +411,18 @@ const LocationStep = ({
             <p className={styles.formDescription}>
               The exact location to showcase on your event page and calendar events
             </p>
+
+            <label htmlFor="addressSearch" className={styles.formLabel}>
+              Search address or venue
+            </label>
+            <p className={styles.formDescription}>
+              Start typing to autocomplete — fields below will fill in automatically. A Google
+              Maps link is generated from the selected location for your event page.
+            </p>
+            <AddressAutocomplete
+              initialValue={addressSearchLabel}
+              onSelect={handleAddressSelect}
+            />
             
             <label htmlFor="googleMapLink" className={styles.formLabel}>
               Google Maps link<OptionalLabel />

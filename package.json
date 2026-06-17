@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@geoapify/geocoder-autocomplete": "^3.0.1",
     "@reduxjs/toolkit": "^1.9.5",
     "@tanstack/react-table": "^8.21.3",
     "@testing-library/jest-dom": "^5.16.5",
