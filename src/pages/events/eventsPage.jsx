@@ -232,7 +232,7 @@ const EventsPage = () => {
           {/* <div className={styles.searchContainer}>
             <input
               type="text"
-              placeholder="Search"
+
               className={styles.searchInput}
               value={searchQuery}
               onChange={handleSearchChange}

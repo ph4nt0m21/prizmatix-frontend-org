@@ -430,7 +430,7 @@
 //             id="campaignName"
 //             value={campaignName}
 //             onChange={(e) => setCampaignName(e.target.value)}
-//             placeholder="e.g. Weekly Newsletter, New Event Promo"
+//
 //           />
 //         </div>
 
@@ -457,7 +457,7 @@
 //             id="subject"
 //             value={subject}
 //             onChange={handleSubjectChange}
-//             placeholder="Your email subject line"
+//
 //           />
 //         </div>
 //         <div className={styles.formGroup}>
@@ -574,7 +574,7 @@
 //                 <input
 //                   type="email"
 //                   value={newTestEmail}
-//                   placeholder="Enter email"
+//
 //                   onChange={(e) => setNewTestEmail(e.target.value)}
 //                 />
 //                 <button
@@ -1078,7 +1078,7 @@ const EmailCampaignsPage = () => {
               id="campaignName"
               value={campaignName}
               onChange={(e) => setCampaignName(e.target.value)}
-              placeholder="Enter the official name of your event that will be displayed to attendees"
+
             />
           </div>
 
@@ -1107,7 +1107,7 @@ const EmailCampaignsPage = () => {
               id="subject"
               value={subject}
               onChange={handleSubjectChange}
-              placeholder="Your email subject line"
+
             />
           </div>
           <div className={styles.formGroup}>
@@ -1237,7 +1237,7 @@ const EmailCampaignsPage = () => {
                 <input
                   type="email"
                   value={newTestEmail}
-                  placeholder="Enter email"
+
                   onChange={(e) => setNewTestEmail(e.target.value)}
                 />
                 <button

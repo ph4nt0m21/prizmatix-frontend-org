@@ -87,12 +87,6 @@
   &.active {
     background-color: rgba(124, 58, 237, 0.1);
   }
-
-  &.completed {
-    .stepLabel {
-      color: #7C3AED;
-    }
-  }
 }
 
 .stepIconContainer {
@@ -113,95 +107,15 @@
   .active & {
     opacity: 1;
   }
-
-  .completed & {
-    opacity: 1;
-  }
-}
-
-.stepStatusIndicator {
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  border: 1px solid #E9EAEC;
-  background-color: #FFF;
-  margin-left: auto; /* This pushes it to the right */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  &.activeIndicator {
-    background-color: #7C3AED;
-    border-color: #7C3AED;
-  }
-
-  &.completedIndicator {
-    background-color: #22C55E;
-    border-color: #22C55E;
-  }
-
-  svg {
-    width: 10px;
-    height: 10px;
-  }
 }
 
 .stepLabel {
   font-size: 14px;
   color: #6b7280;
-  flex: 1; /* This ensures the label takes up available space */
+  flex: 1;
 
   .active & {
     color: #7C3AED;
     font-weight: 500;
   }
-
-  .completed & {
-    color: #7C3AED;
-    font-weight: 500;
-  }
-}
-
-// New container for progress info with specific styling
-.progressInfoContainer {
-  display: flex;
-  width: 100%;
-  height: 64px;
-  padding: 16px;
-  flex-direction: column;
-  justify-content: center;
-  align-items: flex-start;
-  gap: 8px;
-  align-self: stretch;
-  margin-top: auto; // Push to bottom
-  border-radius: 0px 0px 8px 8px;
-  border-top: 1px solid #E9EAEC; // Added to create separation
-  background: #FFF;
-  box-shadow: 0px 2px 4px 0px rgba(0, 0, 0, 0.00);
-
-  @media (max-width: 768px) {
-    padding: 10px 15px; // Adjust padding
-    height: 56px; // Adjust height
-  }
-}
-
-.progressText {
-  font-size: 12px;
-  color: #6b7280;
-  margin: 0;
-}
-
-.progressBar {
-  width: 100%;
-  height: 4px;
-  background-color: #f0f0f0;
-  border-radius: 2px;
-  overflow: hidden;
-}
-
-.progressFill {
-  height: 100%;
-  background-color: #7C3AED;
-  border-radius: 2px;
-  transition: width 0.3s ease;
 }

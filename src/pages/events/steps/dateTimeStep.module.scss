@@ -67,6 +67,16 @@
   }
 }
 
+.scheduleLockNotice {
+  padding: 12px 14px;
+  border-radius: 8px;
+  border: 1px solid #fcd34d;
+  background: #fffbeb;
+  color: #92400e;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
 // Each date block (start details / end details)
 .dateBlock {
   display: flex;

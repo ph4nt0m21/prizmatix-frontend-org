@@ -16,7 +16,6 @@ import { ReactComponent as ArtIcon } from '../../../assets/icons/art-icon.svg';
  *
  * @param {Object} props Component props
  * @param {number} props.currentStep - The currently active step number.
- * @param {Object} props.stepStatus - Object containing completion/visited status for each step.
  * @param {Function} props.navigateToStep - Function to navigate to a specific step.
  * @param {string} props.eventId - The ID of the event being edited.
  * @param {boolean} props.isMobileSidebarOpen - Controls if the sidebar is open on mobile.
@@ -25,11 +24,10 @@ import { ReactComponent as ArtIcon } from '../../../assets/icons/art-icon.svg';
  */
 const EditEventSidebar = ({
   currentStep,
-  stepStatus,
   navigateToStep,
   eventId,
-  isMobileSidebarOpen, // Prop for mobile sidebar state
-  toggleMobileSidebar // Prop for mobile sidebar toggle function
+  isMobileSidebarOpen,
+  toggleMobileSidebar,
 }) => {
 
   // Steps configuration (modified from eventCreationSidebar)
@@ -48,13 +46,8 @@ const EditEventSidebar = ({
    * @returns {string} CSS class
    */
   const getStepClass = (step) => {
-    const status = stepStatus[step.key] || {}; // Provide default empty object
     const isActive = currentStep === step.number;
-
-    if (isActive) return `${styles.step} ${styles.active}`;
-    if (status.completed) return `${styles.step} ${styles.completed}`;
-    if (status.visited) return `${styles.step} ${styles.visited}`;
-    return styles.step;
+    return isActive ? `${styles.step} ${styles.active}` : styles.step;
   };
 
   /**
@@ -84,10 +77,7 @@ const EditEventSidebar = ({
 
       <div className={styles.stepsList}>
         {steps.map((step) => {
-          const IconComponent = step.icon; // Get the SVG component
-          const status = stepStatus[step.key] || {}; // Provide default empty object
-          const isActive = currentStep === step.number;
-          const isCompleted = status.completed;
+          const IconComponent = step.icon;
 
           return (
             <div
@@ -99,31 +89,9 @@ const EditEventSidebar = ({
                 <IconComponent className={styles.stepIcon} />
               </div>
               <span className={styles.stepLabel}>{step.label}</span>
-              <div
-                className={`${styles.stepStatusIndicator} ${
-                  isActive ? styles.activeIndicator :
-                  isCompleted ? styles.completedIndicator : ''
-                }`}
-              >
-                {isCompleted && (
-                  <svg width="8" height="8" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" fill="#FFFFFF"/>
-                  </svg>
-                )}
-              </div>
             </div>
           );
         })}
-      </div>
-
-      <div className={styles.progressInfoContainer}>
-        <div className={styles.progressText}>Step {currentStep} of {steps.length}</div>
-        <div className={styles.progressBar}>
-          <div
-            className={styles.progressFill}
-            style={{ width: `${(currentStep / steps.length) * 100}%` }}
-          ></div>
-        </div>
       </div>
     </div>
   );
@@ -131,11 +99,10 @@ const EditEventSidebar = ({
 
 EditEventSidebar.propTypes = {
   currentStep: PropTypes.number.isRequired,
-  stepStatus: PropTypes.object.isRequired,
   navigateToStep: PropTypes.func.isRequired,
   eventId: PropTypes.string.isRequired,
-  isMobileSidebarOpen: PropTypes.bool.isRequired, // Added propType
-  toggleMobileSidebar: PropTypes.func.isRequired, // Added propType
+  isMobileSidebarOpen: PropTypes.bool.isRequired,
+  toggleMobileSidebar: PropTypes.func.isRequired,
 };
 
 export default EditEventSidebar;

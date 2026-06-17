@@ -2,6 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { OrganizationRegisterAPIComplete, OrganizationRegisterInitiateAPI, UploadOrganizerProfilePhotoAPI } from '../../services/allApis';
 import { useAuth } from '../../context/authContext';
+import {
+  notifyAuthError,
+  notifyAuthInfo,
+  notifyAuthWarning,
+} from '../../utils/authFeedback';
+import { clearEventData, saveEventData } from '../../utils/eventUtil';
 import EmailVerification from './registerSteps/emailVerification';
 import BasicDetails from './registerSteps/basicDetails';
 import CreatePassword from './registerSteps/createPassword';
@@ -28,9 +34,6 @@ const MultiStepRegisterPage = () => {
   
   // Email verification sub-step state
   const [verificationStep, setVerificationStep] = useState('email-entry'); // 'email-entry' or 'code-verification'
-  
-  // Local error state
-  const [error, setError] = useState(null);
   
   // Organization profile additional state
   const [uploadedLogo, setUploadedLogo] = useState(null);
@@ -68,10 +71,6 @@ const MultiStepRegisterPage = () => {
     if (isAuthenticated) {
       navigate('/', { replace: true });
     }
-
-    return () => {
-      setError(null);
-    };
   }, [isAuthenticated, navigate]);
   
   // Update progress indicator based on current step
@@ -101,12 +100,13 @@ const MultiStepRegisterPage = () => {
    * @param {string} type - Type of error (error, warning, info)
    */
   const showError = (message, type = "error") => {
-    setError({ message, type });
-    
-    // Auto-clear error after 5 seconds
-    setTimeout(() => {
-      setError(null);
-    }, 5000);
+    if (type === "warning") {
+      notifyAuthWarning(message);
+    } else if (type === "info") {
+      notifyAuthInfo(message);
+    } else {
+      notifyAuthError(message);
+    }
   };
 
   /**
@@ -240,8 +240,6 @@ const MultiStepRegisterPage = () => {
   const handleSubmit = async (overrides = {}) => {
     const registrationFormData = { ...formData, ...overrides };
 
-    clearError();
-    setError(null);
     let registrationCompleted = false;
 
     try {
@@ -284,8 +282,21 @@ const MultiStepRegisterPage = () => {
         await refreshProfile();
       }
 
+      const trimmedEventName = registrationFormData.eventName?.trim();
       resetFormData();
-      navigate('/', { replace: true });
+
+      if (trimmedEventName) {
+        clearEventData();
+        saveEventData({
+          name: trimmedEventName,
+          publishStatus: 'draft',
+          eventType: 'public',
+          showHostProfile: true,
+        });
+        navigate('/events/create', { replace: true });
+      } else {
+        navigate('/', { replace: true });
+      }
     } catch (error) {
       console.error('Registration failed:', error);
       if (registrationCompleted) {
@@ -303,13 +314,6 @@ const MultiStepRegisterPage = () => {
     }
   };
 
-  /**
-   * Clear form errors
-   */
-  const clearError = () => {
-    setError(null);
-  };
-  
   /**
    * Handle input changes for all steps
    * @param {Object} e - Event object
@@ -495,20 +499,6 @@ const MultiStepRegisterPage = () => {
   
   // Determine if register button should be disabled
   const isRegisterDisabled = isLoading?.['register'] || authLoading;
-  
-  // Show error message from either local state or auth state
-  const errorMessage = error?.message;
-  
-  // Render error message if exists
-  const renderErrorMessage = () => {
-    if (!errorMessage) return null;
-    
-    const className = styles.errorMessage + 
-      (error?.type === "warning" ? ` ${styles.warningMessage}` : '') +
-      (error?.type === "info" ? ` ${styles.infoMessage}` : '');
-    
-    return <div className={className}>{errorMessage}</div>;
-  };
   
   // If still checking auth status, show loading state
   if (authLoading && !isRegisterDisabled) {

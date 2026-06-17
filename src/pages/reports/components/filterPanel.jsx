@@ -34,7 +34,7 @@ const FilterPanel = ({ isOpen, onApplyFilters, currentFilters }) => {
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
               className={styles.filterInput}
-              placeholder="From"
+
             />
             <span className={styles.dateSeparator}>to</span>
             <input
@@ -43,7 +43,7 @@ const FilterPanel = ({ isOpen, onApplyFilters, currentFilters }) => {
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
               className={styles.filterInput}
-              placeholder="To"
+
             />
           </div>
         </div>

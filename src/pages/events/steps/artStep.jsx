@@ -705,7 +705,7 @@ const isFileSizeValid = (file, maxSizeMB) => {
               value={aiPrompt}
               onChange={(e) => setAiPrompt(e.target.value)}
               rows={4}
-              placeholder="e.g. warm jazz club stage, spotlights, crowd silhouettes"
+              placeholder="Describe the artwork style and scene"
               disabled={aiGenerating}
             />
             <div className={styles.aiModalActions}>

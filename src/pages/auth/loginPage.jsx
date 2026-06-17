@@ -2,48 +2,46 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/authContext";
 import styles from "./loginPage.module.scss";
+import {
+  REMEMBERED_LOGIN_EMAIL_KEY,
+  getLoginErrorMessage,
+  notifyAuthError,
+  notifyAuthInfo,
+  notifyAuthWarning,
+} from "../../utils/authFeedback";
 
-// Import SVG components
 import { ReactComponent as MailIcon } from "../../assets/icons/mail-icon.svg";
 import { ReactComponent as LockIcon } from "../../assets/icons/lock-icon.svg";
-import { ReactComponent as ArrowIcon } from "../../assets/icons/arrow-icon.svg";
 
-// --- EDITED FOR ICON FIX ---
-// Import SVGs as files to be used in <img> tags
 import eyeIcon from "../../assets/icons/eye-icon.svg";
 import eyeOffIcon from "../../assets/icons/eye-off-icon.svg";
 
-// Import images
 import wallpaperBg from "../../assets/images/auth-bg.jpg";
 import logoImage from "../../assets/images/logo.svg";
 import emojiSparkles from "../../assets/images/emoji-sparkles_.svg";
 
-/**
- * LoginPage component handles user authentication.
- * It uses the AuthContext for login logic and manages its own UI state.
- *
- * @returns {JSX.Element} The LoginPage component
- */
 const LoginPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { login, isAuthenticated } = useAuth(); // Use the login function and isAuthenticated state from context
+  const { login, isAuthenticated } = useAuth();
 
-  // Form state
   const [formData, setFormData] = useState({
     username: "",
     password: "",
   });
 
-  // Remember me state
   const [rememberMe, setRememberMe] = useState(false);
-
-  // UI states
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
 
-  // Redirect if already logged in
+  useEffect(() => {
+    const rememberedEmail = localStorage.getItem(REMEMBERED_LOGIN_EMAIL_KEY);
+    if (rememberedEmail) {
+      setFormData((prev) => ({ ...prev, username: rememberedEmail }));
+      setRememberMe(true);
+    }
+  }, []);
+
   useEffect(() => {
     if (isAuthenticated) {
       const from = location.state?.from?.pathname || "/";
@@ -51,95 +49,55 @@ const LoginPage = () => {
     }
   }, [isAuthenticated, navigate, location]);
 
-  /**
-   * Shows an error message in the UI.
-   * @param {string} message - The error message to display.
-   * @param {string} type - The type of error (e.g., "warning", "error").
-   */
-  const showError = (message, type = "error") => {
-    setError({ message, type });
-    setTimeout(() => {
-      setError(null);
-    }, 5000);
-  };
-
   useEffect(() => {
     if (location.state?.notice) {
-      showError(location.state.notice, "info");
+      notifyAuthInfo(location.state.notice);
       navigate(location.pathname, { replace: true, state: {} });
     }
   }, [location.pathname, location.state, navigate]);
 
-  /**
-   * Handles the form submission for login.
-   * @param {Event} e - The form submission event.
-   */
   const handleLogin = async (e) => {
     e.preventDefault();
     const { username, password } = formData;
 
-    // Form validation
     if (!username || !password) {
-      showError("Please fill all fields", "warning");
+      notifyAuthWarning("Please fill all fields");
       return;
     }
 
     setIsLoading(true);
-    setError(null);
 
     try {
-      // Call the login function from AuthContext, passing credentials and rememberMe status
       await login({ username, password }, rememberMe);
-
-      // On successful login, navigation will be handled by the useEffect that watches `isAuthenticated`
       const from = location.state?.from?.pathname || "/";
       navigate(from, { replace: true });
-
     } catch (err) {
-      // Catch errors thrown from the context's login function
-      const errorMessage = err.message || "Login failed. Please check your credentials.";
-      showError(errorMessage);
+      notifyAuthError(getLoginErrorMessage(err));
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Render error message if it exists
-  const renderErrorMessage = () => {
-    if (!error) return null;
-    const className = `${styles.errorMessage} ${
-      error.type === "warning"
-        ? styles.warningMessage
-        : error.type === "info"
-          ? styles.infoMessage
-          : ""
-    }`;
-    return <div className={className}>{error.message}</div>;
-  };
-
-  // Toggle password visibility
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
 
-  // Handle going back
-  const handleGoBack = () => {
-    navigate(-1);
+  const handleRememberMeChange = () => {
+    const nextValue = !rememberMe;
+    setRememberMe(nextValue);
+    if (!nextValue) {
+      localStorage.removeItem(REMEMBERED_LOGIN_EMAIL_KEY);
+    }
   };
 
   return (
     <div className={styles.loginPanel}>
-      {/* Left Panel with background */}
       <div className={styles.leftPanel}>
         <img className={styles.wallpaper} alt="Background" src={wallpaperBg} />
       </div>
 
-      {/* Right Panel with form */}
       <div className={styles.rightPanel}>
         <div className={styles.header}>
-          {/* <button className={styles.backButton} onClick={handleGoBack} aria-label="Go back">
-            <ArrowIcon className={styles.backIcon} />
-          </button> */}
           <div className={styles.logoContainer}>
             <img src={logoImage} alt="Prizmatix Logo" className={styles.logo} />
           </div>
@@ -152,8 +110,6 @@ const LoginPage = () => {
             </h1>
             <p className={styles.welcomeSubtitle}>We're glad to see you again.</p>
           </div>
-
-          {renderErrorMessage()}
 
           <form onSubmit={handleLogin} className={styles.form}>
             <div className={styles.inputGroup}>
@@ -181,7 +137,6 @@ const LoginPage = () => {
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   disabled={isLoading}
                 />
-                {/* --- EDITED FOR ICON FIX --- */}
                 <button
                   type="button"
                   className={styles.passwordToggle}
@@ -199,7 +154,7 @@ const LoginPage = () => {
                   type="checkbox"
                   className={styles.checkbox}
                   checked={rememberMe}
-                  onChange={() => setRememberMe(!rememberMe)}
+                  onChange={handleRememberMeChange}
                 />
                 <span>Remember Me</span>
               </label>
@@ -222,7 +177,6 @@ const LoginPage = () => {
             Don't have an account? <Link to="/register" className={styles.signupLink}>sign up, it's free</Link>
           </div>
         </div>
-
       </div>
     </div>
   );

@@ -29,6 +29,8 @@ const EventManageSidebar = ({
   isPublished = false,
   eventId,
   onDeleteClick,
+  onDuplicateClick,
+  isDuplicating = false,
   isMobileSidebarOpen,
   toggleMobileSidebar
 }) => {
@@ -385,7 +387,18 @@ const EventManageSidebar = ({
       <div
         className={`${styles.eventActions} ${isPublished ? styles.eventActionsNoPublishAbove : ''}`}
       >
-        <button type="button" className={styles.duplicateButton}>
+        <button
+          type="button"
+          className={styles.duplicateButton}
+          onClick={() => {
+            if (!eventId) {
+              alert("Event ID is required to duplicate this event.");
+              return;
+            }
+            onDuplicateClick?.();
+          }}
+          disabled={isDuplicating}
+        >
           <svg
             width="16"
             height="16"
@@ -441,6 +454,8 @@ EventManageSidebar.propTypes = {
   isPublished: PropTypes.bool,
   eventId: PropTypes.string,
   onDeleteClick: PropTypes.func,
+  onDuplicateClick: PropTypes.func,
+  isDuplicating: PropTypes.bool,
   isMobileSidebarOpen: PropTypes.bool.isRequired,
   toggleMobileSidebar: PropTypes.func.isRequired,
 };

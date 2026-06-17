@@ -138,7 +138,7 @@
 //                   id="subject"
 //                   value={subject}
 //                   onChange={(e) => setSubject(e.target.value)}
-//                   placeholder="e.g. Early Bird Ticket Issue"
+//                   placeholder="Subject"
 //                   required
 //                 />
 //               </div>
@@ -148,7 +148,7 @@
 //                   id="message"
 //                   value={message}
 //                   onChange={(e) => setMessage(e.target.value)}
-//                   placeholder="e.g. The great Music Festival 2025"
+//                   placeholder="Describe your issue"
 //                   rows="5"
 //                   required
 //                 />
@@ -449,7 +449,7 @@ const HelpSupportModal = ({ isOpen, onClose }) => {
                   id="subject"
                   value={subject}
                   onChange={(e) => setSubject(e.target.value)}
-                  placeholder="e.g. Early Bird Ticket Issue"
+                  placeholder="Subject"
                   required
                 />
               </div>
@@ -460,7 +460,7 @@ const HelpSupportModal = ({ isOpen, onClose }) => {
                   id="message"
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
-                  placeholder="e.g. The great Music Festival 2025"
+                  placeholder="Describe your issue"
                   rows="5"
                   required
                 />

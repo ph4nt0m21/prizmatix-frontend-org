@@ -189,7 +189,7 @@ const ReportsPage = () => {
               }}
               disabled={isEventsLoading || events.length === 0}
               loading={isEventsLoading}
-              placeholder=""
+
             />
           </div>
           <div className={styles.tabsContainer}>

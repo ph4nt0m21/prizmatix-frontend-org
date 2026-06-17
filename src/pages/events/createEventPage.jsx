@@ -46,6 +46,7 @@ import {
   mapStepTicketToApiPayload,
   mapEventApiPayloadToLocationForm,
   isEventLocationComplete,
+  getLocationStepMissingFieldLabels,
   getCreationWizardPublishBlockers,
   formatPublishBlockersAlertMessage,
   parseUsageLimitForAPI,
@@ -148,8 +149,8 @@ const CreateEventPage = () => {
     publishedAt: null,
 
     // Additional organizer info for publish preview
-    organizerName: "City Music Festival Ltd.",
-    organizerMeta: "23 Events Conducted",
+    organizerName: "",
+    organizerMeta: "",
   });
 
   // Track completion status for each step
@@ -1089,6 +1090,27 @@ const validateDiscountCodes = () =>
       alert("Please complete the Basic Info step first to create your event.");
       return;
     }
+    if (eventId && !canAdvance) {
+      const stepKey = getStepKeyByNumber(currentStep);
+      setStepStatus((prevStatus) => ({
+        ...prevStatus,
+        [stepKey]: {
+          ...prevStatus[stepKey],
+          visited: true,
+        },
+      }));
+      if (currentStep === 2) {
+        const missing = getLocationStepMissingFieldLabels(eventData);
+        alert(
+          missing.length
+            ? `Please add: ${missing.join(", ")}.`
+            : "Please complete all required location fields before continuing."
+        );
+      } else {
+        alert("Please complete all required fields before continuing.");
+      }
+      return;
+    }
     if (currentStep === 8) {
       await handlePublishEvent();
       return;
@@ -1333,9 +1355,9 @@ const validateDiscountCodes = () =>
           } catch (statusError) {
             console.error("Error fetching updated event status:", statusError);
           }
+          navigate(`/events/create/${eventId}/${currentStep + 1}`);
+          setCurrentStep((prevStep) => prevStep + 1);
         }
-        navigate(`/events/create/${eventId}/${currentStep + 1}`);
-        setCurrentStep((prevStep) => prevStep + 1);
       } else {
         alert(
           "Please complete the Basic Info step first to create your event."

@@ -37,14 +37,14 @@ import "react-toastify/dist/ReactToastify.css";
  * It's a separate component to ensure it's rendered inside AuthProvider.
  */
 const AppContent = () => {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isInitializing } = useAuth();
 
   useEffect(() => {
     checkAndCleanupEventData(120);
     setupEventDataCleanup();
   }, []);
 
-  if (isLoading) {
+  if (isInitializing) {
     return (
       <div className="loading-container">
         <LoadingSpinner fullPage={true} size="large" />
@@ -130,8 +130,13 @@ const AppContent = () => {
         {/* <Route path="/unauthorized" element={<UnauthorizedPage />} /> */}
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
+    </>
+  );
+};
 
-      {/* ✅ ToastContainer is outside Routes */}
+function App() {
+  return (
+    <>
       <ToastContainer
         position="top-right"
         autoClose={3000}
@@ -144,19 +149,10 @@ const AppContent = () => {
         pauseOnHover
         theme="light"
       />
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
     </>
-  );
-};
-
-
-/**
- * App component now simply wraps the main content with the AuthProvider.
- */
-function App() {
-  return (
-    <AuthProvider>
-      <AppContent />
-    </AuthProvider>
   );
 }
 

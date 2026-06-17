@@ -8,10 +8,15 @@ import { useAuth } from "../../context/authContext";
 import {
   GetOrganizerProfileAPI,
   UpdateBasicDetailsAPI,
+  UpdateOrganizationProfileAPI,
   UploadOrganizerProfilePhotoAPI,
   ChangePasswordAPI,
 } from "../../services/allApis";
-import { mapProfileResponseToUserData, notifyProfileUpdated } from "../../utils/profileUtil";
+import {
+  mapProfileResponseToUserData,
+  notifyProfileUpdated,
+  isPlaceholderOrganizationName,
+} from "../../utils/profileUtil";
 
 const GeneralIcon = (props) => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
@@ -68,6 +73,7 @@ const SettingsOverlay = ({ isOpen, onClose }) => {
     organizationName: "",
     profilePhotoUrl: "",
   });
+  const [savedOrganizationName, setSavedOrganizationName] = useState("");
 
   const [photoPreview, setPhotoPreview] = useState({ url: "", name: "", file: null });
   const [removePhoto, setRemovePhoto] = useState(false);
@@ -92,10 +98,12 @@ const SettingsOverlay = ({ isOpen, onClose }) => {
       mobileNumber: profile.mobileNumber || "",
       email: profile.email || "",
     });
+    const organizationName = profile.organizationName || "";
     setOrganizationDetails({
-      organizationName: profile.organizationName || "",
+      organizationName,
       profilePhotoUrl: profile.profilePhotoUrl || "",
     });
+    setSavedOrganizationName(organizationName);
     setPhotoPreview({ url: "", name: "", file: null });
     setRemovePhoto(false);
   };
@@ -182,23 +190,48 @@ const SettingsOverlay = ({ isOpen, onClose }) => {
     }
   };
 
+  const organizationNameChanged =
+    organizationDetails.organizationName.trim() !== savedOrganizationName.trim();
+  const hasOrganizationChanges = organizationNameChanged || Boolean(photoPreview.file);
+
   const handleSaveOrganizationDetails = async () => {
-    if (!photoPreview.file) {
-      toast.info("No profile photo changes to save.");
+    if (!hasOrganizationChanges) {
+      toast.info("No organization changes to save.");
+      return;
+    }
+
+    if (organizationNameChanged && !organizationDetails.organizationName.trim()) {
+      toast.error("Organization name is required.");
       return;
     }
 
     setIsSavingOrganization(true);
     try {
-      const photoResponse = await UploadOrganizerProfilePhotoAPI(photoPreview.file);
-      const latestProfile = photoResponse?.data?.data;
+      let latestProfile = null;
+
+      if (organizationNameChanged) {
+        const nameResponse = await UpdateOrganizationProfileAPI({
+          name: organizationDetails.organizationName.trim(),
+        });
+        latestProfile = nameResponse?.data?.data;
+      }
+
+      if (photoPreview.file) {
+        const photoResponse = await UploadOrganizerProfilePhotoAPI(photoPreview.file);
+        latestProfile = photoResponse?.data?.data || latestProfile;
+      }
+
       if (latestProfile) {
         await syncProfile(latestProfile);
       }
-      toast.success("Profile photo saved.");
+
+      const savedParts = [];
+      if (organizationNameChanged) savedParts.push("organization name");
+      if (photoPreview.file) savedParts.push("profile photo");
+      toast.success(`${savedParts.join(" and ")} saved.`);
     } catch (err) {
       console.error("Failed to save organization details:", err);
-      toast.error(err.response?.data?.message || "Could not save profile photo.");
+      toast.error(err.response?.data?.message || "Could not save organization details.");
     } finally {
       setIsSavingOrganization(false);
     }
@@ -419,11 +452,19 @@ const SettingsOverlay = ({ isOpen, onClose }) => {
         <label htmlFor="organizationName" className={styles.label}>Organization Name</label>
         <input
           id="organizationName"
-          className={`${styles.input} ${styles.readOnlyInput}`}
+          className={styles.input}
           value={organizationDetails.organizationName}
-          readOnly
+          onChange={(e) =>
+            setOrganizationDetails((prev) => ({ ...prev, organizationName: e.target.value }))
+          }
+          maxLength={100}
+          disabled={isSavingOrganization || isLoadingProfile}
         />
-        <p className={styles.formHelper}>Organization name cannot be changed here.</p>
+        {isPlaceholderOrganizationName(organizationDetails.organizationName) && (
+          <p className={styles.formHelper}>
+            You skipped this during signup — update it to your real organization name.
+          </p>
+        )}
       </div>
 
       <div className={styles.tabFooter}>
@@ -431,9 +472,9 @@ const SettingsOverlay = ({ isOpen, onClose }) => {
           type="button"
           className={styles.saveTabButton}
           onClick={handleSaveOrganizationDetails}
-          disabled={isSavingOrganization || isLoadingProfile || !photoPreview.file}
+          disabled={isSavingOrganization || isLoadingProfile || !hasOrganizationChanges}
         >
-          {isSavingOrganization ? "Saving…" : "Save profile photo"}
+          {isSavingOrganization ? "Saving…" : "Save organization details"}
         </button>
       </div>
     </div>

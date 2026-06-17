@@ -398,7 +398,7 @@ const verifyOtp = async (otp) => {
             <input
               type="email"
               name="email"
-              placeholder="Email"
+
               className={styles.input}
               value={formData.email}
               onChange={handleChange}

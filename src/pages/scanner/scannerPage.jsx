@@ -266,7 +266,7 @@ const ScannerPage = () => {
             }}
             disabled={isEventLoading || events.length === 0}
             loading={isEventLoading}
-            placeholder=""
+
             emptyListMessage="No events available"
           />
         </div>

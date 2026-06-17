@@ -100,7 +100,9 @@ const CustomTimeInput = forwardRef(({ value, onClick, onChange, onFocus, onBlur,
 
 const DateTimeStep = ({
   eventData = {},
-  handleInputChange = () => { }
+  handleInputChange = () => { },
+  scheduleLocked = false,
+  lockMessage = '',
 }) => {
   const initialStartDate = parseDateTimeStrings(eventData.dateTime?.startDate, eventData.dateTime?.startTime);
   const initialEndDate = parseDateTimeStrings(eventData.dateTime?.endDate, eventData.dateTime?.endTime);
@@ -273,6 +275,12 @@ const DateTimeStep = ({
       </div>
 
       <div className={styles.formSection}>
+        {scheduleLocked && (
+          <div className={styles.scheduleLockNotice} role="status">
+            {lockMessage}
+          </div>
+        )}
+
         {/* Event Start Details */}
         <div className={styles.dateBlock} data-node-id="486:8570">
           <div className={styles.sectionHeader}>
@@ -287,9 +295,10 @@ const DateTimeStep = ({
               <DatePicker
                 selected={startDate}
                 onChange={handleStartDateSelect}
+                disabled={scheduleLocked}
                 customInput={
                   <CustomDateInput
-                    placeholder="eg. The great Music Festival 2025"
+
                     value={startDateStr}
                     onChange={(e) => setStartDateStr(e.target.value)}
                     onFocus={() => { isStartDateFocused.current = true; }}
@@ -308,14 +317,14 @@ const DateTimeStep = ({
                 onChange={handleStartTimeSelect}
                 customInput={
                   <CustomTimeInput
-                    placeholder="eg. The great Music Festival 2025"
+
                     value={startTimeStr}
                     onChange={(e) => setStartTimeStr(e.target.value)}
                     onFocus={() => { isStartTimeFocused.current = true; }}
                     onBlur={handleStartTimeBlur}
                   />
                 }
-                disabled={!startDate}
+                disabled={scheduleLocked || !startDate}
                 showTimeSelect
                 showTimeSelectOnly
                 timeIntervals={15}
@@ -342,14 +351,14 @@ const DateTimeStep = ({
                 onChange={handleEndDateSelect}
                 customInput={
                   <CustomDateInput
-                    placeholder="eg. The great Music Festival 2025"
+
                     value={endDateStr}
                     onChange={(e) => setEndDateStr(e.target.value)}
                     onFocus={() => { isEndDateFocused.current = true; }}
                     onBlur={handleEndDateBlur}
                   />
                 }
-                disabled={!startDate}
+                disabled={scheduleLocked || !startDate}
                 minDate={startDate || new Date()}
                 dateFormat="dd-MM-yyyy"
                 showPopperArrow={false}
@@ -362,14 +371,14 @@ const DateTimeStep = ({
                 onChange={handleEndTimeSelect}
                 customInput={
                   <CustomTimeInput
-                    placeholder="eg. The great Music Festival 2025"
+
                     value={endTimeStr}
                     onChange={(e) => setEndTimeStr(e.target.value)}
                     onFocus={() => { isEndTimeFocused.current = true; }}
                     onBlur={handleEndTimeBlur}
                   />
                 }
-                disabled={!endDate}
+                disabled={scheduleLocked || !endDate}
                 showTimeSelect
                 showTimeSelectOnly
                 timeIntervals={15}
@@ -401,7 +410,9 @@ const DateTimeStep = ({
 
 DateTimeStep.propTypes = {
   eventData: PropTypes.object,
-  handleInputChange: PropTypes.func
+  handleInputChange: PropTypes.func,
+  scheduleLocked: PropTypes.bool,
+  lockMessage: PropTypes.string,
 };
 
 export default DateTimeStep;

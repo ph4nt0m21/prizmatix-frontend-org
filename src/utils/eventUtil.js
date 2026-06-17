@@ -289,6 +289,7 @@ export const mapEventApiPayloadToLocationForm = (eventPayload = {}) => {
     onlineEventUrl: isOnlineType
       ? firstString(
           locationPayload.onlineEventUrl,
+          ep?.eventLocationMeetingUrl,
           ep?.eventLocationAddress,
           locationPayload.address,
           ep?.address
@@ -299,6 +300,7 @@ export const mapEventApiPayloadToLocationForm = (eventPayload = {}) => {
       ? firstString(
           locationPayload.virtualMeetingUrl,
           locationPayload.onlineEventUrl,
+          ep?.eventLocationMeetingUrl,
           ep?.onlineEventUrl
         )
       : "",
@@ -330,31 +332,265 @@ export const mapEventApiPayloadToLocationForm = (eventPayload = {}) => {
   };
 };
 
+const TBA_PLACEHOLDER_VENUE = /^to be announced$/i;
+const TBA_PLACEHOLDER_DESCRIPTION =
+  /location details will be announced closer to the event date/i;
+
+/**
+ * Removes backend TBA placeholder text when switching to a concrete location type.
+ * @param {Object} location
+ * @returns {Object}
+ */
+export const clearTbaPlaceholderLocationFields = (location = {}) => {
+  const next = { ...location };
+  if (TBA_PLACEHOLDER_VENUE.test(String(next.venue ?? "").trim())) {
+    next.venue = "";
+  }
+  if (TBA_PLACEHOLDER_DESCRIPTION.test(String(next.additionalInfo ?? "").trim())) {
+    next.additionalInfo = "";
+  }
+  return next;
+};
+
 /** Default LocationStep form state from API or parent `eventData.location`. */
-export const buildLocationFormState = (data = {}) => ({
-  locationType: data.locationType || "physical",
-  isToBeAnnounced: Boolean(data.isToBeAnnounced),
-  isPrivateLocation: Boolean(data.isPrivateLocation),
-  eventLocationId: data.eventLocationId ?? null,
-  googleMapLink: data.googleMapLink || "",
-  venue: data.venue || "",
-  street: data.street || "",
-  streetNumber: data.streetNumber || "",
-  city: data.city || "",
-  postalCode: data.postalCode || "",
-  state: data.state || "",
-  country: data.country || "",
-  additionalInfo: data.additionalInfo || "",
-  onlineEventUrl: data.onlineEventUrl || "",
-  onlineEventDescription: data.onlineEventDescription || "",
-  virtualMeetingUrl: data.virtualMeetingUrl || "",
-  latitude: data.latitude ?? "",
-  longitude: data.longitude ?? "",
-  formattedAddress: data.formattedAddress || "",
-});
+export const buildLocationFormState = (data = {}) => {
+  const state = {
+    locationType: data.locationType || "physical",
+    isToBeAnnounced: Boolean(data.isToBeAnnounced),
+    isPrivateLocation: Boolean(data.isPrivateLocation),
+    eventLocationId: data.eventLocationId ?? null,
+    googleMapLink: data.googleMapLink || "",
+    venue: data.venue || "",
+    street: data.street || "",
+    streetNumber: data.streetNumber || "",
+    city: data.city || "",
+    postalCode: data.postalCode || "",
+    state: data.state || "",
+    country: data.country || "",
+    additionalInfo: data.additionalInfo || "",
+    onlineEventUrl: data.onlineEventUrl || "",
+    onlineEventDescription: data.onlineEventDescription || "",
+    virtualMeetingUrl: data.virtualMeetingUrl || "",
+    latitude: data.latitude ?? "",
+    longitude: data.longitude ?? "",
+    formattedAddress: data.formattedAddress || "",
+  };
+
+  const isPhysicalOrPrivate =
+    !state.isToBeAnnounced &&
+    state.locationType !== "tba" &&
+    state.locationType !== "online";
+
+  return isPhysicalOrPrivate ? clearTbaPlaceholderLocationFields(state) : state;
+};
+
+/** @returns {'inPerson'|'online'|'tba'} */
+export const getLocationModeKey = (location = {}) => {
+  if (location.isToBeAnnounced || location.locationType === "tba") {
+    return "tba";
+  }
+  if (location.locationType === "online") {
+    return "online";
+  }
+  return "inPerson";
+};
+
+const IN_PERSON_DRAFT_KEYS = [
+  "eventLocationId",
+  "googleMapLink",
+  "venue",
+  "street",
+  "streetNumber",
+  "city",
+  "postalCode",
+  "state",
+  "country",
+  "additionalInfo",
+  "virtualMeetingUrl",
+  "latitude",
+  "longitude",
+  "formattedAddress",
+];
+
+const ONLINE_DRAFT_KEYS = [
+  "onlineEventUrl",
+  "onlineEventDescription",
+  "additionalInfo",
+];
+
+const TBA_DRAFT_KEYS = ["additionalInfo"];
+
+/**
+ * Snapshot fields for one location mode so switching types can restore unsaved edits.
+ * @param {Object} location
+ * @param {'inPerson'|'online'|'tba'} modeKey
+ */
+export const pickLocationModeFields = (location = {}, modeKey) => {
+  const keys =
+    modeKey === "online"
+      ? ONLINE_DRAFT_KEYS
+      : modeKey === "tba"
+        ? TBA_DRAFT_KEYS
+        : IN_PERSON_DRAFT_KEYS;
+
+  return keys.reduce((draft, key) => {
+    draft[key] = location[key] ?? (key === "eventLocationId" ? null : "");
+    return draft;
+  }, {});
+};
+
+/**
+ * Build LocationStep state after changing location type, restoring per-mode drafts.
+ * @param {Object} prev - Current form state
+ * @param {string} type - Target type: physical, private, online, tba
+ * @param {Object} drafts - Map of modeKey -> field snapshot
+ */
+export const buildLocationStateForTypeChange = (prev, type, drafts = {}) => {
+  const fromMode = getLocationModeKey(prev);
+  const nextDrafts = {
+    ...drafts,
+    [fromMode]: pickLocationModeFields(prev, fromMode),
+  };
+
+  const isTba = type === "tba";
+  const nextMode = isTba ? "tba" : type === "online" ? "online" : "inPerson";
+
+  const inPersonDraft = nextDrafts.inPerson || {};
+  const onlineDraft = nextDrafts.online || {};
+  const tbaDraft = nextDrafts.tba || {};
+  const activeDraft =
+    nextMode === "online"
+      ? onlineDraft
+      : nextMode === "tba"
+        ? tbaDraft
+        : inPersonDraft;
+
+  let next = {
+    eventLocationId:
+      inPersonDraft.eventLocationId ?? prev.eventLocationId ?? null,
+    locationType: isTba ? "tba" : type,
+    isToBeAnnounced: isTba,
+    isPrivateLocation: type === "private",
+    googleMapLink: inPersonDraft.googleMapLink ?? "",
+    venue: inPersonDraft.venue ?? "",
+    street: inPersonDraft.street ?? "",
+    streetNumber: inPersonDraft.streetNumber ?? "",
+    city: inPersonDraft.city ?? "",
+    postalCode: inPersonDraft.postalCode ?? "",
+    state: inPersonDraft.state ?? "",
+    country: inPersonDraft.country ?? "",
+    virtualMeetingUrl: inPersonDraft.virtualMeetingUrl ?? "",
+    latitude: inPersonDraft.latitude ?? "",
+    longitude: inPersonDraft.longitude ?? "",
+    formattedAddress: inPersonDraft.formattedAddress ?? "",
+    onlineEventUrl: onlineDraft.onlineEventUrl ?? "",
+    onlineEventDescription: onlineDraft.onlineEventDescription ?? "",
+    additionalInfo: activeDraft.additionalInfo ?? "",
+  };
+
+  if (!isTba && fromMode === "tba") {
+    next = clearTbaPlaceholderLocationFields(next);
+  }
+
+  return { next, drafts: nextDrafts };
+};
 
 export const serializeLocationFormState = (location = {}) =>
   JSON.stringify(buildLocationFormState(location));
+
+const SHORT_GOOGLE_MAP_LINK =
+  /^https?:\/\/(?:maps\.app\.goo\.gl|goo\.gl\/maps)/i;
+
+/**
+ * Extract lat/lng from common Google Maps URL formats.
+ * @param {string} url
+ * @returns {{ lat: number, lng: number } | null}
+ */
+export const parseCoordsFromGoogleMapsUrl = (url) => {
+  const trimmedUrl = String(url || "").trim();
+  if (!trimmedUrl) {
+    return null;
+  }
+
+  let match = trimmedUrl.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+  if (match?.length >= 3) {
+    return { lat: parseFloat(match[1]), lng: parseFloat(match[2]) };
+  }
+
+  match = trimmedUrl.match(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/);
+  if (match?.length >= 3) {
+    return { lat: parseFloat(match[1]), lng: parseFloat(match[2]) };
+  }
+
+  match = trimmedUrl.match(/[?&]ll=(-?\d+\.\d+),(-?\d+\.\d+)/);
+  if (match?.length >= 3) {
+    return { lat: parseFloat(match[1]), lng: parseFloat(match[2]) };
+  }
+
+  return null;
+};
+
+/**
+ * Store a compact link when possible. Long search-bar URLs exceed DB limits and
+ * are replaced with a canonical @lat,lng link when coordinates are known.
+ * @param {string} url
+ * @param {number|string|null|undefined} lat
+ * @param {number|string|null|undefined} lng
+ * @returns {string}
+ */
+export const normalizeGoogleMapLink = (url, lat, lng) => {
+  const trimmed = String(url || "").trim();
+  if (!trimmed) {
+    return "";
+  }
+
+  const parsedLat = lat != null && lat !== "" ? parseFloat(lat) : NaN;
+  const parsedLng = lng != null && lng !== "" ? parseFloat(lng) : NaN;
+  const fromUrl = parseCoordsFromGoogleMapsUrl(trimmed);
+  const useLat = Number.isFinite(parsedLat) ? parsedLat : fromUrl?.lat;
+  const useLng = Number.isFinite(parsedLng) ? parsedLng : fromUrl?.lng;
+
+  if (Number.isFinite(useLat) && Number.isFinite(useLng)) {
+    return `https://www.google.com/maps/@${useLat},${useLng},17z`;
+  }
+
+  if (SHORT_GOOGLE_MAP_LINK.test(trimmed) || trimmed.length <= 512) {
+    return trimmed;
+  }
+
+  const placeMatch = trimmed.match(
+    /^(https:\/\/www\.google\.com\/maps\/place\/[^/@?]+)/i
+  );
+  if (placeMatch) {
+    return placeMatch[1];
+  }
+
+  return trimmed.slice(0, 2048);
+};
+
+/** @param {string} url */
+export const isShortGoogleMapLink = (url) =>
+  SHORT_GOOGLE_MAP_LINK.test(String(url || "").trim());
+
+/**
+ * Build a geocoder query from structured address fields.
+ * @param {Object} location
+ * @returns {string}
+ */
+export const buildAddressGeocodeQuery = (location = {}) => {
+  const parts = [
+    location.streetNumber,
+    location.street,
+    location.city,
+    location.state,
+    location.postalCode,
+    location.country,
+  ]
+    .map((part) => String(part ?? "").trim())
+    .filter(Boolean);
+
+  return parts.length >= 2 ? parts.join(", ") : "";
+};
 
 /**
  * Prepare location data for API submission
@@ -409,7 +645,11 @@ export const prepareLocationDataForAPI = (locationData, eventId = null) => {
     state: locationData.state || "", // State is now always passed as null
     country: locationData.country || "", // Country is now hardcoded
     postalCode: locationData.postalCode || "",
-    googleMapLink: locationData.googleMapLink || "",
+    googleMapLink: normalizeGoogleMapLink(
+      locationData.googleMapLink,
+      locationData.latitude,
+      locationData.longitude
+    ),
     onlineEventUrl: (locationData.virtualMeetingUrl || "").trim(),
     onlineEventDescription: "",
     additionalInfo: locationData.additionalInfo || "",
@@ -816,7 +1056,9 @@ export const preparePublishEventDataForAPI = (eventId = null) => {
 const PHYSICAL_LOCATION_FIELDS = [
   { key: "venue", label: "Venue name" },
   { key: "street", label: "Street address" },
+  { key: "streetNumber", label: "Street No." },
   { key: "city", label: "City" },
+  { key: "postalCode", label: "Postal code" },
   { key: "country", label: "Country" },
 ];
 
@@ -846,7 +1088,9 @@ export const getEffectiveEventLocation = (event = {}) => {
       nested.isToBeAnnounced === true || event.eventLocationType === "tba",
     venue: firstString(nested.venue, event.eventLocationName),
     street: firstString(nested.street, event.eventLocationStreet),
+    streetNumber: firstString(nested.streetNumber, event.eventLocationStreetNumber),
     city: firstString(nested.city, event.eventLocationCity),
+    postalCode: firstString(nested.postalCode, event.eventLocationPostalCode),
     state: firstString(nested.state, event.eventLocationState),
     country: firstString(
       nested.country,
@@ -881,22 +1125,37 @@ export const getPhysicalLocationMissingFieldLabels = (location = {}) => {
   ).map(({ label }) => label);
 };
 
+export const getOnlineLocationMissingFieldLabels = (location = {}) => {
+  const url = String(location.onlineEventUrl ?? "").trim();
+  return url ? [] : ["Meeting link URL"];
+};
+
 /**
- * Physical venues need venue, street, city, and country.
- * State/province and additional information are optional.
+ * Required fields for the current location mode (excludes optional map / hybrid links).
+ * @param {Object} event
+ * @returns {string[]}
+ */
+export const getLocationStepMissingFieldLabels = (event = {}) => {
+  const mode = getEventLocationMode(event);
+  const location = getEffectiveEventLocation(event);
+  if (mode === "tba") {
+    return [];
+  }
+  if (mode === "online") {
+    return getOnlineLocationMissingFieldLabels(location);
+  }
+  return getPhysicalLocationMissingFieldLabels(location);
+};
+
+/**
+ * Physical venues need venue, street, street no., city, postal code, and country.
+ * Google Maps link and virtual meeting URL are optional.
+ * Online events require a meeting link URL.
  * @param {Object} event
  * @returns {boolean}
  */
-export const isEventLocationComplete = (event = {}) => {
-  const mode = getEventLocationMode(event);
-  if (mode === "tba" || mode === "online") {
-    return true;
-  }
-  return (
-    getPhysicalLocationMissingFieldLabels(getEffectiveEventLocation(event))
-      .length === 0
-  );
-};
+export const isEventLocationComplete = (event = {}) =>
+  getLocationStepMissingFieldLabels(event).length === 0;
 
 /**
  * True when all creation steps 1–7 are done and step 8 (publish) is not completed yet.
@@ -992,11 +1251,8 @@ export const getEventPublishMissingItems = (event = {}, dashboard = {}) => {
   }
 
   if (!isEventLocationComplete(event)) {
-    const mode = getEventLocationMode(event);
-    const missingFields = getPhysicalLocationMissingFieldLabels(
-      getEffectiveEventLocation(event)
-    );
-    if (mode === "physical" && missingFields.length > 0) {
+    const missingFields = getLocationStepMissingFieldLabels(event);
+    if (missingFields.length > 0) {
       missing.push(
         `Location — add: ${missingFields.join(", ")} (Event Page → Location).`
       );
@@ -1069,11 +1325,7 @@ export const getCreationWizardPublishBlockers = (event = {}, stepStatus = {}) =>
     {
       key: "location",
       label: "Location",
-      getMissing: () => {
-        const mode = getEventLocationMode(event);
-        if (mode === "tba" || mode === "online") return [];
-        return getPhysicalLocationMissingFieldLabels(event.location);
-      },
+      getMissing: () => getLocationStepMissingFieldLabels(event),
     },
     {
       key: "dateTime",

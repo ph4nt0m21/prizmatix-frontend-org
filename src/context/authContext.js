@@ -7,6 +7,7 @@ import {
 } from '../services/allApis';
 import { getUserData, setUserData } from '../utils/authUtil';
 import { mapProfileResponseToUserData, notifyProfileUpdated } from '../utils/profileUtil';
+import { REMEMBERED_LOGIN_EMAIL_KEY } from '../utils/authFeedback';
 
 const AuthContext = createContext();
 
@@ -17,7 +18,7 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isInitializing, setIsInitializing] = useState(true);
   const [error, setError] = useState(null);
 
   const refreshProfile = useCallback(async () => {
@@ -46,7 +47,7 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const checkAuthStatus = async () => {
-      setIsLoading(true);
+      setIsInitializing(true);
       const token = Cookies.get('token');
       if (token) {
         const storedUserData = getUserData();
@@ -59,21 +60,31 @@ export const AuthProvider = ({ children }) => {
         setIsAuthenticated(false);
         setCurrentUser(null);
       }
-      setIsLoading(false);
+      setIsInitializing(false);
     };
 
     checkAuthStatus();
   }, [refreshProfile]);
 
   const login = async (credentials, rememberMe = false) => {
-    setIsLoading(true);
     setError(null);
 
-    try {
-      const response = await LoginAPI(credentials);
+    const normalizedCredentials = {
+      ...credentials,
+      username: credentials.username?.trim().toLowerCase() ?? '',
+    };
 
-      const expiryDays = rememberMe ? 7 : 1;
-      Cookies.set('token', response.data.token, { expires: expiryDays });
+    try {
+      const response = await LoginAPI(normalizedCredentials);
+
+      const cookieOptions = rememberMe ? { expires: 7 } : undefined;
+      Cookies.set('token', response.data.token, cookieOptions);
+
+      if (rememberMe) {
+        localStorage.setItem(REMEMBERED_LOGIN_EMAIL_KEY, normalizedCredentials.username);
+      } else {
+        localStorage.removeItem(REMEMBERED_LOGIN_EMAIL_KEY);
+      }
 
       const userData = {
         id: response.data.id || response.data.userId,
@@ -82,7 +93,7 @@ export const AuthProvider = ({ children }) => {
         firstName: response.data.firstName || '',
         lastName: response.data.lastName || '',
         name: response.data.name || `${response.data.firstName || ''} ${response.data.lastName || ''}`.trim(),
-        email: response.data.email || credentials.username,
+        email: response.data.email || normalizedCredentials.username,
         role: response.data.roles && response.data.roles.length > 0 ? response.data.roles[0] : null,
       };
       setUserData(userData);
@@ -97,14 +108,11 @@ export const AuthProvider = ({ children }) => {
       const errorMessage =
         err.response?.data?.message || 'Login failed. Please check your credentials.';
       setError(errorMessage);
-      throw new Error(errorMessage);
-    } finally {
-      setIsLoading(false);
+      throw err;
     }
   };
 
   const register = async (userData) => {
-    setIsLoading(true);
     setError(null);
     try {
       const response = await OrganizationRegisterInitiateAPI(userData);
@@ -128,9 +136,7 @@ export const AuthProvider = ({ children }) => {
         err.response?.data?.error ||
         'Registration failed. Please try again.';
       setError(errorMessage);
-      throw new Error(errorMessage);
-    } finally {
-      setIsLoading(false);
+      throw err;
     }
   };
 
@@ -148,7 +154,8 @@ export const AuthProvider = ({ children }) => {
   const value = {
     currentUser,
     isAuthenticated,
-    isLoading,
+    isInitializing,
+    isLoading: isInitializing,
     error,
     login,
     register,
@@ -159,7 +166,7 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider value={value}>
-      {!isLoading && children}
+      {children}
     </AuthContext.Provider>
   );
 };
