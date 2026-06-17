@@ -871,7 +871,7 @@ const EmailCampaignsPage = () => {
           campaignName: campaignName || "Draft Campaign",
           subject: subject || "",
           message: "",
-          replyTo: userData?.email || "support@prizmatix.nz",
+          replyTo: getUserData()?.email || "support@prizmatix.nz",
           recipientType: "EVENT_BUYERS",
           sent: false,
           eventIds: [],

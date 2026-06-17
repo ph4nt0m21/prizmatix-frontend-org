@@ -7,6 +7,7 @@ import {
   notifyAuthSuccess,
   notifyAuthWarning,
 } from "../../utils/authFeedback";
+import styles from "./loginPage.module.scss";
 
 /**
  * ResetPasswordPage component
