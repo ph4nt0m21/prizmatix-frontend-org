@@ -29,6 +29,9 @@ export const notifyProfileUpdated = () => {
   window.dispatchEvent(new Event("profile-updated"));
 };
 
+export const isPlaceholderOrganizationName = (name) =>
+  typeof name === "string" && /'s Organization$/i.test(name.trim());
+
 export const getProfileInitials = (userData = {}) => {
   if (userData.firstName && userData.lastName) {
     return `${userData.firstName[0]}${userData.lastName[0]}`.toUpperCase();

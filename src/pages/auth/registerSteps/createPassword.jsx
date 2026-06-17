@@ -188,7 +188,7 @@ const handlePasswordBlur = () => {
                   id="password"
                   name="password"
                   className={styles.input}
-                  placeholder="Enter your password"
+
                   value={formData.password}
                   onChange={handleChange}
                   onFocus={handlePasswordFocus}
@@ -277,7 +277,7 @@ const handlePasswordBlur = () => {
                   id="confirmPassword"
                   name="confirmPassword"
                   className={styles.input}
-                  placeholder="Enter your password"
+
                   value={formData.confirmPassword}
                   onChange={handleConfirmPasswordChange}
                   disabled={isLoading}

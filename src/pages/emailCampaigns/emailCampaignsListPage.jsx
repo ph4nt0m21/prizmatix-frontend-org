@@ -138,7 +138,7 @@
 //         <div className={styles.right}>
 //             <div className={styles.searchBar}>
 //                 <IconSearch />
-//                 <input type="text" placeholder="Search" />
+//                 <input type="text" />
 //             </div>
 //           <button className={styles.primaryButton} onClick={handleNewCampaign}>
 //             + New Email Campaign
@@ -502,7 +502,7 @@ const EmailCampaignsListPage = () => {
           <div className={styles.right}>
             <div className={styles.searchBar}>
               <IconSearch />
-              <input type="text" placeholder="Search" />
+              <input type="text" />
             </div>
             <button
               type="button"

@@ -13,6 +13,7 @@ import {
   GetEventAPI,
   GetEventStatusAPI,
   DeleteEventAPI,
+  DuplicateEventAPI,
 } from "../../services/allApis";
 import { getUserData } from "../../utils/authUtil";
 import OverviewSection from "./sections/overviewSection";
@@ -36,6 +37,7 @@ const EventManagePage = () => {
   const [currentSection, setCurrentSection] = useState("overview");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isDuplicating, setIsDuplicating] = useState(false);
 
   const publishGate = useMemo(
     () =>
@@ -107,6 +109,31 @@ const EventManagePage = () => {
     navigate(`/events/create/${eventId}/8`);
     if (window.innerWidth <= 768 && isManageSidebarOpen) {
       setIsManageSidebarOpen(false);
+    }
+  };
+
+  const duplicateEvent = async () => {
+    if (!eventId) return;
+
+    try {
+      setIsDuplicating(true);
+      const response = await DuplicateEventAPI(eventId);
+      const newEventId = response.data?.eventId;
+
+      if (!newEventId) {
+        throw new Error("Duplicate event ID missing from response.");
+      }
+
+      toast.success("Event duplicated successfully.");
+      const targetStep = eventStatus === "PAST" ? 3 : 8;
+      navigate(`/events/create/${newEventId}/${targetStep}`);
+    } catch (duplicateError) {
+      console.error("Failed to duplicate event:", duplicateError);
+      toast.error(
+        duplicateError.response?.data?.message || "Failed to duplicate the event."
+      );
+    } finally {
+      setIsDuplicating(false);
     }
   };
 
@@ -196,6 +223,8 @@ const EventManagePage = () => {
           isPublished={!!eventData?.isPublished}
           eventId={eventId}
           onDeleteClick={() => setShowDeleteConfirm(true)}
+          onDuplicateClick={duplicateEvent}
+          isDuplicating={isDuplicating}
           isMobileSidebarOpen={isManageSidebarOpen}
           toggleMobileSidebar={() => setIsManageSidebarOpen(!isManageSidebarOpen)}
         />

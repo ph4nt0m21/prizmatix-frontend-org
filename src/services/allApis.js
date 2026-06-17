@@ -112,6 +112,11 @@ export const DeleteEventAPI = async (eventId, userId) => {
   });
 };
 
+// Duplicate an event as a new draft
+export const DuplicateEventAPI = async (eventId) => {
+  return await apiClient.post(`/api/events/${eventId}/duplicate`);
+};
+
 // Update event status
 export const GetEventStatusAPI = async (eventId, statusData) => {
   return await apiClient.get(`/api/events/${eventId}/status`, statusData);

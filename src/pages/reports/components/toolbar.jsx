@@ -72,7 +72,7 @@ const Toolbar = ({ activeTab, searchQuery, setSearchQuery, data, currentFilters,
           <FiSearch className={styles.searchIcon} />
           <input
             type="text"
-            placeholder={searchPlaceholder}
+
             className={styles.searchInput}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}

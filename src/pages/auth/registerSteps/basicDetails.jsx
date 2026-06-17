@@ -109,7 +109,7 @@ const BasicDetails = ({
                   id="firstName"
                   name="firstName"
                   className={styles.input}
-                  placeholder="eg. John"
+
                   value={formData.firstName}
                   onChange={handleChange}
                   disabled={isLoading}
@@ -128,7 +128,7 @@ const BasicDetails = ({
                   id="lastName"
                   name="lastName"
                   className={styles.input}
-                  placeholder="eg. Doe"
+
                   value={formData.lastName}
                   onChange={handleChange}
                   disabled={isLoading}
@@ -149,7 +149,7 @@ const BasicDetails = ({
                 id="mobileNumber"
                 name="mobileNumber"
                 className={styles.input}
-                placeholder="eg. 97364856**"
+
                 value={formData.mobileNumber}
                 onChange={handleChange}
                 disabled={isLoading}
@@ -169,7 +169,7 @@ const BasicDetails = ({
                 id="email"
                 name="email"
                 className={`${styles.input} ${styles.disabledInput}`}
-                placeholder="johndoe@gmail.com"
+
                 value={formData.email}
                 onChange={handleChange}
                 disabled={true} // Email is pre-filled and disabled since it was entered in previous step

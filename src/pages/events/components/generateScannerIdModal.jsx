@@ -64,7 +64,7 @@ const GenerateScannerIdModal = ({ isOpen, onClose, assignedEventId }) => {
               value={formData.firstName}
               onChange={handleChange}
               className={styles.formInput}
-              placeholder="First name"
+
             />
           </div>
 
@@ -78,7 +78,7 @@ const GenerateScannerIdModal = ({ isOpen, onClose, assignedEventId }) => {
               value={formData.lastName}
               onChange={handleChange}
               className={styles.formInput}
-              placeholder="Last name"
+
             />
           </div>
 
@@ -92,7 +92,7 @@ const GenerateScannerIdModal = ({ isOpen, onClose, assignedEventId }) => {
               value={formData.email}
               onChange={handleChange}
               className={styles.formInput}
-              placeholder="user@example.com"
+
             />
           </div>
 
@@ -106,7 +106,7 @@ const GenerateScannerIdModal = ({ isOpen, onClose, assignedEventId }) => {
               value={formData.password}
               onChange={handleChange}
               className={styles.formInput}
-              placeholder="Enter a secure password"
+
             />
           </div>
         </div>

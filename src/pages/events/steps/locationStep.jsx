@@ -6,6 +6,13 @@ import OptionalLabel from '../../../components/common/optionalLabel/optionalLabe
 import {
   buildLocationFormState,
   serializeLocationFormState,
+  parseCoordsFromGoogleMapsUrl,
+  normalizeGoogleMapLink,
+  isShortGoogleMapLink,
+  buildAddressGeocodeQuery,
+  getLocationModeKey,
+  pickLocationModeFields,
+  buildLocationStateForTypeChange,
 } from '../../../utils/eventUtil';
 
 /**
@@ -28,6 +35,12 @@ const LocationStep = ({
   const markerRef = useRef(null);
   const skipParentSyncRef = useRef(true);
   const lastSyncedToParentRef = useRef('');
+  const locationDraftsRef = useRef(null);
+  if (locationDraftsRef.current == null) {
+    const initial = buildLocationFormState(locationData);
+    const modeKey = getLocationModeKey(initial);
+    locationDraftsRef.current = { [modeKey]: pickLocationModeFields(initial, modeKey) };
+  }
   
   // Local state for form management
   const [location, setLocation] = useState(() => buildLocationFormState(locationData));
@@ -117,74 +130,85 @@ const LocationStep = ({
   };
   
   /**
-   * NEW/SIMPLIFIED: Extracts latitude and longitude from a Google Maps URL
-   * and updates the state.
+   * Extracts latitude and longitude from a Google Maps URL (or address fields for short links).
+   * Long search-bar URLs are normalized to a compact @lat,lng link before save.
    * @param {string} url - The Google Maps URL
+   * @param {Object} [addressContext] - Current location fields for geocoding fallback
    */
-const extractCoordsFromUrl = (url) => {
-  const trimmedUrl = String(url || '').trim();
-  if (!trimmedUrl) {
-    return null;
-  }
-
-  setIsLoadingMap(true);
-  try {
-    let lat;
-    let lng;
-
-    // Pattern 1: @lat,lng
-    let match = trimmedUrl.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
-    if (match && match.length >= 3) {
-      lat = parseFloat(match[1]);
-      lng = parseFloat(match[2]);
-    }
-
-    // Pattern 2: !3d<lat>!4d<lng> (fallback)
-    if (!lat || !lng) {
-      match = trimmedUrl.match(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/);
-      if (match && match.length >= 3) {
-        lat = parseFloat(match[1]);
-        lng = parseFloat(match[2]);
-      }
-    }
-
-    // Pattern 3: query params ll=lat,lng
-    if (!lat || !lng) {
-      match = trimmedUrl.match(/[?&]ll=(-?\d+\.\d+),(-?\d+\.\d+)/);
-      if (match && match.length >= 3) {
-        lat = parseFloat(match[1]);
-        lng = parseFloat(match[2]);
-      }
-    }
-
-    setLocation((prevLocation) => ({
-      ...prevLocation,
-      googleMapLink: trimmedUrl,
-      ...(lat && lng
-        ? { latitude: lat, longitude: lng }
-        : {}),
-    }));
-
-    if (!lat || !lng) {
-      toast.info(
-        'Map link saved. Coordinates could not be extracted — address fields will still be saved.'
-      );
+  const extractCoordsFromUrl = (url, addressContext) => {
+    const trimmedUrl = String(url || '').trim();
+    if (!trimmedUrl) {
       return null;
     }
 
-    return { lat, lng };
-  } catch (error) {
-    console.error('Error parsing URL:', error);
-    toast.error('Could not process the map link. You can still save address fields.');
-    setLocation((prevLocation) => ({
-      ...prevLocation,
-      googleMapLink: trimmedUrl,
-    }));
-    return null;
-  } finally {
-    setTimeout(() => setIsLoadingMap(false), 500);
-  }
-};
+    setIsLoadingMap(true);
+
+    const coords = parseCoordsFromGoogleMapsUrl(trimmedUrl);
+    const lat = coords?.lat;
+    const lng = coords?.lng;
+    const normalizedLink = normalizeGoogleMapLink(trimmedUrl, lat, lng);
+
+    const applyLinkAndCoords = (nextLat, nextLng) => {
+      setLocation((prevLocation) => ({
+        ...prevLocation,
+        googleMapLink: normalizeGoogleMapLink(trimmedUrl, nextLat, nextLng),
+        ...(Number.isFinite(nextLat) && Number.isFinite(nextLng)
+          ? { latitude: nextLat, longitude: nextLng }
+          : {}),
+      }));
+    };
+
+    const finishLoading = () => {
+      setTimeout(() => setIsLoadingMap(false), 500);
+    };
+
+    try {
+      if (Number.isFinite(lat) && Number.isFinite(lng)) {
+        applyLinkAndCoords(lat, lng);
+        finishLoading();
+        return { lat, lng };
+      }
+
+      const addressQuery = buildAddressGeocodeQuery(addressContext || location);
+      if (addressQuery && window.google?.maps?.Geocoder) {
+        const geocoder = new window.google.maps.Geocoder();
+        geocoder.geocode({ address: addressQuery }, (results, status) => {
+          if (status === 'OK' && results?.[0]?.geometry?.location) {
+            const geocodedLat = results[0].geometry.location.lat();
+            const geocodedLng = results[0].geometry.location.lng();
+            applyLinkAndCoords(geocodedLat, geocodedLng);
+          } else {
+            applyLinkAndCoords(null, null);
+            if (!isShortGoogleMapLink(trimmedUrl)) {
+              toast.info(
+                'Map link saved. Coordinates could not be extracted — address fields will still be saved.'
+              );
+            }
+          }
+          finishLoading();
+        });
+        return null;
+      }
+
+      applyLinkAndCoords(null, null);
+      if (!isShortGoogleMapLink(trimmedUrl)) {
+        toast.info(
+          'Map link saved. Coordinates could not be extracted — address fields will still be saved.'
+        );
+      }
+      finishLoading();
+      return null;
+    } catch (error) {
+      console.error('Error parsing URL:', error);
+      toast.error('Could not process the map link. You can still save address fields.');
+      setLocation((prevLocation) => ({
+        ...prevLocation,
+        googleMapLink: normalizedLink,
+      }));
+      finishLoading();
+      return null;
+    }
+  };
 
   /**
    * Handle Google Maps link pasting — always keep the URL even if coords fail.
@@ -223,6 +247,8 @@ const extractCoordsFromUrl = (url) => {
    */
   useEffect(() => {
     const nextLocation = buildLocationFormState(locationData);
+    const modeKey = getLocationModeKey(nextLocation);
+    locationDraftsRef.current[modeKey] = pickLocationModeFields(nextLocation, modeKey);
     setLocation((prev) => {
       if (serializeLocationFormState(prev) === serializeLocationFormState(nextLocation)) {
         return prev;
@@ -261,12 +287,37 @@ const extractCoordsFromUrl = (url) => {
   };
 
   const handleLocationTypeChange = (type) => {
-    setLocation((prev) => ({
-      ...prev,
-      locationType: type,
-      isToBeAnnounced: type === 'tba',
-      isPrivateLocation: type === 'private',
-    }));
+    if (type === 'physical' || type === 'private') {
+      setLocation((prev) => {
+        if (getLocationModeKey(prev) === 'inPerson') {
+          return {
+            ...prev,
+            locationType: type,
+            isPrivateLocation: type === 'private',
+            isToBeAnnounced: false,
+          };
+        }
+
+        const { next, drafts } = buildLocationStateForTypeChange(
+          prev,
+          type,
+          locationDraftsRef.current
+        );
+        locationDraftsRef.current = drafts;
+        return next;
+      });
+      return;
+    }
+
+    setLocation((prev) => {
+      const { next, drafts } = buildLocationStateForTypeChange(
+        prev,
+        type,
+        locationDraftsRef.current
+      );
+      locationDraftsRef.current = drafts;
+      return next;
+    });
   };
   
   const handleFieldChange = (e) => {
@@ -402,14 +453,14 @@ const extractCoordsFromUrl = (url) => {
             </p>
             <div className={styles.formGroup}>
               <label htmlFor="onlineEventUrl" className={styles.formLabel}>
-                Event link (URL)<OptionalLabel />
+                Meeting link URL
               </label>
               <input
                 type="url"
                 id="onlineEventUrl"
                 name="onlineEventUrl"
                 className={styles.formInput}
-                placeholder="https://example.com/your-meeting-link"
+                placeholder="Meeting link URL"
                 value={location.onlineEventUrl}
                 onChange={handleFieldChange}
                 autoComplete="off"
@@ -423,7 +474,7 @@ const extractCoordsFromUrl = (url) => {
                 id="onlineEventDescription"
                 name="onlineEventDescription"
                 className={styles.formTextarea}
-                placeholder="e.g. Zoom meeting ID, password in email, or streaming instructions"
+                placeholder="Streaming or access instructions"
                 value={location.onlineEventDescription}
                 onChange={handleFieldChange}
                 rows={4}
@@ -494,7 +545,7 @@ const extractCoordsFromUrl = (url) => {
                 id="virtualMeetingUrl"
                 name="virtualMeetingUrl"
                 className={styles.formInput}
-                placeholder="https://example.com/your-meeting-link"
+                placeholder="Meeting link URL"
                 value={location.virtualMeetingUrl}
                 onChange={handleFieldChange}
                 autoComplete="off"
@@ -544,7 +595,7 @@ const extractCoordsFromUrl = (url) => {
                   id="venue"
                   name="venue"
                   className={styles.formInput}
-                  placeholder="Enter venue name (e.g., Conference Center, Stadium)"
+                  placeholder="Venue name"
                   value={location.venue}
                   onChange={handleFieldChange}
                 />
@@ -587,7 +638,7 @@ const extractCoordsFromUrl = (url) => {
               </div>
               <div className={styles.formGroup}>
                 <label htmlFor="streetNumber" className={styles.formLabel}>
-                  Street No.<OptionalLabel />
+                  Street No.
                 </label>
                 <div className={styles.dropdownInput}>
                   <input
@@ -636,7 +687,7 @@ const extractCoordsFromUrl = (url) => {
               </div>
               <div className={styles.formGroup}>
                 <label htmlFor="postalCode" className={styles.formLabel}>
-                  Postal Code<OptionalLabel />
+                  Postal Code
                 </label>
                 <div className={styles.dropdownInput}>
                   <input
@@ -715,7 +766,7 @@ const extractCoordsFromUrl = (url) => {
                 id="additionalInfo"
                 name="additionalInfo"
                 className={styles.formTextarea}
-                placeholder="Additional details about the location (e.g., parking instructions, entrance information)"
+                placeholder="Additional location details"
                 value={location.additionalInfo}
                 onChange={handleFieldChange}
                 rows={4}

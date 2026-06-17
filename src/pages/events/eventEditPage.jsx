@@ -18,6 +18,7 @@ import ArtStep from './steps/artStep';
 // Import API Services
 import {
   GetEventAPI,
+  GetEventStatusAPI,
   UpdateEventLocationAPI,
   UpdateEventDateTimeAPI,
   UpdateEventDescriptionAPI,
@@ -30,8 +31,11 @@ import {
   prepareDateTimeDataForAPI,
   prepareDescriptionDataForAPI,
   mapEventApiPayloadToLocationForm,
+  isEventLocationComplete,
+  getLocationStepMissingFieldLabels,
 } from '../../utils/eventUtil';
 import { getUserData } from '../../utils/authUtil';
+import { getPublishedEventTimingStatus, ENDED_PUBLISHED_EVENT_SCHEDULE_MESSAGE } from './eventStatusUtils';
 
 const normalizeApiTime = (timeValue) => {
   if (!timeValue) return '';
@@ -118,6 +122,8 @@ const EventEditPage = () => {
   const [isLoading, setIsLoading] = useState({ initialLoad: true, saveEvent: false });
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
+  /** Published events that had already ended when loaded — schedule cannot be changed. */
+  const [scheduleLocked, setScheduleLocked] = useState(false);
 
   // Map step numbers to their keys for status tracking
   const stepKeys = { 1: 'basicInfo', 2: 'location', 3: 'dateTime', 4: 'description', 5: 'art' };
@@ -144,13 +150,19 @@ const EventEditPage = () => {
 
       setIsLoading(prev => ({ ...prev, initialLoad: true }));
       try {
-        const response = await GetEventAPI(paramEventId);
+        const [response, statusResponse] = await Promise.all([
+          GetEventAPI(paramEventId),
+          GetEventStatusAPI(paramEventId),
+        ]);
         const fetchedData = response.data;
+        const isPublished = statusResponse.data?.step8Completed ?? false;
 
         // --- CORRECTED: Data transformation now matches the provided API response ---
         const transformedData = {
           id: fetchedData.id,
           name: fetchedData.name,
+          slug: fetchedData.slug,
+          isPublished,
           eventType: fetchedData.isPrivate ? 'private' : 'public',
           organizerName: fetchedData.organizationName || 'Organizer',
           category: fetchedData.category || '',
@@ -168,6 +180,8 @@ const EventEditPage = () => {
               fetchedData.dateTime?.endTime || fetchedData.endTime
             ),
           },
+          endDate: fetchedData.endDate || '',
+          endTime: normalizeApiTime(fetchedData.endTime),
           description: fetchedData.description || '',
           art: {
             thumbnailFile: null,
@@ -190,6 +204,10 @@ const EventEditPage = () => {
         };
         
         setEventData(transformedData);
+        setScheduleLocked(
+          isPublished &&
+            getPublishedEventTimingStatus(transformedData) === 'PAST'
+        );
         setError(null);
       } catch (err) {
         console.error("Error fetching event for editing:", err);
@@ -203,7 +221,16 @@ const EventEditPage = () => {
 
   // Universal handler for input changes from child step components
   const handleInputChange = useCallback((value, fieldName) => {
-    setEventData(prevData => ({ ...prevData, [fieldName]: value }));
+    setEventData(prevData => {
+      const next = { ...prevData, [fieldName]: value };
+      if (fieldName === 'dateTime' && value && typeof value === 'object') {
+        next.endDate = value.endDate ?? prevData.endDate;
+        next.endTime = value.endTime ?? prevData.endTime;
+        next.startDate = value.startDate ?? prevData.startDate;
+        next.startTime = value.startTime ?? prevData.startTime;
+      }
+      return next;
+    });
     const currentStepKey = getStepKey(currentStep);
     setStepStatus(prevStatus => ({
       ...prevStatus,
@@ -221,14 +248,7 @@ const EventEditPage = () => {
         isValid = !!eventData.name?.trim();
         break;
       case 'location':
-        const loc = eventData.location;
-        isValid =
-          loc?.isToBeAnnounced ||
-          loc?.locationType === "online" ||
-          (!!loc?.venue &&
-            !!loc?.street &&
-            !!loc?.city &&
-            !!loc?.state);
+        isValid = isEventLocationComplete(eventData);
         break;
       case 'dateTime':
         const dt = eventData.dateTime;
@@ -263,15 +283,35 @@ const EventEditPage = () => {
   };
 
   const handleSaveStep = async () => {
-    if (!validateCurrentStep()) {
-      setError('Please fill out all required fields correctly before continuing.');
+    const currentStepKey = getStepKey(currentStep);
+
+    if (scheduleLocked && currentStepKey === 'dateTime') {
+      setError(ENDED_PUBLISHED_EVENT_SCHEDULE_MESSAGE);
+      return;
+    }
+
+    const isStepValid = validateCurrentStep();
+    if (!isStepValid) {
+      const currentStepKey = getStepKey(currentStep);
+      setStepStatus((prev) => ({
+        ...prev,
+        [currentStepKey]: { ...prev[currentStepKey], visited: true },
+      }));
+      if (currentStepKey === 'location') {
+        const missing = getLocationStepMissingFieldLabels(eventData);
+        setError(
+          missing.length
+            ? `Please add: ${missing.join(', ')}.`
+            : 'Please fill out all required location fields before continuing.'
+        );
+      } else {
+        setError('Please fill out all required fields correctly before continuing.');
+      }
       return;
     }
     setError(null);
     setSuccessMessage(null);
     setIsLoading(prev => ({ ...prev, saveEvent: true }));
-
-    const currentStepKey = getStepKey(currentStep);
 
     try {
       // Use a switch to call the correct update API for the current step
@@ -290,6 +330,13 @@ const EventEditPage = () => {
         case 'dateTime': {
           const payload = prepareDateTimeDataForAPI(eventData.dateTime, eventData.id);
           await UpdateEventDateTimeAPI(eventData.id, payload);
+          setEventData((prev) => ({
+            ...prev,
+            endDate: prev.dateTime?.endDate ?? prev.endDate,
+            endTime: prev.dateTime?.endTime ?? prev.endTime,
+            startDate: prev.dateTime?.startDate ?? prev.startDate,
+            startTime: prev.dateTime?.startTime ?? prev.startTime,
+          }));
           break;
         }
         case 'description': {
@@ -354,7 +401,12 @@ const EventEditPage = () => {
 
     } catch (err) {
       console.error(`Error updating ${currentStepKey}:`, err);
-      setError(err.response?.data?.message || `Failed to update ${currentStepKey}. Please try again.`);
+      setError(
+        err.response?.data?.message ||
+          (scheduleLocked && currentStepKey === 'dateTime'
+            ? ENDED_PUBLISHED_EVENT_SCHEDULE_MESSAGE
+            : `Failed to update ${currentStepKey}. Please try again.`)
+      );
     } finally {
       setIsLoading(prev => ({ ...prev, saveEvent: false }));
     }
@@ -372,12 +424,19 @@ const EventEditPage = () => {
     switch (currentStep) {
       case 1: return <BasicInfoStep {...stepProps} />;
       case 2: return <LocationStep {...stepProps} />;
-      case 3: return <DateTimeStep {...stepProps} />;
+      case 3:
+        return (
+          <DateTimeStep
+            {...stepProps}
+            scheduleLocked={scheduleLocked}
+            lockMessage={ENDED_PUBLISHED_EVENT_SCHEDULE_MESSAGE}
+          />
+        );
       case 4: return <DescriptionStep {...stepProps} />;
       case 5: return <ArtStep {...stepProps} />;
       default: return <div>Unknown Step</div>;
     }
-  }, [currentStep, eventData, handleInputChange, stepStatus, getStepKey]);
+  }, [currentStep, eventData, handleInputChange, stepStatus, getStepKey, scheduleLocked]);
 
   if (isLoading.initialLoad) {
     return <div className={styles.loadingContainer}><LoadingSpinner size="large" /><p>Loading Event Editor...</p></div>;
@@ -387,6 +446,10 @@ const EventEditPage = () => {
     return <div className={styles.errorContainer}><p>{error}</p><button onClick={() => navigate('/events')}>Back to Events</button></div>;
   }
 
+  const eventStatus = eventData.isPublished
+    ? getPublishedEventTimingStatus(eventData)
+    : 'DRAFT';
+
   return (
     <div className={styles.pageContainer}>
       <EventHeaderNav
@@ -395,6 +458,8 @@ const EventEditPage = () => {
         context="edit"
         eventId={paramEventId}
         eventSlug={eventData.slug}
+        isDraft={!eventData.isPublished}
+        eventStatus={eventStatus}
         toggleMobileSidebar={toggleEditSidebar} // Pass the local toggle function to EventHeaderNav
       />
       <div className={styles.content}>
@@ -405,7 +470,6 @@ const EventEditPage = () => {
         {/* EditEventSidebar now uses local state */}
         <EditEventSidebar
           currentStep={currentStep}
-          stepStatus={stepStatus}
           navigateToStep={(step) => {
             navigate(`/events/edit-page/${paramEventId}/${step}`);
             if (window.innerWidth <= 768 && isEditSidebarOpen) { // Close sidebar on navigation
@@ -448,7 +512,15 @@ const EventEditPage = () => {
             <button type="button" onClick={handlePrevStep} disabled={currentStep === 1} className={styles.backButton}>
               Back
             </button>
-            <button type="button" onClick={handleSaveStep} disabled={isLoading.saveEvent} className={styles.nextButton}>
+            <button
+              type="button"
+              onClick={handleSaveStep}
+              disabled={
+                isLoading.saveEvent ||
+                (scheduleLocked && getStepKey(currentStep) === 'dateTime')
+              }
+              className={styles.nextButton}
+            >
               {isLoading.saveEvent ? 'Saving...' : (currentStep === totalSteps ? 'Save and Finish' : 'Save and Continue')}
             </button>
           </div>
