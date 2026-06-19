@@ -8,6 +8,25 @@ import AnchoredActionMenu, {
 import AnchoredDropdownPanel from '../../../components/common/anchoredDropdownPanel/anchoredDropdownPanel';
 import OptionalLabel from '../../../components/common/optionalLabel/optionalLabel';
 import styles from './discountCodesStep.module.scss';
+import {
+  localWallClockToInstant,
+  resolveEventTimezone,
+  isInstantInPast,
+} from '../../../utils/datetimeUtil';
+
+const normalizeAvailableTickets = (tickets = []) => {
+  const activeTickets = (Array.isArray(tickets) ? tickets : []).filter(
+    (ticket) => ticket?.isDeleted !== true
+  );
+  const seenIds = new Set();
+  return activeTickets.filter((ticket) => {
+    const ticketId = parseInt(ticket?.id, 10);
+    if (!Number.isFinite(ticketId)) return true;
+    if (seenIds.has(ticketId)) return false;
+    seenIds.add(ticketId);
+    return true;
+  });
+};
 
 /**
  * DiscountCodesStep component - Seventh step of event creation
@@ -76,7 +95,7 @@ const DiscountCodesStep = ({
       try {
         const response = await fetchAvailableTickets();
         if (response.data && Array.isArray(response.data)) {
-          setAvailableTickets(response.data);
+          setAvailableTickets(normalizeAvailableTickets(response.data));
           ticketsFetched.current = true;
         } else {
           setAvailableTickets([]);
@@ -100,7 +119,7 @@ const DiscountCodesStep = ({
       try {
         const response = await fetchAvailableTickets();
         if (response.data && Array.isArray(response.data)) {
-          setAvailableTickets(response.data);
+          setAvailableTickets(normalizeAvailableTickets(response.data));
           ticketsFetched.current = true;
         } else {
           setAvailableTickets([]);
@@ -196,9 +215,14 @@ const DiscountCodesStep = ({
   };
 
   const isExpired = (code) => {
-  if (!code.validUntilDate || !code.validUntilTime) return false;
-  const expiry = new Date(`${code.validUntilDate}T${code.validUntilTime}:00Z`);
-  return new Date() > expiry;
+    if (!code.validUntilDate || !code.validUntilTime) return false;
+    const timezone = resolveEventTimezone(eventData.dateTime?.timezone);
+    const expiry = localWallClockToInstant(
+      code.validUntilDate,
+      code.validUntilTime,
+      timezone
+    );
+    return isInstantInPast(expiry);
   };
 
   const getSelectedTicketNames = (selectedIds) => {

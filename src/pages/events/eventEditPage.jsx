@@ -34,6 +34,7 @@ import {
   isEventLocationComplete,
   getLocationStepMissingFieldLabels,
 } from '../../utils/eventUtil';
+import { mapApiDateTimeToFormDateTime } from '../../utils/datetimeUtil';
 import { getUserData } from '../../utils/authUtil';
 import { getPublishedEventTimingStatus, ENDED_PUBLISHED_EVENT_SCHEDULE_MESSAGE } from './eventStatusUtils';
 
@@ -170,16 +171,19 @@ const EventEditPage = () => {
           
           location: mapEventApiPayloadToLocationForm(fetchedData),
           
-          dateTime: {
-            startDate: fetchedData.dateTime?.startDate || fetchedData.startDate || '',
-            startTime: normalizeApiTime(
-              fetchedData.dateTime?.startTime || fetchedData.startTime
-            ),
-            endDate: fetchedData.dateTime?.endDate || fetchedData.endDate || '',
-            endTime: normalizeApiTime(
-              fetchedData.dateTime?.endTime || fetchedData.endTime
-            ),
-          },
+          dateTime: mapApiDateTimeToFormDateTime(
+            {
+              startDate: fetchedData.dateTime?.startDate || fetchedData.startDate || '',
+              startTime: fetchedData.dateTime?.startTime || fetchedData.startTime,
+              endDate: fetchedData.dateTime?.endDate || fetchedData.endDate || '',
+              endTime: fetchedData.dateTime?.endTime || fetchedData.endTime,
+              timezone:
+                fetchedData.dateTime?.timezone ||
+                fetchedData.timezone ||
+                fetchedData.timeZone,
+            },
+            {}
+          ),
           endDate: fetchedData.endDate || '',
           endTime: normalizeApiTime(fetchedData.endTime),
           description: fetchedData.description || '',
@@ -330,12 +334,23 @@ const EventEditPage = () => {
         case 'dateTime': {
           const payload = prepareDateTimeDataForAPI(eventData.dateTime, eventData.id);
           await UpdateEventDateTimeAPI(eventData.id, payload);
+          const syncedDateTime = mapApiDateTimeToFormDateTime(
+            {
+              startDate: payload.startDate,
+              startTime: payload.startTime,
+              endDate: payload.endDate,
+              endTime: payload.endTime,
+              timezone: payload.timeZone,
+            },
+            eventData.dateTime
+          );
           setEventData((prev) => ({
             ...prev,
-            endDate: prev.dateTime?.endDate ?? prev.endDate,
-            endTime: prev.dateTime?.endTime ?? prev.endTime,
-            startDate: prev.dateTime?.startDate ?? prev.startDate,
-            startTime: prev.dateTime?.startTime ?? prev.startTime,
+            dateTime: syncedDateTime,
+            endDate: payload.endDate,
+            endTime: payload.endTime,
+            startDate: payload.startDate,
+            startTime: payload.startTime,
           }));
           break;
         }

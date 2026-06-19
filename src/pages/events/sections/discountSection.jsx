@@ -12,10 +12,16 @@ import {
 } from "../../../services/allApis";
 import {
   parseUsageLimitForAPI,
-  formatUsageLimitForUI,
   filterBlankDiscountCodes,
   validateDiscountCodesList,
+  mapApiDiscountToStepDiscount,
+  buildDiscountValidityInstants,
 } from "../../../utils/eventUtil";
+import {
+  mapApiDateTimeToFormDateTime,
+  eventEndInstantFromFormDateTime,
+  resolveEventTimezone,
+} from "../../../utils/datetimeUtil";
 
 const formatTimeObject = (timeValue) => {
   if (typeof timeValue === "string") {
@@ -28,45 +34,6 @@ const formatTimeObject = (timeValue) => {
     return `${hour}:${minute}:${second}`;
   }
   return "00:00:00";
-};
-
-const toDateAndTime = (iso) => {
-  if (!iso) return { date: "", time: "" };
-  const dt = new Date(iso);
-  if (Number.isNaN(dt.getTime())) return { date: "", time: "" };
-  return {
-    date: dt.toISOString().split("T")[0],
-    time: dt.toISOString().split("T")[1].slice(0, 5),
-  };
-};
-
-const formatToISO = (date, time) => {
-  if (!date || !time) return null;
-  const paddedTime = time.includes(":") ? time : `${time}:00`;
-  return new Date(`${date}T${paddedTime}`).toISOString();
-};
-
-const mapApiDiscountToStepDiscount = (code = {}) => {
-  const validFrom = toDateAndTime(code.validFrom);
-  const validUntil = toDateAndTime(code.validUntil);
-  return {
-    id: code.id,
-    code: code.code || "",
-    type: code.type || "percentage",
-    value: code.value ?? "",
-    usageLimit: formatUsageLimitForUI(code.usageLimit),
-    validFromDate: validFrom.date,
-    validFromTime: validFrom.time,
-    validUntilDate: validUntil.date,
-    validUntilTime: validUntil.time,
-    ticketsApplicable: Array.isArray(code.ticketsApplicable)
-      ? code.ticketsApplicable
-          .map((id) => parseInt(id, 10))
-          .filter((id) => Number.isFinite(id))
-      : [],
-    isActive: code.isActive !== false,
-    isDeleted: code.isDeleted === true,
-  };
 };
 
 const DiscountSection = ({ onCommitSuccess = () => {} }) => {
@@ -86,15 +53,22 @@ const DiscountSection = ({ onCommitSuccess = () => {} }) => {
       ]);
 
       const event = eventResponse?.data || {};
-      const dateTime = event.dateTime || {
-        startDate: event.startDate || "",
-        startTime: formatTimeObject(event.startTime),
-        endDate: event.endDate || "",
-        endTime: formatTimeObject(event.endTime),
-      };
+      const dateTime = mapApiDateTimeToFormDateTime(
+        event.dateTime || {
+          startDate: event.startDate || "",
+          startTime: formatTimeObject(event.startTime),
+          endDate: event.endDate || "",
+          endTime: formatTimeObject(event.endTime),
+          timezone: event.timezone || event.timeZone,
+        },
+        {}
+      );
+      const eventTimezone = resolveEventTimezone(dateTime.timezone);
       const discountData = discountsResponse?.data?.discountCodes || discountsResponse?.data || [];
       const mappedDiscountCodes = Array.isArray(discountData)
-        ? discountData.filter((d) => d?.isDeleted !== true).map(mapApiDiscountToStepDiscount)
+        ? discountData
+            .filter((d) => d?.isDeleted !== true)
+            .map((discount) => mapApiDiscountToStepDiscount(discount, eventTimezone))
         : [];
 
       setEventData({
@@ -142,9 +116,8 @@ const DiscountSection = ({ onCommitSuccess = () => {} }) => {
       const existingCodes = Array.isArray(existingData) ? existingData : [];
 
       const fallbackValidFrom = new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString();
-      const fallbackValidUntil =
-        formatToISO(eventData.dateTime?.endDate, eventData.dateTime?.endTime) ||
-        formatToISO(eventData.dateTime?.startDate, eventData.dateTime?.startTime);
+      const fallbackValidUntil = eventEndInstantFromFormDateTime(eventData.dateTime);
+      const eventTimezone = resolveEventTimezone(eventData.dateTime?.timezone);
       const activePayloadIds = new Set(
         codesToSave
           .map((code) => parseInt(code.id, 10))
@@ -174,22 +147,27 @@ const DiscountSection = ({ onCommitSuccess = () => {} }) => {
 
       const payload = {
         discountCodes: [
-          ...codesToSave.map((code) => ({
-            id: code.id || null,
-            code: code.code,
-            type: code.type,
-            value: parseFloat(code.value),
-            validFrom:
-              formatToISO(code.validFromDate, code.validFromTime) || fallbackValidFrom,
-            validUntil:
-              formatToISO(code.validUntilDate, code.validUntilTime) || fallbackValidUntil,
-            usageLimit: parseUsageLimitForAPI(code.usageLimit),
-            isActive: code.isActive !== false,
-            isDeleted: code.isDeleted === true,
-            ticketsApplicable: (code.ticketsApplicable || [])
-              .map((id) => parseInt(id, 10))
-              .filter((id) => Number.isFinite(id)),
-          })),
+          ...codesToSave.map((code) => {
+            const { validFrom, validUntil } = buildDiscountValidityInstants(
+              code,
+              eventTimezone,
+              eventData.dateTime
+            );
+            return {
+              id: code.id || null,
+              code: code.code,
+              type: code.type,
+              value: parseFloat(code.value),
+              validFrom,
+              validUntil,
+              usageLimit: parseUsageLimitForAPI(code.usageLimit),
+              isActive: code.isActive !== false,
+              isDeleted: code.isDeleted === true,
+              ticketsApplicable: (code.ticketsApplicable || [])
+                .map((id) => parseInt(id, 10))
+                .filter((id) => Number.isFinite(id)),
+            };
+          }),
           ...deletedCodesPayload,
         ],
       };
@@ -198,7 +176,9 @@ const DiscountSection = ({ onCommitSuccess = () => {} }) => {
       const savedResponse = await GetEventDiscountCodesAPI(eventId);
       const savedData = savedResponse?.data?.discountCodes || savedResponse?.data || [];
       const mappedSavedCodes = Array.isArray(savedData)
-        ? savedData.filter((d) => d?.isDeleted !== true).map(mapApiDiscountToStepDiscount)
+        ? savedData
+            .filter((d) => d?.isDeleted !== true)
+            .map((discount) => mapApiDiscountToStepDiscount(discount, eventTimezone))
         : codesToSave;
 
       setEventData((prev) => ({ ...prev, discountCodes: mappedSavedCodes }));

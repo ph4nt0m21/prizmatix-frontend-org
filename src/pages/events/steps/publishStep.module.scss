@@ -16,6 +16,7 @@
   padding: 12px 16px;
   background: #111;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
 }
 
 .previewLabel {
@@ -46,7 +47,8 @@
 .eventPageWrapper {
   position: relative;
   flex: 1 0 auto;
-  overflow: visible;
+  min-height: 100%;
+  overflow: hidden;
 }
 
 .bannerBg {
@@ -68,7 +70,8 @@
   background: rgba(0, 0, 0, 0.85);
   backdrop-filter: blur(70px);
   -webkit-backdrop-filter: blur(20px);
-  padding-bottom: 2rem;
+  min-height: 100%;
+  padding-top: 2px;
 }
 
 .eventContainer {
@@ -77,9 +80,10 @@
 }
 
 .eventHeader {
-  margin: 0 auto 2rem;
+  margin: 3rem auto 2rem;
+  text-align: center;
   max-width: 1200px;
-  padding: 0 2rem;
+  padding: 0 1rem;
 }
 
 .bannerWrapper {
@@ -92,8 +96,15 @@
 .bannerWrapperCover {
   position: absolute;
   inset: 0;
+  z-index: 0;
   border-radius: inherit;
   overflow: hidden;
+  padding: 0;
+  border: none;
+  background: none;
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 
 .bannerImage {
@@ -107,6 +118,20 @@
   display: none;
 }
 
+.imagePreviewTrigger {
+  cursor: zoom-in;
+  transition: opacity 0.2s ease;
+
+  &:hover {
+    opacity: 0.92;
+  }
+
+  &:focus-visible {
+    outline: 2px solid #b360ff;
+    outline-offset: 2px;
+  }
+}
+
 .eventDetailLayout {
   display: flex;
   align-items: flex-start;
@@ -118,19 +143,28 @@
 
 .eventSidebar {
   width: 280px;
+  padding: 1.5rem;
+  border-radius: 1rem;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 1.25rem;
   color: #fff;
   position: sticky;
-  top: 24px;
+  top: 100px;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
 }
 
 .eventSidebarPoster {
   width: 100%;
   border-radius: 12px;
   overflow: hidden;
+  padding: 0;
+  border: none;
+  background: none;
+  display: block;
 
   img {
     width: 100%;
@@ -150,7 +184,7 @@
 
 .metaItem {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 0.5rem;
   font-size: 0.95rem;
   color: #ccc;
@@ -160,11 +194,12 @@
     width: 20px;
     height: 20px;
     flex-shrink: 0;
-    margin-top: 2px;
+    object-fit: contain;
   }
 
   span {
     flex: 1;
+    display: inline-block;
   }
 }
 
@@ -175,17 +210,16 @@
   border: none;
   border-radius: 8px;
   width: 100%;
-  font-weight: 700;
+  font-weight: bold;
   color: #fff;
   font-size: 1rem;
   cursor: not-allowed;
-  opacity: 0.72;
 }
 
 .priceHint {
   color: #ccc;
   font-size: 0.85rem;
-  margin: 0;
+  margin: 0.5rem 0 0;
   text-align: center;
 }
 
@@ -195,7 +229,7 @@
 }
 
 .eventAbout {
-  margin-bottom: 2rem;
+  flex: 1;
 }
 
 .eventTitle {
@@ -203,15 +237,16 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 0.75rem;
-  font-size: clamp(1.75rem, 4vw, 2.8rem);
+  font-size: 45px;
   font-weight: 600;
   color: #fff;
   margin: 0 0 0.5rem;
   line-height: 1.2;
+  font-family: 'Onest', 'Segoe UI', sans-serif;
 }
 
 .underline {
-  margin: 1rem 0;
+  margin-top: 1rem;
   height: 1px;
   background: rgba(255, 255, 255, 0.2);
   width: 100%;
@@ -219,7 +254,7 @@
 
 .eventAbout h3,
 .eventVenue h3 {
-  font-size: 1.2rem;
+  font-size: 1.3rem;
   margin: 0 0 1rem;
   color: #fff;
 }
@@ -258,7 +293,12 @@
 }
 
 .eventVenue {
-  margin-bottom: 2rem;
+  margin-bottom: 3rem;
+
+  h3 {
+    font-size: 1.2rem;
+    margin-bottom: 0.5rem;
+  }
 }
 
 .venueName {
@@ -277,33 +317,35 @@
 
 .venueMapLink {
   margin: 0.5rem 0 0.75rem;
-  color: #7eb8ff;
-  font-size: 0.95rem;
+
+  a {
+    color: #7eb8ff;
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
 }
 
-.venueMapFrame,
-.venueMapPlaceholder {
+.venueMapFrame {
   width: 100%;
   height: 200px;
   border: none;
   border-radius: 10px;
-  margin-top: 1rem;
-}
-
-.venueMapPlaceholder {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(255, 255, 255, 0.08);
-  color: #bbb;
-  font-size: 0.95rem;
+  margin: 1rem 0 0;
 }
 
 .venueDetails,
 .venueExtraDetails {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.venueDetails {
+  margin-top: 0;
 }
 
 .venueDetailBlock {
@@ -319,14 +361,25 @@
   letter-spacing: 0.04em;
 }
 
-.venueDetailValue,
-.venueText,
-.venueLinkPreview {
+.venueDetailValue {
   color: #eee;
+}
+
+.venueText {
   margin: 0;
   white-space: pre-wrap;
   line-height: 1.5;
-  word-break: break-word;
+  color: #eee;
+}
+
+.venueLink {
+  color: #7eb8ff;
+  word-break: break-all;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
 }
 
 .tbaMessage {
@@ -346,13 +399,13 @@
   }
 
   .eventHeader {
+    display: block;
     margin: 0 0 0.5rem;
     max-width: none;
-    padding: 0 0 3.25rem;
+    padding: 0;
     width: 100vw;
     margin-left: calc(50% - 50vw);
     margin-right: calc(50% - 50vw);
-    overflow: visible;
   }
 
   .bannerWrapper {
@@ -368,11 +421,14 @@
 
   .mobileCoverThumbnail {
     display: flex;
+    align-items: center;
+    justify-content: flex-start;
     position: absolute;
     left: 1.25rem;
     bottom: 0;
     transform: translateY(50%);
     z-index: 3;
+    pointer-events: auto;
   }
 
   .mobileCoverThumbnailImg {
@@ -382,41 +438,74 @@
     object-fit: cover;
     border: 4px solid rgba(18, 18, 18, 0.96);
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+    display: block;
   }
 
   .eventContainerWithThumb .eventSidebarPoster {
     display: none;
   }
 
+  .eventHeader + .eventDetailLayout {
+    margin-top: 3.25rem;
+  }
+
   .eventDetailLayout {
     flex-direction: column;
     gap: 1.5rem;
-    padding: 0 1rem 1rem;
-    margin-top: 0;
+    padding: 1rem;
   }
 
   .eventSidebar {
     position: static;
     width: 100%;
-    padding: 1rem 0 0;
+    padding: 1rem;
+    background: transparent;
+    backdrop-filter: blur(8px);
+
+    img {
+      border-radius: 10px;
+    }
+
+    .buyBtn,
+    .priceHint {
+      display: none;
+    }
   }
 
-  .buyBtn,
-  .priceHint {
-    display: none;
+  .eventContent {
+    width: 100%;
+    flex: unset;
+  }
+
+  .eventTitle {
+    font-size: 1.5rem;
+  }
+
+  .eventAbout h3,
+  .eventVenue h3 {
+    font-size: 1.1rem;
+  }
+
+  .eventDescription {
+    font-size: 0.95rem;
+  }
+
+  .eventVenue iframe,
+  .venueMapFrame {
+    height: 180px;
   }
 
   .eventBlurOverlay {
-    padding-bottom: 1rem;
+    padding-bottom: 100px;
   }
 
   .mobileBuyBar {
     display: flex;
-    position: sticky;
+    position: fixed;
     bottom: 0;
     left: 0;
     right: 0;
-    z-index: 2;
+    z-index: 9999;
     background: #1a1a1a;
     padding: 1rem 1.2rem;
     border-top: 1px solid rgba(255, 255, 255, 0.1);
@@ -447,6 +536,6 @@
     flex-shrink: 0;
     border-radius: 30px;
     background: linear-gradient(90deg, #a541f5, #7914e0);
-    opacity: 0.72;
+    font-weight: 600;
   }
 }

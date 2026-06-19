@@ -1,3 +1,7 @@
+import { formatEventTimeForDisplay as formatEventTime, formatEventScheduleForDisplay, formatEventScheduleFromFormDateTime } from './datetimeUtil';
+
+export { formatEventTimeForDisplay, formatTime24, formatEventScheduleForDisplay, formatEventScheduleFromFormDateTime } from './datetimeUtil';
+
 const TBA_VENUE = /^to be announced$/i;
 
 export function normalizeLocationType(type, isToBeAnnounced) {
@@ -194,19 +198,9 @@ export function formatSidebarDate(dateStr) {
   });
 }
 
-export function formatSidebarTime(timeStr) {
-  if (!timeStr) return '';
-  const [hours, minutes] = timeStr.split(':');
-  const date = new Date();
-  date.setHours(Number(hours), Number(minutes));
-  return new Intl.DateTimeFormat('en-US', {
-    hour: 'numeric',
-    minute: 'numeric',
-    hour12: true,
-  })
-    .format(date)
-    .toLowerCase()
-    .replace(' ', '');
+/** @deprecated Use formatEventTimeForDisplay with date + timezone for API-backed times. */
+export function formatSidebarTime(timeStr, dateStr, timezone) {
+  return formatEventTime(dateStr, timeStr, timezone);
 }
 
 export function getLowestTicketPrice(tickets = []) {

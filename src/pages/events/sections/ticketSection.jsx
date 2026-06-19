@@ -15,6 +15,10 @@ import {
   mapTicketStructureToStepTicket,
   mapStepTicketToApiPayload,
 } from "../../../utils/eventUtil";
+import {
+  mapApiDateTimeToFormDateTime,
+  resolveEventTimezone,
+} from "../../../utils/datetimeUtil";
 
 const TicketSection = ({ onCommitSuccess = () => {} }) => {
   const { eventId } = useParams();
@@ -33,17 +37,22 @@ const TicketSection = ({ onCommitSuccess = () => {} }) => {
       ]);
 
       const event = eventResponse?.data || {};
-      const dateTime = event.dateTime || {
-        startDate: event.startDate || "",
-        startTime: event.startTime || "",
-        endDate: event.endDate || "",
-        endTime: event.endTime || "",
-      };
+      const dateTime = mapApiDateTimeToFormDateTime(
+        event.dateTime || {
+          startDate: event.startDate || "",
+          startTime: event.startTime || "",
+          endDate: event.endDate || "",
+          endTime: event.endTime || "",
+          timezone: event.timezone || event.timeZone,
+        },
+        {}
+      );
+      const eventTimezone = resolveEventTimezone(dateTime.timezone);
 
       const mappedTickets = Array.isArray(ticketsResponse?.data)
         ? ticketsResponse.data
             .filter((t) => t?.isDeleted !== true)
-            .map(mapTicketStructureToStepTicket)
+            .map((ticket) => mapTicketStructureToStepTicket(ticket, eventTimezone))
         : [];
 
       setEventData({
@@ -136,7 +145,7 @@ const TicketSection = ({ onCommitSuccess = () => {} }) => {
       }
 
       for (const ticket of ticketsToSave) {
-        const payload = mapStepTicketToApiPayload(ticket);
+        const payload = mapStepTicketToApiPayload(ticket, eventData.dateTime?.timezone);
         if (ticket.id) {
           await UpdateTicketStructureAPI(ticket.id, {
             ...payload,
@@ -155,7 +164,7 @@ const TicketSection = ({ onCommitSuccess = () => {} }) => {
       const savedTickets = Array.isArray(savedTicketsResponse?.data)
         ? savedTicketsResponse.data
             .filter((t) => t?.isDeleted !== true)
-            .map(mapTicketStructureToStepTicket)
+            .map((t) => mapTicketStructureToStepTicket(t, eventData.dateTime?.timezone))
         : ticketsToSave;
 
       setEventData((prev) => ({ ...prev, tickets: savedTickets }));
@@ -180,7 +189,7 @@ const TicketSection = ({ onCommitSuccess = () => {} }) => {
       setError(null);
       setIsSavingTickets(true);
       const payload = {
-        ...mapStepTicketToApiPayload(ticket),
+        ...mapStepTicketToApiPayload(ticket, eventData.dateTime?.timezone),
         id: parseInt(ticketId, 10),
         eventId: parseInt(eventId, 10),
         soldOutOverride: nextValue,
@@ -190,7 +199,7 @@ const TicketSection = ({ onCommitSuccess = () => {} }) => {
       const savedTickets = Array.isArray(savedTicketsResponse?.data)
         ? savedTicketsResponse.data
             .filter((t) => t?.isDeleted !== true)
-            .map(mapTicketStructureToStepTicket)
+            .map((t) => mapTicketStructureToStepTicket(t, eventData.dateTime?.timezone))
         : [];
       setEventData((prev) => ({ ...prev, tickets: savedTickets }));
       return savedTickets;

@@ -119,6 +119,42 @@ const DateTimeStep = ({
   const isStartTimeFocused = useRef(false);
   const isEndDateFocused = useRef(false);
   const isEndTimeFocused = useRef(false);
+  const lastSyncedDateTimeKey = useRef('');
+
+  const syncPickerStateFromDateTime = (dateTime = {}) => {
+    const parsedStart = parseDateTimeStrings(dateTime.startDate, dateTime.startTime);
+    const parsedEnd = parseDateTimeStrings(dateTime.endDate, dateTime.endTime);
+
+    setStartDate(parsedStart);
+    setEndDate(parsedEnd);
+    setStartDateStr(formatDateForDisplay(parsedStart));
+    setStartTimeStr(formatTimeForDisplay(parsedStart));
+    setEndDateStr(formatDateForDisplay(parsedEnd));
+    setEndTimeStr(formatTimeForDisplay(parsedEnd));
+  };
+
+  useEffect(() => {
+    const dateTime = eventData.dateTime || {};
+    if (!dateTime.startDate || !dateTime.startTime) return;
+
+    const syncKey = [
+      dateTime.startDate,
+      dateTime.startTime,
+      dateTime.endDate,
+      dateTime.endTime,
+      dateTime.timezone,
+    ].join('|');
+
+    if (syncKey === lastSyncedDateTimeKey.current) return;
+    lastSyncedDateTimeKey.current = syncKey;
+    syncPickerStateFromDateTime(dateTime);
+  }, [
+    eventData.dateTime?.startDate,
+    eventData.dateTime?.startTime,
+    eventData.dateTime?.endDate,
+    eventData.dateTime?.endTime,
+    eventData.dateTime?.timezone,
+  ]);
 
   // --- START DATE & TIME HANDLERS ---
 
@@ -235,9 +271,12 @@ const DateTimeStep = ({
       startTime: formatTimeForParent(startDate),
       endDate: formatDateForParent(endDate),
       endTime: formatTimeForParent(endDate),
+      timezone:
+        eventData.dateTime?.timezone ||
+        Intl.DateTimeFormat().resolvedOptions().timeZone,
     };
     handleInputChange(formattedDataForParent, 'dateTime');
-  }, [startDate, endDate, handleInputChange]);
+  }, [startDate, endDate, handleInputChange, eventData.dateTime?.timezone]);
 
   useEffect(() => {
     if (!startDate) {
