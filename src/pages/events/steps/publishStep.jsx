@@ -5,6 +5,7 @@ import {
   ART_PLACEHOLDER_THUMBNAIL,
   applyArtImageFallback,
 } from '../../../constants/artImagePlaceholders';
+import EventImagePreviewModal from '../../../components/eventPreview/EventImagePreviewModal';
 import styles from './publishStep.module.scss';
 import { getEventData } from '../../../utils/eventUtil';
 import {
@@ -13,8 +14,7 @@ import {
   displayVenueName,
   formatEventLocationSummary,
   formatPhysicalAddressLines,
-  formatSidebarDate,
-  formatSidebarTime,
+  formatEventScheduleFromFormDateTime,
   formatTicketPriceLabel,
   mapOrgLocationToPreviewFields,
   normalizeLocationType,
@@ -25,11 +25,55 @@ import locationIcon from '../../../assets/icons/event-preview-location.svg';
 
 const PUBLIC_EVENT_BASE_URL = 'https://www.prizmatix.nz/events';
 
-const DummyBuyButton = ({ className, children }) => (
-  <button type="button" className={className} disabled aria-disabled="true" tabIndex={-1}>
+const PreviewBuyButton = ({ className, children }) => (
+  <button
+    type="button"
+    className={className}
+    disabled
+    aria-disabled="true"
+    title="Ticket purchase is disabled in preview"
+  >
     {children}
   </button>
 );
+
+const DetailBlock = ({ label, children }) => {
+  if (!children) return null;
+  return (
+    <div className={styles.venueDetailBlock}>
+      <span className={styles.venueDetailLabel}>{label}</span>
+      <div className={styles.venueDetailValue}>{children}</div>
+    </div>
+  );
+};
+
+DetailBlock.propTypes = {
+  label: PropTypes.string.isRequired,
+  children: PropTypes.node,
+};
+
+const MeetingLink = ({ url, label }) => {
+  const trimmed = String(url || '').trim();
+  if (!trimmed) return null;
+
+  return (
+    <DetailBlock label={label}>
+      <a
+        href={trimmed}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={styles.venueLink}
+      >
+        {trimmed}
+      </a>
+    </DetailBlock>
+  );
+};
+
+MeetingLink.propTypes = {
+  url: PropTypes.string,
+  label: PropTypes.string.isRequired,
+};
 
 const VenuePreviewSection = ({ locationFields }) => {
   const type = normalizeLocationType(locationFields.eventLocationType);
@@ -53,29 +97,18 @@ const VenuePreviewSection = ({ locationFields }) => {
         </p>
       ) : isOnline ? (
         <div className={styles.venueDetails}>
-          {locationFields.eventLocationMeetingUrl?.trim() && (
-            <div className={styles.venueDetailBlock}>
-              <span className={styles.venueDetailLabel}>Meeting link</span>
-              <div className={styles.venueDetailValue}>
-                <span className={styles.venueLinkPreview}>
-                  {locationFields.eventLocationMeetingUrl.trim()}
-                </span>
-              </div>
-            </div>
-          )}
+          <MeetingLink url={locationFields.eventLocationMeetingUrl} label="Meeting link" />
           {locationFields.eventLocationJoinNotes?.trim() && (
-            <div className={styles.venueDetailBlock}>
-              <span className={styles.venueDetailLabel}>How to join</span>
+            <DetailBlock label="How to join">
               <p className={styles.venueText}>{locationFields.eventLocationJoinNotes.trim()}</p>
-            </div>
+            </DetailBlock>
           )}
           {locationFields.eventLocationAdditionalInfo?.trim() && (
-            <div className={styles.venueDetailBlock}>
-              <span className={styles.venueDetailLabel}>Additional information</span>
+            <DetailBlock label="Additional information">
               <p className={styles.venueText}>
                 {locationFields.eventLocationAdditionalInfo.trim()}
               </p>
-            </div>
+            </DetailBlock>
           )}
         </div>
       ) : (
@@ -96,7 +129,9 @@ const VenuePreviewSection = ({ locationFields }) => {
 
           {mapExternalUrl && (
             <p className={styles.venueMapLink}>
-              <span>Open in Google Maps</span>
+              <a href={mapExternalUrl} target="_blank" rel="noopener noreferrer">
+                Open in Google Maps
+              </a>
             </p>
           )}
 
@@ -110,28 +145,23 @@ const VenuePreviewSection = ({ locationFields }) => {
               title="Event location map"
               className={styles.venueMapFrame}
             />
-          ) : (
-            <div className={styles.venueMapPlaceholder}>Map preview unavailable</div>
-          )}
+          ) : null}
 
           {(locationFields.eventLocationMeetingUrl?.trim() ||
             locationFields.eventLocationAdditionalInfo?.trim()) && (
             <div className={styles.venueExtraDetails}>
               {locationFields.eventLocationMeetingUrl?.trim() && (
-                <div className={styles.venueDetailBlock}>
-                  <span className={styles.venueDetailLabel}>Virtual meeting link (hybrid)</span>
-                  <span className={styles.venueLinkPreview}>
-                    {locationFields.eventLocationMeetingUrl.trim()}
-                  </span>
-                </div>
+                <MeetingLink
+                  url={locationFields.eventLocationMeetingUrl}
+                  label="Virtual meeting link (hybrid)"
+                />
               )}
               {locationFields.eventLocationAdditionalInfo?.trim() && (
-                <div className={styles.venueDetailBlock}>
-                  <span className={styles.venueDetailLabel}>Additional information</span>
+                <DetailBlock label="Additional information">
                   <p className={styles.venueText}>
                     {locationFields.eventLocationAdditionalInfo.trim()}
                   </p>
-                </div>
+                </DetailBlock>
               )}
             </div>
           )}
@@ -147,6 +177,7 @@ VenuePreviewSection.propTypes = {
 
 const PublishStep = ({ eventData = {} }) => {
   const [localEventData, setLocalEventData] = useState(eventData);
+  const [previewView, setPreviewView] = useState(null);
 
   useEffect(() => {
     const storedEventData = getEventData();
@@ -164,8 +195,9 @@ const PublishStep = ({ eventData = {} }) => {
   );
   const locationSummary = formatEventLocationSummary(locationFields);
   const ticketPriceLabel = formatTicketPriceLabel(localEventData.tickets || []);
-  const startDate = localEventData.dateTime?.startDate;
-  const startTime = localEventData.dateTime?.startTime;
+  const scheduleLabel = formatEventScheduleFromFormDateTime(
+    localEventData.dateTime || {}
+  );
   const descriptionHtml =
     localEventData.description ||
     localEventData.shortDescription ||
@@ -173,6 +205,7 @@ const PublishStep = ({ eventData = {} }) => {
   const publicEventUrl = localEventData.slug
     ? `${PUBLIC_EVENT_BASE_URL}/${localEventData.slug}`
     : null;
+  const hasThumbnail = Boolean(thumbnailUrl);
 
   const handleOpenPreview = () => {
     if (publicEventUrl) {
@@ -206,55 +239,61 @@ const PublishStep = ({ eventData = {} }) => {
         <div className={styles.eventBlurOverlay}>
           <div
             className={`${styles.eventContainer} ${
-              thumbnailUrl ? styles.eventContainerWithThumb : ''
+              hasThumbnail ? styles.eventContainerWithThumb : ''
             }`}
           >
             <div className={styles.eventHeader}>
               <div className={styles.bannerWrapper}>
-                <div className={styles.bannerWrapperCover}>
+                <button
+                  type="button"
+                  className={`${styles.bannerWrapperCover} ${styles.imagePreviewTrigger}`}
+                  onClick={() => setPreviewView('banner')}
+                  aria-label="View full banner image"
+                >
                   <img
                     src={bannerUrl}
                     alt="Event banner"
                     className={styles.bannerImage}
                     onError={(e) => applyArtImageFallback(e, ART_PLACEHOLDER_BANNER)}
                   />
-                </div>
-                {thumbnailUrl && (
-                  <div className={styles.mobileCoverThumbnail}>
+                </button>
+                {hasThumbnail ? (
+                  <button
+                    type="button"
+                    className={`${styles.mobileCoverThumbnail} ${styles.imagePreviewTrigger}`}
+                    onClick={() => setPreviewView('thumbnail')}
+                    aria-label="View full thumbnail image"
+                  >
                     <img
                       src={thumbnailUrl}
                       alt={localEventData.name || 'Event thumbnail'}
                       className={styles.mobileCoverThumbnailImg}
                       onError={(e) => applyArtImageFallback(e, ART_PLACEHOLDER_THUMBNAIL)}
                     />
-                  </div>
-                )}
+                  </button>
+                ) : null}
               </div>
             </div>
 
             <div className={styles.eventDetailLayout}>
               <aside className={styles.eventSidebar}>
-                <div className={styles.eventSidebarPoster}>
+                <button
+                  type="button"
+                  className={`${styles.eventSidebarPoster} ${styles.imagePreviewTrigger}`}
+                  onClick={() => setPreviewView('thumbnail')}
+                  aria-label={`View full image for ${localEventData.name || 'event'}`}
+                >
                   <img
                     src={thumbnailUrl}
                     alt={localEventData.name || 'Event thumbnail'}
                     onError={(e) => applyArtImageFallback(e, ART_PLACEHOLDER_THUMBNAIL)}
                   />
-                </div>
+                </button>
 
                 <div className={styles.sidebarMeta}>
                   <div className={styles.metaItem}>
                     <img src={calendarIcon} alt="" aria-hidden="true" />
-                    <span>
-                      {startDate ? (
-                        <>
-                          {formatSidebarDate(startDate)}
-                          {startTime ? `, ${formatSidebarTime(startTime)}` : ''}
-                        </>
-                      ) : (
-                        'Date and time not set'
-                      )}
-                    </span>
+                    <span>{scheduleLabel}</span>
                   </div>
                   <div className={styles.metaItem}>
                     <img src={locationIcon} alt="" aria-hidden="true" />
@@ -262,7 +301,7 @@ const PublishStep = ({ eventData = {} }) => {
                   </div>
                 </div>
 
-                <DummyBuyButton className={styles.buyBtn}>Buy Tickets</DummyBuyButton>
+                <PreviewBuyButton className={styles.buyBtn}>Buy Tickets</PreviewBuyButton>
                 <p className={styles.priceHint}>
                   Ticket rate starting from ${ticketPriceLabel}
                 </p>
@@ -282,6 +321,7 @@ const PublishStep = ({ eventData = {} }) => {
                 <VenuePreviewSection locationFields={locationFields} />
               </div>
             </div>
+
           </div>
         </div>
 
@@ -290,10 +330,19 @@ const PublishStep = ({ eventData = {} }) => {
             <span>
               Ticket rate starting from <strong>${ticketPriceLabel}</strong>
             </span>
-            <DummyBuyButton className={styles.mobileBuyBtn}>Buy Tickets</DummyBuyButton>
+            <PreviewBuyButton className={styles.mobileBuyBtn}>Buy Tickets</PreviewBuyButton>
           </div>
         </div>
       </div>
+
+      {previewView ? (
+        <EventImagePreviewModal
+          bannerHref={bannerUrl}
+          thumbnailHref={thumbnailUrl}
+          initialView={previewView}
+          onClose={() => setPreviewView(null)}
+        />
+      ) : null}
     </div>
   );
 };

@@ -1,4 +1,11 @@
 import { getUserData } from "./authUtil";
+import {
+  localWallClockToUtcStorage,
+  localWallClockToInstant,
+  instantToLocalWallClock,
+  resolveEventTimezone,
+  eventEndInstantFromFormDateTime,
+} from "./datetimeUtil";
 
 /**
  * Save event data to localStorage
@@ -674,57 +681,30 @@ const formatAddress = (locationData) => {
   return components.join(", ");
 };
 
-// ✅ NEW: Helper function to convert local time to UTC and split it
-const convertAndSplitUTC = (dateStr, timeStr) => {
-  // If either part is missing, return null values
-  if (!dateStr || !timeStr) {
-    return { date: null, time: null };
-  }
-
-  // 1. Ensure time string has seconds
-  const timeWithSeconds = timeStr.split(':').length === 3 ? timeStr : `${timeStr}:00`;
-  
-  // 2. Create a Date object from the local date and time
-  const localDateTime = new Date(`${dateStr}T${timeWithSeconds}`);
-
-  // 3. Convert to a UTC ISO string (e.g., "2025-10-04T12:37:01.123Z")
-  const isoString = localDateTime.toISOString();
-
-  // 4. Split the ISO string into date and time parts
-  const utcDate = isoString.substring(0, 10); // "2025-10-04"
-  const utcTime = isoString.substring(11, 19); // "12:37:01"
-
-  return { date: utcDate, time: utcTime };
-};
-
-
 export const prepareDateTimeDataForAPI = (dateTimeData, eventId = null) => {
   const userData = getUserData();
   const eventData = getEventData();
   const eventDataId = eventId || eventData?.eventId || 0;
+  const timezone = resolveEventTimezone(dateTimeData.timezone);
 
-  // ✅ CHANGED: Convert start and end times to their UTC equivalents
-  const { date: utcStartDate, time: utcStartTime } = convertAndSplitUTC(
+  const { date: utcStartDate, time: utcStartTime } = localWallClockToUtcStorage(
     dateTimeData.startDate,
-    dateTimeData.startTime
+    dateTimeData.startTime,
+    timezone
   );
-  const { date: utcEndDate, time: utcEndTime } = convertAndSplitUTC(
+  const { date: utcEndDate, time: utcEndTime } = localWallClockToUtcStorage(
     dateTimeData.endDate,
-    dateTimeData.endTime
+    dateTimeData.endTime,
+    timezone
   );
 
   return {
     id: parseInt(eventDataId, 10),
-    
-    // Send the UTC date and time under the original keys
     startDate: utcStartDate || "",
     startTime: utcStartTime || "",
     endDate: utcEndDate || "",
     endTime: utcEndTime || "",
-
-    // ✅ CRITICAL: Explicitly label the time as UTC
-    timeZone: "UTC",
-
+    timeZone: timezone,
     updatedBy: userData?.id || eventData?.createdBy || 0,
   };
 };
@@ -791,23 +771,18 @@ export const prepareArtDataForAPI = (
 /**
  * Format ticket sale date + time for API. Returns null when either part is missing.
  */
-export const formatTicketDateTimeForAPI = (dateString, timeString) => {
-  if (!dateString || !timeString) return null;
-  const paddedTime = timeString.includes(":") ? timeString : `${timeString}:00`;
-  const dateTime = new Date(`${dateString}T${paddedTime}`);
-  if (Number.isNaN(dateTime.getTime())) return null;
-  return dateTime.toISOString();
+export const formatTicketDateTimeForAPI = (dateString, timeString, timezone) => {
+  return localWallClockToInstant(dateString, timeString, timezone);
 };
 
 /**
  * Map API ticket structure to step/modal ticket shape.
  * Empty sale fields mean the organizer did not set custom sale windows.
  */
-export const mapTicketStructureToStepTicket = (ticket = {}) => {
-  const startIso = ticket.listingStartTime ? new Date(ticket.listingStartTime) : null;
-  const endIso = ticket.listingEndTime ? new Date(ticket.listingEndTime) : null;
-  const isValidStart = startIso && !Number.isNaN(startIso.getTime());
-  const isValidEnd = endIso && !Number.isNaN(endIso.getTime());
+export const mapTicketStructureToStepTicket = (ticket = {}, timezone) => {
+  const timeZone = resolveEventTimezone(timezone);
+  const startLocal = instantToLocalWallClock(ticket.listingStartTime, timeZone);
+  const endLocal = instantToLocalWallClock(ticket.listingEndTime, timeZone);
 
   return {
     id: ticket.id,
@@ -818,10 +793,10 @@ export const mapTicketStructureToStepTicket = (ticket = {}) => {
       ticket.maxPurchasePerOrder && ticket.maxPurchasePerOrder > 0
         ? ticket.maxPurchasePerOrder
         : "",
-    salesStartDate: isValidStart ? startIso.toISOString().split("T")[0] : "",
-    salesStartTime: isValidStart ? startIso.toISOString().split("T")[1].slice(0, 5) : "",
-    salesEndDate: isValidEnd ? endIso.toISOString().split("T")[0] : "",
-    salesEndTime: isValidEnd ? endIso.toISOString().split("T")[1].slice(0, 5) : "",
+    salesStartDate: startLocal.date,
+    salesStartTime: startLocal.time,
+    salesEndDate: endLocal.date,
+    salesEndTime: endLocal.time,
     startsAfterTicketStructureId:
       ticket.startsAfterTicketStructureId != null
         ? ticket.startsAfterTicketStructureId
@@ -836,7 +811,8 @@ export const mapTicketStructureToStepTicket = (ticket = {}) => {
 /**
  * Map step/modal ticket to API payload. Null listing times use platform defaults at purchase time.
  */
-export const mapStepTicketToApiPayload = (ticket) => {
+export const mapStepTicketToApiPayload = (ticket, timezone) => {
+  const timeZone = resolveEventTimezone(timezone);
   const depRaw = ticket.startsAfterTicketStructureId;
   const startsAfterTicketStructureId =
     depRaw != null && depRaw !== "" && Number.isFinite(Number(depRaw))
@@ -856,11 +832,13 @@ export const mapStepTicketToApiPayload = (ticket) => {
     description: ticket.description || null,
     listingStartTime: formatTicketDateTimeForAPI(
       ticket.salesStartDate,
-      ticket.salesStartTime
+      ticket.salesStartTime,
+      timeZone
     ),
     listingEndTime: formatTicketDateTimeForAPI(
       ticket.salesEndDate,
-      ticket.salesEndTime
+      ticket.salesEndTime,
+      timeZone
     ),
     startsAfterTicketStructureId,
     soldOutOverride: Boolean(ticket.soldOutOverride),
@@ -875,18 +853,17 @@ export const mapStepTicketToApiPayload = (ticket) => {
  * @param {string|number} eventId - Optional event ID to override stored value
  * @returns {Object} Formatted tickets data for API
  */
-export const prepareTicketsDataForAPI = (tickets, eventId = null) => {
+export const prepareTicketsDataForAPI = (tickets, eventId = null, timezone) => {
   const userData = getUserData();
   const eventData = getEventData();
-
-  // Use provided eventId first, or fall back to stored eventId
   const eventDataId = eventId || eventData?.eventId || 0;
+  const timeZone = resolveEventTimezone(timezone || eventData?.dateTime?.timezone);
 
   return {
     id: parseInt(eventDataId, 10),
     ticketStructures: tickets.map((ticket) => {
       const maxPurchase = parseInt(ticket.maxPurchaseAmount, 10);
-      const apiTicket = mapStepTicketToApiPayload(ticket);
+      const apiTicket = mapStepTicketToApiPayload(ticket, timeZone);
 
       return {
         id: ticket.id || null,
@@ -979,55 +956,85 @@ export const validateDiscountCodesList = (codes = []) => {
  * @param {string|number} eventId - Optional event ID to override stored value
  * @returns {Object} Formatted discount codes data for API
  */
+/** Map API discount code to step/form shape using organizer timezone. */
+export const mapApiDiscountToStepDiscount = (code = {}, timezone) => {
+  const timeZone = resolveEventTimezone(timezone);
+  const validFrom = instantToLocalWallClock(code.validFrom, timeZone);
+  const validUntil = instantToLocalWallClock(code.validUntil, timeZone);
+
+  return {
+    id: code.id,
+    code: code.code || "",
+    type: code.type || "percentage",
+    value: code.value ?? "",
+    usageLimit: formatUsageLimitForUI(code.usageLimit),
+    validFromDate: validFrom.date,
+    validFromTime: validFrom.time,
+    validUntilDate: validUntil.date,
+    validUntilTime: validUntil.time,
+    ticketsApplicable: Array.isArray(code.ticketsApplicable)
+      ? code.ticketsApplicable
+          .map((id) => parseInt(id, 10))
+          .filter((id) => Number.isFinite(id))
+      : [],
+    isActive: code.isActive !== false,
+    isDeleted: code.isDeleted === true,
+  };
+};
+
+/** Build discount validFrom/validUntil instants for API from form fields. */
+export const buildDiscountValidityInstants = (code, timezone, eventDateTime = {}) => {
+  const timeZone = resolveEventTimezone(timezone);
+  const fallbackValidFrom = new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString();
+  const fallbackValidUntil = eventEndInstantFromFormDateTime({
+    ...eventDateTime,
+    timezone: timeZone,
+  });
+
+  return {
+    validFrom:
+      localWallClockToInstant(code.validFromDate, code.validFromTime, timeZone) ||
+      fallbackValidFrom,
+    validUntil:
+      localWallClockToInstant(code.validUntilDate, code.validUntilTime, timeZone) ||
+      fallbackValidUntil,
+  };
+};
+
 export const prepareDiscountCodesDataForAPI = (
   discountCodes,
-  eventId = null
+  eventId = null,
+  timezone
 ) => {
   const userData = getUserData();
   const eventData = getEventData();
-
   const eventDataId = eventId || eventData?.eventId || 0;
-
-  // Helper to format provided date & time into ISO string
-  const formatToISO = (date, time) => {
-    if (!date || !time) return null;
-    const paddedTime = time.includes(':') ? time : `${time}:00`;
-    return `${date}T${paddedTime}:00.000Z`;
-  };
-
-  // Fallback to 12 hours ago from now (current system time)
-  const fallbackValidFrom = new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString();
-
-  // Get the main event's date and time for fallback logic
   const eventDateTime = eventData?.dateTime || {};
+  const timeZone = resolveEventTimezone(timezone || eventDateTime.timezone);
 
   return {
     id: parseInt(eventDataId, 10),
     discountCodes: discountCodes.map((code) => {
-      // Create a list of ticket IDs applicable to this discount code
       const ticketsApplicable = code.ticketsApplicable.map((ticketId) =>
         parseInt(ticketId, 10)
       );
-
-      const validFrom =
-        formatToISO(code.validFromDate, code.validFromTime) || fallbackValidFrom;
-      
-      const validUntil =
-        formatToISO(code.validUntilDate, code.validUntilTime) ||
-        formatToISO(eventDateTime.endDate, eventDateTime.endTime) ||
-        formatToISO(eventDateTime.startDate, eventDateTime.startTime);
+      const { validFrom, validUntil } = buildDiscountValidityInstants(
+        code,
+        timeZone,
+        eventDateTime
+      );
 
       return {
-        id: code.id || null, 
+        id: code.id || null,
         code: code.code,
-        type: code.type, 
+        type: code.type,
         value: parseFloat(code.value),
-        validFrom: validFrom,
-        validUntil: validUntil,
+        validFrom,
+        validUntil,
         usageLimit: parseUsageLimitForAPI(code.usageLimit),
-        isActive: true, 
+        isActive: true,
         isDeleted: false,
-        ticketsApplicable: ticketsApplicable,
+        ticketsApplicable,
       };
     }),
     updatedBy: userData?.id || eventData?.createdBy || 0,

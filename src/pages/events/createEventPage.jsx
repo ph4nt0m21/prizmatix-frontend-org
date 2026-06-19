@@ -53,7 +53,14 @@ import {
   formatUsageLimitForUI,
   filterBlankDiscountCodes,
   validateDiscountCodesList,
+  mapApiDiscountToStepDiscount,
+  buildDiscountValidityInstants,
 } from "../../utils/eventUtil";
+import {
+  mapApiDateTimeToFormDateTime,
+  eventEndInstantFromFormDateTime,
+  resolveEventTimezone,
+} from "../../utils/datetimeUtil";
 
 /**
  * CreateEventPage component for the multi-step event creation process
@@ -421,33 +428,35 @@ const CreateEventPage = () => {
             ]);
 
           const eventPayload = eventResponse?.data || {};
-          const mappedTickets = Array.isArray(ticketStructuresResponse?.data)
-            ? ticketStructuresResponse.data
-                .filter((ticket) => ticket?.isDeleted !== true)
-                .map(mapTicketStructureToStepTicket)
-            : [];
           const discountPayload =
             discountCodesResponse?.data?.discountCodes ||
             discountCodesResponse?.data ||
             [];
+          const eventTimezone = resolveEventTimezone(
+            eventPayload?.dateTime?.timezone || eventPayload?.timezone
+          );
+          const mappedTickets = Array.isArray(ticketStructuresResponse?.data)
+            ? ticketStructuresResponse.data
+                .filter((ticket) => ticket?.isDeleted !== true)
+                .map((ticket) => mapTicketStructureToStepTicket(ticket, eventTimezone))
+            : [];
           const mappedDiscountCodes = Array.isArray(discountPayload)
             ? discountPayload
                 .filter((discount) => discount?.isDeleted !== true)
-                .map(mapApiDiscountToStepDiscount)
+                .map((discount) => mapApiDiscountToStepDiscount(discount, eventTimezone))
             : [];
           const locationFromApi =
             mapEventApiPayloadToLocationForm(eventPayload);
-          const dateTimeFromApi = {
-            startDate:
-              eventPayload?.dateTime?.startDate || eventPayload?.startDate || "",
-            startTime: normalizeApiTime(
-              eventPayload?.dateTime?.startTime || eventPayload?.startTime
-            ),
-            endDate: eventPayload?.dateTime?.endDate || eventPayload?.endDate || "",
-            endTime: normalizeApiTime(
-              eventPayload?.dateTime?.endTime || eventPayload?.endTime
-            ),
-          };
+          const dateTimeFromApi = mapApiDateTimeToFormDateTime(
+            {
+              startDate: eventPayload?.dateTime?.startDate || eventPayload?.startDate,
+              startTime: eventPayload?.dateTime?.startTime || eventPayload?.startTime,
+              endDate: eventPayload?.dateTime?.endDate || eventPayload?.endDate,
+              endTime: eventPayload?.dateTime?.endTime || eventPayload?.endTime,
+              timezone: eventPayload?.dateTime?.timezone || eventPayload?.timezone,
+            },
+            {}
+          );
 
           const mergedEventData = {
             ...eventPayload,
@@ -839,7 +848,7 @@ const validateDiscountCodes = () =>
 
       // Upsert each row so newly added rows receive backend IDs immediately.
       for (const ticket of ticketsToSave) {
-        const payload = mapStepTicketToApiPayload(ticket);
+        const payload = mapStepTicketToApiPayload(ticket, eventData.dateTime?.timezone);
         if (ticket.id) {
           await UpdateTicketStructureAPI(ticket.id, {
             ...payload,
@@ -858,7 +867,9 @@ const validateDiscountCodes = () =>
       const savedTickets = Array.isArray(savedTicketsResponse?.data)
         ? savedTicketsResponse.data
             .filter((t) => t?.isDeleted !== true)
-            .map(mapTicketStructureToStepTicket)
+            .map((ticket) =>
+              mapTicketStructureToStepTicket(ticket, eventData.dateTime?.timezone)
+            )
         : ticketsToSave;
 
       setEventData((prev) => ({ ...prev, tickets: savedTickets }));
@@ -881,39 +892,6 @@ const validateDiscountCodes = () =>
     }
   };
 
-  const mapApiDiscountToStepDiscount = (code = {}) => {
-    const toDateAndTime = (iso) => {
-      if (!iso) return { date: "", time: "" };
-      const dt = new Date(iso);
-      if (Number.isNaN(dt.getTime())) return { date: "", time: "" };
-      return {
-        date: dt.toISOString().split("T")[0],
-        time: dt.toISOString().split("T")[1].slice(0, 5),
-      };
-    };
-
-    const validFrom = toDateAndTime(code.validFrom);
-    const validUntil = toDateAndTime(code.validUntil);
-    return {
-      id: code.id,
-      code: code.code || "",
-      type: code.type || "percentage",
-      value: code.value ?? "",
-      usageLimit: formatUsageLimitForUI(code.usageLimit),
-      validFromDate: validFrom.date,
-      validFromTime: validFrom.time,
-      validUntilDate: validUntil.date,
-      validUntilTime: validUntil.time,
-      ticketsApplicable: Array.isArray(code.ticketsApplicable)
-        ? code.ticketsApplicable
-            .map((id) => parseInt(id, 10))
-            .filter((id) => Number.isFinite(id))
-        : [],
-      isActive: code.isActive !== false,
-      isDeleted: code.isDeleted === true,
-    };
-  };
-
   const saveDiscountCodesStepToBackend = async (
     codesOverride = null,
     { skipped = false } = {}
@@ -932,12 +910,6 @@ const validateDiscountCodes = () =>
       return false;
     }
 
-    const formatToISO = (date, time) => {
-      if (!date || !time) return null;
-      const paddedTime = time.includes(":") ? time : `${time}:00`;
-      return new Date(`${date}T${paddedTime}`).toISOString();
-    };
-
     try {
       setError(null);
       setSuccessMessage(null);
@@ -948,9 +920,8 @@ const validateDiscountCodes = () =>
       const existingCodes = Array.isArray(existingData) ? existingData : [];
 
       const fallbackValidFrom = new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString();
-      const fallbackValidUntil =
-        formatToISO(eventData.dateTime?.endDate, eventData.dateTime?.endTime) ||
-        formatToISO(eventData.dateTime?.startDate, eventData.dateTime?.startTime);
+      const fallbackValidUntil = eventEndInstantFromFormDateTime(eventData.dateTime);
+      const eventTimezone = resolveEventTimezone(eventData.dateTime?.timezone);
       const activePayloadIds = new Set(
         codesToSave
           .map((code) => parseInt(code.id, 10))
@@ -980,22 +951,27 @@ const validateDiscountCodes = () =>
 
       const payload = {
         discountCodes: [
-          ...codesToSave.map((code) => ({
-            id: code.id || null,
-            code: code.code,
-            type: code.type,
-            value: parseFloat(code.value),
-            validFrom:
-              formatToISO(code.validFromDate, code.validFromTime) || fallbackValidFrom,
-            validUntil:
-              formatToISO(code.validUntilDate, code.validUntilTime) || fallbackValidUntil,
-            usageLimit: parseUsageLimitForAPI(code.usageLimit),
-            isActive: code.isActive !== false,
-            isDeleted: code.isDeleted === true,
-            ticketsApplicable: (code.ticketsApplicable || [])
-              .map((id) => parseInt(id, 10))
-              .filter((id) => Number.isFinite(id)),
-          })),
+          ...codesToSave.map((code) => {
+            const { validFrom, validUntil } = buildDiscountValidityInstants(
+              code,
+              eventTimezone,
+              eventData.dateTime
+            );
+            return {
+              id: code.id || null,
+              code: code.code,
+              type: code.type,
+              value: parseFloat(code.value),
+              validFrom,
+              validUntil,
+              usageLimit: parseUsageLimitForAPI(code.usageLimit),
+              isActive: code.isActive !== false,
+              isDeleted: code.isDeleted === true,
+              ticketsApplicable: (code.ticketsApplicable || [])
+                .map((id) => parseInt(id, 10))
+                .filter((id) => Number.isFinite(id)),
+            };
+          }),
           ...deletedCodesPayload,
         ],
       };
@@ -1004,7 +980,9 @@ const validateDiscountCodes = () =>
       const savedResponse = await GetEventDiscountCodesAPI(eventId);
       const savedData = savedResponse?.data?.discountCodes || savedResponse?.data || [];
       const mappedSavedCodes = Array.isArray(savedData)
-        ? savedData.filter((d) => d?.isDeleted !== true).map(mapApiDiscountToStepDiscount)
+        ? savedData
+            .filter((d) => d?.isDeleted !== true)
+            .map((discount) => mapApiDiscountToStepDiscount(discount, eventTimezone))
         : codesToSave;
 
       setEventData((prev) => ({ ...prev, discountCodes: mappedSavedCodes }));
@@ -1218,9 +1196,31 @@ const validateDiscountCodes = () =>
               );
               console.log("Date/time update successful:", response);
               const currentEventData = getEventData();
+              const syncedDateTime = mapApiDateTimeToFormDateTime(
+                {
+                  startDate: dateTimeData.startDate,
+                  startTime: dateTimeData.startTime,
+                  endDate: dateTimeData.endDate,
+                  endTime: dateTimeData.endTime,
+                  timezone: dateTimeData.timeZone,
+                },
+                eventData.dateTime
+              );
+              setEventData((prev) => ({
+                ...prev,
+                dateTime: syncedDateTime,
+                startDate: dateTimeData.startDate,
+                startTime: dateTimeData.startTime,
+                endDate: dateTimeData.endDate,
+                endTime: dateTimeData.endTime,
+              }));
               saveEventData({
                 ...currentEventData,
-                dateTime: eventData.dateTime,
+                dateTime: syncedDateTime,
+                startDate: dateTimeData.startDate,
+                startTime: dateTimeData.startTime,
+                endDate: dateTimeData.endDate,
+                endTime: dateTimeData.endTime,
               });
             } catch (error) {
               console.error("Error updating date/time:", error);
@@ -1312,10 +1312,12 @@ const validateDiscountCodes = () =>
               setIsLoading((prev) => ({ ...prev, saveEvent: false }));
               return;
             }
-            // Keep backend step-status pipeline in sync for sidebar indicators.
+            // Use persisted tickets from saveTicketsStepToBackend — eventData.tickets
+            // may still be stale here and lack backend IDs, which would create duplicates.
             const ticketsData = prepareTicketsDataForAPI(
-              eventData.tickets,
-              eventId
+              didSave,
+              eventId,
+              eventData.dateTime?.timezone
             );
             await UpdateEventTicketsAPI(eventId, ticketsData);
           } else if (currentStep === 7) {
