@@ -1299,15 +1299,16 @@ const getDateTimeMissingFieldLabels = (event = {}) => {
   const startTime = dateTime.startTime || event.startTime;
   const endDate = dateTime.endDate || event.endDate;
   const endTime = dateTime.endTime || event.endTime;
+  const timezone = resolveEventTimezone(dateTime.timezone || event.timezone || event.timeZone);
   const missing = [];
   if (!startDate) missing.push("Start date");
   if (!startTime) missing.push("Start time");
   if (!endDate) missing.push("End date");
   if (!endTime) missing.push("End time");
   if (startDate && startTime && endDate && endTime) {
-    const start = new Date(`${startDate}T${startTime}`);
-    const end = new Date(`${endDate}T${endTime}`);
-    if (!Number.isNaN(start.getTime()) && !Number.isNaN(end.getTime()) && end <= start) {
+    const startIso = localWallClockToInstant(startDate, startTime, timezone);
+    const endIso = localWallClockToInstant(endDate, endTime, timezone);
+    if (startIso && endIso && new Date(endIso) <= new Date(startIso)) {
       missing.push("End must be after start");
     }
   }
