@@ -1,41 +1,31 @@
-const toDateFromEventDateTime = (dateValue, timeValue) => {
-  if (!dateValue) return null;
+import { parseUtcStorageDateTime } from '../../utils/datetimeUtil';
 
+const normalizeTimeValue = (timeValue) => {
+  if (!timeValue) return '';
+  if (typeof timeValue === 'string') return timeValue;
   if (timeValue instanceof Date) {
-    const date = new Date(dateValue);
-    if (Number.isNaN(date.getTime())) return null;
-    date.setHours(
-      timeValue.getHours(),
-      timeValue.getMinutes(),
-      timeValue.getSeconds(),
-      timeValue.getMilliseconds()
-    );
-    return date;
+    return `${String(timeValue.getHours()).padStart(2, '0')}:${String(timeValue.getMinutes()).padStart(2, '0')}:${String(timeValue.getSeconds()).padStart(2, '0')}`;
   }
-
-  if (typeof timeValue === 'object' && timeValue !== null) {
+  if (typeof timeValue === 'object') {
     const rawHour = timeValue.hour ?? timeValue.hours ?? 0;
     const rawMinute = timeValue.minute ?? timeValue.minutes ?? 0;
     const rawSecond = timeValue.second ?? timeValue.seconds ?? 0;
-    const date = new Date(dateValue);
-    if (Number.isNaN(date.getTime())) return null;
-    date.setHours(Number(rawHour) || 0, Number(rawMinute) || 0, Number(rawSecond) || 0, 0);
-    return date;
+    return `${String(rawHour).padStart(2, '0')}:${String(rawMinute).padStart(2, '0')}:${String(rawSecond).padStart(2, '0')}`;
   }
+  return '';
+};
 
-  const dateTimeString = timeValue ? `${dateValue}T${timeValue}` : `${dateValue}T23:59:59`;
-  const parsed = new Date(dateTimeString);
-  if (!Number.isNaN(parsed.getTime())) return parsed;
-
-  const fallbackDate = new Date(dateValue);
-  if (Number.isNaN(fallbackDate.getTime())) return null;
-  fallbackDate.setHours(23, 59, 59, 999);
-  return fallbackDate;
+/** Event end instant from UTC date/time components stored by the API. */
+const getEventEndInstant = (event = {}) => {
+  const { endDate, endTime, startDate, startTime } = getEffectiveEventDates(event);
+  const resolvedEndDate = endDate || startDate;
+  const resolvedEndTime = normalizeTimeValue(endTime || startTime) || '23:59:59';
+  if (!resolvedEndDate) return null;
+  return parseUtcStorageDateTime(resolvedEndDate, resolvedEndTime);
 };
 
 export const getPublishedEventTimingStatus = (event = {}, now = new Date()) => {
-  const { endDate, endTime } = getEffectiveEventDates(event);
-  const eventEnd = toDateFromEventDateTime(endDate, endTime);
+  const eventEnd = getEventEndInstant(event);
   if (!eventEnd) return 'LIVE';
   return now > eventEnd ? 'PAST' : 'LIVE';
 };

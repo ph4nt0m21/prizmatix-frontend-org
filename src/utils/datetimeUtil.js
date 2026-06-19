@@ -5,6 +5,14 @@ export const resolveEventTimezone = (timezone) => {
   if (timezone && timezone !== 'UTC' && timezone !== 'Etc/UTC') {
     return timezone;
   }
+  return DEFAULT_EVENT_TIMEZONE;
+};
+
+/** Event editor default: stored event TZ, else organizer browser TZ for new events. */
+export const resolveFormEventTimezone = (timezone) => {
+  if (timezone && timezone !== 'UTC' && timezone !== 'Etc/UTC') {
+    return timezone;
+  }
   if (typeof Intl !== 'undefined') {
     return Intl.DateTimeFormat().resolvedOptions().timeZone || DEFAULT_EVENT_TIMEZONE;
   }
