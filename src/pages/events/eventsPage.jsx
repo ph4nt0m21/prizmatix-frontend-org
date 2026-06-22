@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
+import { toast } from 'react-toastify';
 import { GetAllOrganizationEventsAPI, DeleteEventAPI, GetEventStatusAPI, GetEventDashboardAPI } from '../../services/allApis';
 import LoadingSpinner from '../../components/common/loadingSpinner/loadingSpinner';
 import EventHeaderNav from '../../pages/events/components/eventHeaderNav'; // Adjust path if necessary
 import styles from './eventsPage.module.scss';
 import { getUserData } from '../../utils/authUtil';
+import { copyPublicEventLink } from '../../utils/eventLinkUtil';
 import { getPublishedEventTimingStatus } from './eventStatusUtils';
 import {
   ART_PLACEHOLDER_THUMBNAIL,
@@ -165,6 +167,22 @@ const EventsPage = () => {
     e.stopPropagation();
     setEventToDelete(event);
     setShowDeleteConfirm(true);
+    setOpenMenuId(null);
+  };
+
+  const handleCopyEventLink = async (e, event) => {
+    e.stopPropagation();
+    try {
+      const copied = await copyPublicEventLink(event);
+      if (copied) {
+        toast.success('Event link copied');
+      } else {
+        toast.warning('No public link available for this event yet');
+      }
+    } catch (err) {
+      console.error('Failed to copy event link:', err);
+      toast.error('Could not copy event link');
+    }
     setOpenMenuId(null);
   };
 
@@ -360,6 +378,7 @@ const EventsPage = () => {
 
                               {openMenuId === event.id && (
                                 <div className={styles.actionsMenu}>
+                                  <button onClick={(e) => handleCopyEventLink(e, event)}>Copy event link</button>
                                   <button onClick={(e) => handleEditEvent(e, event.id)}>Edit</button>
                                   <button onClick={(e) => handleDeleteClick(e, event)} className={styles.deleteAction}>Delete</button>
                                 </div>
@@ -416,6 +435,7 @@ const EventsPage = () => {
                           </button>
                           {openMenuId === event.id && (
                             <div className={styles.actionsMenu}>
+                              <button onClick={(e) => handleCopyEventLink(e, event)}>Copy event link</button>
                               <button onClick={(e) => handleEditEvent(e, event.id)}>Edit</button>
                               <button onClick={(e) => handleDeleteClick(e, event)} className={styles.deleteAction}>Delete</button>
                             </div>

@@ -8,13 +8,13 @@ import {
 import EventImagePreviewModal from '../../../components/eventPreview/EventImagePreviewModal';
 import styles from './publishStep.module.scss';
 import { getEventData } from '../../../utils/eventUtil';
+import { formatEventScheduleFromFormDateTime } from '../../../utils/datetimeUtil';
 import {
   buildMapEmbedUrl,
   buildMapExternalUrl,
   displayVenueName,
   formatEventLocationSummary,
   formatPhysicalAddressLines,
-  formatEventScheduleFromFormDateTime,
   formatTicketPriceLabel,
   mapOrgLocationToPreviewFields,
   normalizeLocationType,

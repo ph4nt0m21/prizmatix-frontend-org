@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import { Link } from 'react-router-dom';
 import styles from './eventHeaderNav.module.scss';
 import GenerateScannerIdModal from '../components/generateScannerIdModal';
+import { copyPublicEventLink } from '../../../utils/eventLinkUtil';
 import {  useNavigate } from 'react-router-dom';
 // --- SVG Icons ---
 const ArrowIcon = () => (
@@ -72,16 +73,17 @@ const navigate = useNavigate();
   }, []);
 
   const handleCopyLink = () => {
-    const publicPath = eventSlug || eventId;
-    if (!publicPath) return;
-    const eventLink = `https://www.prizmatix.nz/events/${publicPath}`;
-    navigator.clipboard.writeText(eventLink).then(() => {
-      setIsCopied(true);
-      setTimeout(() => setIsCopied(false), 2500);
-      setIsActionMenuOpen(false);
-    }).catch(err => {
-      console.error('Failed to copy text: ', err);
-    });
+    if (!eventSlug && !eventId) return;
+    copyPublicEventLink({ slug: eventSlug, id: eventId })
+      .then((copied) => {
+        if (!copied) return;
+        setIsCopied(true);
+        setTimeout(() => setIsCopied(false), 2500);
+        setIsActionMenuOpen(false);
+      })
+      .catch((err) => {
+        console.error('Failed to copy text: ', err);
+      });
   };
 
   const handleOpenScannerModal = () => {
