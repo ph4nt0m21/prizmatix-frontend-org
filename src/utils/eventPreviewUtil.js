@@ -1,4 +1,4 @@
-import { formatEventTimeForDisplay as formatEventTime, formatEventScheduleForDisplay, formatEventScheduleFromFormDateTime } from './datetimeUtil';
+import { formatEventTimeForDisplay as formatEventTime } from './datetimeUtil';
 
 export { formatEventTimeForDisplay, formatTime24, formatEventScheduleForDisplay, formatEventScheduleFromFormDateTime } from './datetimeUtil';
 

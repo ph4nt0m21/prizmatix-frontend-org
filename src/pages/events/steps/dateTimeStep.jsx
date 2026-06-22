@@ -11,8 +11,40 @@ import styles from './dateTimeStep.module.scss';
 
 const parseDateTimeStrings = (dateStr, timeStr) => {
   if (!dateStr || !timeStr) return null;
-  return new Date(`${dateStr}T${timeStr}`);
+  const normalizedTime = String(timeStr).trim().slice(0, 5);
+  const [year, month, day] = String(dateStr).split('-').map((value) => parseInt(value, 10));
+  const [hours, minutes] = normalizedTime.split(':').map((value) => parseInt(value, 10));
+  if (
+    Number.isNaN(year) ||
+    Number.isNaN(month) ||
+    Number.isNaN(day) ||
+    Number.isNaN(hours) ||
+    Number.isNaN(minutes)
+  ) {
+    return null;
+  }
+  return new Date(year, month - 1, day, hours, minutes, 0, 0);
 };
+
+const buildDateTimePayload = (start, end, timezone) => ({
+  startDate: formatDateForParent(start),
+  startTime: formatTimeForParent(start),
+  endDate: formatDateForParent(end),
+  endTime: formatTimeForParent(end),
+  timezone: resolveFormEventTimezone(timezone),
+});
+
+const dateTimePayloadKey = (dateTime = {}) =>
+  [
+    dateTime.startDate || '',
+    (dateTime.startTime || '').slice(0, 5),
+    dateTime.endDate || '',
+    (dateTime.endTime || '').slice(0, 5),
+    dateTime.timezone || '',
+  ].join('|');
+
+const dateTimePayloadEquals = (left = {}, right = {}) =>
+  dateTimePayloadKey(left) === dateTimePayloadKey(right);
 
 const formatDateForParent = (date) => {
   if (!date) return '';
@@ -121,8 +153,16 @@ const DateTimeStep = ({
   const isEndDateFocused = useRef(false);
   const isEndTimeFocused = useRef(false);
   const lastSyncedDateTimeKey = useRef('');
+  const skipEndAlignmentRef = useRef(false);
+
+  const isAnyFieldFocused = () =>
+    isStartDateFocused.current ||
+    isStartTimeFocused.current ||
+    isEndDateFocused.current ||
+    isEndTimeFocused.current;
 
   const syncPickerStateFromDateTime = (dateTime = {}) => {
+    skipEndAlignmentRef.current = true;
     const parsedStart = parseDateTimeStrings(dateTime.startDate, dateTime.startTime);
     const parsedEnd = parseDateTimeStrings(dateTime.endDate, dateTime.endTime);
 
@@ -137,16 +177,11 @@ const DateTimeStep = ({
   useEffect(() => {
     const dateTime = eventData.dateTime || {};
     if (!dateTime.startDate || !dateTime.startTime) return;
+    if (isAnyFieldFocused()) return;
 
-    const syncKey = [
-      dateTime.startDate,
-      dateTime.startTime,
-      dateTime.endDate,
-      dateTime.endTime,
-      dateTime.timezone,
-    ].join('|');
-
+    const syncKey = dateTimePayloadKey(dateTime);
     if (syncKey === lastSyncedDateTimeKey.current) return;
+
     lastSyncedDateTimeKey.current = syncKey;
     syncPickerStateFromDateTime(dateTime);
   }, [
@@ -267,18 +302,25 @@ const DateTimeStep = ({
   // --- Effects ---
 
   useEffect(() => {
-    const eventTimezone = resolveFormEventTimezone(eventData.dateTime?.timezone);
-    const formattedDataForParent = {
-      startDate: formatDateForParent(startDate),
-      startTime: formatTimeForParent(startDate),
-      endDate: formatDateForParent(endDate),
-      endTime: formatTimeForParent(endDate),
-      timezone: eventTimezone,
-    };
-    handleInputChange(formattedDataForParent, 'dateTime');
+    const payload = buildDateTimePayload(
+      startDate,
+      endDate,
+      eventData.dateTime?.timezone
+    );
+    const current = eventData.dateTime || {};
+
+    if (dateTimePayloadEquals(payload, current)) return;
+
+    lastSyncedDateTimeKey.current = dateTimePayloadKey(payload);
+    handleInputChange(payload, 'dateTime');
   }, [startDate, endDate, handleInputChange, eventData.dateTime?.timezone]);
 
   useEffect(() => {
+    if (skipEndAlignmentRef.current) {
+      skipEndAlignmentRef.current = false;
+      return;
+    }
+
     if (!startDate) {
       setEndDate(null);
       setEndDateStr('');
