@@ -65,7 +65,7 @@ const EventsPage = () => {
       const organizationId = userData?.organizationId;
 
       if (!organizationId) {
-        setError('Organization ID not found. Please login again.');
+        setError('Organisation ID not found. Please login again.');
         setIsLoading(false);
         return;
       }

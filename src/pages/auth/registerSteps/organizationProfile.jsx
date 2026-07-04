@@ -132,7 +132,7 @@ const OrganizationProfile = ({
    */
   const handleSkip = () => {
     completeRegistration({
-      name: `${formData.firstName}'s Organization`,
+      name: `${formData.firstName}'s Organisation`,
       bio: "",
     });
   };
@@ -181,7 +181,7 @@ const OrganizationProfile = ({
         <div className={styles.formContainer}>
           <div className={styles.welcomeSection}>
             <h1 className={styles.welcomeTitle}>
-              Setup Organization Profile
+              Setup Organisation Profile
             </h1>
             <p className={styles.welcomeSubtitle}>Enter your details to create an account</p>
           </div>
@@ -204,10 +204,10 @@ const OrganizationProfile = ({
               />
             </div>
             
-            {/* Organization Name */}
+            {/* Organisation Name */}
             <div className={styles.formGroup}>
               <label htmlFor="name" className={styles.inputLabel}>
-                Organization Name<OptionalLabel />
+                Organisation Name<OptionalLabel />
               </label>
               <input
                 type="text"
@@ -233,7 +233,7 @@ const OrganizationProfile = ({
                 id="bio"
                 name="bio"
                 className={styles.textarea}
-                placeholder="Tell Something about your organization"
+                placeholder="Tell something about your organisation"
                 value={formData.bio || ""}
                 onChange={handleChange}
                 disabled={isLoading}

@@ -328,7 +328,7 @@ const ForgotPasswordPage = () => {
           {step === STEPS.OTP && (
             <form onSubmit={handleVerifyOtp} className={styles.form}>
               <p className={fpStyles.emailHint}>
-                Code sent to <strong>{email.trim()}</strong>
+                Enter the 6-digit numeric code sent to <strong>{email.trim()}</strong>
               </p>
               <div className={styles.inputGroup}>
                 <div className={styles.inputField}>
@@ -336,8 +336,9 @@ const ForgotPasswordPage = () => {
                   <input
                     type="text"
                     inputMode="numeric"
+                    pattern="[0-9]*"
                     autoComplete="one-time-code"
-                    placeholder="6-digit code"
+                    placeholder="6-digit numeric code"
                     className={`${styles.input} ${fpStyles.otpInput}`}
                     value={otp}
                     onChange={(e) =>

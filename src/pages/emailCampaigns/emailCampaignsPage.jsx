@@ -114,7 +114,7 @@
 //       try {
 //         const userData = getUserData();
 //         const orgId = userData?.organizationId;
-//         if (!orgId) return toast.error("Organization ID not found");
+//         if (!orgId) return toast.error("Organisation ID not found");
 //         const res = await GetAllOrganizationEventsAPI(orgId);
 //         setEvents(res.data || []);
 //       } catch {
@@ -748,7 +748,7 @@ const EmailCampaignsPage = () => {
       try {
         const userData = getUserData();
         const orgId = userData?.organizationId;
-        if (!orgId) return toast.error("Organization ID not found");
+        if (!orgId) return toast.error("Organisation ID not found");
         const res = await GetAllOrganizationEventsAPI(orgId);
         setEvents(res.data || []);
       } catch {

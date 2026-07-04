@@ -196,12 +196,12 @@ const SettingsOverlay = ({ isOpen, onClose }) => {
 
   const handleSaveOrganizationDetails = async () => {
     if (!hasOrganizationChanges) {
-      toast.info("No organization changes to save.");
+      toast.info("No organisation changes to save.");
       return;
     }
 
     if (organizationNameChanged && !organizationDetails.organizationName.trim()) {
-      toast.error("Organization name is required.");
+      toast.error("Organisation name is required.");
       return;
     }
 
@@ -226,12 +226,12 @@ const SettingsOverlay = ({ isOpen, onClose }) => {
       }
 
       const savedParts = [];
-      if (organizationNameChanged) savedParts.push("organization name");
+      if (organizationNameChanged) savedParts.push("organisation name");
       if (photoPreview.file) savedParts.push("profile photo");
       toast.success(`${savedParts.join(" and ")} saved.`);
     } catch (err) {
       console.error("Failed to save organization details:", err);
-      toast.error(err.response?.data?.message || "Could not save organization details.");
+      toast.error(err.response?.data?.message || "Could not save organisation details.");
     } finally {
       setIsSavingOrganization(false);
     }
@@ -435,7 +435,7 @@ const SettingsOverlay = ({ isOpen, onClose }) => {
 
   const renderOrganizationSection = () => (
     <div className={styles.sectionContent}>
-      <h3 className={styles.contentTitle}>Organization Details</h3>
+      <h3 className={styles.contentTitle}>Organisation Details</h3>
 
       <div className={styles.formGroup}>
         <label className={styles.label}>Profile Photo<OptionalLabel /></label>
@@ -449,7 +449,7 @@ const SettingsOverlay = ({ isOpen, onClose }) => {
       </div>
 
       <div className={styles.formGroup}>
-        <label htmlFor="organizationName" className={styles.label}>Organization Name</label>
+        <label htmlFor="organizationName" className={styles.label}>Organisation Name</label>
         <input
           id="organizationName"
           className={styles.input}
@@ -462,7 +462,7 @@ const SettingsOverlay = ({ isOpen, onClose }) => {
         />
         {isPlaceholderOrganizationName(organizationDetails.organizationName) && (
           <p className={styles.formHelper}>
-            You skipped this during signup — update it to your real organization name.
+            You skipped this during signup — update it to your real organisation name.
           </p>
         )}
       </div>
@@ -474,7 +474,7 @@ const SettingsOverlay = ({ isOpen, onClose }) => {
           onClick={handleSaveOrganizationDetails}
           disabled={isSavingOrganization || isLoadingProfile || !hasOrganizationChanges}
         >
-          {isSavingOrganization ? "Saving…" : "Save organization details"}
+          {isSavingOrganization ? "Saving…" : "Save organisation details"}
         </button>
       </div>
     </div>
@@ -496,7 +496,7 @@ const SettingsOverlay = ({ isOpen, onClose }) => {
                 <GeneralIcon className={styles.navIcon} /> Basic Details
               </li>
               <li className={activeSection === "organisation" ? styles.active : ""} onClick={() => setActiveSection("organisation")}>
-                <OrganisationIcon className={styles.navIcon} /> Organization
+                <OrganisationIcon className={styles.navIcon} /> Organisation
               </li>
             </ul>
           </nav>

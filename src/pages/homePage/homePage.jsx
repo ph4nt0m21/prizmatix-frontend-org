@@ -241,7 +241,7 @@ const HomePage = () => {
         <div className={styles.overviewSection}>
           <div className={styles.analyticsContainer}>
             <div className={styles.sectionHeader}>
-              <h2 className={styles.sectionTitle}>Organization Overview</h2>
+              <h2 className={styles.sectionTitle}>Organisation Overview</h2>
             </div>
 
             {overviewError && (

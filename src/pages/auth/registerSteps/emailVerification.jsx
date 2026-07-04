@@ -108,7 +108,7 @@ const EmailVerification = ({
       
       // Show a success message
       setLocalError({
-        message: 'Verification code sent to your email!',
+        message: 'A 6-digit numeric code was sent to your email.',
         type: 'info'
       });
     } catch (error) {
@@ -132,6 +132,31 @@ const EmailVerification = ({
     }
   };
   
+  /**
+   * Apply a pasted OTP string into the six inputs and verify when complete.
+   * @param {string} rawText - Text from clipboard or paste event
+   */
+  const applyPastedOtp = (rawText) => {
+    const pastedData = rawText.trim().replace(/\D/g, '').slice(0, 6);
+    if (!pastedData || !/^\d+$/.test(pastedData)) {
+      return;
+    }
+
+    const newCode = pastedData.split('').concat(Array(6 - pastedData.length).fill(''));
+    setVerificationCode(newCode);
+
+    const nextEmptyIndex = newCode.findIndex((digit) => !digit);
+    if (nextEmptyIndex !== -1 && inputRefs.current[nextEmptyIndex]) {
+      inputRefs.current[nextEmptyIndex].focus();
+    } else if (inputRefs.current[5]) {
+      inputRefs.current[5].focus();
+    }
+
+    if (pastedData.length === 6) {
+      verifyOtp(pastedData);
+    }
+  };
+
   /**
    * Handle verification code input changes
    * @param {number} index - Index of the input field
@@ -228,43 +253,10 @@ const verifyOtp = async (otp) => {
       }
     }
     
-    // Handle paste event
+    // Handle paste via keyboard shortcut
     if (e.key === 'v' && (e.ctrlKey || e.metaKey)) {
       e.preventDefault();
-      navigator.clipboard.readText().then(text => {
-        const pastedData = text.trim().slice(0, 6);
-        if (/^\d+$/.test(pastedData)) {
-          const newCode = pastedData.split('').concat(Array(6 - pastedData.length).fill(''));
-          setVerificationCode(newCode);
-          
-          // Focus the next empty field or the last field
-          const nextEmptyIndex = newCode.findIndex(digit => !digit);
-          if (nextEmptyIndex !== -1 && inputRefs.current[nextEmptyIndex]) {
-            inputRefs.current[nextEmptyIndex].focus();
-          } else if (inputRefs.current[5]) {
-            inputRefs.current[5].focus();
-          }
-
-          // For the handleKeyDown function, update the auto-verify section:
-          if (!newCode.includes('')) {
-            const completeOtp = newCode.join('');
-            console.log('Auto-verifying complete OTP from keyboard:', completeOtp);
-            verifyOtp(completeOtp);
-          }
-
-          // For the handlePaste function, update the auto-verify section:
-          if (!newCode.includes('')) {
-            const completeOtp = newCode.join('');
-            console.log('Auto-verifying complete OTP from paste:', completeOtp);
-            verifyOtp(completeOtp);
-          }
-          
-          // Auto-verify if complete
-          if (!newCode.includes('')) {
-            verifyOtp(newCode.join(''));
-          }
-        }
-      });
+      navigator.clipboard.readText().then(applyPastedOtp).catch(() => {});
     }
   };
   
@@ -274,25 +266,7 @@ const verifyOtp = async (otp) => {
    */
   const handlePaste = (e) => {
     e.preventDefault();
-    const pastedData = e.clipboardData.getData('text').trim().slice(0, 6);
-    
-    if (/^\d+$/.test(pastedData)) {
-      const newCode = pastedData.split('').concat(Array(6 - pastedData.length).fill(''));
-      setVerificationCode(newCode);
-      
-      // Focus the next empty field or the last field
-      const nextEmptyIndex = newCode.findIndex(digit => !digit);
-      if (nextEmptyIndex !== -1 && inputRefs.current[nextEmptyIndex]) {
-        inputRefs.current[nextEmptyIndex].focus();
-      } else if (inputRefs.current[5]) {
-        inputRefs.current[5].focus();
-      }
-      
-      // Auto-verify if complete
-      if (!newCode.includes('')) {
-        verifyOtp(newCode.join(''));
-      }
-    }
+    applyPastedOtp(e.clipboardData.getData('text'));
   };
   
   /**
@@ -323,7 +297,7 @@ const verifyOtp = async (otp) => {
       
       // Show a success message
       setLocalError({
-        message: 'New verification code sent to your email!',
+        message: 'A new 6-digit numeric code was sent to your email.',
         type: 'info'
       });
       
@@ -435,7 +409,7 @@ const verifyOtp = async (otp) => {
           Email Verification <img src={emojiSparkles} alt="✨" className={styles.sparkleIcon} />
         </h1>
         <p className={styles.welcomeSubtitle}>
-          Enter the 6-digit verification code sent to<br />
+          Enter the 6-digit numeric code sent to<br />
           <strong className={styles.emailHighlight}>{formData.email}</strong>
         </p>
       </div>
@@ -449,12 +423,15 @@ const verifyOtp = async (otp) => {
               key={index}
               ref={el => inputRefs.current[index] = el}
               type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              autoComplete={index === 0 ? 'one-time-code' : 'off'}
               className={styles.codeInput}
               maxLength={1}
               value={digit}
               onChange={(e) => handleCodeChange(index, e)}
               onKeyDown={(e) => handleKeyDown(index, e)}
-              onPaste={index === 0 ? handlePaste : undefined}
+              onPaste={handlePaste}
               disabled={localLoading || isLoading}
               aria-label={`Verification code digit ${index + 1}`}
             />

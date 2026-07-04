@@ -165,7 +165,7 @@ const EventEditPage = () => {
           slug: fetchedData.slug,
           isPublished,
           eventType: fetchedData.isPrivate ? 'private' : 'public',
-          organizerName: fetchedData.organizationName || 'Organizer',
+          organizerName: fetchedData.organizationName || 'Organiser',
           category: fetchedData.category || '',
           searchTags: fetchedData.keywords ? fetchedData.keywords.split(',').map(tag => tag.trim()) : [],
           

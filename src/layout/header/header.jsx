@@ -73,13 +73,13 @@ const Header = ({ toggleMobileSidebar }) => {
         <div className={styles.orgLogo}>
           <ProfileAvatar
             src={profilePhotoUrl}
-            alt="Organization profile"
+            alt="Organisation profile"
             className={styles.orgLogoImage}
           />
         </div>
         <div className={styles.orgDetails}>
           <span className={styles.orgLabel}>Organisation</span>
-          <h2 className={styles.orgName}>{userData?.organizationName || "Organization"}</h2>
+          <h2 className={styles.orgName}>{userData?.organizationName || "Organisation"}</h2>
         </div>
       </div>
 

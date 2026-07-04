@@ -30,7 +30,7 @@ export const notifyProfileUpdated = () => {
 };
 
 export const isPlaceholderOrganizationName = (name) =>
-  typeof name === "string" && /'s Organization$/i.test(name.trim());
+  typeof name === "string" && /'s Organi[sz]ation$/i.test(name.trim());
 
 export const getProfileInitials = (userData = {}) => {
   if (userData.firstName && userData.lastName) {
