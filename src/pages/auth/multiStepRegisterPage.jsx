@@ -133,7 +133,7 @@ const MultiStepRegisterPage = () => {
     setVerificationStep('code-verification');
     
     // Show a success message
-    showError('Verification code sent to your email!', 'info');
+    showError('A 6-digit numeric code was sent to your email!', 'info');
   } catch (error) {
     console.error('Error sending OTP:', error);
     
@@ -251,7 +251,7 @@ const MultiStepRegisterPage = () => {
         lastName: registrationFormData.lastName,
         mobileNumber: registrationFormData.mobileNumber,
         password: registrationFormData.password,
-        name: registrationFormData.name || `${registrationFormData.firstName}'s Organization`,
+        name: registrationFormData.name || `${registrationFormData.firstName}'s Organisation`,
         bio: registrationFormData.bio || "",
         description: registrationFormData.bio || "",
         profilePhoto: null,

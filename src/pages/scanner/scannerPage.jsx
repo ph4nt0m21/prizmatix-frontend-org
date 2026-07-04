@@ -41,7 +41,7 @@ const ScannerPage = () => {
         const orgId = userData?.organizationId;
 
         if (!orgId) {
-          setError('Organization not found. Please login again.');
+          setError('Organisation not found. Please login again.');
           setEvents([]);
           return;
         }
@@ -51,7 +51,7 @@ const ScannerPage = () => {
         setEvents(list);
       } catch (err) {
         console.error('Failed to fetch organization events:', err);
-        setError('Could not load organization events.');
+        setError('Could not load organisation events.');
       } finally {
         setIsEventLoading(false);
       }

@@ -45,7 +45,7 @@
 //     try {
 //       const userData = getUserData();
 //       if (!userData?.organizationName) {
-//         toast.error('Organization name not found. Please re-login.');
+//         toast.error('Organisation name not found. Please re-login.');
 //         setIsLoading(false);
 //         return;
 //       }
@@ -273,7 +273,7 @@ const EmailCampaignsListPage = () => {
     try {
       const userData = getUserData();
       if (!userData?.organizationName) {
-        toast.error('Organization name not found. Please re-login.');
+        toast.error('Organisation name not found. Please re-login.');
         setIsLoading(false);
         return;
       }

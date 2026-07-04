@@ -341,7 +341,7 @@ const BasicInfoStep = ({ eventData, handleInputChange, isValid, stepStatus }) =>
                 aria-label="View host details"
               >
                 <div className={styles.hostLogo}>
-                  <img src="/icons/organizer-logo.svg" alt="Organizer Logo" />
+                  <img src="/icons/organizer-logo.svg" alt="Organiser logo" />
                 </div>
                 <div className={styles.hostDetails}>
                   <h4 className={styles.hostName}>{userData?.organizationName}</h4>
@@ -366,7 +366,7 @@ const BasicInfoStep = ({ eventData, handleInputChange, isValid, stepStatus }) =>
               <div className={styles.modalOverlay}>
                 <div className={styles.modal}>
                   <div className={styles.modalHeader}>
-                    <h3>Organizer Information</h3>
+                    <h3>Organiser Information</h3>
                     <button 
                       className={styles.closeButton}
                       onClick={toggleModal}
@@ -380,7 +380,7 @@ const BasicInfoStep = ({ eventData, handleInputChange, isValid, stepStatus }) =>
                       <span className={styles.infoValue}>{userData?.name || 'Not available'}</span>
                     </div>
                     <div className={styles.infoRow}>
-                      <span className={styles.infoLabel}>Organization:</span>
+                      <span className={styles.infoLabel}>Organisation:</span>
                       <span className={styles.infoValue}>{userData?.organizationName || 'Not available'}</span>
                     </div>
                     <div className={styles.infoRow}>
