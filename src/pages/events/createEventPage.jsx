@@ -715,32 +715,69 @@ const CreateEventPage = () => {
     return !hasThumbnailError && !hasBannerError;
   };
 
+  const isDonationTicket = (ticket) =>
+    String(ticket?.ticketKind || "").toUpperCase() === "DONATION";
+
+  const getInvalidTicketItems = (ticketsToCheck) => {
+    const invalidTickets = [];
+    const invalidDonations = [];
+
+    (ticketsToCheck || []).forEach((ticket) => {
+      const donation = isDonationTicket(ticket);
+      const missingName = !ticket.name || ticket.name.trim() === "";
+      const invalidPrice =
+        ticket.price === null ||
+        ticket.price === "" ||
+        Number.isNaN(Number(ticket.price)) ||
+        parseFloat(ticket.price) < 0;
+
+      if (donation) {
+        if (missingName || invalidPrice) {
+          invalidDonations.push(ticket);
+        }
+        return;
+      }
+
+      if (missingName || invalidPrice) {
+        invalidTickets.push(ticket);
+        return;
+      }
+
+      const isUnlimited = ticket.quantity === "No Limit";
+      if (!isUnlimited) {
+        if (
+          ticket.quantity === null ||
+          ticket.quantity === "" ||
+          Number.isNaN(Number(ticket.quantity)) ||
+          !Number.isInteger(Number(ticket.quantity)) ||
+          parseInt(ticket.quantity, 10) <= 0
+        ) {
+          invalidTickets.push(ticket);
+          return;
+        }
+      }
+      if (
+        ticket.maxPurchaseAmount &&
+        (Number.isNaN(Number(ticket.maxPurchaseAmount)) ||
+          !Number.isInteger(Number(ticket.maxPurchaseAmount)) ||
+          parseInt(ticket.maxPurchaseAmount, 10) <= 0)
+      ) {
+        invalidTickets.push(ticket);
+      }
+    });
+
+    return { invalidTickets, invalidDonations };
+  };
+
   const validateTickets = () => {
     if (!eventData.tickets || eventData.tickets.length === 0) {
       console.error("Validation Failed: No tickets have been added.");
       return false;
     }
-    const invalidTickets = eventData.tickets.filter((ticket) => {
-      if (!ticket.name || ticket.name.trim() === "") {
-        return true;
-      }
-      if (ticket.price === null || ticket.price === '' || isNaN(ticket.price) || parseFloat(ticket.price) < 0) {
-        return true;
-      }
-      const isUnlimited = ticket.quantity === "No Limit";
-      if (!isUnlimited) {
-        if (ticket.quantity === null || ticket.quantity === '' || isNaN(ticket.quantity) || !Number.isInteger(Number(ticket.quantity)) || parseInt(ticket.quantity, 10) <= 0) {
-          return true;
-        }
-      }
-      if (ticket.maxPurchaseAmount && (isNaN(ticket.maxPurchaseAmount) || !Number.isInteger(Number(ticket.maxPurchaseAmount)) || parseInt(ticket.maxPurchaseAmount, 10) <= 0)) {
-          return true;
-      }
-      return false;
-    });
-    const isValid = invalidTickets.length === 0;
+    const { invalidTickets, invalidDonations } = getInvalidTicketItems(eventData.tickets);
+    const isValid = invalidTickets.length === 0 && invalidDonations.length === 0;
     if (!isValid) {
-        console.error("Validation Failed: One or more tickets have invalid data.");
+        console.error("Validation Failed: One or more tickets/donations have invalid data.");
     }
     return isValid;
   };
@@ -809,16 +846,15 @@ const validateDiscountCodes = () =>
       return false;
     }
 
-    const invalidTickets = ticketsToSave.filter((ticket) => {
-      if (!ticket.name || ticket.name.trim() === "") return true;
-      if (ticket.price === null || ticket.price === "" || Number.isNaN(Number(ticket.price)) || parseFloat(ticket.price) < 0) return true;
-      if (ticket.quantity === "No Limit") return false;
-      if (ticket.quantity === null || ticket.quantity === "" || Number.isNaN(Number(ticket.quantity)) || !Number.isInteger(Number(ticket.quantity)) || parseInt(ticket.quantity, 10) <= 0) return true;
-      if (ticket.maxPurchaseAmount && (Number.isNaN(Number(ticket.maxPurchaseAmount)) || !Number.isInteger(Number(ticket.maxPurchaseAmount)) || parseInt(ticket.maxPurchaseAmount, 10) <= 0)) return true;
-      return false;
-    });
-    if (invalidTickets.length > 0) {
-      setError("Please complete valid ticket details before saving.");
+    const { invalidTickets, invalidDonations } = getInvalidTicketItems(ticketsToSave);
+    if (invalidTickets.length > 0 || invalidDonations.length > 0) {
+      if (invalidDonations.length > 0 && invalidTickets.length === 0) {
+        setError("Please complete valid donation details before saving.");
+      } else if (invalidTickets.length > 0 && invalidDonations.length === 0) {
+        setError("Please complete valid ticket details before saving.");
+      } else {
+        setError("Please complete valid ticket and donation details before saving.");
+      }
       return false;
     }
 
@@ -878,7 +914,15 @@ const validateDiscountCodes = () =>
         ...currentEventData,
         tickets: savedTickets,
       });
-      setSuccessMessage("Tickets saved successfully.");
+      const hasDonation = ticketsToSave.some(isDonationTicket);
+      const hasRegular = ticketsToSave.some((t) => !isDonationTicket(t));
+      if (hasDonation && !hasRegular) {
+        setSuccessMessage("Donation saved successfully.");
+      } else if (hasDonation && hasRegular) {
+        setSuccessMessage("Tickets and donation saved successfully.");
+      } else {
+        setSuccessMessage("Tickets saved successfully.");
+      }
       return savedTickets;
     } catch (error) {
       console.error("Error saving tickets:", error);

@@ -784,25 +784,52 @@ export const mapTicketStructureToStepTicket = (ticket = {}, timezone) => {
   const startLocal = instantToLocalWallClock(ticket.listingStartTime, timeZone);
   const endLocal = instantToLocalWallClock(ticket.listingEndTime, timeZone);
 
+  const isDonation = String(ticket.ticketKind || "").toUpperCase() === "DONATION";
+  let suggestedAmounts = [];
+  if (Array.isArray(ticket.suggestedAmounts)) {
+    suggestedAmounts = ticket.suggestedAmounts;
+  } else if (typeof ticket.suggestedAmounts === "string" && ticket.suggestedAmounts.trim()) {
+    try {
+      const parsed = JSON.parse(ticket.suggestedAmounts);
+      suggestedAmounts = Array.isArray(parsed) ? parsed : [];
+    } catch {
+      suggestedAmounts = ticket.suggestedAmounts
+        .replace(/[\[\]]/g, "")
+        .split(",")
+        .map((v) => v.trim())
+        .filter(Boolean);
+    }
+  }
+
   return {
     id: ticket.id,
     name: ticket.name || "",
     price: ticket.price ?? "",
-    quantity: ticket.limitedQuantity ? ticket.ticketCapacity : "No Limit",
-    maxPurchaseAmount:
-      ticket.maxPurchasePerOrder && ticket.maxPurchasePerOrder > 0
+    quantity: isDonation
+      ? "No Limit"
+      : ticket.limitedQuantity
+        ? ticket.ticketCapacity
+        : "No Limit",
+    maxPurchaseAmount: isDonation
+      ? ""
+      : ticket.maxPurchasePerOrder && ticket.maxPurchasePerOrder > 0
         ? ticket.maxPurchasePerOrder
         : "",
     salesStartDate: startLocal.date,
     salesStartTime: startLocal.time,
     salesEndDate: endLocal.date,
     salesEndTime: endLocal.time,
-    startsAfterTicketStructureId:
-      ticket.startsAfterTicketStructureId != null
+    startsAfterTicketStructureId: isDonation
+      ? null
+      : ticket.startsAfterTicketStructureId != null
         ? ticket.startsAfterTicketStructureId
         : null,
     description: ticket.description || "",
     soldOutOverride: Boolean(ticket.soldOutOverride),
+    ticketKind: isDonation ? "DONATION" : "STANDARD",
+    suggestedAmounts,
+    donationRequired: Boolean(ticket.donationRequired),
+    isActive: ticket.isActive !== false,
     isAdvance: false,
     advanceAmount: "",
   };
@@ -813,22 +840,35 @@ export const mapTicketStructureToStepTicket = (ticket = {}, timezone) => {
  */
 export const mapStepTicketToApiPayload = (ticket, timezone) => {
   const timeZone = resolveEventTimezone(timezone);
+  const isDonation = String(ticket.ticketKind || "").toUpperCase() === "DONATION";
   const depRaw = ticket.startsAfterTicketStructureId;
   const startsAfterTicketStructureId =
-    depRaw != null && depRaw !== "" && Number.isFinite(Number(depRaw))
+    !isDonation && depRaw != null && depRaw !== "" && Number.isFinite(Number(depRaw))
       ? parseInt(depRaw, 10)
       : null;
+
+  const suggestedAmounts = Array.isArray(ticket.suggestedAmounts)
+    ? ticket.suggestedAmounts
+        .map((v) => Number(v))
+        .filter((v) => Number.isFinite(v) && v >= 0)
+    : [];
 
   return {
     name: ticket.name,
     price: parseFloat(ticket.price),
     finalPrice: parseFloat(ticket.price),
-    ticketCapacity: ticket.quantity === "No Limit" ? 0 : parseInt(ticket.quantity, 10),
-    maxPurchasePerOrder: ticket.maxPurchaseAmount
-      ? parseInt(ticket.maxPurchaseAmount, 10)
-      : 0,
+    ticketCapacity: isDonation
+      ? 0
+      : ticket.quantity === "No Limit"
+        ? 0
+        : parseInt(ticket.quantity, 10),
+    maxPurchasePerOrder: isDonation
+      ? null
+      : ticket.maxPurchaseAmount
+        ? parseInt(ticket.maxPurchaseAmount, 10)
+        : 0,
     currency: "NZD",
-    limitedQuantity: ticket.quantity !== "No Limit",
+    limitedQuantity: isDonation ? false : ticket.quantity !== "No Limit",
     description: ticket.description || null,
     listingStartTime: formatTicketDateTimeForAPI(
       ticket.salesStartDate,
@@ -841,8 +881,11 @@ export const mapStepTicketToApiPayload = (ticket, timezone) => {
       timeZone
     ),
     startsAfterTicketStructureId,
-    soldOutOverride: Boolean(ticket.soldOutOverride),
-    isActive: true,
+    soldOutOverride: isDonation ? false : Boolean(ticket.soldOutOverride),
+    ticketKind: isDonation ? "DONATION" : "STANDARD",
+    suggestedAmounts: isDonation ? JSON.stringify(suggestedAmounts) : null,
+    donationRequired: isDonation ? Boolean(ticket.donationRequired) : false,
+    isActive: ticket.isActive !== false,
     isDeleted: false,
   };
 };
@@ -862,6 +905,7 @@ export const prepareTicketsDataForAPI = (tickets, eventId = null, timezone) => {
   return {
     id: parseInt(eventDataId, 10),
     ticketStructures: tickets.map((ticket) => {
+      const isDonation = String(ticket.ticketKind || "").toUpperCase() === "DONATION";
       const maxPurchase = parseInt(ticket.maxPurchaseAmount, 10);
       const apiTicket = mapStepTicketToApiPayload(ticket, timeZone);
 
@@ -869,7 +913,11 @@ export const prepareTicketsDataForAPI = (tickets, eventId = null, timezone) => {
         id: ticket.id || null,
         ...apiTicket,
         ticketCapacity: apiTicket.ticketCapacity,
-        maxPurchasePerOrder: !isNaN(maxPurchase) && maxPurchase > 0 ? maxPurchase : 0,
+        maxPurchasePerOrder: isDonation
+          ? null
+          : !isNaN(maxPurchase) && maxPurchase > 0
+            ? maxPurchase
+            : 0,
         toBeDeleted: false,
       };
     }),
