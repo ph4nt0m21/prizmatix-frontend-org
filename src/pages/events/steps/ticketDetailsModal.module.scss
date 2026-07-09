@@ -3,43 +3,57 @@
 
 .modalOverlay {
   position: fixed;
-  top: 0;
-  left: 0;
+  inset: 0;
   width: 100%;
   height: 100%;
+  height: 100dvh;
   background-color: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  // Add padding to prevent modal from touching screen edges on small devices
-  padding: 16px; 
+  padding: 16px;
+  box-sizing: border-box;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+
+  @media (max-width: 768px) {
+    align-items: flex-start;
+    padding: 12px;
+  }
 }
 
 .modalContainer {
   width: 900px;
   height: 650px;
+  max-height: min(90vh, 90dvh);
   background-color: white;
   border-radius: 16px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
   display: flex;
-  overflow: hidden; // Ensures content respects border-radius
+  overflow: hidden;
+  min-height: 0;
+  box-sizing: border-box;
 
   @media (max-width: 992px) {
-    width: 90%; // Make it take up more width on tablets/laptops
-    max-width: 700px; // Cap maximum width
-    height: 80vh; // Occupy 80% of viewport height
+    width: 90%;
+    max-width: 700px;
+    height: 80vh;
+    height: 80dvh;
   }
 
   @media (max-width: 768px) {
-    flex-direction: column; // Stack side panel and content panel
-    width: 100%; // Take full width on mobile
-    height: 95vh; // Almost full height on mobile
-    border-radius: 8px; // Slightly smaller border radius for mobile
+    flex-direction: column;
+    width: 100%;
+    height: auto;
+    max-height: calc(100dvh - 24px);
+    border-radius: 8px;
   }
 
   @media (max-width: 480px) {
-    height: 98vh; // Even taller on very small screens
+    max-height: calc(100dvh - 16px);
   }
 }
 
@@ -50,13 +64,14 @@
   padding: 24px 20px;
   display: flex;
   flex-direction: column;
-  flex-shrink: 0; // Prevent it from shrinking on larger screens
+  flex-shrink: 0;
 
   @media (max-width: 768px) {
-    width: 100%; // Take full width on mobile
-    height: auto; // Allow height to adjust based on content
-    padding: 16px; // Adjust padding for mobile
-    border-bottom: 1px solid #e5e7eb; // Add a separator
+    width: 100%;
+    height: auto;
+    flex-shrink: 0;
+    padding: 16px;
+    border-bottom: 1px solid #e5e7eb;
   }
 }
 
@@ -170,6 +185,9 @@
   flex: 1;
   display: flex;
   flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .modalHeader {
@@ -178,9 +196,10 @@
   align-items: center;
   padding: 16px 24px;
   border-bottom: 1px solid #e5e7eb;
+  flex-shrink: 0;
 
   @media (max-width: 768px) {
-    padding: 12px 16px; // Adjust padding for mobile
+    padding: 12px 16px;
   }
 }
 
@@ -246,11 +265,15 @@
 
 .modalContent {
   flex: 1;
+  min-height: 0;
   padding: 24px;
-  overflow-y: auto; // Make content scrollable if it overflows
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
 
   @media (max-width: 768px) {
-    padding: 16px; // Adjust padding for mobile
+    padding: 16px;
   }
 }
 
@@ -575,6 +598,78 @@
     width: 100%; // Full width on mobile
     padding: 0 16px; // Adjust padding
     font-size: 14px; // Adjust font size
+  }
+}
+
+.suggestedAmountRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+
+  .inputWithPrefix {
+    flex: 1;
+    min-width: 0;
+  }
+
+  @media (max-width: 480px) {
+    flex-direction: column;
+    align-items: stretch;
+
+    .suggestedAddButton {
+      width: 100%;
+    }
+  }
+}
+
+.suggestedAmountChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.suggestedAmountChip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  padding: 6px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
+  color: #374151;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+
+  &:hover {
+    border-color: #c4b5fd;
+    background: #f5f3ff;
+    color: #5b21b6;
+  }
+}
+
+.suggestedAddButton {
+  height: 40px;
+  padding: 0 16px;
+  border: none;
+  background-color: #7c3aed;
+  color: white;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+
+  &:hover {
+    background-color: #6d28d9;
+  }
+
+  &:disabled {
+    background-color: #c4b5fd;
+    cursor: not-allowed;
   }
 }
 

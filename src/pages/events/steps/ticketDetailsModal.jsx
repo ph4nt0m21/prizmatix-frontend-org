@@ -45,6 +45,8 @@ const TicketDetailsModal = ({
   const [saleDateType, setSaleDateType] = useState('custom');
   const [quantityType, setQuantityType] = useState('limited');
   const [localTicket, setLocalTicket] = useState({});
+  const [suggestedAmountInput, setSuggestedAmountInput] = useState('');
+  const isDonation = String(ticket?.ticketKind || localTicket?.ticketKind || '').toUpperCase() === 'DONATION';
 
   // Effect to synchronize the local state when the ticket prop changes
   useEffect(() => {
@@ -69,8 +71,15 @@ const TicketDetailsModal = ({
       description: '',
       startsAfterTicketStructureId: null,
       soldOutOverride: false,
+      ticketKind: 'STANDARD',
+      suggestedAmounts: [],
+      donationRequired: false,
+      isActive: true,
       ...ticket, // Overwrite defaults with any passed ticket data
     };
+    if (!Array.isArray(initialState.suggestedAmounts)) {
+      initialState.suggestedAmounts = [];
+    }
     setLocalTicket(initialState);
     
     // Set quantity type based on incoming ticket data
@@ -136,7 +145,7 @@ const TicketDetailsModal = ({
    */
   const handleSubmit = () => {
     let startsAfterTicketStructureId = null;
-    if (saleDateType === 'beforeAfter') {
+    if (!isDonation && saleDateType === 'beforeAfter') {
       const v = localTicket.startsAfterTicketStructureId;
       if (v != null && v !== '' && Number.isFinite(Number(v))) {
         startsAfterTicketStructureId = parseInt(String(v), 10);
@@ -144,13 +153,46 @@ const TicketDetailsModal = ({
     }
     onSave({
       ...localTicket,
-      startsAfterTicketStructureId,
+      ticketKind: isDonation ? 'DONATION' : (localTicket.ticketKind || 'STANDARD'),
+      quantity: isDonation ? 'No Limit' : localTicket.quantity,
+      maxPurchaseAmount: isDonation ? '' : localTicket.maxPurchaseAmount,
+      startsAfterTicketStructureId: isDonation ? null : startsAfterTicketStructureId,
+      soldOutOverride: isDonation ? false : localTicket.soldOutOverride,
+      suggestedAmounts: isDonation
+        ? (Array.isArray(localTicket.suggestedAmounts) ? localTicket.suggestedAmounts : [])
+        : [],
+      donationRequired: isDonation ? Boolean(localTicket.donationRequired) : false,
     });
+  };
+
+  const addSuggestedAmount = () => {
+    const value = Number(suggestedAmountInput);
+    if (!Number.isFinite(value) || value < 0) return;
+    const existing = Array.isArray(localTicket.suggestedAmounts)
+      ? localTicket.suggestedAmounts
+      : [];
+    if (existing.some((v) => Number(v) === value)) {
+      setSuggestedAmountInput('');
+      return;
+    }
+    setLocalTicket((prev) => ({
+      ...prev,
+      suggestedAmounts: [...existing, value].sort((a, b) => a - b),
+    }));
+    setSuggestedAmountInput('');
+  };
+
+  const removeSuggestedAmount = (amount) => {
+    setLocalTicket((prev) => ({
+      ...prev,
+      suggestedAmounts: (prev.suggestedAmounts || []).filter((v) => Number(v) !== Number(amount)),
+    }));
   };
 
   const dependencyOptions = allTickets
     .filter((t, i) => excludeTicketIndex == null || i !== excludeTicketIndex)
-    .filter((t) => t.id != null && t.id !== '');
+    .filter((t) => t.id != null && t.id !== '')
+    .filter((t) => String(t.ticketKind || '').toUpperCase() !== 'DONATION');
   
   if (!isOpen) return null;
   
@@ -164,8 +206,10 @@ const TicketDetailsModal = ({
               <path d="M20 12C20 10.9 19.1 10 18 10H17.74C17.9 9.55 18 9.03 18 8.5C18 6.57 16.43 5 14.5 5C13.45 5 12.46 5.45 11.83 6.39C11.35 5.32 10.24 4.5 8.89 4.5C7.16 4.5 5.75 5.91 5.75 7.64C5.75 8.47 6.09 9.24 6.64 9.81C5.09 10.24 4 11.7 4 13.34C4 15.3 5.54 16.91 7.5 16.98V17H18C19.1 17 20 16.1 20 15V12Z" fill="#7C3AED"/>
             </svg>
           </div>
-          <h3 className={styles.sidePanelTitle}>Ticket Options</h3>
-          <p className={styles.sidePanelSubtitle}>Advanced Ticket Options</p>
+          <h3 className={styles.sidePanelTitle}>{isDonation ? 'Donation Options' : 'Ticket Options'}</h3>
+          <p className={styles.sidePanelSubtitle}>
+            {isDonation ? 'Advanced Donation Options' : 'Advanced Ticket Options'}
+          </p>
           
           <div className={styles.navigationMenu}>
             <button 
@@ -222,7 +266,7 @@ const TicketDetailsModal = ({
                 
                 <div className={styles.formGroup}>
                   <label htmlFor="price" className={styles.formLabel}>
-                    Price
+                    {isDonation ? 'Minimum donation amount' : 'Price'}
                   </label>
                   <div className={styles.inputWithPrefix}>
                     <span className={styles.prefix}>$</span>
@@ -231,89 +275,175 @@ const TicketDetailsModal = ({
                       id="price"
                       name="price"
                       step="0.01"
+                      min="0"
                       className={styles.formInput}
                       value={localTicket.price || ''}
                       onChange={handleInputChange}
                     />
                   </div>
+                  {isDonation && (
+                    <p className={styles.formHelper}>
+                      Buyers must donate at least this amount (scaled by ticket quantity when tickets are selected).
+                    </p>
+                  )}
                 </div>
-                
-                <div className={styles.formGroup}>
-                  <label htmlFor="quantity" className={styles.formLabel}>
-                    Quantity
-                  </label>
-                  <div className={styles.quantityToggle}>
-                    <div className={styles.saleTypeToggle}>
-                      <button
-                        type="button"
-                        className={`${styles.saleTypeBtn} ${quantityType === 'limited' ? styles.active : ''}`}
-                        onClick={() => handleQuantityTypeChange('limited')}
-                      >
-                        Limited
-                      </button>
-                      <button
-                        type="button"
-                        className={`${styles.saleTypeBtn} ${quantityType === 'unlimited' ? styles.active : ''}`}
-                        onClick={() => handleQuantityTypeChange('unlimited')}
-                      >
-                        Unlimited
-                      </button>
+
+                {!isDonation && (
+                  <>
+                    <div className={styles.formGroup}>
+                      <label htmlFor="quantity" className={styles.formLabel}>
+                        Quantity
+                      </label>
+                      <div className={styles.quantityToggle}>
+                        <div className={styles.saleTypeToggle}>
+                          <button
+                            type="button"
+                            className={`${styles.saleTypeBtn} ${quantityType === 'limited' ? styles.active : ''}`}
+                            onClick={() => handleQuantityTypeChange('limited')}
+                          >
+                            Limited
+                          </button>
+                          <button
+                            type="button"
+                            className={`${styles.saleTypeBtn} ${quantityType === 'unlimited' ? styles.active : ''}`}
+                            onClick={() => handleQuantityTypeChange('unlimited')}
+                          >
+                            Unlimited
+                          </button>
+                        </div>
+                        
+                        {quantityType === 'limited' ? (
+                          <input
+                            type="number"
+                            id="quantity"
+                            name="quantity"
+                            className={styles.formInput}
+                            value={localTicket.quantity === 'No Limit' ? '' : (localTicket.quantity || '')}
+                            onChange={handleInputChange}
+                          />
+                        ) : (
+                          <div className={styles.noLimitText}>
+                            No limit on the number of tickets
+                          </div>
+                        )}
+                      </div>
                     </div>
                     
-                    {quantityType === 'limited' ? (
+                    <div className={styles.formGroup}>
+                      <label htmlFor="maxPurchaseAmount" className={styles.formLabel}>
+                        Max Purchase<OptionalLabel />
+                      </label>
                       <input
                         type="number"
-                        id="quantity"
-                        name="quantity"
+                        id="maxPurchaseAmount"
+                        name="maxPurchaseAmount"
                         className={styles.formInput}
-                        value={localTicket.quantity === 'No Limit' ? '' : (localTicket.quantity || '')}
+                        value={localTicket.maxPurchaseAmount === 'No Limit' ? '' : localTicket.maxPurchaseAmount || ''}
                         onChange={handleInputChange}
                       />
-                    ) : (
-                      <div className={styles.noLimitText}>
-                        No limit on the number of tickets
-                      </div>
-                    )}
+                       <p className={styles.formHelper}>Max tickets that can be bought in one order. Leave blank for no limit.</p>
+                    </div>
+                  </>
+                )}
+
+                {isDonation && (
+                  <div className={styles.formGroup}>
+                    <label className={styles.formLabel}>Donation required</label>
+                    <p className={styles.formHelper}>
+                      When enabled, buyers must include a donation. Add/Remove is hidden on the event page.
+                    </p>
+                    <label className={styles.toggleSwitch}>
+                      <input
+                        type="checkbox"
+                        name="donationRequired"
+                        checked={Boolean(localTicket.donationRequired)}
+                        onChange={handleInputChange}
+                      />
+                      <span className={styles.slider} />
+                    </label>
                   </div>
-                </div>
-                
-                <div className={styles.formGroup}>
-                  <label htmlFor="maxPurchaseAmount" className={styles.formLabel}>
-                    Max Purchase<OptionalLabel />
-                  </label>
-                  <input
-                    type="number"
-                    id="maxPurchaseAmount"
-                    name="maxPurchaseAmount"
-                    className={styles.formInput}
-                    value={localTicket.maxPurchaseAmount === 'No Limit' ? '' : localTicket.maxPurchaseAmount || ''}
-                    onChange={handleInputChange}
-                  />
-                   <p className={styles.formHelper}>Max tickets that can be bought in one order. Leave blank for no limit.</p>
-                </div>
+                )}
               </>
             ) : (
               // Advance Details Panel
               <>
-                <div className={styles.formGroup}>
-                  <label className={styles.formLabel}>Sold out override</label>
-                  <p className={styles.formHelper}>
-                    When enabled, this ticket shows as sold out on the public event page regardless of remaining capacity.
-                  </p>
-                  <label className={styles.toggleSwitch}>
-                    <input
-                      type="checkbox"
-                      name="soldOutOverride"
-                      checked={Boolean(localTicket.soldOutOverride)}
-                      onChange={handleInputChange}
-                    />
-                    <span className={styles.slider} />
-                  </label>
-                </div>
+                {isDonation ? (
+                  <>
+                    <div className={styles.formGroup}>
+                      <label className={styles.formLabel}>Active</label>
+                      <p className={styles.formHelper}>
+                        Deactivate to hide this donation from the public event page without deleting it.
+                      </p>
+                      <label className={styles.toggleSwitch}>
+                        <input
+                          type="checkbox"
+                          name="isActive"
+                          checked={localTicket.isActive !== false}
+                          onChange={handleInputChange}
+                        />
+                        <span className={styles.slider} />
+                      </label>
+                    </div>
+
+                    <div className={styles.formGroup}>
+                      <label className={styles.formLabel}>Suggested amounts<OptionalLabel /></label>
+                      <p className={styles.formHelper}>
+                        Optional quick-select amounts shown to buyers (must be ≥ minimum).
+                      </p>
+                      <div className={styles.suggestedAmountRow}>
+                        <div className={styles.inputWithPrefix}>
+                          <span className={styles.prefix}>$</span>
+                          <input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            className={styles.formInput}
+                            value={suggestedAmountInput}
+                            onChange={(e) => setSuggestedAmountInput(e.target.value)}
+                            placeholder="e.g. 20"
+                          />
+                        </div>
+                        <button type="button" className={styles.suggestedAddButton} onClick={addSuggestedAmount}>
+                          Add
+                        </button>
+                      </div>
+                      <div className={styles.suggestedAmountChips}>
+                        {(localTicket.suggestedAmounts || []).map((amount) => (
+                          <button
+                            key={amount}
+                            type="button"
+                            className={styles.suggestedAmountChip}
+                            onClick={() => removeSuggestedAmount(amount)}
+                            title="Remove"
+                          >
+                            ${Number(amount).toFixed(2)} ×
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <div className={styles.formGroup}>
+                    <label className={styles.formLabel}>Sold out override</label>
+                    <p className={styles.formHelper}>
+                      When enabled, this ticket shows as sold out on the public event page regardless of remaining capacity.
+                    </p>
+                    <label className={styles.toggleSwitch}>
+                      <input
+                        type="checkbox"
+                        name="soldOutOverride"
+                        checked={Boolean(localTicket.soldOutOverride)}
+                        onChange={handleInputChange}
+                      />
+                      <span className={styles.slider} />
+                    </label>
+                  </div>
+                )}
 
                 <div className={styles.formGroup}>
                   <label htmlFor="description" className={styles.formLabel}>
-                    Description<OptionalLabel />
+                    {isDonation ? 'Message above donation field' : 'Description'}
+                    <OptionalLabel />
                   </label>
                   <div className={styles.richTextEditor}>
                     <div className={styles.editorToolbar}>
@@ -327,6 +457,7 @@ const TicketDetailsModal = ({
                   </div>
                 </div>
                 
+                {!isDonation && (
                 <div className={styles.formGroup}>
                   <label className={styles.formLabel}>Sale Start/End</label>
                   <p className={styles.formHelper}>
@@ -431,6 +562,7 @@ const TicketDetailsModal = ({
                     </div>
                   )}
                 </div>
+                )}
               </>
             )}
           </div>

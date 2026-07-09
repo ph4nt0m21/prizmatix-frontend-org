@@ -79,18 +79,38 @@ const TicketSection = ({ onCommitSuccess = () => {} }) => {
     setEventData((prev) => ({ ...prev, tickets: value || [] }));
   };
 
-  const validateTickets = (ticketsToCheck) => {
-    if (!ticketsToCheck || ticketsToCheck.length === 0) return false;
-    const invalidTickets = ticketsToCheck.filter((ticket) => {
-      if (!ticket.name || ticket.name.trim() === "") return true;
-      if (
+  const isDonationTicket = (ticket) =>
+    String(ticket?.ticketKind || "").toUpperCase() === "DONATION";
+
+  const getInvalidTicketItems = (ticketsToCheck) => {
+    if (!ticketsToCheck || ticketsToCheck.length === 0) {
+      return { invalidTickets: [], invalidDonations: [] };
+    }
+
+    const invalidTickets = [];
+    const invalidDonations = [];
+
+    ticketsToCheck.forEach((ticket) => {
+      const donation = isDonationTicket(ticket);
+      const missingName = !ticket.name || ticket.name.trim() === "";
+      const invalidPrice =
         ticket.price === null ||
         ticket.price === "" ||
         Number.isNaN(Number(ticket.price)) ||
-        parseFloat(ticket.price) < 0
-      ) {
-        return true;
+        parseFloat(ticket.price) < 0;
+
+      if (donation) {
+        if (missingName || invalidPrice) {
+          invalidDonations.push(ticket);
+        }
+        return;
       }
+
+      if (missingName || invalidPrice) {
+        invalidTickets.push(ticket);
+        return;
+      }
+
       const isUnlimited = ticket.quantity === "No Limit";
       if (!isUnlimited) {
         if (
@@ -100,7 +120,8 @@ const TicketSection = ({ onCommitSuccess = () => {} }) => {
           !Number.isInteger(Number(ticket.quantity)) ||
           parseInt(ticket.quantity, 10) <= 0
         ) {
-          return true;
+          invalidTickets.push(ticket);
+          return;
         }
       }
       if (
@@ -109,17 +130,37 @@ const TicketSection = ({ onCommitSuccess = () => {} }) => {
           !Number.isInteger(Number(ticket.maxPurchaseAmount)) ||
           parseInt(ticket.maxPurchaseAmount, 10) <= 0)
       ) {
-        return true;
+        invalidTickets.push(ticket);
       }
-      return false;
     });
-    return invalidTickets.length === 0;
+
+    return { invalidTickets, invalidDonations };
+  };
+
+  const validateTickets = (ticketsToCheck) => {
+    if (!ticketsToCheck || ticketsToCheck.length === 0) return false;
+    const { invalidTickets, invalidDonations } = getInvalidTicketItems(ticketsToCheck);
+    return invalidTickets.length === 0 && invalidDonations.length === 0;
+  };
+
+  const getValidationErrorMessage = (ticketsToCheck) => {
+    const { invalidTickets, invalidDonations } = getInvalidTicketItems(ticketsToCheck);
+    if (invalidDonations.length > 0 && invalidTickets.length === 0) {
+      return "Please complete valid donation details before saving.";
+    }
+    if (invalidTickets.length > 0 && invalidDonations.length === 0) {
+      return "Please complete valid ticket details before saving.";
+    }
+    if (invalidTickets.length > 0 && invalidDonations.length > 0) {
+      return "Please complete valid ticket and donation details before saving.";
+    }
+    return "Please complete valid ticket details before saving.";
   };
 
   const onTicketsCommit = async (ticketsOverride = null) => {
     const ticketsToSave = ticketsOverride || eventData.tickets;
     if (!validateTickets(ticketsToSave)) {
-      setError("Please complete valid ticket details before saving.");
+      setError(getValidationErrorMessage(ticketsToSave));
       return false;
     }
 
@@ -212,10 +253,20 @@ const TicketSection = ({ onCommitSuccess = () => {} }) => {
     }
   };
 
+  const getTicketsSaveSuccessMessage = (ticketsToCheck) => {
+    const list = ticketsToCheck || [];
+    const hasDonation = list.some(isDonationTicket);
+    const hasRegular = list.some((t) => !isDonationTicket(t));
+    if (hasDonation && !hasRegular) return "Donation saved successfully.";
+    if (hasDonation && hasRegular) return "Tickets and donation saved successfully.";
+    return "Tickets saved successfully.";
+  };
+
   const handleSaveTicketsClick = async () => {
+    const ticketsToSave = eventData.tickets;
     const ok = await onTicketsCommit();
     if (ok) {
-      toast.success("Tickets saved successfully.");
+      toast.success(getTicketsSaveSuccessMessage(ticketsToSave));
     }
   };
 

@@ -174,7 +174,7 @@
 .ticketsContainer {
   border: 1px solid #e5e7eb;
   border-radius: 8px;
-  margin-bottom: 20px;
+  margin-bottom: 0;
   @include inline-table-container;
   @include inline-table-action-menu;
 }
@@ -418,6 +418,109 @@ $ticket-grid-columns:
   &:hover {
     background-color: rgba(124, 58, 237, 0.05);
   }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.emptyStateActions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.standaloneAddRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.ticketsSection {
+  margin-bottom: 0;
+}
+
+.sectionHeading {
+  margin-bottom: 12px;
+}
+
+.sectionTitle {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #111827;
+  line-height: 1.3;
+}
+
+.sectionSubtitle {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: #6b7280;
+  line-height: 1.4;
+}
+
+.donationSection {
+  margin-top: 40px;
+}
+
+.donationTableWrapper {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  margin-bottom: 0;
+  overflow: hidden;
+}
+
+$donation-grid-columns:
+  32px
+  minmax(0, 2fr)
+  minmax(120px, 1fr)
+  minmax(80px, 96px);
+
+.donationTableContent {
+  .donationTableHeader,
+  .donationItem {
+    display: grid;
+    align-items: center;
+    grid-template-columns: $donation-grid-columns;
+    @include inline-table-row-spacing;
+  }
+
+  .donationItem {
+    @include inline-table-row-cell;
+  }
+}
+
+.donationTableHeader {
+  background-color: #f3f4f6;
+  border-bottom: 1px solid #e5e7eb;
+  font-size: 12px;
+  font-weight: 600;
+  color: #4b5563;
+  text-transform: uppercase;
+
+  .ticketName {
+    text-align: left;
+  }
+
+  .ticketPrice,
+  .ticketActions {
+    text-align: center;
+  }
+}
+
+.donationItem {
+  border-bottom: 1px solid #e5e7eb;
+
+  &:hover {
+    background-color: #f9fafb;
+  }
+
+  &:last-child {
+    border-bottom: none;
+  }
 }
 
 @media (max-width: 768px) {
@@ -503,5 +606,100 @@ $ticket-grid-columns:
         justify-content: flex-end;
       }
     }
+  }
+
+  .donationSection {
+    margin-top: 24px;
+  }
+
+  .donationTableWrapper {
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    overflow: visible;
+  }
+
+  .donationTableContent {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-width: 0;
+
+    .donationTableHeader {
+      display: none;
+    }
+
+    .donationItem {
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      grid-template-columns: unset;
+      column-gap: 0;
+      gap: 0;
+      margin: 0;
+      padding: 12px;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      background: #fff;
+      min-height: unset;
+
+      &:last-child {
+        border-bottom: 1px solid #e5e7eb;
+      }
+
+      &:hover {
+        background-color: #fff;
+      }
+
+      > .ticketDrag {
+        display: none;
+      }
+
+      > [data-label] {
+        @include inline-table-labelled-row;
+      }
+
+      .ticketName,
+      .ticketPrice,
+      .ticketActions {
+        justify-self: unset;
+        padding: 0;
+      }
+
+      .ticketInput,
+      .inputWithPrefix {
+        text-align: left;
+      }
+
+      .ticketActions {
+        .actionMenuContainer {
+          flex: 0 0 auto;
+          justify-content: flex-end;
+        }
+      }
+    }
+  }
+
+  .standaloneAddRow {
+    margin-top: 8px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background-color: #f9fafb;
+  }
+
+  .emptyStateActions {
+    flex-direction: column;
+    width: 100%;
+    max-width: 280px;
+
+    .createTicketButton {
+      width: 100%;
+    }
+  }
+
+  .addTicketInlineButton {
+    width: 100%;
+    max-width: 280px;
+    height: 44px;
   }
 }
