@@ -3,18 +3,21 @@ import styles from './ordersAndAttendeesSection.module.scss';
 import Toolbar from './components/toolbar';
 import OrdersTable from './components/ordersTable';
 import OrderDetailsModal from './components/orderDetailsModal';
-import { GetEventOrdersAPI, GetEventAttendeesAPI } from '../../../../services/allApis';
-import { FiTag, FiUsers, FiPlus } from 'react-icons/fi';
+import { GetEventOrdersAPI, GetEventAttendeesAPI, GetEventDonationNotesAPI } from '../../../../services/allApis';
+import { FiTag, FiUsers, FiFileText } from 'react-icons/fi';
 import AttendeesTable from './components/attendeesTable';
+import DonationNotesTable from './components/donationNotesTable';
 import { format } from 'date-fns';
 
 const OrdersAndAttendeesSection = ({ eventId }) => {
   const [activeTab, setActiveTab] = useState('Orders');
   const [orderSearchQuery, setOrderSearchQuery] = useState('');
   const [attendeeSearchQuery, setAttendeeSearchQuery] = useState('');
+  const [donationNoteSearchQuery, setDonationNoteSearchQuery] = useState('');
 
   const [orders, setOrders] = useState([]);
   const [attendees, setAttendees] = useState([]);
+  const [donationNotes, setDonationNotes] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -36,7 +39,6 @@ const OrdersAndAttendeesSection = ({ eventId }) => {
     const fetchAttendees = async () => {
       try {
         const response = await GetEventAttendeesAPI(eventId);
-        // Enhance attendee data to match screenshot columns
         const formattedAttendees = response.data.map((attendee, index) => ({
           id: attendee.ticketId || `att-${index}`,
           orderId: `#${attendee.orderId || 'N/A'}`,
@@ -45,7 +47,7 @@ const OrdersAndAttendeesSection = ({ eventId }) => {
           mobile: attendee.attendeeMobile || 'N/A',
           orderDate: attendee.orderDate ? format(new Date(attendee.orderDate), 'dd MMM yyyy hh:mm a') : 'N/A',
           ticketType: attendee.ticketType || 'N/A',
-          isCheckedIn: false, // This can be updated with real data later
+          isCheckedIn: false,
         }));
         setAttendees(formattedAttendees);
       } catch (err) {
@@ -59,12 +61,36 @@ const OrdersAndAttendeesSection = ({ eventId }) => {
     }
   }, [eventId]);
 
+  useEffect(() => {
+    const fetchDonationNotes = async () => {
+      try {
+        const response = await GetEventDonationNotesAPI(eventId);
+        const formatted = (response.data || []).map((row, index) => ({
+          id: row.ticketId || `dn-${index}`,
+          orderId: `#${row.orderId || 'N/A'}`,
+          buyerName: `${row.buyerFirstName || ''} ${row.buyerLastName || ''}`.trim() || 'N/A',
+          buyerEmail: row.buyerEmail || 'N/A',
+          amount: row.amount != null ? Number(row.amount) : 0,
+          donationNote: row.donationNote || '',
+          ticketType: row.ticketType || 'Donation',
+          orderDate: row.orderTime ? format(new Date(row.orderTime), 'dd MMM yyyy hh:mm a') : 'N/A',
+        }));
+        setDonationNotes(formatted);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    if (eventId) {
+      fetchDonationNotes();
+    }
+  }, [eventId]);
+
   // Fetch orders only when Orders tab is active
   useEffect(() => {
     const fetchOrders = async () => {
       try {
         const response = await GetEventOrdersAPI(eventId);
-        // Enhance order data to match screenshot columns
         const formattedOrders = response.data.map(order => ({
           id: `#${order.orderId}`,
           customer: { name: `${order.buyerFirstName} ${order.buyerLastName}`, email: order.buyerEmail },
@@ -73,7 +99,11 @@ const OrdersAndAttendeesSection = ({ eventId }) => {
           ticketType: order.tickets.length > 0 ? order.tickets[0].ticketType : 'N/A',
           amount: order.totalAmount || 0,
           discount: order.discountCode || '',
-          attendees: order.tickets.map(t => ({ name: t.attendeeName })),
+          attendees: order.tickets.map(t => ({
+            name: t.attendeeName,
+            donationNote: t.donationNote,
+            ticketType: t.ticketType,
+          })),
           paymentMethod: 'Stripe',
           tickets: order.tickets,
         }));
@@ -109,7 +139,6 @@ const OrdersAndAttendeesSection = ({ eventId }) => {
         (attendeeFilters.status === 'Checked In' && attendee.isCheckedIn) ||
         (attendeeFilters.status === 'Not Checked In' && !attendee.isCheckedIn);
 
-      // Date range filter
       let dateMatch = true;
       if (attendeeFilters.startDate || attendeeFilters.endDate) {
         const orderDate = new Date(attendee.orderDate);
@@ -127,6 +156,17 @@ const OrdersAndAttendeesSection = ({ eventId }) => {
     });
   }, [attendeeSearchQuery, attendees, attendeeFilters]);
 
+  const filteredDonationNotes = useMemo(() => {
+    const q = donationNoteSearchQuery.toLowerCase();
+    if (!q) return donationNotes;
+    return donationNotes.filter((row) =>
+      (row.orderId && row.orderId.toLowerCase().includes(q)) ||
+      (row.buyerName && row.buyerName.toLowerCase().includes(q)) ||
+      (row.buyerEmail && row.buyerEmail.toLowerCase().includes(q)) ||
+      (row.donationNote && row.donationNote.toLowerCase().includes(q))
+    );
+  }, [donationNoteSearchQuery, donationNotes]);
+
   const handleOrderSelect = (order) => setSelectedOrder(order);
   const handleCloseModal = () => setSelectedOrder(null);
 
@@ -138,21 +178,17 @@ const OrdersAndAttendeesSection = ({ eventId }) => {
     );
   };
 
-  // --- Search + filter for ORDERS ---
   const filteredOrders = useMemo(() => {
     return orders.filter(order => {
-      // Search match
       const q = orderSearchQuery.toLowerCase();
       const searchMatch = !q ||
         (order.id && order.id.toLowerCase().includes(q)) ||
         (order.customer?.name && order.customer.name.toLowerCase().includes(q)) ||
         (order.customer?.email && order.customer.email.toLowerCase().includes(q));
 
-      // Ticket type filter
       const ticketTypeMatch =
         orderFilters.ticketType === 'All' || order.ticketType === orderFilters.ticketType;
 
-      // Date range filter
       let dateMatch = true;
       if (orderFilters.startDate || orderFilters.endDate) {
         const orderDate = new Date(order.orderDate);
@@ -170,7 +206,6 @@ const OrdersAndAttendeesSection = ({ eventId }) => {
     });
   }, [orderSearchQuery, orders, orderFilters]);
 
-  // Extract unique ticket types for filter dropdown
   const ticketTypes = useMemo(() => {
     const source = activeTab === 'Orders' ? orders : attendees;
     const types = [...new Set(source.map(item => item.ticketType).filter(Boolean))];
@@ -178,7 +213,28 @@ const OrdersAndAttendeesSection = ({ eventId }) => {
   }, [orders, attendees, activeTab]);
 
   const totalAttendees = attendees.length;
-  const checkedInCount = attendees.filter(a => a.isCheckedIn).length;
+  const totalDonationNotes = donationNotes.length;
+
+  const toolbarSearchQuery =
+    activeTab === 'Orders'
+      ? orderSearchQuery
+      : activeTab === 'Attendees'
+        ? attendeeSearchQuery
+        : donationNoteSearchQuery;
+
+  const setToolbarSearchQuery =
+    activeTab === 'Orders'
+      ? setOrderSearchQuery
+      : activeTab === 'Attendees'
+        ? setAttendeeSearchQuery
+        : setDonationNoteSearchQuery;
+
+  const toolbarData =
+    activeTab === 'Orders'
+      ? filteredOrders
+      : activeTab === 'Attendees'
+        ? filteredAttendees
+        : filteredDonationNotes;
 
   const renderContent = () => {
     if (isLoading && activeTab === 'Orders') return <div className={styles.placeholder}><p>Loading Orders...</p></div>;
@@ -196,6 +252,10 @@ const OrdersAndAttendeesSection = ({ eventId }) => {
       return (
         <AttendeesTable attendees={filteredAttendees} onCheckIn={handleCheckIn} />
       );
+    }
+
+    if (activeTab === 'Donation Notes') {
+      return <DonationNotesTable notes={filteredDonationNotes} />;
     }
   };
 
@@ -216,20 +276,23 @@ const OrdersAndAttendeesSection = ({ eventId }) => {
             >
               <FiUsers /> Attendees ({totalAttendees})
             </button>
+            <button
+              className={`${styles.tabButton} ${activeTab === 'Donation Notes' ? styles.active : ''}`}
+              onClick={() => setActiveTab('Donation Notes')}
+            >
+              <FiFileText /> Donation Notes ({totalDonationNotes})
+            </button>
           </div>
           <div className={styles.toolbarContainer}>
             <Toolbar
               activeTab={activeTab}
-              searchQuery={activeTab === 'Orders' ? orderSearchQuery : attendeeSearchQuery}
-              setSearchQuery={activeTab === 'Orders' ? setOrderSearchQuery : setAttendeeSearchQuery}
-              data={activeTab === 'Orders' ? filteredOrders : filteredAttendees}
+              searchQuery={toolbarSearchQuery}
+              setSearchQuery={setToolbarSearchQuery}
+              data={toolbarData}
               currentFilters={activeTab === 'Orders' ? orderFilters : attendeeFilters}
               onApplyFilters={activeTab === 'Orders' ? setOrderFilters : setAttendeeFilters}
               ticketTypes={ticketTypes}
             />
-            {/* <button className={styles.addOrderButton}>
-              <FiPlus /> Add Order
-            </button> */}
           </div>
         </div>
         <div className={styles.mainContent}>
