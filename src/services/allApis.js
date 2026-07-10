@@ -206,6 +206,11 @@ export const GetEventAttendeesAPI = async (eventId) => {
   return await apiClient.get(`/orgDashboard/admin/events/${eventId}/attendees`);
 };
 
+// Donation notes for an event (donation ticket lines)
+export const GetEventDonationNotesAPI = async (eventId) => {
+  return await apiClient.get(`/orgDashboard/admin/events/${eventId}/donation-notes`);
+};
+
 // NEW: API to get all dashboard overview data for a specific event
 export const GetEventDashboardAPI = async (eventId) => {
   return await apiClient.get(`/orgDashboard/events/${eventId}/dashboard`);

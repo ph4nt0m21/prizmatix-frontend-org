@@ -23,6 +23,7 @@ const Toolbar = ({ activeTab, searchQuery, setSearchQuery, data, currentFilters,
   }, [exportOpen]);
 
   const isOrdersTab = activeTab === 'Orders';
+  const isDonationNotesTab = activeTab === 'Donation Notes';
 
 
   const searchPlaceholder = '';
@@ -32,21 +33,38 @@ const Toolbar = ({ activeTab, searchQuery, setSearchQuery, data, currentFilters,
 
     const tableHead = isOrdersTab
       ? [['Order ID', 'Name', 'Mail', 'Order Date', 'Ticket Type']]
-      : [['Name', 'Ticket Type', 'Status']];
+      : isDonationNotesTab
+        ? [['Order ID', 'Buyer', 'Email', 'Amount', 'Notes', 'Order Date']]
+        : [['Name', 'Ticket Type', 'Status']];
 
     const tableBody = isOrdersTab
       ? data.map(order => [
         order.id, order.customer.name, order.customer.email,
         order.orderDate, order.ticketType
       ])
-      : data.map(attendee => [
-        attendee.name,
-        attendee.ticketType,
-        attendee.isCheckedIn ? 'Checked In' : 'Not Checked In'
-      ]);
+      : isDonationNotesTab
+        ? data.map(row => [
+          row.orderId,
+          row.buyerName,
+          row.buyerEmail,
+          row.amount != null ? `$${Number(row.amount).toFixed(2)}` : '',
+          row.donationNote || '',
+          row.orderDate,
+        ])
+        : data.map(attendee => [
+          attendee.name,
+          attendee.ticketType,
+          attendee.isCheckedIn ? 'Checked In' : 'Not Checked In'
+        ]);
 
     autoTable(doc, { head: tableHead, body: tableBody });
-    doc.save(isOrdersTab ? 'orders.pdf' : 'attendees.pdf');
+    doc.save(
+      isOrdersTab
+        ? 'orders.pdf'
+        : isDonationNotesTab
+          ? 'donation-notes.pdf'
+          : 'attendees.pdf'
+    );
     setExportOpen(false);
   };
 
@@ -58,11 +76,20 @@ const Toolbar = ({ activeTab, searchQuery, setSearchQuery, data, currentFilters,
       { label: "Order Date", key: "orderDate" },
       { label: "Ticket Type", key: "ticketType" },
     ]
-    : [
-      { label: "Name", key: "name" },
-      { label: "Ticket Type", key: "ticketType" },
-      { label: "Status", key: "isCheckedIn" }
-    ];
+    : isDonationNotesTab
+      ? [
+        { label: "Order ID", key: "orderId" },
+        { label: "Buyer", key: "buyerName" },
+        { label: "Email", key: "buyerEmail" },
+        { label: "Amount", key: "amount" },
+        { label: "Notes", key: "donationNote" },
+        { label: "Order Date", key: "orderDate" },
+      ]
+      : [
+        { label: "Name", key: "name" },
+        { label: "Ticket Type", key: "ticketType" },
+        { label: "Status", key: "isCheckedIn" }
+      ];
 
   return (
     <>
@@ -88,6 +115,7 @@ const Toolbar = ({ activeTab, searchQuery, setSearchQuery, data, currentFilters,
             <button
               className={styles.actionButton}
               onClick={() => setFilterModalOpen(true)}
+              style={isDonationNotesTab ? { display: 'none' } : undefined}
             >
               <FiFilter /> Filter
             </button>
@@ -100,7 +128,13 @@ const Toolbar = ({ activeTab, searchQuery, setSearchQuery, data, currentFilters,
                   <CSVLink
                     data={data}
                     headers={csvHeaders}
-                    filename={isOrdersTab ? "orders.csv" : "attendees.csv"}
+                    filename={
+                      isOrdersTab
+                        ? 'orders.csv'
+                        : isDonationNotesTab
+                          ? 'donation-notes.csv'
+                          : 'attendees.csv'
+                    }
                     className={styles.exportLink}
                     onClick={() => setExportOpen(false)}
                   >

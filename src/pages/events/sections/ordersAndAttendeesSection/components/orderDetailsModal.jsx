@@ -64,7 +64,13 @@ const OrderDetailsModal = ({ order, onClose }) => {
                   <div className={styles.ticketInfo}>
                     <span className={styles.ticketName}>
                       {ticket.ticketType}
+                      {ticket.attendeeName ? ` — ${ticket.attendeeName}` : ''}
                     </span>
+                    {ticket.donationNote ? (
+                      <div style={{ marginTop: 6, whiteSpace: 'pre-wrap', color: '#4B5563', fontSize: 13 }}>
+                        <strong>Notes:</strong> {ticket.donationNote}
+                      </div>
+                    ) : null}
                   </div>
                 </div>
               ))}
@@ -76,11 +82,19 @@ const OrderDetailsModal = ({ order, onClose }) => {
               <h4>Attendees</h4>
             </div>
             {order.attendees &&
-              order.attendees.map((attendee, index) => (
+              order.attendees
+                .filter((attendee) => attendee.name !== 'Donation')
+                .map((attendee, index) => (
                 <div key={index} className={styles.attendeeNameRow}>
                   {attendee.name}
                 </div>
               ))}
+            {order.attendees &&
+              order.attendees.filter((attendee) => attendee.name !== 'Donation').length === 0 && (
+                <div className={styles.attendeeNameRow} style={{ color: '#9CA3AF' }}>
+                  No ticket attendees
+                </div>
+              )}
           </div>
         </div>
 
