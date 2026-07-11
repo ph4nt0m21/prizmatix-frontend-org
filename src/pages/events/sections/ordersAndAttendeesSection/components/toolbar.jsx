@@ -34,7 +34,7 @@ const Toolbar = ({ activeTab, searchQuery, setSearchQuery, data, currentFilters,
     const tableHead = isOrdersTab
       ? [['Order ID', 'Name', 'Mail', 'Order Date', 'Ticket Type']]
       : isDonationNotesTab
-        ? [['Order ID', 'Buyer', 'Email', 'Amount', 'Notes', 'Order Date']]
+        ? [['Order ID', 'Donator', 'Email', 'Amount', 'Notes', 'Order Date']]
         : [['Name', 'Ticket Type', 'Status']];
 
     const tableBody = isOrdersTab
@@ -45,7 +45,7 @@ const Toolbar = ({ activeTab, searchQuery, setSearchQuery, data, currentFilters,
       : isDonationNotesTab
         ? data.map(row => [
           row.orderId,
-          row.buyerName,
+          row.donatorName || row.buyerName,
           row.buyerEmail,
           row.amount != null ? `$${Number(row.amount).toFixed(2)}` : '',
           row.donationNote || '',
@@ -79,7 +79,7 @@ const Toolbar = ({ activeTab, searchQuery, setSearchQuery, data, currentFilters,
     : isDonationNotesTab
       ? [
         { label: "Order ID", key: "orderId" },
-        { label: "Buyer", key: "buyerName" },
+        { label: "Donator", key: "donatorName" },
         { label: "Email", key: "buyerEmail" },
         { label: "Amount", key: "amount" },
         { label: "Notes", key: "donationNote" },
