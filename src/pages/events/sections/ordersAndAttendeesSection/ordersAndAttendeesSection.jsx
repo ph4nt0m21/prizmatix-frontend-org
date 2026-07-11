@@ -69,6 +69,7 @@ const OrdersAndAttendeesSection = ({ eventId }) => {
           id: row.ticketId || `dn-${index}`,
           orderId: `#${row.orderId || 'N/A'}`,
           buyerName: `${row.buyerFirstName || ''} ${row.buyerLastName || ''}`.trim() || 'N/A',
+          donatorName: row.donatorName || `${row.buyerFirstName || ''} ${row.buyerLastName || ''}`.trim() || 'N/A',
           buyerEmail: row.buyerEmail || 'N/A',
           amount: row.amount != null ? Number(row.amount) : 0,
           donationNote: row.donationNote || '',
@@ -99,11 +100,13 @@ const OrdersAndAttendeesSection = ({ eventId }) => {
           ticketType: order.tickets.length > 0 ? order.tickets[0].ticketType : 'N/A',
           amount: order.totalAmount || 0,
           discount: order.discountCode || '',
-          attendees: order.tickets.map(t => ({
-            name: t.attendeeName,
-            donationNote: t.donationNote,
-            ticketType: t.ticketType,
-          })),
+          attendees: order.tickets
+            .filter((t) => !t.donation)
+            .map((t) => ({
+              name: t.attendeeName,
+              donationNote: t.donationNote,
+              ticketType: t.ticketType,
+            })),
           paymentMethod: 'Stripe',
           tickets: order.tickets,
         }));
@@ -161,6 +164,7 @@ const OrdersAndAttendeesSection = ({ eventId }) => {
     if (!q) return donationNotes;
     return donationNotes.filter((row) =>
       (row.orderId && row.orderId.toLowerCase().includes(q)) ||
+      (row.donatorName && row.donatorName.toLowerCase().includes(q)) ||
       (row.buyerName && row.buyerName.toLowerCase().includes(q)) ||
       (row.buyerEmail && row.buyerEmail.toLowerCase().includes(q)) ||
       (row.donationNote && row.donationNote.toLowerCase().includes(q))

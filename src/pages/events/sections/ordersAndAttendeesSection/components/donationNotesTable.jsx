@@ -25,9 +25,9 @@ const DonationNotesTable = ({ notes }) => {
       cell: (info) => info.getValue(),
     },
     {
-      id: 'buyer',
-      accessorFn: (row) => row.buyerName ?? '',
-      header: 'Buyer',
+      id: 'donator',
+      accessorFn: (row) => row.donatorName ?? row.buyerName ?? '',
+      header: 'Donator',
       enableSorting: true,
       cell: (info) => info.getValue(),
       meta: { cellClassName: styles.nameCell },
