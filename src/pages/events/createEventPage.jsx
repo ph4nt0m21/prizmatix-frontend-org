@@ -841,7 +841,7 @@ const validateDiscountCodes = () =>
     }
 
     const ticketsToSave = ticketsOverride || eventData.tickets;
-    if (!ticketsToSave || ticketsToSave.length === 0) {
+    if (!Array.isArray(ticketsToSave)) {
       setError("Please add at least one ticket before saving.");
       return false;
     }

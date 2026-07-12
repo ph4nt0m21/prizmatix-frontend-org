@@ -14,6 +14,7 @@ import {
   GetEventStatusAPI,
   DeleteEventAPI,
   DuplicateEventAPI,
+  GetEventTicketStructuresAPI,
 } from "../../services/allApis";
 import { getUserData } from "../../utils/authUtil";
 import OverviewSection from "./sections/overviewSection";
@@ -58,17 +59,23 @@ const EventManagePage = () => {
 
       try {
         if (showLoader) setIsLoading(true);
-        // Fetch dashboard, event details and publish status in parallel.
-        const [dashboardRes, eventRes, statusRes] = await Promise.all([
+        // Fetch dashboard, event details, publish status, and ticket structures in parallel.
+        const [dashboardRes, eventRes, statusRes, ticketsRes] = await Promise.all([
           GetEventDashboardAPI(eventId),
           GetEventAPI(eventId),
           GetEventStatusAPI(eventId),
+          GetEventTicketStructuresAPI(eventId),
         ]);
 
         const isPublished =
           statusRes.data?.step8Completed ?? eventRes.data?.isPublished ?? false;
+        const ticketStructures = Array.isArray(ticketsRes?.data)
+          ? ticketsRes.data.filter((ticket) => ticket?.isDeleted !== true)
+          : [];
         const mergedEventData = {
           ...eventRes.data,
+          tickets: ticketStructures,
+          ticketStructures,
           isPublished,
         };
         setDashboardData(dashboardRes.data);

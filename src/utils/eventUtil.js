@@ -1249,6 +1249,38 @@ export const isCreationReadyForPublish = (statusData) => {
  * @param {Object} dashboard
  * @returns {boolean}
  */
+export const hasPublishableTickets = (event = {}, dashboard = {}) => {
+  const ticketList = Array.isArray(event?.tickets)
+    ? event.tickets
+    : Array.isArray(event?.ticketStructures)
+      ? event.ticketStructures
+      : [];
+
+  if (ticketList.length === 0) {
+    return false;
+  }
+
+  return ticketList.some((ticket) => {
+    if (!ticket || typeof ticket !== "object") {
+      return false;
+    }
+
+    const isDonation = String(ticket?.ticketKind || "").toUpperCase() === "DONATION";
+    const hasName = Boolean(String(ticket?.name || "").trim());
+    const hasPrice =
+      ticket?.price != null &&
+      ticket.price !== "" &&
+      !Number.isNaN(Number(ticket.price)) &&
+      Number(ticket.price) >= 0;
+
+    if (isDonation) {
+      return hasName || Boolean(ticket?.id) || ticket?.ticketKind === "DONATION";
+    }
+
+    return hasName && hasPrice;
+  });
+};
+
 export const isPublishReadyFromEventData = (event = {}, dashboard = {}) => {
   const hasName = Boolean(event?.name && String(event.name).trim().length > 0);
   const hasDescription = Boolean(
@@ -1262,10 +1294,7 @@ export const isPublishReadyFromEventData = (event = {}, dashboard = {}) => {
   const hasDateTime = Boolean(startDate && startTime && endDate && endTime);
 
   const hasLocation = isEventLocationComplete(event);
-
-  const hasTickets =
-    Number(dashboard?.totalTicketCapacity || 0) > 0 ||
-    (Array.isArray(event?.tickets) && event.tickets.length > 0);
+  const hasTickets = hasPublishableTickets(event, dashboard);
 
   return hasName && hasDescription && hasDateTime && hasLocation && hasTickets;
 };
@@ -1316,11 +1345,9 @@ export const getEventPublishMissingItems = (event = {}, dashboard = {}) => {
     }
   }
 
-  const hasTickets =
-    Number(dashboard?.totalTicketCapacity || 0) > 0 ||
-    (Array.isArray(event?.tickets) && event.tickets.length > 0);
+  const hasTickets = hasPublishableTickets(event, dashboard);
   if (!hasTickets) {
-    missing.push("Add at least one ticket with capacity under Tickets.");
+    missing.push("Add at least one ticket or donation under Tickets.");
   }
 
   return missing;

@@ -108,10 +108,19 @@ const TicketsStep = ({
    * Delete a ticket
    * @param {number} index Index of the ticket to delete
    */
-  const handleDeleteTicket = (index) => {
+  const handleDeleteTicket = async (index) => {
     const updatedTickets = [...tickets];
     updatedTickets.splice(index, 1);
-    setTickets(updatedTickets);
+
+    if (onTicketsCommit) {
+      const persistedTickets = await onTicketsCommit(updatedTickets);
+      if (!persistedTickets) return;
+      setTickets(persistedTickets);
+    } else {
+      setTickets(updatedTickets);
+    }
+
+    setOpenMenuIndex(null);
   };
 
   // Connect this to the main "Add Ticket" button.
