@@ -159,7 +159,7 @@ const TicketSection = ({ onCommitSuccess = () => {} }) => {
 
   const onTicketsCommit = async (ticketsOverride = null) => {
     const ticketsToSave = ticketsOverride || eventData.tickets;
-    if (!validateTickets(ticketsToSave)) {
+    if (ticketsToSave.length > 0 && !validateTickets(ticketsToSave)) {
       setError(getValidationErrorMessage(ticketsToSave));
       return false;
     }
