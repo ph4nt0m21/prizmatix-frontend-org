@@ -27,6 +27,13 @@ export const AuthProvider = ({ children }) => {
       return null;
     }
 
+    const stored = getUserData();
+    const role = (stored?.role || '').replace(/^ROLE_/, '');
+    // Scanner users have no organizer profile — skip to avoid 403.
+    if (role === 'SCANNER') {
+      return stored;
+    }
+
     try {
       const response = await GetOrganizerProfileAPI();
       const profile = response?.data?.data;
@@ -86,6 +93,10 @@ export const AuthProvider = ({ children }) => {
         localStorage.removeItem(REMEMBERED_LOGIN_EMAIL_KEY);
       }
 
+      const rawRole =
+        response.data.roles && response.data.roles.length > 0 ? response.data.roles[0] : null;
+      const role = rawRole ? String(rawRole).replace(/^ROLE_/, '') : null;
+
       const userData = {
         id: response.data.id || response.data.userId,
         organizationId: response.data.organizationId,
@@ -94,15 +105,18 @@ export const AuthProvider = ({ children }) => {
         lastName: response.data.lastName || '',
         name: response.data.name || `${response.data.firstName || ''} ${response.data.lastName || ''}`.trim(),
         email: response.data.email || normalizedCredentials.username,
-        role: response.data.roles && response.data.roles.length > 0 ? response.data.roles[0] : null,
+        role,
+        assignedEventId: response.data.assignedEventId ?? null,
       };
       setUserData(userData);
       setCurrentUser(userData);
       setIsAuthenticated(true);
 
-      await refreshProfile();
+      if (role !== 'SCANNER') {
+        await refreshProfile();
+      }
 
-      return response.data;
+      return { ...response.data, role, assignedEventId: userData.assignedEventId };
     } catch (err) {
       console.error('Login error:', err);
       const errorMessage =

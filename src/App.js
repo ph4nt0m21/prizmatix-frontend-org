@@ -37,7 +37,9 @@ import "react-toastify/dist/ReactToastify.css";
  * It's a separate component to ensure it's rendered inside AuthProvider.
  */
 const AppContent = () => {
-  const { isAuthenticated, isInitializing } = useAuth();
+  const { isAuthenticated, isInitializing, currentUser } = useAuth();
+  const role = (currentUser?.role || '').replace(/^ROLE_/, '');
+  const authenticatedHome = role === 'SCANNER' ? '/scanner' : '/';
 
   useEffect(() => {
     checkAndCleanupEventData(120);
@@ -62,23 +64,23 @@ const AppContent = () => {
         {/* If the user is already logged in, redirect them away from these pages. */}
         <Route
           path="/login"
-          element={isAuthenticated ? <Navigate to="/" /> : <LoginPage />}
+          element={isAuthenticated ? <Navigate to={authenticatedHome} /> : <LoginPage />}
         />
         <Route
           path="/register"
-          element={isAuthenticated ? <Navigate to="/" /> : <RegisterPage />}
+          element={isAuthenticated ? <Navigate to={authenticatedHome} /> : <RegisterPage />}
         />
         <Route
           path="/forgot-password"
-          element={isAuthenticated ? <Navigate to="/" /> : <ForgotPasswordPage />}
+          element={isAuthenticated ? <Navigate to={authenticatedHome} /> : <ForgotPasswordPage />}
         />
         <Route
           path="/reset-link-sent"
-          element={isAuthenticated ? <Navigate to="/" /> : <ResetLinkSentPage />}
+          element={isAuthenticated ? <Navigate to={authenticatedHome} /> : <ResetLinkSentPage />}
         />
         <Route
           path="/reset-password"
-          element={isAuthenticated ? <Navigate to="/" /> : <ResetPasswordPage />}
+          element={isAuthenticated ? <Navigate to={authenticatedHome} /> : <ResetPasswordPage />}
         />
         {/* ... other public auth routes ... */}
 
@@ -90,7 +92,7 @@ const AppContent = () => {
         <Route element={<ProtectedRoute />}>
 
           {/* Routes for ORGANIZER and SUPER_ADMIN */}
-          <Route element={<ProtectedRoute allowedRoles={['ORGANIZER', 'SUPER_ADMIN']} />}>
+          <Route element={<ProtectedRoute allowedRoles={['ORGANIZER', 'SUPER_ADMIN', 'ADMINISTRATOR']} />}>
             <Route path="/" element={<MainLayout />}>
               <Route index element={<HomePage />} />
               <Route path="events" element={<EventsPage />} />
@@ -112,7 +114,6 @@ const AppContent = () => {
             </Route>
           </Route>
 
-          {/* Routes for SCANNER (and ORGANIZER) */}
           {/* Routes for SCANNER (and ORGANIZER) */}
           <Route element={<ProtectedRoute allowedRoles={['SCANNER', 'ORGANIZER']} />}>
             <Route path="/" element={<MainLayout />}>

@@ -323,10 +323,12 @@ const SideNavBar = ({ isMobileSidebarOpen, toggleMobileSidebar }) => {
 
                   <div className={styles.dropdownDivider}></div>
 
-                  <button className={styles.dropdownItem} onClick={handleOpenSettings}>
-                    <SettingsIcon className={styles.dropdownIcon} />
-                    <span>Settings</span>
-                  </button>
+                  {userRole !== 'SCANNER' && (
+                    <button className={styles.dropdownItem} onClick={handleOpenSettings}>
+                      <SettingsIcon className={styles.dropdownIcon} />
+                      <span>Settings</span>
+                    </button>
+                  )}
 
                   <button className={styles.dropdownItem} onClick={handleLogout}>
                     <LogoutIcon className={styles.dropdownIcon} />

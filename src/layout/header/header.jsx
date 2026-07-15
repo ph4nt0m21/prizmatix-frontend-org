@@ -78,8 +78,12 @@ const Header = ({ toggleMobileSidebar }) => {
           />
         </div>
         <div className={styles.orgDetails}>
-          <span className={styles.orgLabel}>Organisation</span>
-          <h2 className={styles.orgName}>{userData?.organizationName || "Organisation"}</h2>
+          <span className={styles.orgLabel}>{userData?.role === 'SCANNER' || userData?.role === 'ROLE_SCANNER' ? 'Scanner' : 'Organisation'}</span>
+          <h2 className={styles.orgName}>
+            {userData?.organizationName ||
+              (userData?.name ? userData.name : null) ||
+              'Organisation'}
+          </h2>
         </div>
       </div>
 

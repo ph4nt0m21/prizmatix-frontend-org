@@ -156,6 +156,35 @@
   }
 }
 
+.tabs {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.2rem;
+  background: #f3f4f6;
+  border-radius: 10px;
+  flex: 1;
+  min-width: 0;
+}
+
+.tabButton {
+  border: none;
+  background: transparent;
+  color: #6b7280;
+  font-size: 0.95rem;
+  font-weight: 600;
+  padding: 0.55rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.tabActive {
+  background: #ffffff;
+  color: #7c3aed;
+  box-shadow: 0 1px 2px rgba(17, 24, 39, 0.08);
+}
+
 .toolbarRow {
   padding-bottom: 1rem;
   margin-bottom: 1rem;

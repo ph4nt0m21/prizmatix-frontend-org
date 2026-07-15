@@ -5,7 +5,8 @@ import { FiCheck } from 'react-icons/fi';
 
 const DEFAULT_PAGE_SIZE = 10;
 
-const AttendeesTable = ({ attendees, onToggleCheckIn }) => {
+const AttendeesTable = ({ attendees, onToggleCheckIn, mode = 'attendees' }) => {
+  const isDonators = mode === 'donators';
   const [sorting, setSorting] = useState([]);
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: DEFAULT_PAGE_SIZE });
 
@@ -32,62 +33,110 @@ const AttendeesTable = ({ attendees, onToggleCheckIn }) => {
 
   useEffect(() => {
     setPagination((p) => ({ ...p, pageIndex: 0 }));
-  }, [attendees?.length]);
+  }, [attendees?.length, mode]);
 
-  const columns = [
-    {
-      id: 'name',
-      accessorFn: (row) => row.name ?? '',
-      header: 'Name',
-      enableSorting: true,
-      cell: (info) => info.getValue(),
-    },
-    {
-      id: 'ticketType',
-      accessorFn: (row) => row.ticketType ?? '',
-      header: 'Ticket Type',
-      enableSorting: true,
-      cell: (info) => {
-        const ticketType = info.getValue();
-        return (
-          <span className={`${styles.ticketType} ${getTicketTypeClass(ticketType)}`}>
-            {ticketType}
-          </span>
-        );
-      },
-    },
-    {
-      id: 'checkIn',
-      header: () => null,
-      enableSorting: false,
-      cell: ({ row }) => {
-        const attendee = row.original;
-        return attendee.isCheckedIn ? (
-          <button
-            className={`${styles.checkInButton} ${styles.checkedIn}`}
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onToggleCheckIn(attendee.id, true);
-            }}
-          >
-            <FiCheck /> Check In
-          </button>
-        ) : (
-          <button
-            className={styles.checkInButton}
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onToggleCheckIn(attendee.id, false);
-            }}
-          >
-            Check In
-          </button>
-        );
-      },
-    },
-  ];
+  const columns = isDonators
+    ? [
+        {
+          id: 'name',
+          accessorFn: (row) => row.name ?? '',
+          header: 'Donator',
+          enableSorting: true,
+          cell: (info) => info.getValue(),
+        },
+        {
+          id: 'donationNote',
+          accessorFn: (row) => row.donationNote ?? '',
+          header: 'Notes',
+          enableSorting: true,
+          cell: (info) => info.getValue() || '—',
+        },
+        {
+          id: 'checkIn',
+          header: () => null,
+          enableSorting: false,
+          cell: ({ row }) => {
+            const attendee = row.original;
+            return attendee.isCheckedIn ? (
+              <button
+                className={`${styles.checkInButton} ${styles.checkedIn}`}
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggleCheckIn(attendee.id, true);
+                }}
+              >
+                <FiCheck /> Check In
+              </button>
+            ) : (
+              <button
+                className={styles.checkInButton}
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggleCheckIn(attendee.id, false);
+                }}
+              >
+                Check In
+              </button>
+            );
+          },
+        },
+      ]
+    : [
+        {
+          id: 'name',
+          accessorFn: (row) => row.name ?? '',
+          header: 'Name',
+          enableSorting: true,
+          cell: (info) => info.getValue(),
+        },
+        {
+          id: 'ticketType',
+          accessorFn: (row) => row.ticketType ?? '',
+          header: 'Ticket Type',
+          enableSorting: true,
+          cell: (info) => {
+            const ticketType = info.getValue();
+            return (
+              <span className={`${styles.ticketType} ${getTicketTypeClass(ticketType)}`}>
+                {ticketType}
+              </span>
+            );
+          },
+        },
+        {
+          id: 'checkIn',
+          header: () => null,
+          enableSorting: false,
+          cell: ({ row }) => {
+            const attendee = row.original;
+            return attendee.isCheckedIn ? (
+              <button
+                className={`${styles.checkInButton} ${styles.checkedIn}`}
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggleCheckIn(attendee.id, true);
+                }}
+              >
+                <FiCheck /> Check In
+              </button>
+            ) : (
+              <button
+                className={styles.checkInButton}
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggleCheckIn(attendee.id, false);
+                }}
+              >
+                Check In
+              </button>
+            );
+          },
+        },
+      ];
 
   const table = useReactTable({
     data: attendees ?? [],
@@ -107,7 +156,11 @@ const AttendeesTable = ({ attendees, onToggleCheckIn }) => {
     typeof column.columnDef.header === 'string' ? column.columnDef.header : '';
 
   if (!attendees || attendees.length === 0) {
-    return <div className={styles.noResults}>No attendees found.</div>;
+    return (
+      <div className={styles.noResults}>
+        {isDonators ? 'No donators found.' : 'No attendees found.'}
+      </div>
+    );
   }
 
   return (
