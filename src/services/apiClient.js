@@ -53,8 +53,12 @@ apiClient.interceptors.response.use(
     const status = error.response?.status;
     const url = error.config?.url || "";
 
+    // Scanner accounts are not allowed on organizer-only endpoints (e.g. /admin/profile).
+    // Do not clear their session when those calls 403.
     const skipForcedLogout =
-      url.includes("/scanner/verify") || isPublicAuthRequest(url);
+      url.includes("/scanner/verify") ||
+      url.includes("/admin/profile") ||
+      isPublicAuthRequest(url);
 
     if ((status === 401 || status === 403) && !skipForcedLogout) {
       Cookies.remove("token");

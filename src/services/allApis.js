@@ -105,11 +105,16 @@ export const GetAllOrganizationEventsAPI = async (organizationId) => {
   return await apiClient.get(`/api/events/organization/${organizationId}`);
 };
 
-// Delete an event
+// Delete an event (moves to Deleted box for 30 days)
 export const DeleteEventAPI = async (eventId, userId) => {
   return await apiClient.delete(`/api/events/${eventId}`, {
     params: { userId }
   });
+};
+
+// Restore an event from the Deleted box
+export const RestoreEventAPI = async (eventId) => {
+  return await apiClient.post(`/api/events/${eventId}/restore`);
 };
 
 // Duplicate an event as a new draft
@@ -311,8 +316,10 @@ export const CreateScannerUserAPI = async (data) => {
   return await apiClient.post("/admin/scanner-users", data);
 };
 
-export const GetAttendeeScanner = async () => {
-  return await apiClient.get(`/scanner/attendees`);
+export const GetAttendeeScanner = async (eventId) => {
+  return await apiClient.get(`/scanner/attendees`, {
+    params: eventId != null ? { eventId: Number(eventId) } : undefined,
+  });
 };
 
 export const CheckInAttendeeAPI = async (ticketId) => {

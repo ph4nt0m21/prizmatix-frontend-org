@@ -157,7 +157,7 @@ const EventManagePage = () => {
     try {
       setIsDeleting(true);
       await DeleteEventAPI(eventId, currentUserId);
-      toast.success("Event deleted successfully.");
+      toast.success("Event moved to Deleted. You can restore it within 30 days.");
       setShowDeleteConfirm(false);
       navigate("/events");
     } catch (deleteError) {
@@ -245,7 +245,8 @@ const EventManagePage = () => {
             <h3>Confirm Deletion</h3>
             <p>
               Are you sure you want to delete the event &quot;{eventData?.name}&quot;?
-              This action cannot be undone.
+              It will move to Deleted for 30 days and can be restored during that time.
+              After 30 days it will be permanently removed from your lists.
             </p>
             <div className={styles.deleteModalActions}>
               <button

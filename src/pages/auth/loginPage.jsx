@@ -23,7 +23,7 @@ import emojiSparkles from "../../assets/images/emoji-sparkles_.svg";
 const LoginPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { login, isAuthenticated } = useAuth();
+  const { login, isAuthenticated, currentUser } = useAuth();
 
   const [formData, setFormData] = useState({
     username: "",
@@ -33,6 +33,11 @@ const LoginPage = () => {
   const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+  const getDefaultPath = (user) => {
+    const role = (user?.role || "").replace(/^ROLE_/, "");
+    return role === "SCANNER" ? "/scanner" : "/";
+  };
 
   useEffect(() => {
     const rememberedEmail = localStorage.getItem(REMEMBERED_LOGIN_EMAIL_KEY);
@@ -44,10 +49,19 @@ const LoginPage = () => {
 
   useEffect(() => {
     if (isAuthenticated) {
-      const from = location.state?.from?.pathname || "/";
-      navigate(from, { replace: true });
+      const from = location.state?.from?.pathname;
+      const fallback = getDefaultPath(currentUser);
+      // Scanners may only use scanner routes; ignore deep-links into organizer pages.
+      const role = (currentUser?.role || "").replace(/^ROLE_/, "");
+      const destination =
+        role === "SCANNER"
+          ? "/scanner"
+          : from && from !== "/login"
+            ? from
+            : fallback;
+      navigate(destination, { replace: true });
     }
-  }, [isAuthenticated, navigate, location]);
+  }, [isAuthenticated, navigate, location, currentUser]);
 
   useEffect(() => {
     if (location.state?.notice) {
@@ -68,9 +82,9 @@ const LoginPage = () => {
     setIsLoading(true);
 
     try {
-      await login({ username, password }, rememberMe);
-      const from = location.state?.from?.pathname || "/";
-      navigate(from, { replace: true });
+      const data = await login({ username, password }, rememberMe);
+      const role = (data?.role || "").replace(/^ROLE_/, "");
+      navigate(role === "SCANNER" ? "/scanner" : "/", { replace: true });
     } catch (err) {
       notifyAuthError(getLoginErrorMessage(err));
     } finally {
