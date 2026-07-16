@@ -199,13 +199,24 @@
   border-top: 1px solid #EAECF0;
 
   @media (max-width: 768px) {
-    padding: 12px 20px; // Adjust padding for mobile
-    gap: 16px; // Reduce gap
-    justify-content: space-between; // Distribute buttons
+    position: sticky;
+    bottom: 0;
+    z-index: 20;
+    padding: 12px 20px;
+    gap: 16px;
+    justify-content: space-between;
+    box-shadow: 0 -4px 12px rgba(16, 24, 40, 0.08);
   }
 
   @media (max-width: 480px) {
     padding: 12px 16px;
+  }
+}
+
+.publishButton {
+  @media (max-width: 480px) {
+    flex: 1;
+    text-align: center;
   }
 }
 
