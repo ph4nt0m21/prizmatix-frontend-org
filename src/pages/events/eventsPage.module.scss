@@ -325,10 +325,6 @@
   text-align: left;
 }
 
-.table th:nth-child(2),
-.table th:nth-child(5) {
-  text-align: center;
-}
 
 /* ================================
    CELLS & ROWS
@@ -340,6 +336,7 @@
   white-space: nowrap;
   color: #1F2937;
   font-weight: 500;
+  text-align: left;
 }
 
 .table tr:last-child td {
@@ -360,6 +357,7 @@
 .eventInfoCell {
   display: flex;
   align-items: center;
+  justify-content: flex-start;
   gap: 16px;
   min-width: 0;
 }
@@ -418,7 +416,7 @@
 .statusCell {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
 }
 
 .statusBadge {
@@ -494,7 +492,7 @@
 
 /* Gross column */
 .grossCell {
-  text-align: center;
+  text-align: left;
   font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
   font-weight: 600;
   color: #252b37;
@@ -504,7 +502,7 @@
 
 /* Date column */
 .dateCell {
-  text-align: center;
+  text-align: left;
   font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
   font-weight: 600;
   color: #252b37;

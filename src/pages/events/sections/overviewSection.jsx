@@ -197,20 +197,24 @@ const OverviewSection = ({ dashboardData, eventData }) => {
           <div className={styles.statCard}>
             <p className={styles.statTitle}>Tickets Issued</p>
             <div className={styles.statValue}>
-              {dashboardData.totalTicketsIssued}{' '}
-              <span className={styles.statTotal}>of {dashboardData.totalTicketCapacity}</span>
+              {dashboardData.totalTicketsIssued}
+              {dashboardData.totalTicketCapacity > 0 && (
+                <span className={styles.statTotal}> of {dashboardData.totalTicketCapacity}</span>
+              )}
             </div>
-            <div className={styles.progressBarContainer}>
-              <div
-                className={styles.progressBar}
-                style={{
-                  width:
-                    dashboardData.totalTicketCapacity > 0
-                      ? `${(dashboardData.totalTicketsIssued / dashboardData.totalTicketCapacity) * 100}%`
-                      : '0%',
-                }}
-              ></div>
-            </div>
+            {dashboardData.totalTicketCapacity > 0 && (
+              <div className={styles.progressBarContainer}>
+                <div
+                  className={styles.progressBar}
+                  style={{
+                    width: `${Math.min(
+                      100,
+                      (dashboardData.totalTicketsIssued / dashboardData.totalTicketCapacity) * 100
+                    )}%`,
+                  }}
+                ></div>
+              </div>
+            )}
           </div>
           <div className={styles.statCard}>
             <p className={styles.statTitle}>Orders</p>
