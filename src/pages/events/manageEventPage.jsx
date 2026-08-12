@@ -175,10 +175,18 @@ const EventManagePage = () => {
     ? getPublishedEventTimingStatus(eventData)
     : 'DRAFT';
 
+  const goToOrdersAndAttendees = () => navigateToManageSection("ordersAndAttendees");
+
   const renderCurrentSection = () => {
     switch (currentSection) {
       case "overview":
-        return <OverviewSection dashboardData={dashboardData} eventData={eventData} />;
+        return (
+          <OverviewSection
+            dashboardData={dashboardData}
+            eventData={eventData}
+            onViewAllOrders={goToOrdersAndAttendees}
+          />
+        );
       case "ordersAndAttendees":
         return <OrdersAndAttendeesSection eventId={eventId} />;
       case "payout":
@@ -188,7 +196,13 @@ const EventManagePage = () => {
       case "discounts":
         return <DiscountSection onCommitSuccess={() => fetchEventData({ showLoader: false })} />;
       default:
-        return <OverviewSection dashboardData={dashboardData} eventData={eventData} />;
+        return (
+          <OverviewSection
+            dashboardData={dashboardData}
+            eventData={eventData}
+            onViewAllOrders={goToOrdersAndAttendees}
+          />
+        );
     }
   };
 

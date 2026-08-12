@@ -1,9 +1,27 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
 import Chart from 'react-apexcharts';
+import { FiInfo } from 'react-icons/fi';
 import styles from './homePage.module.scss';
 import { GetOrganizationOverviewAPI } from '../../services/allApis';
+
+const toFeeAmount = (value) => {
+  const n = typeof value === 'number' ? value : parseFloat(value);
+  return Number.isFinite(n) ? n : 0;
+};
+
+const buildAbsorbedFeeBreakdown = (data = {}) => {
+  const buyerFees = toFeeAmount(data.buyerAbsorbedFees ?? data.totalBookingFee);
+  const afterpayFees = toFeeAmount(data.afterpayFees);
+  const internationalCardFees = toFeeAmount(data.internationalCardFees);
+  return {
+    buyerFees,
+    afterpayFees,
+    internationalCardFees,
+    total: buyerFees + afterpayFees + internationalCardFees,
+  };
+};
 
 // SVG Icons for analytics tiles
 const CalendarIcon = () => (
@@ -60,6 +78,31 @@ const HomePage = () => {
   const [overviewLoading, setOverviewLoading] = useState(true);
   const [overviewError, setOverviewError] = useState(null);
   const [granularity, setGranularity] = useState('MONTHLY');
+  const [isAbsorbedInfoOpen, setAbsorbedInfoOpen] = useState(false);
+  const absorbedInfoRef = useRef(null);
+
+  const absorbedFees = useMemo(
+    () => buildAbsorbedFeeBreakdown(overviewData || {}),
+    [overviewData]
+  );
+
+  useEffect(() => {
+    if (!isAbsorbedInfoOpen) return undefined;
+    const handlePointerDown = (event) => {
+      if (absorbedInfoRef.current && !absorbedInfoRef.current.contains(event.target)) {
+        setAbsorbedInfoOpen(false);
+      }
+    };
+    const handleEscape = (event) => {
+      if (event.key === 'Escape') setAbsorbedInfoOpen(false);
+    };
+    document.addEventListener('mousedown', handlePointerDown);
+    document.addEventListener('keydown', handleEscape);
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [isAbsorbedInfoOpen]);
 
   useEffect(() => {
     checkAuthStatus();
@@ -123,7 +166,7 @@ const HomePage = () => {
       return [
         { label: 'Next Event in', value: '—', accent: '#FECACA', icon: <CalendarIcon />, sub: 'No upcoming event' },
         { label: 'Active Events', value: '0', accent: '#BFDBFE', icon: <ActiveEventsIcon />, sub: 'Upcoming events' },
-        { label: 'Total Revenue', value: formatCurrency(0), accent: '#FDE68A', icon: <RevenueIcon />, sub: 'All time' },
+        { label: 'Net Organiser Revenue', value: formatCurrency(0), accent: '#FDE68A', icon: <RevenueIcon />, sub: 'All time' },
         { label: 'Total Tickets Sold', value: '0', accent: '#A7F3D0', icon: <TicketsSoldIcon />, sub: 'All time' },
       ];
     }
@@ -134,7 +177,7 @@ const HomePage = () => {
     return [
       { label: 'Next Event in', value: nextLabel, accent: '#FECACA', icon: <CalendarIcon />, sub: nextSub },
       { label: 'Active Events', value: String(activeCount), accent: '#BFDBFE', icon: <ActiveEventsIcon />, sub: 'Upcoming events' },
-      { label: 'Total Revenue', value: formatCurrency(overviewData.totalRevenue), accent: '#FDE68A', icon: <RevenueIcon />, sub: 'All time' },
+      { label: 'Net Organiser Revenue', value: formatCurrency(overviewData.totalRevenue), accent: '#FDE68A', icon: <RevenueIcon />, sub: 'All time' },
       { label: 'Total Tickets Sold', value: String(overviewData.totalTicketsSold ?? 0), accent: '#A7F3D0', icon: <TicketsSoldIcon />, sub: 'All time' },
     ];
   }, [overviewData]);
@@ -315,26 +358,75 @@ const HomePage = () => {
               </div>
               <div className={styles.earningsRow}>
                 <div>
-                  <div className={styles.earningsLabel}>Total Revenue</div>
+                  <div className={styles.earningsLabel}>Gross Ticket Sales</div>
                   <div className={styles.earningsSub}>
-                    Our platform service fee deducted from total revenue.
+                    Total ticket and donation sales before organiser deductions.
                   </div>
                 </div>
                 <div className={styles.earningsValue}>
-                  {overviewData ? formatCurrency(overviewData.totalRevenue) : '—'}
+                  {overviewData ? formatCurrency(overviewData.grossTicketSales) : '—'}
                 </div>
               </div>
               <div className={styles.earningsRow}>
                 <div>
-                  <div className={styles.earningsLabel}>Absorbed Fee</div>
+                  <div className={styles.earningsLabelRow}>
+                    <div className={styles.earningsLabel}>Absorbed Fees</div>
+                    <div className={styles.infoButtonWrap} ref={absorbedInfoRef}>
+                      <button
+                        type="button"
+                        className={styles.infoButton}
+                        aria-label="Absorbed fees breakdown"
+                        aria-expanded={isAbsorbedInfoOpen}
+                        onClick={() => setAbsorbedInfoOpen((open) => !open)}
+                        onMouseEnter={() => setAbsorbedInfoOpen(true)}
+                      >
+                        <FiInfo aria-hidden="true" />
+                      </button>
+                      {isAbsorbedInfoOpen && (
+                        <div className={styles.infoPopover} role="dialog" aria-label="Fee breakdown">
+                          <div className={styles.infoPopoverTitle}>Fee breakdown</div>
+                          <div className={styles.infoPopoverRow}>
+                            <span>
+                              Prizmatix / gateway fees
+                              <em> (ticket buyer)</em>
+                            </span>
+                            <strong>{formatCurrency(absorbedFees.buyerFees)}</strong>
+                          </div>
+                          <div className={styles.infoPopoverRow}>
+                            <span>
+                              Afterpay fees
+                              <em> (organiser)</em>
+                            </span>
+                            <strong>{formatCurrency(absorbedFees.afterpayFees)}</strong>
+                          </div>
+                          <div className={styles.infoPopoverRow}>
+                            <span>
+                              International card fees
+                              <em> (organiser)</em>
+                            </span>
+                            <strong>{formatCurrency(absorbedFees.internationalCardFees)}</strong>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                   <div className={styles.earningsSub}>
-                    Gateway fee deducted from total revenue.
+                    Total of buyer-paid fees and Afterpay / international fees deducted from organiser payout.
                   </div>
                 </div>
                 <div className={styles.earningsValue}>
-                  {overviewData != null && overviewData.totalBookingFee != null
-                    ? formatCurrency(overviewData.totalBookingFee)
-                    : '—'}
+                  {overviewData != null ? formatCurrency(absorbedFees.total) : '—'}
+                </div>
+              </div>
+              <div className={styles.earningsRow}>
+                <div>
+                  <div className={styles.earningsLabel}>Net Organiser Revenue</div>
+                  <div className={styles.earningsSub}>
+                    Gross sales minus Afterpay and international card fees.
+                  </div>
+                </div>
+                <div className={styles.earningsValue}>
+                  {overviewData ? formatCurrency(overviewData.totalRevenue) : '—'}
                 </div>
               </div>
             </div>

@@ -1,15 +1,58 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
 import styles from './overviewSection.module.scss';
 import Chart from 'react-apexcharts';
 import { format, startOfWeek, startOfMonth, startOfYear, isValid } from 'date-fns';
+import { FiInfo } from 'react-icons/fi';
 import RecentOrdersModal from './recentOrdersModal';
 import { getPublishedEventTimingStatus } from '../eventStatusUtils';
 
-const OverviewSection = ({ dashboardData, eventData }) => {
+const toFeeAmount = (value) => {
+  const n = typeof value === 'number' ? value : parseFloat(value);
+  return Number.isFinite(n) ? n : 0;
+};
+
+const buildAbsorbedFeeBreakdown = (data = {}) => {
+  const buyerFees = toFeeAmount(data.buyerAbsorbedFees ?? data.totalBookingFee ?? data.absorbedFee);
+  const afterpayFees = toFeeAmount(data.afterpayFees);
+  const internationalCardFees = toFeeAmount(data.internationalCardFees);
+  return {
+    buyerFees,
+    afterpayFees,
+    internationalCardFees,
+    total: buyerFees + afterpayFees + internationalCardFees,
+  };
+};
+
+const OverviewSection = ({ dashboardData, eventData, onViewAllOrders }) => {
   // --- All hooks are now at the top level, before any returns ---
   const [isOrdersModalOpen, setOrdersModalOpen] = useState(false);
   const [salesTimeframe, setSalesTimeframe] = useState('Monthly');
+  const [isAbsorbedInfoOpen, setAbsorbedInfoOpen] = useState(false);
+  const absorbedInfoRef = useRef(null);
+
+  useEffect(() => {
+    if (!isAbsorbedInfoOpen) return undefined;
+    const handlePointerDown = (event) => {
+      if (absorbedInfoRef.current && !absorbedInfoRef.current.contains(event.target)) {
+        setAbsorbedInfoOpen(false);
+      }
+    };
+    const handleEscape = (event) => {
+      if (event.key === 'Escape') setAbsorbedInfoOpen(false);
+    };
+    document.addEventListener('mousedown', handlePointerDown);
+    document.addEventListener('keydown', handleEscape);
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [isAbsorbedInfoOpen]);
+
+  const absorbedFees = useMemo(
+    () => buildAbsorbedFeeBreakdown(dashboardData || {}),
+    [dashboardData]
+  );
 
   const aggregatedSalesData = useMemo(() => {
     // Safely access dashboardData using optional chaining (?.)
@@ -191,8 +234,11 @@ const OverviewSection = ({ dashboardData, eventData }) => {
         {/* Stats Grid */}
         <div className={styles.statsGrid}>
           <div className={styles.statCard}>
-            <p className={styles.statTitle}>Revenue</p>
-            <div className={styles.statValue}>{formatCurrency(dashboardData.revenue)}</div>
+            <p className={styles.statTitle}>Available Payout</p>
+            <div className={styles.statValue}>
+              {formatCurrency(dashboardData.availablePayout ?? dashboardData.revenue)}
+            </div>
+            <p className={styles.statHint}>Current balance available to withdraw</p>
           </div>
           <div className={styles.statCard}>
             <p className={styles.statTitle}>Tickets Issued</p>
@@ -224,7 +270,7 @@ const OverviewSection = ({ dashboardData, eventData }) => {
                 className={styles.breakdownLink}
                 onClick={() => setOrdersModalOpen(true)}
               >
-                View Recent Orders
+                Show recent 10 orders
               </button>
             </div>
           </div>
@@ -257,27 +303,77 @@ const OverviewSection = ({ dashboardData, eventData }) => {
 
             <div className={styles.earningsRow}>
               <div>
-                <div className={styles.earningsLabel}>Total Revenue</div>
+                <div className={styles.earningsLabel}>Gross Ticket Sales</div>
                 <div className={styles.earningsSub}>
-                  Our platform service fee deducted from total revenue.
+                  Total ticket and donation sales before organiser deductions.
                 </div>
               </div>
               <div className={styles.earningsValue}>
-                {formatCurrency(dashboardData.totalRevenue ?? dashboardData.revenue)}
+                {formatCurrency(dashboardData.grossTicketSales)}
               </div>
             </div>
 
             <div className={styles.earningsRow}>
               <div>
-                <div className={styles.earningsLabel}>Absorbed Fee</div>
+                <div className={styles.earningsLabelRow}>
+                  <div className={styles.earningsLabel}>Absorbed Fees</div>
+                  <div className={styles.infoButtonWrap} ref={absorbedInfoRef}>
+                    <button
+                      type="button"
+                      className={styles.infoButton}
+                      aria-label="Absorbed fees breakdown"
+                      aria-expanded={isAbsorbedInfoOpen}
+                      onClick={() => setAbsorbedInfoOpen((open) => !open)}
+                      onMouseEnter={() => setAbsorbedInfoOpen(true)}
+                    >
+                      <FiInfo aria-hidden="true" />
+                    </button>
+                    {isAbsorbedInfoOpen && (
+                      <div className={styles.infoPopover} role="dialog" aria-label="Fee breakdown">
+                        <div className={styles.infoPopoverTitle}>Fee breakdown</div>
+                        <div className={styles.infoPopoverRow}>
+                          <span>
+                            Prizmatix / gateway fees
+                            <em> (ticket buyer)</em>
+                          </span>
+                          <strong>{formatCurrency(absorbedFees.buyerFees)}</strong>
+                        </div>
+                        <div className={styles.infoPopoverRow}>
+                          <span>
+                            Afterpay fees
+                            <em> (organiser)</em>
+                          </span>
+                          <strong>{formatCurrency(absorbedFees.afterpayFees)}</strong>
+                        </div>
+                        <div className={styles.infoPopoverRow}>
+                          <span>
+                            International card fees
+                            <em> (organiser)</em>
+                          </span>
+                          <strong>{formatCurrency(absorbedFees.internationalCardFees)}</strong>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
                 <div className={styles.earningsSub}>
-                  Gateway fee deducted from total revenue.
+                  Total of buyer-paid fees and Afterpay / international fees deducted from organiser payout.
                 </div>
               </div>
               <div className={styles.earningsValue}>
-                {(dashboardData.totalBookingFee ?? dashboardData.absorbedFee) != null
-                  ? formatCurrency(dashboardData.totalBookingFee ?? dashboardData.absorbedFee)
-                  : '-'}
+                {formatCurrency(absorbedFees.total)}
+              </div>
+            </div>
+
+            <div className={styles.earningsRow}>
+              <div>
+                <div className={styles.earningsLabel}>Available Payout</div>
+                <div className={styles.earningsSub}>
+                  Net sales after organiser deductions, minus amounts already paid out.
+                </div>
+              </div>
+              <div className={styles.earningsValue}>
+                {formatCurrency(dashboardData.availablePayout ?? dashboardData.revenue)}
               </div>
             </div>
           </div>
@@ -299,7 +395,9 @@ const OverviewSection = ({ dashboardData, eventData }) => {
             </select>
           </div>
           <div className={styles.chartContainer}>
-            <div className={styles.chartValue}>{formatCurrency(dashboardData.revenue)}</div>
+            <div className={styles.chartValue}>
+              {formatCurrency(dashboardData.availablePayout ?? dashboardData.revenue)}
+            </div>
             <Chart options={chartOptions} series={chartSeries} type="bar" height={salesChartHeight} />
           </div>
         </div>
@@ -309,6 +407,7 @@ const OverviewSection = ({ dashboardData, eventData }) => {
         isOpen={isOrdersModalOpen}
         onClose={() => setOrdersModalOpen(false)}
         orders={dashboardData.recentOrders}
+        onViewAllOrders={onViewAllOrders}
       />
     </>
   );
@@ -317,6 +416,7 @@ const OverviewSection = ({ dashboardData, eventData }) => {
 OverviewSection.propTypes = {
   dashboardData: PropTypes.object,
   eventData: PropTypes.object,
+  onViewAllOrders: PropTypes.func,
 };
 
 export default OverviewSection;

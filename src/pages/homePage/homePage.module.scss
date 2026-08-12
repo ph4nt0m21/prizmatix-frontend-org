@@ -570,11 +570,87 @@
   color: #374151;
 }
 
+.earningsLabelRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.infoButtonWrap {
+  position: relative;
+  display: inline-flex;
+}
+
+.infoButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: #6B7280;
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    color: #4C1D95;
+    outline: none;
+  }
+
+  svg {
+    width: 14px;
+    height: 14px;
+  }
+}
+
+.infoPopover {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 20;
+  min-width: 260px;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid #E5E7EB;
+  background: #FFFFFF;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.12);
+}
+
+.infoPopoverTitle {
+  font-size: 12px;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 8px;
+}
+
+.infoPopoverRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 12px;
+  color: #374151;
+  padding: 4px 0;
+
+  em {
+    font-style: normal;
+    color: #6B7280;
+  }
+
+  strong {
+    font-weight: 600;
+    color: #111827;
+    white-space: nowrap;
+  }
+}
+
 .earningsSub {
   font-size: 12px;
   color: #6b7280;
   margin-top: 4px;
-  max-width: 200px;
+  max-width: 220px;
 }
 
 .earningsValue {

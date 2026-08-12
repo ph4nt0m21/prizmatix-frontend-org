@@ -1,23 +1,19 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import PropTypes from 'prop-types';
 import styles from './recentOrdersModal.module.scss';
 import { FiX } from 'react-icons/fi';
 import { format } from 'date-fns';
-import { flexRender, getCoreRowModel, getPaginationRowModel, getSortedRowModel, useReactTable } from '@tanstack/react-table';
+import { flexRender, getCoreRowModel, getSortedRowModel, useReactTable } from '@tanstack/react-table';
 
-const DEFAULT_PAGE_SIZE = 10;
+const RECENT_ORDERS_LIMIT = 10;
 
-const RecentOrdersModal = ({ isOpen, onClose, orders }) => {
+const RecentOrdersModal = ({ isOpen, onClose, orders, onViewAllOrders }) => {
   const [sorting, setSorting] = useState([]);
-  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: DEFAULT_PAGE_SIZE });
 
-  useEffect(() => {
-    setPagination((p) => ({ ...p, pageIndex: 0 }));
-  }, [sorting]);
-
-  useEffect(() => {
-    setPagination((p) => ({ ...p, pageIndex: 0 }));
-  }, [orders?.length]);
+  const recentOrders = useMemo(
+    () => (orders ?? []).slice(0, RECENT_ORDERS_LIMIT),
+    [orders]
+  );
 
   const parseOrderIdForSort = (orderId) => {
     const raw = String(orderId ?? '');
@@ -85,19 +81,14 @@ const RecentOrdersModal = ({ isOpen, onClose, orders }) => {
   );
 
   const table = useReactTable({
-    data: orders ?? [],
+    data: recentOrders,
     columns,
-    state: { sorting, pagination },
+    state: { sorting },
     onSortingChange: setSorting,
-    onPaginationChange: setPagination,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
   });
 
-  const totalRows = table.getPrePaginationRowModel().rows.length;
-  const pageStart = totalRows === 0 ? 0 : pagination.pageIndex * pagination.pageSize + 1;
-  const pageEnd = Math.min((pagination.pageIndex + 1) * pagination.pageSize, totalRows);
   const getColumnLabel = (column) =>
     typeof column.columnDef.header === 'string' ? column.columnDef.header : '';
 
@@ -105,17 +96,21 @@ const RecentOrdersModal = ({ isOpen, onClose, orders }) => {
     return null;
   }
 
+  const handleViewAll = () => {
+    onViewAllOrders?.();
+    onClose();
+  };
+
   return (
     <div className={styles.overlay} onClick={onClose}>
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
         <div className={styles.header}>
-          <h3 className={styles.title}>Recent Orders</h3>
+          <h3 className={styles.title}>Recent 10 Orders</h3>
           <button onClick={onClose} className={styles.closeButton}>
             <FiX />
           </button>
         </div>
         <div className={styles.content}>
-          {/* NEW: Added a container for horizontal scrolling */}
           <div className={styles.tableContainer}>
             <table className={styles.table}>
               <thead>
@@ -157,40 +152,14 @@ const RecentOrdersModal = ({ isOpen, onClose, orders }) => {
               </tbody>
             </table>
           </div>
-
-          <div className={styles.pagination} aria-label="Recent orders pagination">
-            <div className={styles.rowsPerPage}>
-              <span>Rows per page:</span>
-              <select
-                value={pagination.pageSize}
-                onChange={(e) =>
-                  setPagination({ pageIndex: 0, pageSize: Number(e.target.value) })
-                }
-              >
-                <option value={10}>10</option>
-                <option value={25}>25</option>
-                <option value={50}>50</option>
-              </select>
-            </div>
-            <span>
-              {pageStart} - {pageEnd} of {totalRows}
-            </span>
-            <div>
-              <button type="button" onClick={() => table.setPageIndex(0)} disabled={!table.getCanPreviousPage()}>
-                &lt;&lt;
-              </button>
-              <button type="button" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}>
-                &lt;
-              </button>
-              <button type="button" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>
-                &gt;
-              </button>
-              <button type="button" onClick={() => table.setPageIndex(Math.max(0, table.getPageCount() - 1))} disabled={!table.getCanNextPage()}>
-                &gt;&gt;
-              </button>
-            </div>
-          </div>
         </div>
+        {recentOrders.length > 0 && (
+          <div className={styles.footer}>
+            <button type="button" className={styles.viewAllLink} onClick={handleViewAll}>
+              View all orders &rarr;
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -200,6 +169,7 @@ RecentOrdersModal.propTypes = {
   isOpen: PropTypes.bool.isRequired,
   onClose: PropTypes.func.isRequired,
   orders: PropTypes.array,
+  onViewAllOrders: PropTypes.func,
 };
 
 export default RecentOrdersModal;
