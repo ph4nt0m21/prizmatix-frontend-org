@@ -81,15 +81,22 @@ const PayoutSection = ({ eventId, dashboardData, tableOnly = false }) => {
   }, [fetchPayoutData]);
 
   const totalRevenue = eligibility?.totalEventRevenue ?? dashboardData?.revenue ?? 0;
-  const alreadyPaidOut = eligibility?.alreadyPaidOut ?? 0;
-  const remainingPayoutable = eligibility?.remainingPayoutable ?? 0;
+  const alreadyPaidOut = eligibility?.alreadyPaidOut ?? dashboardData?.totalPaidOut ?? 0;
+  const remainingPayoutable =
+    eligibility?.availableForPayout ??
+    eligibility?.remainingPayoutable ??
+    dashboardData?.availablePayout ??
+    0;
+  const pendingBalance =
+    eligibility?.pendingBalance ??
+    requests
+      .filter((request) => request?.status === 'PENDING')
+      .reduce((sum, request) => sum + (parseFloat(request?.amount) || 0), 0);
   const eventFinished = eligibility?.eventFinished ?? false;
 
   const fullAmount = Math.min(totalRevenue * 0.25, remainingPayoutable);
   const canRequestNew = remainingPayoutable > 0.01;
-  const pendingRequestsTotal = requests
-    .filter((request) => request?.status === 'PENDING')
-    .reduce((sum, request) => sum + (parseFloat(request?.amount) || 0), 0);
+  const pendingRequestsTotal = Number(pendingBalance) || 0;
 
   const handleRequestPayoutClick = () => {
     setShowPayoutModal(true);
@@ -190,6 +197,17 @@ const PayoutSection = ({ eventId, dashboardData, tableOnly = false }) => {
 
   const payoutColumns = [
     {
+      id: 'requestedAt',
+      accessorFn: (row) => row.requestedAt ?? '',
+      header: 'Date',
+      enableSorting: true,
+      sortingFn: (rowA, rowB) =>
+        parseRequestedAtForSort(rowA.original.requestedAt) - parseRequestedAtForSort(rowB.original.requestedAt),
+      cell: ({ row }) =>
+        row.original.requestedAt ? format(new Date(row.original.requestedAt), 'dd MMM yyyy, HH:mm') : '—',
+      meta: { cellClassName: styles.dateCell },
+    },
+    {
       id: 'amount',
       accessorFn: (row) => row.amount ?? 0,
       header: 'Amount',
@@ -198,13 +216,6 @@ const PayoutSection = ({ eventId, dashboardData, tableOnly = false }) => {
         parseFloat(rowA.original.amount ?? 0) - parseFloat(rowB.original.amount ?? 0),
       cell: ({ row }) => formatCurrency(row.original.amount),
       meta: { cellClassName: styles.amountCell },
-    },
-    {
-      id: 'type',
-      accessorFn: (row) => row.payoutType ?? '',
-      header: 'Type',
-      enableSorting: true,
-      cell: ({ row }) => PAYOUT_TYPE_LABEL[row.original.payoutType] ?? row.original.payoutType,
     },
     {
       id: 'status',
@@ -226,15 +237,18 @@ const PayoutSection = ({ eventId, dashboardData, tableOnly = false }) => {
       ),
     },
     {
-      id: 'requestedAt',
-      accessorFn: (row) => row.requestedAt ?? '',
-      header: 'Requested',
+      id: 'referenceId',
+      accessorFn: (row) => row.id ?? '',
+      header: 'Reference ID',
       enableSorting: true,
-      sortingFn: (rowA, rowB) =>
-        parseRequestedAtForSort(rowA.original.requestedAt) - parseRequestedAtForSort(rowB.original.requestedAt),
-      cell: ({ row }) =>
-        row.original.requestedAt ? format(new Date(row.original.requestedAt), 'dd MMM yyyy, HH:mm') : '—',
-      meta: { cellClassName: styles.dateCell },
+      cell: ({ row }) => (row.original.id != null ? `#${row.original.id}` : '—'),
+    },
+    {
+      id: 'type',
+      accessorFn: (row) => row.payoutType ?? '',
+      header: 'Type',
+      enableSorting: true,
+      cell: ({ row }) => PAYOUT_TYPE_LABEL[row.original.payoutType] ?? row.original.payoutType,
     },
   ];
 
@@ -387,7 +401,7 @@ const PayoutSection = ({ eventId, dashboardData, tableOnly = false }) => {
   if (tableOnly) {
     return (
       <div className={styles.payoutHistorySection} style={{ marginTop: 0, border: 'none', padding: 0 }}>
-        <h3 className={styles.historyTitle} style={{ textAlign: 'center', margin: '24px' }}>Payout requests</h3>
+        <h3 className={styles.historyTitle} style={{ textAlign: 'center', margin: '24px' }}>Recent Payout History</h3>
         {requests.length === 0 ? (
           <div className={styles.noHistoryPlaceholder}>
             <CardPaymentsIcon className={styles.noHistoryIcon} />
@@ -420,25 +434,31 @@ const PayoutSection = ({ eventId, dashboardData, tableOnly = false }) => {
 
       <div className={styles.contentGrid}>
         <div className={styles.infoCard}>
-          <h3 className={styles.cardTitle}>Total event revenue</h3>
-          <p className={styles.cardValue}>{formatCurrency(totalRevenue)}</p>
-        </div>
-        <div className={styles.infoCard}>
-          <h3 className={styles.cardTitle}>Already paid out</h3>
-          <p className={styles.cardValue}>{formatCurrency(alreadyPaidOut)}</p>
-        </div>
-        <div className={styles.infoCard}>
-          <h3 className={styles.cardTitle}>Remaining</h3>
+          <h3 className={styles.cardTitle}>Available for Payout</h3>
           <p className={styles.cardValue}>{formatCurrency(remainingPayoutable)}</p>
+          <p className={styles.cardHint}>Current balance available for withdrawal.</p>
         </div>
         <div className={styles.infoCard}>
-          <h3 className={styles.cardTitle}>Pending requests</h3>
+          <h3 className={styles.cardTitle}>Pending Balance</h3>
           <p className={styles.cardValue}>{formatCurrency(pendingRequestsTotal)}</p>
+          <p className={styles.cardHint}>Funds in payout requests not yet marked as paid.</p>
+        </div>
+        <div className={styles.infoCard}>
+          <h3 className={styles.cardTitle}>Total Paid Out</h3>
+          <p className={styles.cardValue}>{formatCurrency(alreadyPaidOut)}</p>
+          <p className={styles.cardHint}>Lifetime amount already paid for this event.</p>
+        </div>
+        <div className={styles.infoCard}>
+          <h3 className={styles.cardTitle}>Remaining Balance</h3>
+          <p className={styles.cardValue}>{formatCurrency(remainingPayoutable)}</p>
+          <p className={styles.cardHint}>
+            Net organiser revenue {formatCurrency(totalRevenue)} minus paid out.
+          </p>
         </div>
       </div>
       <p className={styles.summaryNote}>
-        Remaining amount decreases only after requests are marked as <strong>Paid</strong>. Pending
-        and cancelled requests are shown separately.
+        Remaining balance decreases only after requests are marked as <strong>Paid</strong>. Pending
+        requests are tracked separately and do not reduce available balance until paid.
       </p>
 
       {!canRequestNew && (
@@ -448,7 +468,7 @@ const PayoutSection = ({ eventId, dashboardData, tableOnly = false }) => {
       )}
 
       <div className={styles.payoutHistorySection}>
-        <h3 className={styles.historyTitle}>Payout requests</h3>
+        <h3 className={styles.historyTitle}>Recent Payout History</h3>
         {requests.length === 0 ? (
           <div className={styles.noHistoryPlaceholder}>
             <CardPaymentsIcon className={styles.noHistoryIcon} />
