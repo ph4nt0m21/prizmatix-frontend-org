@@ -377,9 +377,14 @@ const SettingsOverlay = ({ isOpen, onClose }) => {
                   special: "One special character",
                   number: "One number",
                 }).map(([key, label]) => (
-                  <span key={key} className={styles.requirementItem}>
-                    <span className={`${styles.checkIcon} ${passwordValidation[key] ? styles.validIcon : ""}`}>●</span>
-                    <span className={passwordValidation[key] ? styles.validText : ""}>{label}</span>
+                  <span
+                    key={key}
+                    className={`${styles.requirementItem} ${
+                      passwordValidation[key] ? styles.metRequirement : styles.unmetRequirement
+                    }`}
+                  >
+                    <span className={styles.checkIcon}>●</span>
+                    <span>{label}</span>
                   </span>
                 ))}
               </div>
@@ -402,20 +407,24 @@ const SettingsOverlay = ({ isOpen, onClose }) => {
                   {showConfirmPassword ? <EyeOffIcon /> : <EyeIcon />}
                 </button>
               </div>
-              {confirmTouched && confirmPassword && (
-                <span className={passwordsMatch ? styles.matchText : styles.fieldError}>
-                  {passwordsMatch ? "Passwords match" : "Passwords do not match"}
-                </span>
-              )}
             </div>
             {changePasswordError && <div className={styles.fieldError}>{changePasswordError}</div>}
-            <button
-              type="submit"
-              className={styles.saveChangesButton}
-              disabled={isSubmittingPassword || !currentPassword || !isNewPasswordValid(passwordValidation) || !passwordsMatch}
-            >
-              {isSubmittingPassword ? "Updating…" : "Update password"}
-            </button>
+            <div className={styles.changePasswordActions}>
+              <div className={styles.buttonTooltipWrapper}>
+                <button
+                  type="submit"
+                  className={styles.saveChangesButton}
+                  disabled={isSubmittingPassword || !currentPassword || !isNewPasswordValid(passwordValidation) || !passwordsMatch}
+                >
+                  {isSubmittingPassword ? "Updating…" : "Update password"}
+                </button>
+                {confirmTouched && confirmPassword && (
+                  <span className={`${styles.buttonTooltip} ${passwordsMatch ? styles.tooltipSuccess : styles.tooltipError}`}>
+                    {passwordsMatch ? "Passwords match" : "Passwords do not match"}
+                  </span>
+                )}
+              </div>
+            </div>
           </form>
         )}
       </div>

@@ -347,26 +347,19 @@
     display: flex;
     align-items: center;
     gap: 6px;
+
+    &.metRequirement {
+      color: #16a34a;
+    }
+
+    &.unmetRequirement {
+      color: #dc2626;
+    }
   }
 
   .checkIcon {
     font-size: 8px;
-    color: #9ca3af;
-
-    &.validIcon {
-      color: #7c3aed;
-    }
-  }
-
-  .validText {
-    color: #7c3aed;
-  }
-
-  .matchText {
-    font-size: 12px;
-    color: #059669;
-    margin-top: 4px;
-    display: block;
+    color: inherit;
   }
 
   .fieldError {
@@ -378,6 +371,60 @@
 
   .changePasswordActions {
     margin-top: 16px;
+
+    .buttonTooltipWrapper {
+      position: relative;
+      display: inline-block;
+    }
+
+    .buttonTooltip {
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      margin-bottom: 8px;
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 500;
+      white-space: nowrap;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.15s ease;
+      pointer-events: none;
+
+      &::after {
+        content: "";
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        border: 5px solid transparent;
+      }
+
+      &.tooltipSuccess {
+        background-color: #dcfce7;
+        color: #16a34a;
+
+        &::after {
+          border-top-color: #dcfce7;
+        }
+      }
+
+      &.tooltipError {
+        background-color: #fee2e2;
+        color: #dc2626;
+
+        &::after {
+          border-top-color: #fee2e2;
+        }
+      }
+    }
+
+    .buttonTooltipWrapper:hover .buttonTooltip {
+      opacity: 1;
+      visibility: visible;
+    }
 
     .saveChangesButton {
       padding: 10px 24px;

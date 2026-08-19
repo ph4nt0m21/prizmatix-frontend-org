@@ -43,9 +43,13 @@ const INITIAL_PASSWORD_VALIDATION = {
 
 function RequirementCheck({ met, label }) {
   return (
-    <div className={fpStyles.requirementItem}>
+    <div
+      className={`${fpStyles.requirementItem} ${
+        met ? fpStyles.metRequirement : fpStyles.unmetRequirement
+      }`}
+    >
       <svg
-        className={`${fpStyles.checkIcon} ${met ? fpStyles.validIcon : ""}`}
+        className={fpStyles.checkIcon}
         width="16"
         height="16"
         viewBox="0 0 16 16"
@@ -54,16 +58,40 @@ function RequirementCheck({ met, label }) {
         aria-hidden="true"
       >
         <circle cx="8" cy="8" r="7.5" stroke="currentColor" />
-        <path
-          d="M5 8L7 10L11 6"
-          stroke="currentColor"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
+        {met ? (
+          <path
+            d="M5 8L7 10L11 6"
+            stroke="currentColor"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        ) : (
+          <path
+            d="M5.5 5.5L10.5 10.5M10.5 5.5L5.5 10.5"
+            stroke="currentColor"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        )}
       </svg>
-      <span className={met ? fpStyles.validText : ""}>{label}</span>
+      <span>{label}</span>
     </div>
   );
+}
+
+const PASSWORD_REQUIREMENT_MESSAGES = [
+  ["length", "Password must be at least 8 characters."],
+  ["lowercase", "Password must include at least one lowercase character."],
+  ["uppercase", "Password must include at least one uppercase character."],
+  ["special", "Password must include at least one special character (e.g. ! @ # $ % & *)."],
+  ["number", "Password must include at least one number."],
+];
+
+function getMissingRequirementMessage(passwordValidation) {
+  const missing = PASSWORD_REQUIREMENT_MESSAGES.find(
+    ([key]) => !passwordValidation[key]
+  );
+  return missing ? missing[1] : "";
 }
 
 const ForgotPasswordPage = () => {
@@ -417,13 +445,20 @@ const ForgotPasswordPage = () => {
                 </div>
 
                 {passwordFieldFocused && (
-                  <div className={fpStyles.passwordRequirements}>
-                    <RequirementCheck met={passwordValidation.length} label="Must be at least 8 characters" />
-                    <RequirementCheck met={passwordValidation.lowercase} label="One lowercase character" />
-                    <RequirementCheck met={passwordValidation.uppercase} label="One uppercase character" />
-                    <RequirementCheck met={passwordValidation.special} label="One special character" />
-                    <RequirementCheck met={passwordValidation.number} label="One number" />
-                  </div>
+                  <>
+                    <div className={fpStyles.passwordRequirements}>
+                      <RequirementCheck met={passwordValidation.length} label="Must be at least 8 characters" />
+                      <RequirementCheck met={passwordValidation.lowercase} label="One lowercase character" />
+                      <RequirementCheck met={passwordValidation.uppercase} label="One uppercase character" />
+                      <RequirementCheck met={passwordValidation.special} label="One special character" />
+                      <RequirementCheck met={passwordValidation.number} label="One number" />
+                    </div>
+                    {newPassword && getMissingRequirementMessage(passwordValidation) && (
+                      <p className={fpStyles.validationMessage}>
+                        {getMissingRequirementMessage(passwordValidation)}
+                      </p>
+                    )}
+                  </>
                 )}
               </div>
 
@@ -449,24 +484,31 @@ const ForgotPasswordPage = () => {
                   {confirmPasswordTouched && passwordsMatch && (
                     <span className={fpStyles.validationIcon}>
                       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" className={fpStyles.matchIcon}>
-                        <path fill="#7c3aed" d="M9,16.17L4.83,12l-1.42,1.41L9,19 21,7l-1.41-1.41L9,16.17z" />
+                        <path fill="#16a34a" d="M9,16.17L4.83,12l-1.42,1.41L9,19 21,7l-1.41-1.41L9,16.17z" />
                       </svg>
                     </span>
                   )}
                 </div>
               </div>
 
-              <button
-                type="submit"
-                className={fpStyles.signInButton}
-                disabled={isLoading || !isPasswordFormValid}
-              >
-                {isLoading ? (
-                  <div className={fpStyles.spinner} />
-                ) : (
-                  "Reset password"
+              <div className={fpStyles.buttonTooltipWrapper}>
+                <button
+                  type="submit"
+                  className={fpStyles.signInButton}
+                  disabled={isLoading || !isPasswordFormValid}
+                >
+                  {isLoading ? (
+                    <div className={fpStyles.spinner} />
+                  ) : (
+                    "Reset password"
+                  )}
+                </button>
+                {confirmPasswordTouched && confirmPassword && (
+                  <span className={`${fpStyles.buttonTooltip} ${passwordsMatch ? fpStyles.tooltipSuccess : fpStyles.tooltipError}`}>
+                    {passwordsMatch ? "Passwords match" : "Passwords do not match"}
+                  </span>
                 )}
-              </button>
+              </div>
             </form>
           )}
 
