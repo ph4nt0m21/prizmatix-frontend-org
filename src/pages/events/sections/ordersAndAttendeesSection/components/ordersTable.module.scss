@@ -20,6 +20,14 @@
   min-width: 800px;
 }
 
+.colOrderId { width: 110px; }
+.colName { width: 160px; }
+.colEmail { width: 260px; }
+.colDate { width: 180px; }
+.colTicket { width: 140px; }
+.colReissue { width: 160px; }
+.colIcon { width: 60px; }
+
 /* ================================
    HEADERS
 ================================ */
@@ -208,10 +216,30 @@
   color: #6B7280;
 }
 
+.mobileOnly {
+  display: none;
+}
+
 @media (max-width: 900px) {
+  .tableContainer {
+    background: transparent;
+  }
+
+  .colOrderId,
+  .colName,
+  .colEmail,
+  .colDate,
+  .colTicket,
+  .colReissue,
+  .colIcon {
+    width: auto;
+  }
+
   .table {
     min-width: 100%;
     table-layout: auto;
+    border-collapse: separate;
+    border-spacing: 0 12px;
   }
 
   .table thead {
@@ -219,27 +247,102 @@
   }
 
   .table tbody tr {
-    display: block;
-    margin: 0 0 12px;
-    border: 1px solid #E5E7EB;
-    border-radius: 8px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+      "orderid ticket"
+      "name name"
+      "email email"
+      "date date"
+      "reissue download";
+    column-gap: 10px;
+    row-gap: 4px;
+    padding: 16px 18px;
+    border: 1px solid #EEF0F4;
+    border-radius: 18px;
     background: #fff;
+    box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 1px 8px rgba(16, 24, 40, 0.06);
   }
 
   .table td {
-    display: flex;
-    justify-content: space-between;
-    gap: 12px;
+    display: block;
+    padding: 0;
+    border: none;
     white-space: normal;
     overflow: visible;
     text-overflow: clip;
   }
 
   .table td::before {
-    content: attr(data-label);
-    font-size: 11px;
+    content: none;
+  }
+
+  .table td:nth-child(1) {
+    grid-area: orderid;
+    align-self: center;
+    font-size: 16px;
+    font-weight: 700;
+    color: #111827;
+  }
+
+  .table td:nth-child(2) {
+    grid-area: name;
+    margin-top: 6px;
+  }
+
+  .table td:nth-child(3) {
+    grid-area: email;
+    font-size: 13px;
     color: #6B7280;
-    text-transform: uppercase;
-    font-weight: 600;
+  }
+
+  .table td:nth-child(4) {
+    grid-area: date;
+    font-size: 12px;
+    color: #9CA3AF;
+    margin-bottom: 4px;
+  }
+
+  .table td:nth-child(5) {
+    grid-area: ticket;
+    justify-self: end;
+    align-self: center;
+  }
+
+  .table td:nth-child(6),
+  .table td:nth-child(7) {
+    display: flex;
+    padding-top: 12px;
+    margin-top: 8px;
+    border-top: 1px solid #F3F4F6;
+  }
+
+  .table td:nth-child(6) {
+    grid-area: reissue;
+  }
+
+  .table td:nth-child(7) {
+    grid-area: download;
+  }
+
+  .mobileOnly {
+    display: inline;
+  }
+
+  .reissueButton {
+    width: 100%;
+    justify-content: center;
+    border-radius: 10px;
+    padding: 10px 14px;
+  }
+
+  .iconButton {
+    width: 100%;
+    justify-content: center;
+    border-radius: 10px;
+    border: 1px solid #E5E7EB;
+    padding: 10px 14px;
+    gap: 6px;
+    font-size: 14px;
   }
 }

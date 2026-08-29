@@ -2,8 +2,17 @@ import React, { useState, useMemo, useEffect } from 'react';
 import styles from './ordersAndAttendeesSection.module.scss';
 import Toolbar from './components/toolbar';
 import OrdersTable from './components/ordersTable';
+import OrderSummaryStats from './components/orderSummaryStats';
 import OrderDetailsModal from './components/orderDetailsModal';
-import { GetEventOrdersAPI, GetEventAttendeesAPI, GetEventDonationNotesAPI } from '../../../../services/allApis';
+import AttendeeSummaryStats from './components/attendeeSummaryStats';
+import AttendeeDetailsModal from './components/attendeeDetailsModal';
+import {
+  GetEventOrdersAPI,
+  GetEventAttendeesAPI,
+  GetEventDonationNotesAPI,
+  CheckInAttendeeAPI,
+  CheckoutAttendeeAPI,
+} from '../../../../services/allApis';
 import { FiTag, FiUsers, FiFileText } from 'react-icons/fi';
 import AttendeesTable from './components/attendeesTable';
 import DonationNotesTable from './components/donationNotesTable';
@@ -22,6 +31,7 @@ const OrdersAndAttendeesSection = ({ eventId }) => {
   const [error, setError] = useState(null);
 
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [selectedAttendee, setSelectedAttendee] = useState(null);
   const [attendeeFilters, setAttendeeFilters] = useState({
     ticketType: 'All',
     status: 'All',
@@ -41,13 +51,13 @@ const OrdersAndAttendeesSection = ({ eventId }) => {
         const response = await GetEventAttendeesAPI(eventId);
         const formattedAttendees = response.data.map((attendee, index) => ({
           id: attendee.ticketId || `att-${index}`,
+          ticketId: attendee.ticketId,
           orderId: `#${attendee.orderId || 'N/A'}`,
           name: attendee.attendeeName || 'N/A',
           email: attendee.attendeeEmail || 'N/A',
-          mobile: attendee.attendeeMobile || 'N/A',
           orderDate: attendee.orderDate ? format(new Date(attendee.orderDate), 'dd MMM yyyy hh:mm a') : 'N/A',
           ticketType: attendee.ticketType || 'N/A',
-          isCheckedIn: false,
+          isCheckedIn: !!attendee.checkedInAt,
         }));
         setAttendees(formattedAttendees);
       } catch (err) {
@@ -98,7 +108,7 @@ const OrdersAndAttendeesSection = ({ eventId }) => {
           orderDate: format(new Date(order.orderTime), 'dd MMM yyyy hh:mm a'),
           purchaseDate: format(new Date(order.orderTime), 'dd MMM yyyy hh:mm a'),
           ticketType: order.tickets.length > 0 ? order.tickets[0].ticketType : 'N/A',
-          amount: order.totalAmount || 0,
+          amount: order.grandTotal || 0,
           discount: order.discountCode || '',
           attendees: order.tickets
             .filter((t) => !t.donation)
@@ -107,8 +117,18 @@ const OrdersAndAttendeesSection = ({ eventId }) => {
               donationNote: t.donationNote,
               ticketType: t.ticketType,
             })),
-          paymentMethod: 'Stripe',
+          paymentMethod: order.paymentMethodType === 'afterpay_clearpay'
+            ? 'Afterpay'
+            : order.isInternational
+              ? 'International card'
+              : 'Domestic card',
           tickets: order.tickets,
+          feeBreakdown: {
+            ticketFaceValue: order.ticketFaceValue || 0,
+            platformFee: order.platformFee || 0,
+            gstOnPlatformFee: order.gstOnPlatformFee || 0,
+            grandTotal: order.grandTotal || 0,
+          },
         }));
         setOrders(formattedOrders);
       } catch (err) {
@@ -174,12 +194,47 @@ const OrdersAndAttendeesSection = ({ eventId }) => {
   const handleOrderSelect = (order) => setSelectedOrder(order);
   const handleCloseModal = () => setSelectedOrder(null);
 
-  const handleCheckIn = (attendeeId) => {
-    setAttendees(currentAttendees =>
-      currentAttendees.map(attendee =>
-        attendee.id === attendeeId ? { ...attendee, isCheckedIn: true } : attendee
-      )
-    );
+  const handleAttendeeSelect = (attendee) => setSelectedAttendee(attendee);
+  const handleCloseAttendeeModal = () => setSelectedAttendee(null);
+
+  const handleViewAttendeeFromOrder = (ticketId) => {
+    const attendee = attendees.find((a) => a.ticketId === ticketId);
+    if (attendee) {
+      setSelectedOrder(null);
+      handleAttendeeSelect(attendee);
+    }
+  };
+
+  const handleCheckIn = async (ticketId) => {
+    try {
+      await CheckInAttendeeAPI(ticketId);
+      setAttendees((current) =>
+        current.map((attendee) =>
+          attendee.ticketId === ticketId ? { ...attendee, isCheckedIn: true } : attendee
+        )
+      );
+      setSelectedAttendee((current) =>
+        current && current.ticketId === ticketId ? { ...current, isCheckedIn: true } : current
+      );
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleCheckOut = async (ticketId) => {
+    try {
+      await CheckoutAttendeeAPI(ticketId);
+      setAttendees((current) =>
+        current.map((attendee) =>
+          attendee.ticketId === ticketId ? { ...attendee, isCheckedIn: false } : attendee
+        )
+      );
+      setSelectedAttendee((current) =>
+        current && current.ticketId === ticketId ? { ...current, isCheckedIn: false } : current
+      );
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const filteredOrders = useMemo(() => {
@@ -247,6 +302,7 @@ const OrdersAndAttendeesSection = ({ eventId }) => {
     if (activeTab === 'Orders') {
       return (
         <div className={styles.contentCard}>
+          <OrderSummaryStats orders={orders} />
           <OrdersTable orders={filteredOrders} onOrderSelect={handleOrderSelect} />
         </div>
       );
@@ -254,7 +310,10 @@ const OrdersAndAttendeesSection = ({ eventId }) => {
 
     if (activeTab === 'Attendees') {
       return (
-        <AttendeesTable attendees={filteredAttendees} onCheckIn={handleCheckIn} />
+        <div className={styles.contentCard}>
+          <AttendeeSummaryStats attendees={attendees} />
+          <AttendeesTable attendees={filteredAttendees} onAttendeeSelect={handleAttendeeSelect} />
+        </div>
       );
     }
 
@@ -304,7 +363,17 @@ const OrdersAndAttendeesSection = ({ eventId }) => {
         </div>
       </div>
 
-      <OrderDetailsModal order={selectedOrder} onClose={handleCloseModal} />
+      <OrderDetailsModal
+        order={selectedOrder}
+        onClose={handleCloseModal}
+        onViewAttendee={handleViewAttendeeFromOrder}
+      />
+      <AttendeeDetailsModal
+        attendee={selectedAttendee}
+        onClose={handleCloseAttendeeModal}
+        onCheckIn={handleCheckIn}
+        onCheckOut={handleCheckOut}
+      />
     </>
   );
 };

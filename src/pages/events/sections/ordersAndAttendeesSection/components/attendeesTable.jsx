@@ -1,74 +1,13 @@
-// import React from 'react';
-// import styles from './attendeesTable.module.scss';
-// import { FiCheck } from 'react-icons/fi';
-
-// const AttendeesTable = ({ attendees, onCheckIn }) => {
-//   if (attendees.length === 0) {
-//     return <div className={styles.noResults}>No attendees found.</div>;
-//   }
-
-//   const getTicketTypeClass = (type) => {
-//     switch(String(type).toLowerCase()){
-//       case 'vip': return styles.vip;
-//       case 'standard': return styles.standard;
-//       case 'early bird':
-//       default: return styles.earlyBird;
-//     }
-//   }
-
-//   return (
-//     <div className={styles.tableContainer}>
-//       <table className={styles.table}>
-//         <thead>
-//           <tr>
-//             <th><input type="checkbox" /></th>
-//             {/* <th>#</th> */}
-//             <th>Name</th>
-//             {/* <th>Mail</th>
-//             <th>Mobile No.</th>
-//             <th>Order Date</th> */}
-//             <th>Ticket Type</th>
-//             <th></th>
-//           </tr>
-//         </thead>
-//         <tbody>
-//           {attendees.map((attendee) => (
-//             <tr key={attendee.id}>
-//               <td><input type="checkbox" /></td>
-//               {/* <td>{attendee.orderId}</td> */}
-//               <td>{attendee.name}</td>
-//               {/* <td>{attendee.email}</td>
-//               <td>{attendee.mobile}</td>
-//               <td>{attendee.orderDate}</td> */}
-//               <td><span className={`${styles.ticketType} ${getTicketTypeClass(attendee.ticketType)}`}>{attendee.ticketType}</span></td>
-//               <td>
-//                 {attendee.isCheckedIn ? (
-//                   <span className={styles.checkedInStatus}>
-//                     <FiCheck /> Checked In
-//                   </span>
-//                 ) : (
-//                   <button className={styles.checkInButton} onClick={() => onCheckIn(attendee.id)}>
-//                     Check In
-//                   </button>
-//                 )}
-//               </td>
-//             </tr>
-//           ))}
-//         </tbody>
-//       </table>
-//     </div>
-//   );
-// };
-
-// export default AttendeesTable;
-
 import React, { useEffect, useState } from 'react';
 import { flexRender, getCoreRowModel, getPaginationRowModel, getSortedRowModel, useReactTable } from '@tanstack/react-table';
+import { FiChevronRight, FiCheck } from 'react-icons/fi';
 import styles from './attendeesTable.module.scss';
 
 const DEFAULT_PAGE_SIZE = 10;
 
-const AttendeesTable = ({ attendees }) => {
+const getInitial = (name) => (name ? name.trim().charAt(0).toUpperCase() : '?');
+
+const AttendeesTable = ({ attendees, onAttendeeSelect }) => {
   const [sorting, setSorting] = useState([]);
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: DEFAULT_PAGE_SIZE });
 
@@ -98,7 +37,22 @@ const AttendeesTable = ({ attendees }) => {
       accessorFn: (row) => row.name ?? '',
       header: 'Name',
       enableSorting: true,
-      cell: (info) => info.getValue(),
+      cell: (info) => (
+        <div className={styles.nameWithAvatar}>
+          <span className={styles.avatarWrapper}>
+            <span className={styles.avatar}>{getInitial(info.getValue())}</span>
+            {info.row.original.isCheckedIn && (
+              <span className={styles.checkedInDot} title="Checked in">
+                <FiCheck />
+              </span>
+            )}
+          </span>
+          <div className={styles.nameEmail}>
+            <span className={styles.nameText}>{info.getValue()}</span>
+            <span className={styles.emailText}>{info.row.original.email}</span>
+          </div>
+        </div>
+      ),
       meta: { cellClassName: styles.nameCell },
     },
     {
@@ -114,6 +68,13 @@ const AttendeesTable = ({ attendees }) => {
           </span>
         );
       },
+    },
+    {
+      id: 'arrow',
+      header: '',
+      enableSorting: false,
+      cell: () => <FiChevronRight className={styles.arrowIcon} />,
+      meta: { cellClassName: styles.arrowCell },
     },
   ];
 
@@ -142,8 +103,9 @@ const AttendeesTable = ({ attendees }) => {
     <div className={styles.tableContainer}>
       <table className={styles.table}>
         <colgroup>
-          <col style={{ width: '260px' }} />
-          <col style={{ width: '160px' }} />
+          <col className={styles.colName} />
+          <col className={styles.colTicket} />
+          <col className={styles.colArrow} />
         </colgroup>
 
         <thead>
@@ -175,7 +137,11 @@ const AttendeesTable = ({ attendees }) => {
 
         <tbody>
           {table.getRowModel().rows.map((row) => (
-            <tr key={row.id} className={styles.tableRow}>
+            <tr
+              key={row.id}
+              className={styles.tableRow}
+              onClick={() => onAttendeeSelect && onAttendeeSelect(row.original)}
+            >
               {row.getVisibleCells().map((cell) => {
                 const cellClassName = cell.column.columnDef.meta?.cellClassName;
                 return (

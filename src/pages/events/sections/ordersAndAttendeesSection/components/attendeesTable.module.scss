@@ -21,6 +21,10 @@
   min-width: 800px;
 }
 
+.colName { width: 480px; }
+.colTicket { width: 200px; }
+.colArrow { width: 48px; }
+
 /* ================================
    HEADERS
 ================================ */
@@ -64,16 +68,86 @@
 }
 
 .nameCell {
-  color: #111827;
-  font-weight: 600;
+  overflow: visible;
 }
 
 /* ================================
-   CHECKBOX
+   NAME + AVATAR BLOCK
 ================================ */
-.rowCheckbox {
-  transform: scale(1.1);
-  cursor: pointer;
+.nameWithAvatar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.avatarWrapper {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #EEF2FF;
+  color: #4F46E5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.checkedInDot {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #16A34A;
+  border: 2px solid #fff;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+}
+
+.nameEmail {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.nameText {
+  color: #111827;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.emailText {
+  color: #6B7280;
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ================================
+   ARROW
+================================ */
+.arrowCell {
+  text-align: right;
+}
+
+.arrowIcon {
+  color: #9CA3AF;
+  font-size: 18px;
 }
 
 /* ================================
@@ -97,50 +171,19 @@
   letter-spacing: 0.01em;
 }
 
-/* ================================
-   CHECK-IN BUTTON
-================================ */
-.checkInButton {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 6px 16px;
-  border-radius: 4px;
-  border: 1px solid #2563EB;
-  background: #FFF;
-  color: #005DA5;
-  font-size: 13px;
-  font-style: italic;
-  font-weight: 500;
-  line-height: 1;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
-
-  &:hover {
-    background: #DBEAFE;
-  }
+.vip {
+  border-color: #D97706;
+  color: #D97706;
 }
 
-/* ================================
-   CHECKED IN LABEL
-================================ */
-.checkedInStatus {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 6px 16px;
-  border-radius: 4px;
-  border: 1px solid #C4B5FD;
-  background: #F5F3FF;
-  color: #7C3AED;
-  font-size: 13px;
-  font-style: italic;
-  font-weight: 500;
-  line-height: 1;
-  white-space: nowrap;
+.standard {
+  border-color: #2563EB;
+  color: #2563EB;
+}
+
+.earlyBird {
+  border-color: #16A34A;
+  color: #16A34A;
 }
 
 /* ================================
@@ -198,9 +241,21 @@
 }
 
 @media (max-width: 900px) {
+  .tableContainer {
+    background: transparent;
+  }
+
+  .colName,
+  .colTicket,
+  .colArrow {
+    width: auto;
+  }
+
   .table {
     min-width: 100%;
     table-layout: auto;
+    border-collapse: separate;
+    border-spacing: 0 12px;
   }
 
   .table thead {
@@ -208,27 +263,35 @@
   }
 
   .table tbody tr {
-    display: block;
-    margin: 0 0 12px;
-    border: 1px solid #E5E7EB;
-    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    border: 1px solid #EEF0F4;
+    border-radius: 18px;
     background: #fff;
+    box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 1px 8px rgba(16, 24, 40, 0.06);
   }
 
   .table td {
-    display: flex;
-    justify-content: space-between;
-    gap: 12px;
+    display: block;
+    padding: 0;
+    border: none;
     white-space: normal;
     overflow: visible;
     text-overflow: clip;
   }
 
-  .table td::before {
-    content: attr(data-label);
-    font-size: 11px;
-    color: #6B7280;
-    text-transform: uppercase;
-    font-weight: 600;
+  .table td:nth-child(1) {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .table td:nth-child(2) {
+    flex-shrink: 0;
+  }
+
+  .table td:nth-child(3) {
+    flex-shrink: 0;
   }
 }

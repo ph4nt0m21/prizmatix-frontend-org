@@ -801,14 +801,20 @@ export const mapTicketStructureToStepTicket = (ticket = {}, timezone) => {
     }
   }
 
+  const soldCount = Number.isFinite(ticket.soldCount) ? ticket.soldCount : 0;
+
   return {
     id: ticket.id,
     name: ticket.name || "",
     price: ticket.price ?? "",
+    soldCount,
+    // ticketCapacity from the API is the live *remaining* count (decremented on every
+    // sale) — the organiser-facing "quantity" is the total ever configured, so it's
+    // remaining + sold. Converted back to remaining in mapStepTicketToApiPayload.
     quantity: isDonation
       ? "No Limit"
       : ticket.limitedQuantity
-        ? ticket.ticketCapacity
+        ? (ticket.ticketCapacity ?? 0) + soldCount
         : "No Limit",
     maxPurchaseAmount: isDonation
       ? ""
@@ -830,6 +836,7 @@ export const mapTicketStructureToStepTicket = (ticket = {}, timezone) => {
     suggestedAmounts,
     donationRequired: Boolean(ticket.donationRequired),
     isActive: ticket.isActive !== false,
+    salesPaused: Boolean(ticket.salesPaused),
     isAdvance: false,
     advanceAmount: "",
   };
@@ -841,6 +848,7 @@ export const mapTicketStructureToStepTicket = (ticket = {}, timezone) => {
 export const mapStepTicketToApiPayload = (ticket, timezone) => {
   const timeZone = resolveEventTimezone(timezone);
   const isDonation = String(ticket.ticketKind || "").toUpperCase() === "DONATION";
+  const soldCount = Number.isFinite(ticket.soldCount) ? ticket.soldCount : 0;
   const depRaw = ticket.startsAfterTicketStructureId;
   const startsAfterTicketStructureId =
     !isDonation && depRaw != null && depRaw !== "" && Number.isFinite(Number(depRaw))
@@ -857,11 +865,13 @@ export const mapStepTicketToApiPayload = (ticket, timezone) => {
     name: ticket.name,
     price: parseFloat(ticket.price),
     finalPrice: parseFloat(ticket.price),
+    // Convert the organiser-facing total back to the live remaining count the API
+    // stores. Never let it go negative even if the UI's own clamp is somehow bypassed.
     ticketCapacity: isDonation
       ? 0
       : ticket.quantity === "No Limit"
         ? 0
-        : parseInt(ticket.quantity, 10),
+        : Math.max(0, parseInt(ticket.quantity, 10) - soldCount),
     maxPurchasePerOrder: isDonation
       ? null
       : ticket.maxPurchaseAmount
@@ -886,6 +896,7 @@ export const mapStepTicketToApiPayload = (ticket, timezone) => {
     suggestedAmounts: isDonation ? JSON.stringify(suggestedAmounts) : null,
     donationRequired: isDonation ? Boolean(ticket.donationRequired) : false,
     isActive: ticket.isActive !== false,
+    salesPaused: Boolean(ticket.salesPaused),
     isDeleted: false,
   };
 };
