@@ -92,6 +92,13 @@ const TicketDetailsModal = ({
    */
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
+    const soldCount = localTicket.soldCount || 0;
+    if (name === 'quantity' && value !== '' && Number(value) < soldCount) {
+      return; // never allow the total to drop below tickets already sold
+    }
+    if ((name === 'name' || name === 'price') && soldCount > 0) {
+      return; // locked once sales begin
+    }
     setLocalTicket(prev => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : value
@@ -261,9 +268,14 @@ const TicketDetailsModal = ({
                     className={styles.formInput}
                     value={localTicket.name || ''}
                     onChange={handleInputChange}
+                    disabled={localTicket.soldCount > 0}
+                    title={localTicket.soldCount > 0 ? 'Locked — tickets have already been sold' : undefined}
                   />
+                  {localTicket.soldCount > 0 && (
+                    <p className={styles.formHelper}>Locked — tickets have already been sold.</p>
+                  )}
                 </div>
-                
+
                 <div className={styles.formGroup}>
                   <label htmlFor="price" className={styles.formLabel}>
                     {isDonation ? 'Minimum donation amount' : 'Price'}
@@ -279,12 +291,17 @@ const TicketDetailsModal = ({
                       className={styles.formInput}
                       value={localTicket.price || ''}
                       onChange={handleInputChange}
+                      disabled={localTicket.soldCount > 0}
+                      title={localTicket.soldCount > 0 ? 'Locked — tickets have already been sold' : undefined}
                     />
                   </div>
                   {isDonation && (
                     <p className={styles.formHelper}>
                       Buyers must donate at least this amount (scaled by ticket quantity when tickets are selected).
                     </p>
+                  )}
+                  {localTicket.soldCount > 0 && (
+                    <p className={styles.formHelper}>Locked — tickets have already been sold.</p>
                   )}
                 </div>
 
@@ -294,6 +311,11 @@ const TicketDetailsModal = ({
                       <label htmlFor="quantity" className={styles.formLabel}>
                         Quantity
                       </label>
+                      {localTicket.soldCount > 0 && (
+                        <p className={styles.formHelper}>
+                          Sold: {localTicket.soldCount}. Total can be increased but never reduced below this.
+                        </p>
+                      )}
                       <div className={styles.quantityToggle}>
                         <div className={styles.saleTypeToggle}>
                           <button
@@ -317,6 +339,7 @@ const TicketDetailsModal = ({
                             type="number"
                             id="quantity"
                             name="quantity"
+                            min={localTicket.soldCount || 0}
                             className={styles.formInput}
                             value={localTicket.quantity === 'No Limit' ? '' : (localTicket.quantity || '')}
                             onChange={handleInputChange}
@@ -367,24 +390,25 @@ const TicketDetailsModal = ({
             ) : (
               // Advance Details Panel
               <>
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>Pause ticket sales</label>
+                  <p className={styles.formHelper}>
+                    Pause to temporarily stop new purchases without deleting this ticket. Buyers will see
+                    "Ticket sales are currently paused."
+                  </p>
+                  <label className={styles.toggleSwitch}>
+                    <input
+                      type="checkbox"
+                      name="salesPaused"
+                      checked={Boolean(localTicket.salesPaused)}
+                      onChange={handleInputChange}
+                    />
+                    <span className={styles.slider} />
+                  </label>
+                </div>
+
                 {isDonation ? (
                   <>
-                    <div className={styles.formGroup}>
-                      <label className={styles.formLabel}>Active</label>
-                      <p className={styles.formHelper}>
-                        Deactivate to hide this donation from the public event page without deleting it.
-                      </p>
-                      <label className={styles.toggleSwitch}>
-                        <input
-                          type="checkbox"
-                          name="isActive"
-                          checked={localTicket.isActive !== false}
-                          onChange={handleInputChange}
-                        />
-                        <span className={styles.slider} />
-                      </label>
-                    </div>
-
                     <div className={styles.formGroup}>
                       <label className={styles.formLabel}>Suggested amounts<OptionalLabel /></label>
                       <p className={styles.formHelper}>
@@ -457,13 +481,14 @@ const TicketDetailsModal = ({
                   </div>
                 </div>
                 
-                {!isDonation && (
+                {(
                 <div className={styles.formGroup}>
                   <label className={styles.formLabel}>Sale Start/End</label>
                   <p className={styles.formHelper}>
                     Set when tickets are available for purchase. Leave blank to use defaults (on sale now until event end).
                   </p>
-                  
+
+                  {!isDonation && (
                   <div className={styles.saleTypeToggle}>
                     <button
                       type="button"
@@ -486,6 +511,7 @@ const TicketDetailsModal = ({
                       Before/After
                     </button>
                   </div>
+                  )}
                   
                   {saleDateType === 'custom' ? (
                     // Custom sales dates using DatePicker

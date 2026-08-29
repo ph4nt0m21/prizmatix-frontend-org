@@ -1,108 +1,213 @@
-import React from 'react';
+import React, { useState } from 'react';
 import styles from './orderDetailsModal.module.scss';
-import { FiX, FiDownload } from 'react-icons/fi';
+import { FiX, FiDownload, FiMail, FiCopy, FiCheck, FiUser } from 'react-icons/fi';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import { ReissueOrderEmailAPI } from '../../../../../services/allApis';
 
-const OrderDetailsModal = ({ order, onClose }) => {
+const getTicketTypeClass = (type) => {
+  switch (String(type).toLowerCase()) {
+    case 'vip':
+      return styles.vip;
+    case 'standard':
+      return styles.standard;
+    case 'early bird':
+    default:
+      return styles.earlyBird;
+  }
+};
+
+const formatCurrency = (value) => `$${Number(value || 0).toFixed(2)}`;
+
+const OrderDetailsModal = ({ order, onClose, onViewAttendee }) => {
+  const [isReissuing, setIsReissuing] = useState(false);
+  const [emailCopied, setEmailCopied] = useState(false);
+
   if (!order) return null;
+
+  const quantity = order.tickets?.length || 0;
+  const fees = order.feeBreakdown || {};
+  const attendeeTickets = (order.tickets || []).filter((t) => !t.donation);
+  const donationTickets = (order.tickets || []).filter((t) => t.donation);
+
+  const handleReissueEmail = async () => {
+    try {
+      setIsReissuing(true);
+      const cleanOrderId = String(order.id).replace('#', '');
+      await ReissueOrderEmailAPI(cleanOrderId);
+      alert(`Reissue email sent for Order ${order.id}`);
+    } catch (err) {
+      alert(`Failed to send reissue email for ${order.id}`);
+    } finally {
+      setIsReissuing(false);
+    }
+  };
+
+  const handleDownloadDetailsPDF = () => {
+    const doc = new jsPDF();
+    doc.text(`Order Details - ${order.id}`, 10, 10);
+    autoTable(doc, {
+      startY: 20,
+      body: [
+        ['Order ID', order.id],
+        ['Name', order.customer.name],
+        ['Email', order.customer.email],
+        ['Order Date', order.orderDate],
+        ['Ticket Type', order.ticketType],
+      ],
+    });
+    doc.save(`order-details-${order.id}.pdf`);
+  };
+
+  const handleCopyEmail = async () => {
+    try {
+      await navigator.clipboard.writeText(order.customer.email);
+      setEmailCopied(true);
+      setTimeout(() => setEmailCopied(false), 1500);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleViewAttendee = (ticketId) => {
+    const targetTicketId = ticketId ?? attendeeTickets[0]?.ticketId;
+    if (targetTicketId && onViewAttendee) {
+      onViewAttendee(targetTicketId);
+    }
+  };
 
   return (
     <>
       <div className={styles.overlay} onClick={onClose}></div>
       <div className={styles.modal}>
         <div className={styles.header}>
-          <h3>{order.id}</h3>
-          <p>Order Details</p>
+          <div>
+            <h3>Order {order.id}</h3>
+            <div className={styles.headerMeta}>
+              <span className={`${styles.ticketType} ${getTicketTypeClass(order.ticketType)}`}>
+                {order.ticketType}
+              </span>
+              <span className={styles.headerDate}>{order.purchaseDate}</span>
+            </div>
+          </div>
           <button onClick={onClose} className={styles.closeButton}>
             <FiX />
           </button>
         </div>
 
         <div className={styles.content}>
-          {/* Purchase Details */}
-          <div className={styles.section}>
-            <div className={styles.sectionHeader}>
-              <h4>Purchase Details</h4>
-            </div>
-            <div className={styles.detailBlock}>
-              <div className={styles.detailItem}>
-                <span>Purchase Date</span>
-                <strong>{order.purchaseDate}</strong>
-              </div>
-              <div className={styles.detailItem}>
-                <span>Payment Method</span>
-                <strong>{order.paymentMethod}</strong>
-              </div>
-            </div>
-          </div>
-
           {/* Customer */}
-          <div className={styles.section}>
-            <div className={styles.sectionHeader}>
-              <h4>Customer</h4>
-            </div>
+          <div className={styles.card}>
+            <div className={styles.cardTitle}>Customer</div>
             <div className={styles.infoRow}>
-              <span className={styles.infoLabel}>Full Name</span>
+              <span className={styles.infoLabel}>Name</span>
               <span className={styles.infoValue}>{order.customer.name}</span>
             </div>
             <div className={styles.infoRow}>
-              <span className={styles.infoLabel}>E-Mail</span>
-              <span className={styles.infoValue}>{order.customer.email}</span>
+              <span className={styles.infoLabel}>Email</span>
+              <span className={styles.infoValueWithAction}>
+                {order.customer.email}
+                <button className={styles.copyButton} onClick={handleCopyEmail} type="button">
+                  {emailCopied ? <FiCheck /> : <FiCopy />} {emailCopied ? 'Copied' : 'Copy'}
+                </button>
+              </span>
             </div>
           </div>
 
-          {/* Tickets */}
-          <div className={styles.section}>
-            <div className={styles.sectionHeader}>
-              <h4>Tickets</h4>
+          {/* Ticket Information */}
+          <div className={styles.card}>
+            <div className={styles.cardTitle}>Ticket Information</div>
+            <div className={styles.infoRow}>
+              <span className={styles.infoLabel}>Ticket Type</span>
+              <span className={styles.infoValue}>{order.ticketType}</span>
             </div>
-            {order.tickets &&
-              order.tickets.map((ticket, index) => (
-                <div
-                  key={ticket.ticketId || index}
-                  className={styles.ticketItem}
-                >
-                  <div className={styles.ticketInfo}>
-                    <span className={styles.ticketName}>
-                      {ticket.ticketType}
-                      {ticket.donation ? ' (Donation)' : ''}
-                    </span>
-                    <div style={{ marginTop: 6, color: '#4B5563', fontSize: 13 }}>
-                      <strong>{ticket.donation ? 'Donator' : 'Attendee'}:</strong>{' '}
-                      {ticket.attendeeName || 'N/A'}
-                    </div>
-                    {ticket.donationNote ? (
-                      <div style={{ marginTop: 6, whiteSpace: 'pre-wrap', color: '#4B5563', fontSize: 13 }}>
-                        <strong>Notes:</strong> {ticket.donationNote}
-                      </div>
-                    ) : null}
-                  </div>
+            <div className={styles.infoRow}>
+              <span className={styles.infoLabel}>Quantity</span>
+              <span className={styles.infoValue}>
+                {quantity} {quantity === 1 ? 'Ticket' : 'Tickets'}
+              </span>
+            </div>
+            <div className={styles.infoRow}>
+              <span className={styles.infoLabel}>Order Date</span>
+              <span className={styles.infoValue}>{order.purchaseDate}</span>
+            </div>
+            <div className={styles.infoRow}>
+              <span className={styles.infoLabel}>Status</span>
+              <span className={styles.paidBadge}>
+                <FiCheck /> Paid
+              </span>
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className={styles.card}>
+            <div className={styles.cardTitle}>Actions</div>
+            <div className={styles.actionsList}>
+              <button className={styles.actionButtonPrimary} onClick={handleReissueEmail} disabled={isReissuing}>
+                <FiMail /> {isReissuing ? 'Sending…' : 'Reissue Ticket'}
+              </button>
+              <button className={styles.actionButton} onClick={handleDownloadDetailsPDF}>
+                <FiDownload /> Download Ticket (PDF)
+              </button>
+              <button className={styles.actionButton} onClick={() => handleViewAttendee()}>
+                <FiUser /> View Attendee
+              </button>
+            </div>
+          </div>
+
+          {/* Attendees (only surfaced separately when the order has more than one) */}
+          {attendeeTickets.length > 1 && (
+            <div className={styles.card}>
+              <div className={styles.cardTitle}>Attendees ({attendeeTickets.length})</div>
+              <div className={styles.attendeeList}>
+                {attendeeTickets.map((ticket, index) => (
+                  <button
+                    key={ticket.ticketId || index}
+                    className={styles.attendeeRow}
+                    onClick={() => handleViewAttendee(ticket.ticketId)}
+                    type="button"
+                  >
+                    <span>{ticket.attendeeName || 'N/A'}</span>
+                    <span className={styles.attendeeRowTicketType}>{ticket.ticketType}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Donation notes, when this order includes any donation add-ons */}
+          {donationTickets.length > 0 && (
+            <div className={styles.card}>
+              <div className={styles.cardTitle}>Donations</div>
+              {donationTickets.map((ticket, index) => (
+                <div key={ticket.ticketId || index} className={styles.infoRow}>
+                  <span className={styles.infoLabel}>{ticket.attendeeName || 'Donor'}</span>
+                  <span className={styles.infoValue}>{ticket.donationNote || '—'}</span>
                 </div>
               ))}
-          </div>
-
-          {/* Attendees */}
-          <div className={styles.section}>
-            <div className={styles.sectionHeader}>
-              <h4>Attendees</h4>
             </div>
-            {order.attendees && order.attendees.length > 0 ? (
-              order.attendees.map((attendee, index) => (
-                <div key={index} className={styles.attendeeNameRow}>
-                  {attendee.name}
-                </div>
-              ))
-            ) : (
-              <div className={styles.attendeeNameRow} style={{ color: '#9CA3AF' }}>
-                No ticket attendees
-              </div>
-            )}
-          </div>
-        </div>
+          )}
 
-        <div className={styles.footer}>
-          <button className={styles.downloadInvoice}>
-            <FiDownload /> Download Invoice
-          </button>
+          {/* Payment Summary */}
+          <div className={styles.card}>
+            <div className={styles.cardTitle}>Payment Summary</div>
+            <div className={styles.summaryRow}>
+              <span>Ticket</span>
+              <span>{formatCurrency(fees.ticketFaceValue)}</span>
+            </div>
+            <div className={styles.summaryRow}>
+              <span>Service Fee</span>
+              <span>{formatCurrency(fees.platformFee)}</span>
+            </div>
+            <div className={styles.summaryRow}>
+              <span>GST</span>
+              <span>{formatCurrency(fees.gstOnPlatformFee)}</span>
+            </div>
+            <div className={styles.summaryRowTotal}>
+              <span>Total</span>
+              <span>{formatCurrency(fees.grandTotal)}</span>
+            </div>
+          </div>
         </div>
       </div>
     </>

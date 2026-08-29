@@ -271,6 +271,13 @@ $ticket-grid-columns:
   text-align: center;
 }
 
+.soldIndicator {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  color: #6b7280;
+}
+
 .ticketPrice {
   padding: 0;
   text-align: center;
@@ -326,6 +333,12 @@ $ticket-grid-columns:
 
   &:hover {
     border-color: #d1d5db;
+  }
+
+  &:disabled {
+    background-color: #f3f4f6;
+    color: #6b7280;
+    cursor: not-allowed;
   }
 
   &:focus {

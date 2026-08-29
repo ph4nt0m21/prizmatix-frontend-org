@@ -100,6 +100,8 @@ const CreateEventPage = () => {
     showHostProfile: true,
     organizationId: null,
     createdBy: null,
+    refundPolicy: "NO_POLICY",
+    customRefundPolicyText: "",
     // category: "",
     // searchTags: [],
 
@@ -651,7 +653,12 @@ const CreateEventPage = () => {
   };
 
   const validateBasicInfo = () => {
-    return eventData.name.trim() !== "";
+    if (eventData.name.trim() === "") return false;
+    if (!eventData.refundPolicy) return false;
+    if (eventData.refundPolicy === "CUSTOM" && !eventData.customRefundPolicyText?.trim()) {
+      return false;
+    }
+    return true;
   };
 
   const validateLocation = () => isEventLocationComplete(eventData);
@@ -1152,6 +1159,9 @@ const validateDiscountCodes = () =>
                 eventData.organizationId || userData?.organizationId || 1,
               createdBy: eventData.createdBy || userData?.userId || 1,
               private: eventData.eventType === "private",
+              refundPolicy: eventData.refundPolicy,
+              customRefundPolicyText:
+                eventData.refundPolicy === "CUSTOM" ? eventData.customRefundPolicyText : null,
             };
             console.log("Creating new event with data:", basicInfoData);
             const response = await CreateEventAPI(basicInfoData);

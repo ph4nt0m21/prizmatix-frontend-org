@@ -187,13 +187,12 @@ const TicketsStep = ({
     setTickets((prevTickets) => [...prevTickets, newDonation]);
   };
 
-  const handleToggleDonationActive = (index) => {
+  const handleTogglePause = (index) => {
     const updatedTickets = [...tickets];
     const ticket = updatedTickets[index];
-    if (!isDonationTicket(ticket)) return;
     updatedTickets[index] = {
       ...ticket,
-      isActive: ticket.isActive === false,
+      salesPaused: !ticket.salesPaused,
     };
     setTickets(updatedTickets);
     setOpenMenuIndex(null);
@@ -203,7 +202,19 @@ const TicketsStep = ({
   const handleTicketRowChange = (e, index) => {
     const { name, value } = e.target;
     const updatedTickets = [...tickets];
-    updatedTickets[index] = { ...updatedTickets[index], [name]: value };
+    const ticket = updatedTickets[index];
+
+    if (name === 'quantity') {
+      const soldCount = ticket.soldCount || 0;
+      if (value !== '' && Number(value) < soldCount) {
+        return; // never allow the total to drop below tickets already sold
+      }
+    }
+    if ((name === 'name' || name === 'price') && ticket.soldCount > 0) {
+      return; // locked once sales begin
+    }
+
+    updatedTickets[index] = { ...ticket, [name]: value };
     setTickets(updatedTickets);
   };
 
@@ -217,6 +228,7 @@ const TicketsStep = ({
     }
     ticketToDuplicate.name = ticketToDuplicate.name ? `${ticketToDuplicate.name} (Copy)` : '';
     delete ticketToDuplicate.id;
+    ticketToDuplicate.soldCount = 0;
 
     const updatedTickets = [...tickets];
     updatedTickets.splice(index + 1, 0, ticketToDuplicate);
@@ -239,17 +251,23 @@ const TicketsStep = ({
             value={ticket.name || ''}
             onChange={(e) => handleTicketRowChange(e, index)}
             placeholder="Name"
+            disabled={ticket.soldCount > 0}
+            title={ticket.soldCount > 0 ? 'Locked — tickets have already been sold' : undefined}
           />
         </div>
         <div className={styles.ticketCount} data-label="Quantity">
           <input
             name="quantity"
             type="number"
+            min={ticket.soldCount || 0}
             className={styles.ticketInput}
             value={ticket.quantity === 'No Limit' ? '' : ticket.quantity || ''}
             onChange={(e) => handleTicketRowChange(e, index)}
             placeholder="Quantity"
           />
+          {ticket.soldCount > 0 && (
+            <span className={styles.soldIndicator}>Sold: {ticket.soldCount}</span>
+          )}
         </div>
         <div className={styles.ticketPrice} data-label="Price">
           <div className={styles.inputWithPrefix}>
@@ -263,6 +281,8 @@ const TicketsStep = ({
               value={ticket.price || ''}
               onChange={(e) => handleTicketRowChange(e, index)}
               placeholder="Price"
+              disabled={ticket.soldCount > 0}
+              title={ticket.soldCount > 0 ? 'Locked — tickets have already been sold' : undefined}
             />
           </div>
         </div>
@@ -417,9 +437,9 @@ const TicketsStep = ({
               <button
                 type="button"
                 className={anchoredActionMenuStyles.menuItem}
-                onClick={() => handleToggleDonationActive(index)}
+                onClick={() => handleTogglePause(index)}
               >
-                {ticket.isActive === false ? 'Activate donation' : 'Deactivate donation'}
+                {ticket.salesPaused ? 'Resume sales' : 'Pause sales'}
               </button>
               <button
                 type="button"

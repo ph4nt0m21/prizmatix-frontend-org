@@ -174,7 +174,52 @@ const BasicInfoStep = ({ eventData, handleInputChange, isValid, stepStatus }) =>
             <div className={styles.fieldError}>Event name is required</div>
           )} */}
         </div>
-        
+
+        <div className={styles.formGroup}>
+          <label htmlFor="refundPolicy" className={styles.formLabel}>
+            Refund Policy
+          </label>
+          <p className={styles.formDescription}>
+            Let ticket buyers know your refund terms before they purchase.
+          </p>
+          <div className={styles.selectWrapper}>
+            <select
+              id="refundPolicy"
+              name="refundPolicy"
+              className={styles.formSelect}
+              value={eventData.refundPolicy || 'NO_POLICY'}
+              onChange={(e) => handleInputChange(e.target.value, 'refundPolicy')}
+            >
+              <option value="NO_POLICY">No specified policy on refunds</option>
+              <option value="REFUND_1_DAY">Refunds are available up to 1 day prior to the event</option>
+              <option value="REFUND_7_DAYS">Refunds are available up to 7 days prior to the event</option>
+              <option value="REFUND_14_DAYS">Refunds are available up to 14 days prior to the event</option>
+              <option value="REFUND_30_DAYS">Refunds are available up to 30 days prior to the event</option>
+              <option value="NO_REFUNDS">No refunds</option>
+              <option value="CUSTOM">Custom</option>
+            </select>
+          </div>
+          {eventData.refundPolicy === 'CUSTOM' && (
+            <>
+              <label htmlFor="customRefundPolicyText" className={styles.formLabel} style={{ marginTop: 12 }}>
+                What is your refund policy?
+              </label>
+              <textarea
+                id="customRefundPolicyText"
+                name="customRefundPolicyText"
+                className={styles.formInput}
+                rows={4}
+                placeholder="Describe your refund terms for ticket buyers"
+                value={eventData.customRefundPolicyText || ''}
+                onChange={(e) => handleInputChange(e.target.value, 'customRefundPolicyText')}
+              />
+              {!eventData.customRefundPolicyText?.trim() && stepStatus.visited && (
+                <div className={styles.fieldError}>Refund policy text is required</div>
+              )}
+            </>
+          )}
+        </div>
+
         <div className={styles.formGroup}>
           <label className={styles.formLabel}>
             Visibility Settings

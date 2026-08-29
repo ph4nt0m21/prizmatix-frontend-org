@@ -165,6 +165,8 @@ const EventEditPage = () => {
           slug: fetchedData.slug,
           isPublished,
           eventType: fetchedData.isPrivate ? 'private' : 'public',
+          refundPolicy: fetchedData.refundPolicy || 'NO_POLICY',
+          customRefundPolicyText: fetchedData.customRefundPolicyText || '',
           organizerName: fetchedData.organizationName || 'Organiser',
           category: fetchedData.category || '',
           searchTags: fetchedData.keywords ? fetchedData.keywords.split(',').map(tag => tag.trim()) : [],
@@ -323,6 +325,9 @@ const EventEditPage = () => {
         case 'basicInfo': {
           const payload = prepareDescriptionDataForAPI(eventData.description, eventData.id, eventData.eventType === 'private');
           payload.name = eventData.name; // Add name to the payload
+          payload.refundPolicy = eventData.refundPolicy;
+          payload.customRefundPolicyText =
+            eventData.refundPolicy === 'CUSTOM' ? eventData.customRefundPolicyText : null;
           await UpdateEventDescriptionAPI(eventData.id, payload);
           break;
         }
