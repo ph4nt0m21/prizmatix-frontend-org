@@ -1,183 +1,181 @@
-import React, { createContext, useState, useEffect, useContext } from 'react';
+import React, { createContext, useState, useEffect, useContext, useCallback } from 'react';
 import Cookies from 'js-cookie';
-import { LoginAPI, RegisterAPI, ProfileAPI } from '../services/allApis';
+import {
+  LoginAPI,
+  OrganizationRegisterInitiateAPI,
+  GetOrganizerProfileAPI,
+} from '../services/allApis';
+import { getUserData, setUserData } from '../utils/authUtil';
+import { mapProfileResponseToUserData, notifyProfileUpdated } from '../utils/profileUtil';
+import { REMEMBERED_LOGIN_EMAIL_KEY } from '../utils/authFeedback';
 
-// Create the auth context
 const AuthContext = createContext();
 
-// Helper hook to use the auth context
 export const useAuth = () => {
   return useContext(AuthContext);
 };
 
-// Auth provider component
 export const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isInitializing, setIsInitializing] = useState(true);
   const [error, setError] = useState(null);
 
-  // Check if user is authenticated on initial load
-  useEffect(() => {
-    checkAuthStatus();
+  const refreshProfile = useCallback(async () => {
+    const token = Cookies.get('token');
+    if (!token) {
+      return null;
+    }
+
+    const stored = getUserData();
+    const role = (stored?.role || '').replace(/^ROLE_/, '');
+    // Scanner users have no organizer profile — skip to avoid 403.
+    if (role === 'SCANNER') {
+      return stored;
+    }
+
+    try {
+      const response = await GetOrganizerProfileAPI();
+      const profile = response?.data?.data;
+      if (!profile) {
+        return getUserData();
+      }
+
+      const mergedUser = mapProfileResponseToUserData(profile, getUserData() || {});
+      setUserData(mergedUser);
+      setCurrentUser(mergedUser);
+      notifyProfileUpdated();
+      return mergedUser;
+    } catch (err) {
+      console.error('Failed to refresh profile:', err);
+      return getUserData();
+    }
   }, []);
 
-  /**
-   * Check if the user is authenticated based on token presence
-   */
-  const checkAuthStatus = async () => {
-    setIsLoading(true);
-    try {
+  useEffect(() => {
+    const checkAuthStatus = async () => {
+      setIsInitializing(true);
       const token = Cookies.get('token');
-      
       if (token) {
-        // Token exists, try to fetch user profile
-        try {
-          const response = await LoginAPI(token);
-          setCurrentUser(response.data);
-          setIsAuthenticated(true);
-          console.log('User profile:', response.data);
-        } catch (error) {
-          console.error('Error fetching user profile:', error);
-          // Even if profile fetch fails, if token exists, consider authenticated
-          setIsAuthenticated(true);
+        const storedUserData = getUserData();
+        if (storedUserData) {
+          setCurrentUser(storedUserData);
         }
+        setIsAuthenticated(true);
+        await refreshProfile();
       } else {
-        // No token, not authenticated
-        setCurrentUser(null);
         setIsAuthenticated(false);
+        setCurrentUser(null);
       }
-    } catch (error) {
-      console.error('Auth check error:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+      setIsInitializing(false);
+    };
 
-  /**
-   * Login user with username and password
-   * @param {Object} credentials - User credentials
-   * @returns {Promise} Promise resolving to login result
-   */
-  const login = async (credentials) => {
-    setIsLoading(true);
+    checkAuthStatus();
+  }, [refreshProfile]);
+
+  const login = async (credentials, rememberMe = false) => {
     setError(null);
-    
+
+    const normalizedCredentials = {
+      ...credentials,
+      username: credentials.username?.trim().toLowerCase() ?? '',
+    };
+
     try {
-      const response = await LoginAPI(credentials);
-      
-      // Store token in cookie
-      if (response.data && response.data.token) {
-        Cookies.set('token', response.data.token, { 
-          expires: 1, // 1 day
-        });
-      } else if (typeof response.data === 'string') {
-        Cookies.set('token', response.data, { 
-          expires: 1,
-        });
+      const response = await LoginAPI(normalizedCredentials);
+
+      const cookieOptions = rememberMe ? { expires: 7 } : undefined;
+      Cookies.set('token', response.data.token, cookieOptions);
+
+      if (rememberMe) {
+        localStorage.setItem(REMEMBERED_LOGIN_EMAIL_KEY, normalizedCredentials.username);
+      } else {
+        localStorage.removeItem(REMEMBERED_LOGIN_EMAIL_KEY);
       }
-      
-      // Set user and authentication state
-      setCurrentUser(response.data.user || {});
-      setIsAuthenticated(true);
-      return response.data;
-    } catch (error) {
-      console.error('Login error:', error);
-      const errorMessage = error.response?.data?.message || 'Login failed. Please check your credentials.';
-      setError(errorMessage);
-      throw errorMessage;
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
-  /**
-   * Register a new organization
-   * @param {Object} userData - Registration data
-   * @returns {Promise} Promise resolving to registration result
-   */
-  const register = async (userData) => {
-    setIsLoading(true);
-    setError(null);
-    
-    try {
-      // Use registration data as-is, without adding username from email
-      const registrationData = {
-        ...userData
+      const rawRole =
+        response.data.roles && response.data.roles.length > 0 ? response.data.roles[0] : null;
+      const role = rawRole ? String(rawRole).replace(/^ROLE_/, '') : null;
+
+      const userData = {
+        id: response.data.id || response.data.userId,
+        organizationId: response.data.organizationId,
+        organizationName: response.data.organizationName,
+        firstName: response.data.firstName || '',
+        lastName: response.data.lastName || '',
+        name: response.data.name || `${response.data.firstName || ''} ${response.data.lastName || ''}`.trim(),
+        email: response.data.email || normalizedCredentials.username,
+        role,
+        assignedEventId: response.data.assignedEventId ?? null,
       };
-      
-      console.log('Sending registration data:', registrationData);
-      const response = await RegisterAPI(registrationData);
-      console.log('Registration response:', response);
-      
-      // Store token in cookie if provided
-      if (response.data && response.data.token) {
-        Cookies.set('token', response.data.token, { 
-          expires: 1, // 1 day
-        });
-      } else if (typeof response.data === 'string') {
-        Cookies.set('token', response.data, { 
-          expires: 1,
-        });
-      } else if (response.data) {
-        // Check for nested token
-        const token = response.data.accessToken || response.data.jwt || response.data.auth_token;
-        if (token) {
-          Cookies.set('token', token, {
-            expires: 1,
-          });
-        }
+      setUserData(userData);
+      setCurrentUser(userData);
+      setIsAuthenticated(true);
+
+      if (role !== 'SCANNER') {
+        await refreshProfile();
       }
-      
-      // Ensure the user object contains necessary fields
+
+      return { ...response.data, role, assignedEventId: userData.assignedEventId };
+    } catch (err) {
+      console.error('Login error:', err);
+      const errorMessage =
+        err.response?.data?.message || 'Login failed. Please check your credentials.';
+      setError(errorMessage);
+      throw err;
+    }
+  };
+
+  const register = async (userData) => {
+    setError(null);
+    try {
+      const response = await OrganizationRegisterInitiateAPI(userData);
+
+      const token = response.data.token || response.data.accessToken;
+      if (token) {
+        Cookies.set('token', token, { expires: 1 });
+      }
+
       const user = response.data.user || {};
       if (!user.name) {
         user.name = `${userData.firstName} ${userData.lastName}`;
       }
-      
-      // Set user and authentication state
+      setUserData(user);
       setCurrentUser(user);
       setIsAuthenticated(true);
       return response.data;
-    } catch (error) {
-      console.error('Registration error:', error);
-      const errorMessage = error.response?.data?.message || 
-                          error.response?.data?.error ||
-                          'Registration failed. Please try again.';
+    } catch (err) {
+      const errorMessage =
+        err.response?.data?.message ||
+        err.response?.data?.error ||
+        'Registration failed. Please try again.';
       setError(errorMessage);
-      throw errorMessage;
-    } finally {
-      setIsLoading(false);
+      throw err;
     }
   };
 
-  /**
-   * Logout user
-   */
   const logout = () => {
     Cookies.remove('token');
+    localStorage.removeItem('userData');
     setCurrentUser(null);
     setIsAuthenticated(false);
   };
 
-  /**
-   * Clear auth errors
-   */
   const clearError = () => {
     setError(null);
   };
 
-  // Auth context value
   const value = {
     currentUser,
     isAuthenticated,
-    isLoading,
+    isInitializing,
+    isLoading: isInitializing,
     error,
     login,
     register,
     logout,
     clearError,
-    checkAuthStatus
+    refreshProfile,
   };
 
   return (

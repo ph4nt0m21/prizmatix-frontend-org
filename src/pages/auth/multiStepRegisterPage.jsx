@@ -1,7 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import Cookies from 'js-cookie';
-import { OrganizationRegisterAPIComplete, OrganizationRegisterInitiateAPI, ProfileAPI } from '../../services/allApis';
+import { useNavigate } from 'react-router-dom';
+import { OrganizationRegisterAPIComplete, OrganizationRegisterInitiateAPI, UploadOrganizerProfilePhotoAPI } from '../../services/allApis';
+import { useAuth } from '../../context/authContext';
+import {
+  notifyAuthError,
+  notifyAuthInfo,
+  notifyAuthWarning,
+} from '../../utils/authFeedback';
+import { clearEventData, saveEventData } from '../../utils/eventUtil';
 import EmailVerification from './registerSteps/emailVerification';
 import BasicDetails from './registerSteps/basicDetails';
 import CreatePassword from './registerSteps/createPassword';
@@ -18,25 +24,16 @@ import styles from './register.module.scss';
  */
 const MultiStepRegisterPage = () => {
   const navigate = useNavigate();
-  const location = useLocation();
+  const { login, isAuthenticated, isLoading: authLoading, refreshProfile } = useAuth();
   
   // UI loading state
   const [isLoading, setIsLoading] = useState({});
-  
-  // Auth state management
-  const [currentUser, setCurrentUser] = useState(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [authLoading, setAuthLoading] = useState(true);
-  const [authError, setAuthError] = useState(null);
   
   // Step state
   const [currentStep, setCurrentStep] = useState(0); // Start at step 0 (email verification)
   
   // Email verification sub-step state
   const [verificationStep, setVerificationStep] = useState('email-entry'); // 'email-entry' or 'code-verification'
-  
-  // Local error state
-  const [error, setError] = useState(null);
   
   // Organization profile additional state
   const [uploadedLogo, setUploadedLogo] = useState(null);
@@ -59,9 +56,6 @@ const MultiStepRegisterPage = () => {
     // Organization Profile (Step 3)
     name: '',
     bio: '',
-    
-    
-
     // Create Event (Step 4)
     eventName: '',
   });
@@ -72,24 +66,11 @@ const MultiStepRegisterPage = () => {
   // Progress state (for progress indicator)
   const [progress, setProgress] = useState(20);
   
-  // Check authentication status on component mount
-  useEffect(() => {
-    checkAuthStatus();
-  }, []);
-  
   // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
-      console.log('User is authenticated, redirecting to home page');
-      // Redirect to home page directly
       navigate('/', { replace: true });
     }
-    
-    // Clear errors when component unmounts
-    return () => {
-      clearError();
-      setError(null);
-    };
   }, [isAuthenticated, navigate]);
   
   // Update progress indicator based on current step
@@ -119,49 +100,19 @@ const MultiStepRegisterPage = () => {
    * @param {string} type - Type of error (error, warning, info)
    */
   const showError = (message, type = "error") => {
-    setError({ message, type });
-    
-    // Auto-clear error after 5 seconds
-    setTimeout(() => {
-      setError(null);
-    }, 5000);
+    if (type === "warning") {
+      notifyAuthWarning(message);
+    } else if (type === "info") {
+      notifyAuthInfo(message);
+    } else {
+      notifyAuthError(message);
+    }
   };
 
   /**
-   * Check if the user is authenticated based on token presence
+   * Verify email address by calling the initiate API
    */
-  const checkAuthStatus = async () => {
-    setAuthLoading(true);
-    try {
-      const token = Cookies.get('token');
-      
-      if (token) {
-        // Token exists, try to fetch user profile
-        try {
-          const response = await ProfileAPI(token);
-          setCurrentUser(response.data);
-          setIsAuthenticated(true);
-        } catch (error) {
-          console.error('Error fetching user profile:', error);
-          // Even if profile fetch fails, if token exists, consider authenticated
-          setIsAuthenticated(true);
-        }
-      } else {
-        // No token, not authenticated
-        setCurrentUser(null);
-        setIsAuthenticated(false);
-      }
-    } catch (error) {
-      console.error('Auth check error:', error);
-    } finally {
-      setAuthLoading(false);
-    }
-  };
-  
-  /**
- * Verify email address by calling the initiate API
- */
-const verifyEmail = async () => {
+  const verifyEmail = async () => {
   // Validate email
   if (!validateEmail()) {
     return;
@@ -182,7 +133,7 @@ const verifyEmail = async () => {
     setVerificationStep('code-verification');
     
     // Show a success message
-    showError('Verification code sent to your email!', 'info');
+    showError('A 6-digit numeric code was sent to your email!', 'info');
   } catch (error) {
     console.error('Error sending OTP:', error);
     
@@ -200,26 +151,6 @@ const verifyEmail = async () => {
     setLoadingState('email-verification', false);
   }
 };
-  
-  /**
-   * Extract token from various response formats
-   * @param {Object} response - API response
-   * @returns {string|null} Extracted token or null
-   */
-  const extractTokenFromResponse = (response) => {
-    if (!response || !response.data) return null;
-    
-    // Check for token in various formats
-    if (response.data.token) return response.data.token;
-    if (response.data.accessToken) return response.data.accessToken;
-    if (response.data.jwt) return response.data.jwt;
-    if (response.data.auth_token) return response.data.auth_token;
-    
-    // Check if response.data is the token string directly
-    if (typeof response.data === 'string') return response.data;
-    
-    return null;
-  };
   
   /**
    * Format error message from API error
@@ -293,8 +224,7 @@ const verifyEmail = async () => {
      
       // Organization fields
       name: '',
-      description: '',
-      bio: '',  // This field is missing in your current reset
+      bio: '',
       
       // Event field
       eventName: ''
@@ -307,114 +237,83 @@ const verifyEmail = async () => {
     setSocialLinks([]);
   };
   
-  const handleSubmit = async () => {
-  // Clear previous errors
-  clearError();
-  setError(null);
-  
-  try {
-    // Set loading state
-    setLoadingState('register', true);
-    
-    // Map form data to the database schema
-    const registrationData = {
-      // Required fields from API schema
-      email: formData.email,
-      firstName: formData.firstName,
-      lastName: formData.lastName,
-      mobileNumber: formData.mobileNumber,
-      password: formData.password,
-      
-      // Organization profile fields - handle skipped step with defaults
-      name: formData.name || `${formData.firstName}'s Organization`, // Use default name if skipped
-      description: formData.description || "Organization description", // Default description
-      bio: formData.bio || "", // Default bio
-      profilePhoto: "profile", // Default profile photo
-      
-      // If socialLinks is empty, provide an empty array
-      socialMediaLinks: socialLinks && socialLinks.length > 0 
-        ? socialLinks.map(link => ({
-            platform: link.platform,
-            url: link.url
-          })) 
-        : []
-    };
-    
-    console.log('Sending registration data:', registrationData);
-    
-    // Call OrganizationRegisterAPIComplete from allApis.js
-    const response = await OrganizationRegisterAPIComplete(registrationData);
-    console.log('Registration successful:', response);
-    
-    // Process the response
-    if (response && response.data) {
-      // Handle token from response, checking different possible formats
-      const token = extractTokenFromResponse(response);
-      
-      if (token) {
-        // Store token in cookie - use same expiry as login page (1 day)
-        Cookies.set('token', token, { 
-          expires: 1 // Use fixed 1 day expiry to match login page
-        });
-        
-        console.log('Token stored in cookie successfully');
-      }
-      
-      // Format user data to match login page format
-      const userData = {
-        id: response.data.userId || response.data.id || response.data.user?.id,
-        organizationId: response.data.organizationId || response.data.organization?.id,
-        organizationName: response.data.name || `${formData.firstName}'s Organization`,
-        name: `${formData.firstName} ${formData.lastName}`,
-        email: formData.email,
-        role: response.data.role || 'organization_admin'
+  const handleSubmit = async (overrides = {}) => {
+    const registrationFormData = { ...formData, ...overrides };
+
+    let registrationCompleted = false;
+
+    try {
+      setLoadingState('register', true);
+
+      const registrationData = {
+        email: registrationFormData.email,
+        firstName: registrationFormData.firstName,
+        lastName: registrationFormData.lastName,
+        mobileNumber: registrationFormData.mobileNumber,
+        password: registrationFormData.password,
+        name: registrationFormData.name || `${registrationFormData.firstName}'s Organisation`,
+        bio: registrationFormData.bio || "",
+        description: registrationFormData.bio || "",
+        profilePhoto: null,
+        socialMediaLinks: socialLinks && socialLinks.length > 0
+          ? socialLinks.map(link => ({
+              platform: link.platform,
+              url: link.url
+            }))
+          : []
       };
-      
-      console.log('Storing user data to localStorage:', userData);
-      
-      // Store in localStorage - same format as login page
-      localStorage.setItem('userData', JSON.stringify(userData));
-      
-      // Update authentication state
-      setCurrentUser(userData);
-      setIsAuthenticated(true);
-      
-      // Clear form data and files on success
+
+      const response = await OrganizationRegisterAPIComplete(registrationData);
+      const apiBody = response?.data;
+
+      if (!apiBody || apiBody.status >= 400) {
+        throw new Error(apiBody?.message || 'Registration failed. Please try again.');
+      }
+
+      registrationCompleted = true;
+
+      await login(
+        { username: registrationFormData.email, password: registrationFormData.password },
+        false
+      );
+
+      if (uploadedLogo?.file) {
+        await UploadOrganizerProfilePhotoAPI(uploadedLogo.file);
+        await refreshProfile();
+      }
+
+      const trimmedEventName = registrationFormData.eventName?.trim();
       resetFormData();
-      
-      // Show success message
-      showError('Registration successful! Redirecting...', 'info');
-      
-      // Redirect to home page after successful registration
-      setTimeout(() => {
-        navigate('/');
-      }, 1500);
-    } else {
-      throw new Error('Invalid response received from server');
+
+      if (trimmedEventName) {
+        clearEventData();
+        saveEventData({
+          name: trimmedEventName,
+          publishStatus: 'draft',
+          eventType: 'public',
+          showHostProfile: true,
+        });
+        navigate('/events/create', { replace: true });
+      } else {
+        navigate('/', { replace: true });
+      }
+    } catch (error) {
+      console.error('Registration failed:', error);
+      if (registrationCompleted) {
+        navigate('/login', {
+          replace: true,
+          state: {
+            notice: 'Your account was created. Please sign in with your email and password.',
+          },
+        });
+        return;
+      }
+      showError(formatErrorMessage(error));
+    } finally {
+      setLoadingState('register', false);
     }
-  } catch (error) {
-    console.error('Registration failed:', error);
-    
-    // Extract and format error message
-    const errorMessage = formatErrorMessage(error);
-    
-    // Show error message
-    showError(errorMessage);
-    
-    // Set auth error state as well
-    setAuthError(errorMessage);
-  } finally {
-    setLoadingState('register', false);
-  }
-};
-  
-  /**
-   * Clear auth errors
-   */
-  const clearError = () => {
-    setAuthError(null);
   };
-  
+
   /**
    * Handle input changes for all steps
    * @param {Object} e - Event object
@@ -437,23 +336,6 @@ const verifyEmail = async () => {
       ...formData,
       [name]: inputValue,
     });
-  };
-  
-  /**
-   * Handle file upload for organization logo
-   * @param {File} file - The uploaded file
-   */
-  const handleFileUpload = (file) => {
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setUploadedLogo({
-          url: e.target.result,
-          name: file.name
-        });
-      };
-      reader.readAsDataURL(file);
-    }
   };
   
   /**
@@ -618,20 +500,6 @@ const verifyEmail = async () => {
   // Determine if register button should be disabled
   const isRegisterDisabled = isLoading?.['register'] || authLoading;
   
-  // Show error message from either local state or auth state
-  const errorMessage = error?.message || authError;
-  
-  // Render error message if exists
-  const renderErrorMessage = () => {
-    if (!errorMessage) return null;
-    
-    const className = styles.errorMessage + 
-      (error?.type === "warning" ? ` ${styles.warningMessage}` : '') +
-      (error?.type === "info" ? ` ${styles.infoMessage}` : '');
-    
-    return <div className={className}>{errorMessage}</div>;
-  };
-  
   // If still checking auth status, show loading state
   if (authLoading && !isRegisterDisabled) {
     return (
@@ -688,13 +556,12 @@ const verifyEmail = async () => {
           nextStep={nextStep}
           errors={validationErrors}
           isLoading={isRegisterDisabled}
-          handleFileUpload={handleFileUpload}
           uploadedLogo={uploadedLogo}
           setUploadedLogo={setUploadedLogo}
           socialLinks={socialLinks}
           setSocialLinks={setSocialLinks}
           onGoBack={prevStep}
-          handleSubmit={handleSubmit}
+          completeRegistration={handleSubmit}
           />
         );
       case 4:

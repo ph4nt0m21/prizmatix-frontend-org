@@ -1,45 +1,64 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import Header from '../../layout/header/header';
-import Footer from '../../layout/footer/footer';
 import SideNavBar from '../../layout/sideNavBar/sideNavbar';
 import styles from './mainLayout.module.scss';
 import ErrorBoundary from '../../components/common/errorBoundary/errorBoundary';
 
 /**
- * MainLayout component serves as the main layout wrapper for the application
- * Refactored to remove the gap between content area and footer
- * Uses ErrorBoundary to catch and handle errors in child components
+ * MainLayout component serves as the main layout wrapper for the application.
+ * It now controls only the main SideNavBar's mobile visibility.
+ * Other page-specific sidebars manage their own state.
+ *
+ * @returns {JSX.Element} The MainLayout component
  */
 const MainLayout = () => {
   const location = useLocation();
-  
-  // Determine if the current page is a full-page layout
-  // For example, login, registration, or error pages might not need the standard layout
-  const isFullPageLayout = ['/login', '/register', '/error'].includes(location.pathname);
-  
-  // Check if we're in the event creation flow
-  const isEventCreationRoute = location.pathname.includes('/events/create');
-  
+  // State to control the visibility of the main SideNavBar on mobile
+  const [isSideNavBarOpen, setIsSideNavBarOpen] = useState(false); // Renamed for clarity
+
+  // Determine if the current page is a full-page layout (e.g., login, register)
+  const isFullPageLayout = ['/login', '/register', '/error', '/forgot-password', '/reset-link-sent'].includes(location.pathname);
+
+  // This variable is still passed via context for other conditional rendering in child components
+  const isEventCreationOrManageRoute = location.pathname.includes('/events/create') || location.pathname.includes('/events/manage');
+
+  /**
+   * Toggles the main SideNavBar open/closed.
+   */
+  const toggleSideNavBar = () => { // Renamed for clarity
+    setIsSideNavBarOpen(!isSideNavBarOpen);
+  };
+
   if (isFullPageLayout) {
     return <Outlet />;
   }
-  
+
   return (
     <div className={styles.outerContainer}>
-      <SideNavBar />
+      {/* Side Navigation Bar - always rendered. Its 'open' state is now *only* tied to isSideNavBarOpen. */}
+      {/* This ensures it opens ONLY when the main header's hamburger is clicked. */}
+      <SideNavBar
+        isMobileSidebarOpen={isSideNavBarOpen} // Pass local state for SideNavBar
+        toggleMobileSidebar={toggleSideNavBar} // Pass local toggle for SideNavBar
+      />
+
+      {/* Mobile Overlay - appears when the main SideNavBar is open on small screens */}
+      {isSideNavBarOpen && (
+        <div className={`${styles.mobileOverlay} ${isSideNavBarOpen ? styles.active : ''}`} onClick={toggleSideNavBar}></div>
+      )}
+
       <div className={styles.mainContentWrapper}>
-        {/* Only show header if not in event creation flow */}
-        {!isEventCreationRoute && <Header />}
-        
-        <main className={`${styles.contentArea} ${isEventCreationRoute ? styles.fullHeight : ''}`}>
+        {/* Header - always present, passes toggle function for main SideNavBar */}
+        <Header toggleMobileSidebar={toggleSideNavBar} /> {/* Header always toggles main SideNavBar */}
+
+        <main className={`${styles.contentArea} ${isEventCreationOrManageRoute ? styles.fullHeight : ''}`}>
           <ErrorBoundary>
-            <Outlet />
+            {/* Pass global toggle and state via context. Child components will decide which sidebar to open. */}
+            <Outlet context={{ toggleGlobalSideNavBar: toggleSideNavBar, isGlobalSideNavBarOpen: isSideNavBarOpen, isEventCreationOrManageRoute }} />
           </ErrorBoundary>
         </main>
-        
-        {/* Only show footer if not in event creation flow */}
-        {/* {!isEventCreationRoute && <Footer />} */}
+
       </div>
     </div>
   );

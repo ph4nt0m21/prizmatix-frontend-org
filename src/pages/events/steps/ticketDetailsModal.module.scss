@@ -1,28 +1,60 @@
-// src/pages/events/steps/components/ticketDetailsModal.module.scss
 @import '../../../styles/variables';
 @import '../../../styles/mixins';
 
 .modalOverlay {
   position: fixed;
-  top: 0;
-  left: 0;
+  inset: 0;
   width: 100%;
   height: 100%;
+  height: 100dvh;
   background-color: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
+  padding: 16px;
+  box-sizing: border-box;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+
+  @media (max-width: 768px) {
+    align-items: flex-start;
+    padding: 12px;
+  }
 }
 
 .modalContainer {
   width: 900px;
   height: 650px;
+  max-height: min(90vh, 90dvh);
   background-color: white;
   border-radius: 16px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
   display: flex;
   overflow: hidden;
+  min-height: 0;
+  box-sizing: border-box;
+
+  @media (max-width: 992px) {
+    width: 90%;
+    max-width: 700px;
+    height: 80vh;
+    height: 80dvh;
+  }
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    width: 100%;
+    height: auto;
+    max-height: calc(100dvh - 24px);
+    border-radius: 8px;
+  }
+
+  @media (max-width: 480px) {
+    max-height: calc(100dvh - 16px);
+  }
 }
 
 // Side panel styles
@@ -32,6 +64,15 @@
   padding: 24px 20px;
   display: flex;
   flex-direction: column;
+  flex-shrink: 0;
+
+  @media (max-width: 768px) {
+    width: 100%;
+    height: auto;
+    flex-shrink: 0;
+    padding: 16px;
+    border-bottom: 1px solid #e5e7eb;
+  }
 }
 
 .ticketIcon {
@@ -43,6 +84,12 @@
   align-items: center;
   justify-content: center;
   margin-bottom: 16px;
+
+  @media (max-width: 768px) {
+    width: 32px; // Smaller icon for mobile
+    height: 32px;
+    margin-bottom: 8px; // Adjust margin
+  }
 }
 
 .sidePanelTitle {
@@ -50,18 +97,35 @@
   font-weight: 600;
   color: #1f1f1f;
   margin: 0 0 4px 0;
+
+  @media (max-width: 768px) {
+    font-size: 16px; // Adjust font size for mobile
+  }
 }
 
 .sidePanelSubtitle {
   font-size: 14px;
   color: #666;
   margin: 0 0 32px 0;
+
+  @media (max-width: 768px) {
+    font-size: 12px; // Adjust font size for mobile
+    margin-bottom: 16px; // Adjust margin
+  }
 }
 
 .navigationMenu {
   display: flex;
   flex-direction: column;
   gap: 8px;
+
+  @media (max-width: 768px) {
+    flex-direction: row; // Arrange navigation items horizontally
+    overflow-x: auto; // Allow horizontal scrolling for menu items
+    -webkit-overflow-scrolling: touch; // Improve scrolling experience on iOS
+    padding-bottom: 8px; // Space for scrollbar
+    gap: 4px; // Smaller gap between items
+  }
 }
 
 .navItem {
@@ -78,6 +142,7 @@
   text-align: left;
   cursor: pointer;
   transition: all 0.2s ease;
+  flex-shrink: 0; // Prevent items from shrinking in horizontal layout
   
   svg {
     width: 20px;
@@ -102,6 +167,17 @@
       color: #7c3aed;
     }
   }
+
+  @media (max-width: 768px) {
+    padding: 8px 12px; // Adjust padding for mobile
+    font-size: 14px; // Adjust font size for mobile
+    gap: 8px; // Adjust gap between icon and text
+    
+    svg {
+      width: 18px; // Smaller icons for mobile
+      height: 18px;
+    }
+  }
 }
 
 // Content panel styles
@@ -109,6 +185,9 @@
   flex: 1;
   display: flex;
   flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .modalHeader {
@@ -117,6 +196,11 @@
   align-items: center;
   padding: 16px 24px;
   border-bottom: 1px solid #e5e7eb;
+  flex-shrink: 0;
+
+  @media (max-width: 768px) {
+    padding: 12px 16px;
+  }
 }
 
 .modalTitle {
@@ -124,6 +208,34 @@
   font-weight: 600;
   color: #333;
   margin: 0;
+
+  @media (max-width: 768px) {
+    font-size: 16px; // Adjust font size for mobile
+  }
+}
+
+.cancelButton {
+  height: 48px;
+  padding: 0 24px;
+  border: 1px solid #e5e7eb; // Standard border
+  background-color: white;   // No background shade
+  color: #4b5563;           // Standard text color
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background-color: #f9fafb; // Subtle hover effect
+    border-color: #d1d5db;
+  }
+
+  @media (max-width: 768px) {
+    height: 40px; // Smaller height for mobile
+    padding: 0 16px; // Adjust padding
+    font-size: 14px; // Adjust font size
+  }
 }
 
 .closeButton {
@@ -140,16 +252,37 @@
   &:hover {
     background-color: #f3f4f6;
   }
+
+  @media (max-width: 768px) {
+    width: 28px; // Smaller button for mobile
+    height: 28px;
+    svg {
+      width: 16px; // Smaller icon for mobile
+      height: 16px;
+    }
+  }
 }
 
 .modalContent {
   flex: 1;
+  min-height: 0;
   padding: 24px;
+  overflow-x: hidden;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+
+  @media (max-width: 768px) {
+    padding: 16px;
+  }
 }
 
 .formGroup {
   margin-bottom: 24px;
+
+  @media (max-width: 768px) {
+    margin-bottom: 16px; // Adjust margin for mobile
+  }
 }
 
 .formLabel {
@@ -158,6 +291,11 @@
   font-weight: 500;
   color: #333;
   margin-bottom: 8px;
+
+  @media (max-width: 768px) {
+    font-size: 13px; // Adjust font size for mobile
+    margin-bottom: 6px; // Adjust margin
+  }
 }
 
 .formHelper {
@@ -168,6 +306,11 @@
   &.salesAfter {
     margin-top: 0;
     margin-bottom: 12px;
+  }
+
+  @media (max-width: 768px) {
+    font-size: 11px; // Adjust font size for mobile
+    margin-bottom: 6px; // Adjust margin
   }
 }
 
@@ -198,6 +341,12 @@
       box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.1);
     }
   }
+
+  @media (max-width: 768px) {
+    height: 40px; // Smaller height for mobile
+    font-size: 13px; // Adjust font size
+    padding: 0 14px; // Adjust padding
+  }
 }
 
 .formSelect {
@@ -221,6 +370,13 @@
     border-color: #7c3aed;
     box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.1);
   }
+
+  @media (max-width: 768px) {
+    height: 40px; // Smaller height for mobile
+    font-size: 13px; // Adjust font size
+    padding: 0 14px; // Adjust padding
+    background-position: right 12px center; // Adjust arrow position
+  }
 }
 
 .fieldError {
@@ -235,7 +391,16 @@
   
   .formGroup {
     flex: 1;
-    margin-bottom: 16px;
+    margin-bottom: 16px; // Keep margin bottom for groups within a row
+  }
+
+  @media (max-width: 640px) {
+    flex-direction: column; // Stack columns on smaller screens
+    gap: 12px; // Adjust gap
+    
+    .formGroup {
+      margin-bottom: 0; // Remove margin between stacked groups in a row
+    }
   }
 }
 
@@ -254,6 +419,17 @@
     font-size: 14px;
     color: #333;
   }
+
+  @media (max-width: 768px) {
+    .checkboxInput {
+      width: 16px; // Smaller checkbox for mobile
+      height: 16px;
+      margin-right: 8px; // Adjust margin
+    }
+    .checkboxLabel {
+      font-size: 13px; // Adjust font size for mobile
+    }
+  }
 }
 
 .richTextEditor {
@@ -267,6 +443,13 @@
     padding: 8px;
     border-bottom: 1px solid #e5e7eb;
     background-color: #f9fafb;
+    flex-wrap: wrap; // Allow toolbar items to wrap
+
+    @media (max-width: 768px) {
+      padding: 6px; // Adjust padding for mobile
+      gap: 4px; // Add small gap between buttons
+      min-height: 36px; // Ensure a min-height if items wrap
+    }
   }
   
   .editorButton {
@@ -290,6 +473,15 @@
       background-color: #ede9fe;
       color: #7c3aed;
     }
+
+    @media (max-width: 768px) {
+      width: 28px; // Smaller buttons for mobile
+      height: 28px;
+      svg {
+        width: 16px; // Smaller icons
+        height: 16px;
+      }
+    }
   }
   
   .editorContent {
@@ -308,6 +500,12 @@
     &::placeholder {
       color: #9ca3af;
     }
+
+    @media (max-width: 768px) {
+      min-height: 90px; // Shorter min-height for mobile
+      padding: 10px 14px; // Adjust padding
+      font-size: 13px; // Adjust font size
+    }
   }
 }
 
@@ -317,7 +515,13 @@
   border-radius: 8px;
   padding: 4px;
   margin-bottom: 16px;
-  width: fit-content;
+  width: fit-content; // Ensures it only takes the width of its content
+
+  @media (max-width: 768px) {
+    width: 100%; // Make it full width on mobile
+    justify-content: space-around; // Distribute buttons evenly
+    padding: 3px; // Adjust padding
+  }
 }
 
 .saleTypeBtn {
@@ -339,6 +543,13 @@
     color: #111827;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   }
+
+  @media (max-width: 768px) {
+    flex: 1; // Take equal space when width is 100%
+    text-align: center; // Center text
+    padding: 7px 10px; // Adjust padding
+    font-size: 13px; // Adjust font size
+  }
 }
 
 .modalFooter {
@@ -347,6 +558,13 @@
   justify-content: flex-end;
   gap: 12px;
   border-top: 1px solid #e5e7eb;
+  flex-shrink: 0; // Prevent footer from shrinking
+
+  @media (max-width: 768px) {
+    flex-direction: column-reverse; // Stack buttons, primary on top
+    gap: 10px; // Adjust gap
+    padding: 12px 16px; // Adjust padding
+  }
 }
 
 .createButton {
@@ -374,9 +592,88 @@
     background-color: #c4b5fd;
     cursor: not-allowed;
   }
+
+  @media (max-width: 768px) {
+    height: 40px; // Smaller height for mobile
+    width: 100%; // Full width on mobile
+    padding: 0 16px; // Adjust padding
+    font-size: 14px; // Adjust font size
+  }
 }
 
-.backButton {
+.suggestedAmountRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+
+  .inputWithPrefix {
+    flex: 1;
+    min-width: 0;
+  }
+
+  @media (max-width: 480px) {
+    flex-direction: column;
+    align-items: stretch;
+
+    .suggestedAddButton {
+      width: 100%;
+    }
+  }
+}
+
+.suggestedAmountChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.suggestedAmountChip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  padding: 6px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
+  color: #374151;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+
+  &:hover {
+    border-color: #c4b5fd;
+    background: #f5f3ff;
+    color: #5b21b6;
+  }
+}
+
+.suggestedAddButton {
+  height: 40px;
+  padding: 0 16px;
+  border: none;
+  background-color: #7c3aed;
+  color: white;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+
+  &:hover {
+    background-color: #6d28d9;
+  }
+
+  &:disabled {
+    background-color: #c4b5fd;
+    cursor: not-allowed;
+  }
+}
+
+.backButton { // Assuming this is also a "Cancel" or "Go Back" button
   height: 48px;
   padding: 0 24px;
   border: 1px solid #e5e7eb;
@@ -397,6 +694,13 @@
     outline: none;
     box-shadow: 0 0 0 3px rgba(209, 213, 219, 0.5);
   }
+
+  @media (max-width: 768px) {
+    height: 40px; // Smaller height for mobile
+    width: 100%; // Full width on mobile
+    padding: 0 16px; // Adjust padding
+    font-size: 14px; // Adjust font size
+  }
 }
 
 // Input prefix (for currency input)
@@ -410,10 +714,18 @@
     transform: translateY(-50%);
     color: #6b7280;
     font-size: 14px;
+
+    @media (max-width: 768px) {
+      font-size: 13px; // Adjust font size for mobile
+      left: 14px; // Adjust position for mobile
+    }
   }
   
   .formInput {
-    padding-left: 28px;
+    padding-left: 28px; // Make space for the prefix
+    @media (max-width: 768px) {
+      padding-left: 26px; // Adjust padding for mobile
+    }
   }
 }
 
@@ -435,55 +747,79 @@
     display: flex;
     align-items: center;
     height: 48px;
+
+    @media (max-width: 768px) {
+      padding: 10px 14px; // Adjust padding
+      font-size: 13px; // Adjust font size
+      height: 40px; // Smaller height
+    }
   }
 }
 
-// Media queries for responsive design
-@media (max-width: 992px) {
-  .modalContainer {
-    width: 90%;
-    max-width: 700px;
-    height: 80vh;
+.toggleSwitch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+
+  input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+
+    &:checked + .slider {
+      background-color: #7C3AED;
+    }
+
+    &:checked + .slider:before {
+      transform: translateX(20px);
+    }
+  }
+
+  .slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: 0.4s;
+    border-radius: 24px;
+
+    &:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: 0.4s;
+      border-radius: 50%;
+    }
   }
 }
 
+// Additional general media queries (ensure they are necessary or remove if covered)
 @media (max-width: 768px) {
-  .modalContainer {
-    flex-direction: column;
-    height: 90vh;
-  }
-  
-  .sidePanel {
-    width: 100%;
-    padding: 16px;
-  }
-  
-  .navigationMenu {
-    flex-direction: row;
-    overflow-x: auto;
-    padding-bottom: 8px;
-  }
-  
-  .navItem {
-    flex-shrink: 0;
-  }
-}
-
-@media (max-width: 576px) {
-  .formRow {
+  // These are general styles that were likely copied from previous files.
+  // Review if they are still needed or if they conflict with more specific rules above.
+  .buttonGroup { // If used, handles stacking buttons
     flex-direction: column;
     gap: 8px;
+
+    button {
+      width: 100%;
+    }
   }
-  
-  .modalHeader {
-    padding: 12px 16px;
+  .stepHeading { // If these classes exist in JSX, adjust font sizes
+    font-size: 16px;
   }
-  
-  .modalContent {
-    padding: 16px;
+  .stepSubheading { // If these classes exist in JSX, adjust font sizes
+    font-size: 14px;
   }
-  
-  .modalFooter {
-    padding: 12px 16px;
+  .tableWrapper { // If a table is rendered and needs wrapping
+    overflow-x: auto;
   }
 }

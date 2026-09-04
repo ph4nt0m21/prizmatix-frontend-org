@@ -1,0 +1,348 @@
+/* ================================
+   TABLE CONTAINER
+================================ */
+.tableContainer {
+  width: 100%;
+  overflow-x: visible;
+  background: #ffffff;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ================================
+   TABLE
+================================ */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  font-size: 14px;
+  table-layout: fixed; /* required for colgroup to work */
+  min-width: 800px;
+}
+
+.colOrderId { width: 110px; }
+.colName { width: 160px; }
+.colEmail { width: 260px; }
+.colDate { width: 180px; }
+.colTicket { width: 140px; }
+.colReissue { width: 160px; }
+.colIcon { width: 60px; }
+
+/* ================================
+   HEADERS
+================================ */
+.table th {
+  padding: 16px 20px;
+  background: #F9FAFB;
+  border-bottom: 1px solid #E5E7EB;
+  color: #4B5563;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  white-space: nowrap;
+  text-align: left;
+}
+
+/* ================================
+   CELLS
+================================ */
+.table td {
+  padding: 16px 20px;
+  border-bottom: 1px solid #E5E7EB;
+  vertical-align: middle;
+  white-space: nowrap;
+  overflow: hidden;      /* ensures ellipsis works */
+  text-overflow: ellipsis;
+  color: #1F2937;
+  font-weight: 500;
+}
+
+/* Specific columns */
+.orderIdCell {
+  font-weight: 700;
+  color: #111827;
+}
+
+.nameCell {
+  font-weight: 600;
+  color: #111827;
+}
+
+.emailCell {
+  color: #374151;
+  white-space: nowrap;
+}
+
+.dateCell {
+  color: #374151;
+}
+
+/* ================================
+   CHECKBOX
+================================ */
+.rowCheckbox {
+  transform: scale(1.1);
+  cursor: pointer;
+}
+
+/* ================================
+   TICKET TYPE
+================================ */
+.ticketType {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 14px;
+  border-radius: 4px;
+  border: 1px solid #16A34A;
+  background: #FFF;
+  color: #16A34A;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+  font-style: italic;
+  text-transform: uppercase;
+  white-space: nowrap;
+  letter-spacing: 0.01em;
+}
+
+/* ================================
+   REISSUE BUTTON
+================================ */
+.reissueButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 16px;
+  border-radius: 4px;
+  border: 1px solid #2563EB;
+  background: #FFF;
+  color: #005DA5;
+  font-size: 13px;
+  font-style: italic;
+  font-weight: 500;
+  line-height: 1;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+
+  svg {
+    font-size: 14px;
+  }
+
+  &:hover:not(:disabled) {
+    background: #DBEAFE;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: default;
+  }
+}
+
+/* ================================
+   DOWNLOAD ICON
+================================ */
+.iconButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  color: #6B7280;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover {
+    background: #E5E7EB;
+    color: #111827;
+  }
+}
+
+.actionCell {
+  text-align: center;
+}
+
+/* ================================
+   PAGINATION
+================================ */
+.pagination {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  flex-wrap: wrap;
+  padding: 16px 24px;
+  color: #6B7280;
+  gap: 24px;
+  background: #ffffff;
+  border-top: 1px solid #E5E7EB;
+
+  .rowsPerPage {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    select {
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      padding: 4px 8px;
+      background: #fff;
+      font-size: 14px;
+    }
+  }
+
+  button {
+    background: none;
+    border: none;
+    cursor: pointer;
+
+    &:hover {
+      color: #111827;
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+}
+
+.noResults {
+  text-align: center;
+  padding: 40px;
+  color: #6B7280;
+}
+
+.mobileOnly {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .tableContainer {
+    background: transparent;
+  }
+
+  .colOrderId,
+  .colName,
+  .colEmail,
+  .colDate,
+  .colTicket,
+  .colReissue,
+  .colIcon {
+    width: auto;
+  }
+
+  .table {
+    min-width: 100%;
+    table-layout: auto;
+    border-collapse: separate;
+    border-spacing: 0 12px;
+  }
+
+  .table thead {
+    display: none;
+  }
+
+  .table tbody tr {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+      "orderid ticket"
+      "name name"
+      "email email"
+      "date date"
+      "reissue download";
+    column-gap: 10px;
+    row-gap: 4px;
+    padding: 16px 18px;
+    border: 1px solid #EEF0F4;
+    border-radius: 18px;
+    background: #fff;
+    box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 1px 8px rgba(16, 24, 40, 0.06);
+  }
+
+  .table td {
+    display: block;
+    padding: 0;
+    border: none;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+  }
+
+  .table td::before {
+    content: none;
+  }
+
+  .table td:nth-child(1) {
+    grid-area: orderid;
+    align-self: center;
+    font-size: 16px;
+    font-weight: 700;
+    color: #111827;
+  }
+
+  .table td:nth-child(2) {
+    grid-area: name;
+    margin-top: 6px;
+  }
+
+  .table td:nth-child(3) {
+    grid-area: email;
+    font-size: 13px;
+    color: #6B7280;
+  }
+
+  .table td:nth-child(4) {
+    grid-area: date;
+    font-size: 12px;
+    color: #9CA3AF;
+    margin-bottom: 4px;
+  }
+
+  .table td:nth-child(5) {
+    grid-area: ticket;
+    justify-self: end;
+    align-self: center;
+  }
+
+  .table td:nth-child(6),
+  .table td:nth-child(7) {
+    display: flex;
+    padding-top: 12px;
+    margin-top: 8px;
+    border-top: 1px solid #F3F4F6;
+  }
+
+  .table td:nth-child(6) {
+    grid-area: reissue;
+  }
+
+  .table td:nth-child(7) {
+    grid-area: download;
+  }
+
+  .mobileOnly {
+    display: inline;
+  }
+
+  .reissueButton {
+    width: 100%;
+    justify-content: center;
+    border-radius: 10px;
+    padding: 10px 14px;
+  }
+
+  .iconButton {
+    width: 100%;
+    justify-content: center;
+    border-radius: 10px;
+    border: 1px solid #E5E7EB;
+    padding: 10px 14px;
+    gap: 6px;
+    font-size: 14px;
+  }
+}

@@ -1,32 +1,41 @@
-// discountCodesStep.module.scss
-// Import core variables and mixins from your main styles
 @import '../../../styles/variables';
 @import '../../../styles/mixins';
+@import './inlineTableShared';
 
 // Core step container styles
 .stepContainer {
   width: 100%;
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 20px;
-  background-color: white;
-  border-radius: 6px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
 }
 
 .stepHeader {
   display: flex;
-  align-items: center;
-  margin-bottom: 24px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid #f0f0f0;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 24px 80px;
+  border-bottom: 1px solid #EAECF0;
+
+  @media (max-width: 768px) {
+    gap: 16px;
+    padding: 24px;
+  }
 }
 
-.stepIcon {
-  margin-right: 12px;
+.stepTextContainer {
   display: flex;
-  align-items: center;
-  justify-content: center;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-start;
+  flex: 1;
+}
+
+.stepDescription {
+  font-size: 14px;
+  color: #666;
+  margin: 0;
 }
 
 .stepTitle {
@@ -36,70 +45,85 @@
   margin: 0;
 }
 
-.stepDescription {
+.stepIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.emptyStateTitle {
+  font-size: 18px;
+  font-weight: 600;
+  color: #374151;
+  margin: 0 0 4px 0;
+}
+
+.emptyStateDescription {
   font-size: 14px;
-  color: #666;
-  margin-top: 0;
+  color: #6b7280;
+  margin: 0 0 24px 0;
+}
+
+.emptyStateActions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  max-width: 280px;
+}
+
+.skipButton {
+  background: none;
+  border: none;
+  color: #7c3aed;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 8px;
+
+  &:hover:not(:disabled) {
+    text-decoration: underline;
+  }
+
+  &:disabled {
+    color: #a78bfa;
+    cursor: not-allowed;
+  }
+}
+
+.createCouponButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 44px;
+  padding: 0 24px;
+  background-color: #ffffff;
+  color: #4f46e5;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+
+  svg {
+    margin-right: 8px;
+    color: #818cf8;
+  }
+
+  &:hover {
+    border-color: #d1d5db;
+    background-color: #f9fafb;
+  }
 }
 
 .formSection {
-  padding: 0;
-}
+  padding: 32px 80px;
 
-.formGroup {
-  margin-bottom: 24px;
-  width: 100%;
-}
-
-.formLabel {
-  display: block;
-  font-size: 14px;
-  font-weight: 600;
-  color: #333;
-  margin-bottom: 4px;
-}
-
-.formDescription {
-  font-size: 13px;
-  color: #666;
-  margin-top: 0;
-  margin-bottom: 12px;
-}
-
-.formInput {
-  width: 100%;
-  height: 44px;
-  padding: 0 16px;
-  background-color: #fff;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  color: #333;
-  font-size: 14px;
-  transition: all 0.2s ease;
-  
-  &:focus {
-    outline: none;
-    border-color: #7C3AED;
-    box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.2);
-  }
-  
-  &::placeholder {
-    color: #999;
-  }
-}
-
-.fieldError {
-  margin-top: 5px;
-  font-size: 12px;
-  color: #e53e3e;
-}
-
-// Error styling for inputs
-.inputError {
-  border-color: #e53e3e;
-  
-  &:focus {
-    box-shadow: 0 0 0 2px rgba(229, 62, 62, 0.2);
+  @media (max-width: 768px) {
+    padding: 24px;
   }
 }
 
@@ -117,108 +141,200 @@
   text-align: center;
 }
 
-.addDiscountCodeButton {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 40px;
-  padding: 0 16px;
-  background-color: #7C3AED;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  
-  svg {
-    margin-right: 8px;
-  }
-  
-  &:hover {
-    background-color: #6d28d9;
-  }
-}
-
 .discountCodesContainer {
   border: 1px solid #e5e7eb;
   border-radius: 8px;
-  overflow: hidden;
+  @include inline-table-container;
+  @include inline-table-action-menu;
+  @include inline-table-dropdown;
+}
+
+// Shared grid: header + rows share tracks so labels align with fields
+$discount-grid-columns:
+  minmax(100px, 1.75fr)
+  minmax(108px, 1.15fr)
+  minmax(72px, 0.95fr)
+  minmax(72px, 0.95fr)
+  minmax(148px, 1.7fr)
+  92px
+  52px;
+
+.tableContent {
+  .discountCodeTableHeader,
+  .discountCodeItem {
+    display: grid;
+    align-items: center;
+    grid-template-columns: $discount-grid-columns;
+    @include inline-table-row-spacing;
+  }
+
+  .discountCodeItem {
+    @include inline-table-row-cell;
+  }
 }
 
 .discountCodeTableHeader {
-  display: flex;
-  align-items: center;
   background-color: #f3f4f6;
-  padding: 12px 16px;
   font-size: 12px;
   font-weight: 600;
   color: #4b5563;
+  text-transform: uppercase;
+  border-radius: 8px 8px 0 0;
   border-bottom: 1px solid #e5e7eb;
+
+  .discountStatus,
+  .discountActions {
+    text-align: center;
+    justify-self: center;
+  }
 }
 
 .discountCodeItem {
-  display: flex;
-  align-items: center;
-  padding: 12px 16px;
   border-bottom: 1px solid #e5e7eb;
   transition: background-color 0.2s ease;
-  
+
   &:hover {
     background-color: #f9fafb;
   }
-  
+
   &:last-child {
     border-bottom: none;
   }
-}
 
-.discountCode {
-  flex: 2;
-  font-weight: 500;
-  color: #333;
-  cursor: pointer;
-  
-  &:hover {
-    color: #7C3AED;
+  .discountStatus {
+    display: flex;
+    justify-content: center;
+    justify-self: center;
   }
 }
 
-.discountPercentage {
-  flex: 1;
-  text-align: center;
-  color: #4b5563;
-}
-
-.maxDiscountAmount {
-  flex: 1;
-  text-align: center;
-  color: #4b5563;
-}
-
-.minDiscountAmount {
-  flex: 1;
-  text-align: center;
-  color: #4b5563;
-}
-
-.discountQuantity {
-  flex: 1;
-  text-align: center;
-  color: #4b5563;
+.discountCode,
+.discountType,
+.discountValue,
+.discountUsageLimit,
+.ticketsApplicable {
+  min-width: 0;
+  overflow: hidden;
 }
 
 .discountActions {
-  width: 40px;
   display: flex;
   justify-content: center;
   align-items: center;
+  justify-self: center;
+  min-width: 0;
+}
+
+.inlineInput {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background-color: #ffffff;
+  box-shadow: inset 0 1px 2px rgba(17, 24, 39, 0.04);
+  font-size: 14px;
+  color: #111827;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  -webkit-appearance: textfield;
+  appearance: textfield;
+
+  &::placeholder {
+    color: #9ca3af;
+  }
+
+  &::-webkit-outer-spin-button,
+  &::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  &:hover {
+    border-color: #d1d5db;
+  }
+
+  &:focus {
+    outline: none;
+    border-color: #7c3aed;
+    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15);
+    background-color: #ffffff;
+  }
+}
+
+.inlineSelect {
+  width: 100%;
+  max-width: 100%;
+  padding: 8px 28px 8px 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background-color: #ffffff;
+  box-shadow: inset 0 1px 2px rgba(17, 24, 39, 0.04);
+  font-size: 14px;
+  color: #111827;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  -webkit-appearance: menulist;
+  appearance: menulist;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+
+  &:hover {
+    border-color: #d1d5db;
+  }
+
+  &:focus {
+    outline: none;
+    border-color: #7c3aed;
+    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15);
+    background-color: #ffffff;
+  }
+}
+
+.actionMenuContainer {
+  position: relative;
+}
+
+.actionMenu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background-color: white;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 30;
+  min-width: 120px;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 4px;
+
+  button {
+    background: none;
+    border: none;
+    padding: 10px 12px;
+    min-height: 36px;
+    text-align: left;
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: 14px;
+    color: #333;
+    &:hover { background-color: #f3f4f6; }
+  }
+}
+
+.deleteAction {
+  color: #ef4444;
+  &:hover {
+    color: #ef4444 !important;
+    background-color: #fee2e2 !important;
+  }
 }
 
 .discountActionButton {
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -258,177 +374,274 @@
   cursor: pointer;
   transition: all 0.2s ease;
   
-  svg {
-    margin-right: 8px;
-  }
+  svg { margin-right: 8px; }
   
-  &:hover {
-    background-color: rgba(124, 58, 237, 0.05);
-  }
+  &:hover { background-color: rgba(124, 58, 237, 0.05); }
 }
 
-// Form row
-.formRow {
-  display: flex;
-  gap: 16px;
-  
-  @media (max-width: 640px) {
-    flex-direction: column;
-    gap: 20px;
-  }
-  
-  .formGroup {
-    flex: 1;
-  }
-}
-
-// Modal styles
-.modalOverlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 50;
-}
-
-.modalContent {
+.customDropdown {
+  position: relative;
   width: 100%;
-  max-width: 500px;
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
-  padding: 24px;
-  max-height: 90vh;
-  overflow-y: auto;
+  min-width: 0;
+  overflow: hidden;
 }
 
-.modalHeader {
+.dropdownButton {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
-}
-
-.modalTitle {
-  font-size: 18px;
-  font-weight: 600;
-  color: #333;
-  margin: 0;
-}
-
-.modalCloseButton {
-  background: none;
-  border: none;
-  font-size: 24px;
-  line-height: 1;
-  color: #6b7280;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  min-height: 40px;
+  padding: 0 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background-color: #ffffff;
+  box-shadow: inset 0 1px 2px rgba(17, 24, 39, 0.04);
+  font-size: 14px;
+  text-align: left;
+  color: #111827;
   cursor: pointer;
-  padding: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 4px;
-  
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  overflow: hidden;
+
   &:hover {
-    background-color: #f3f4f6;
-    color: #333;
+    border-color: #d1d5db;
+  }
+
+  &:focus {
+    outline: none;
+    border-color: #7c3aed;
+    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15);
+  }
+
+  span {
+    flex: 1;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  svg {
+    flex-shrink: 0;
+    margin-left: 8px;
   }
 }
 
-// Modal action buttons
-.modalActions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  margin-top: 32px;
-  padding-top: 16px;
-  border-top: 1px solid #e5e7eb;
-}
-
-.cancelButton {
-  height: 40px;
-  padding: 0 16px;
+.dropdownMenu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 20;
+  width: 100%;
+  max-height: 280px;
+  overflow-y: auto;
+  margin-top: 6px;
+  padding: 10px;
   background-color: white;
   border: 1px solid #d1d5db;
-  color: #4b5563;
   border-radius: 6px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  
-  &:hover {
-    background-color: #f9fafb;
-    border-color: #9ca3af;
-  }
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-.saveButton {
-  height: 40px;
-  padding: 0 16px;
-  background-color: #7C3AED;
-  border: none;
-  color: white;
-  border-radius: 6px;
+.checkboxLabel {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   font-size: 14px;
-  font-weight: 500;
+  color: #333;
   cursor: pointer;
-  transition: all 0.2s ease;
-  
-  &:hover {
-    background-color: #6d28d9;
-  }
-  
-  &:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
+  padding: 8px;
+  border-radius: 4px;
+
+  &:hover { background-color: #f3f4f6; }
 }
 
-// Media queries for responsive design
-@media (max-width: 768px) {
-  .stepContainer {
-    padding: 16px;
-  }
-  
-  .discountCodeTableHeader {
-    display: none;
-  }
-  
-  .discountCodeItem {
-    flex-wrap: wrap;
-    padding: 16px;
-  }
-  
-  .discountCode {
-    flex: 0 0 100%;
-    margin-bottom: 8px;
-  }
-  
-  .discountPercentage, 
-  .maxDiscountAmount, 
-  .minDiscountAmount, 
-  .discountQuantity {
-    flex: 1;
-    text-align: left;
-    font-size: 12px;
-    
-    &::before {
-      content: attr(data-label);
-      font-weight: 600;
-      margin-right: 4px;
+.checkboxInput {
+  accent-color: #7c3aed;
+  width: 16px;
+  height: 16px;
+}
+
+.discountStatus {
+  text-align: center;
+}
+
+.statusControl {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.expiredLabel {
+  font-size: 11px;
+  font-weight: 500;
+  color: #991b1b;
+  background-color: #fef2f2;
+  padding: 2px 8px;
+  border-radius: 10px;
+  white-space: nowrap;
+  line-height: 1.4;
+}
+
+/* Toggle switch */
+.toggleSwitch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+
+  input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+
+    &:checked + .slider {
+      background-color: #7C3AED;
+    }
+
+    &:checked + .slider:before {
+      transform: translateX(20px);
+    }
+
+    &:disabled + .slider {
+      background-color: #e5e7eb;
+      cursor: not-allowed;
     }
   }
-  
-  .discountActions {
-    flex: 0 0 100%;
-    margin-left: 0;
-    margin-top: 12px;
-    justify-content: flex-end;
+
+  .slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+    border-radius: 24px;
+
+    &:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .stepContainer {
+    padding: 0;
+  }
+
+  .discountCodesContainer {
+    border: none;
+    border-radius: 0;
+    background: transparent;
+  }
+
+  .tableWrapper {
+    overflow-x: visible;
+  }
+
+  .tableContent {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-width: 0;
+
+    .discountCodeTableHeader {
+      display: none;
+    }
+
+    .discountCodeItem {
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      grid-template-columns: unset;
+      column-gap: 0;
+      gap: 0;
+      margin: 0;
+      padding: 12px;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      background: #fff;
+      min-height: unset;
+
+      &:last-child {
+        border-bottom: 1px solid #e5e7eb;
+      }
+
+      &:hover {
+        background-color: #fff;
+      }
+
+      > [data-label] {
+        @include inline-table-labelled-row;
+      }
+    }
+  }
+
+  .addDiscountCodeRow {
+    margin-top: 16px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+  }
+
+  .discountCodeItem {
+    .discountCode,
+    .discountType,
+    .discountValue,
+    .discountUsageLimit,
+    .ticketsApplicable,
+    .discountStatus,
+    .discountActions {
+      justify-self: unset;
+    }
+
+    .inlineInput,
+    .inlineSelect,
+    .dropdownButton {
+      text-align: left;
+    }
+
+    .discountStatus {
+      justify-content: space-between;
+
+      .statusControl {
+        flex: 0 0 auto;
+        align-items: flex-end;
+      }
+
+      .toggleSwitch {
+        flex: 0 0 auto;
+      }
+    }
+
+    .discountActions {
+      .actionMenuContainer {
+        flex: 0 0 auto;
+        justify-content: flex-end;
+      }
+    }
+
+    .ticketsApplicable {
+      align-items: flex-start;
+      overflow: visible;
+
+      .customDropdown {
+        width: 100%;
+        overflow: hidden;
+      }
+    }
   }
 }

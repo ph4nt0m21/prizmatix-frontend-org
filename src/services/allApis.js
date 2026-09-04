@@ -27,14 +27,44 @@ export const LoginAPI = async (data) => {
   return await apiClient.post("/login", data);
 };
 
-// API for forgot password
-export const ForgotPasswordAPI = async (data) => {
-  return await apiClient.post("/forgot-password", data);
+// Forgot password (public — no auth header required by backend)
+export const ForgotPasswordInitiateAPI = async (data) => {
+  return await apiClient.post("/api/auth/forgot-password/initiate", data);
 };
 
-// API for reset password
-export const ResetPasswordAPI = async (data) => {
-  return await apiClient.post("/reset-password", data);
+export const ForgotPasswordVerifyOtpAPI = async (data) => {
+  return await apiClient.post("/api/auth/forgot-password/verify-otp", data);
+};
+
+export const ForgotPasswordResetAPI = async (data) => {
+  return await apiClient.post("/api/auth/forgot-password/reset", data);
+};
+
+export const ForgotPasswordResendOtpAPI = async (data) => {
+  return await apiClient.post("/api/auth/forgot-password/resend-otp", data);
+};
+
+// Change password (authenticated admin)
+export const ChangePasswordAPI = async (data) => {
+  return await apiClient.post("/admin/change-password", data);
+};
+
+export const GetOrganizerProfileAPI = async () => {
+  return await apiClient.get("/admin/profile");
+};
+
+export const UpdateBasicDetailsAPI = async (data) => {
+  return await apiClient.put("/admin/profile/basic-details", data);
+};
+
+export const UpdateOrganizationProfileAPI = async (data) => {
+  return await apiClient.put("/admin/profile/organization", data);
+};
+
+export const UploadOrganizerProfilePhotoAPI = async (photoFile) => {
+  const formData = new FormData();
+  formData.append("photoFile", photoFile);
+  return await apiClient.put("/admin/profile/photo", formData);
 };
 
 // Profile API
@@ -64,16 +94,32 @@ export const GetAllEventsAPI = async (params) => {
   return await apiClient.get(`/api/events/`, { params });
 };
 
+// Get organization overview (org-level metrics + sales time-series)
+// Params (all optional): from (ISO date), to (ISO date), granularity (DAILY | WEEKLY | MONTHLY | YEARLY)
+export const GetOrganizationOverviewAPI = async (params = {}) => {
+  return await apiClient.get('/api/events/overview', { params });
+};
+
 // Get all events with pagination
 export const GetAllOrganizationEventsAPI = async (organizationId) => {
   return await apiClient.get(`/api/events/organization/${organizationId}`);
 };
 
-// Delete an event
+// Delete an event (moves to Deleted box for 30 days)
 export const DeleteEventAPI = async (eventId, userId) => {
   return await apiClient.delete(`/api/events/${eventId}`, {
     params: { userId }
   });
+};
+
+// Restore an event from the Deleted box
+export const RestoreEventAPI = async (eventId) => {
+  return await apiClient.post(`/api/events/${eventId}/restore`);
+};
+
+// Duplicate an event as a new draft
+export const DuplicateEventAPI = async (eventId) => {
+  return await apiClient.post(`/api/events/${eventId}/duplicate`);
 };
 
 // Update event status
@@ -99,8 +145,8 @@ export const UpdateEventDescriptionAPI = async (eventId, descriptionData) => {
 };
 
 // Step 5: Upload event banner image
-export const UploadEventBannerAPI = async (eventId, bannerData) => {
-  return await apiClient.put(`/api/events/${eventId}/banner-image`, bannerData);
+export const UploadEventBannerAPI = async (eventId, formData) => {
+  return await apiClient.put(`/api/events/${eventId}/banner-image`, formData);
 };
 
 // Step 6: Update event tickets
@@ -147,10 +193,165 @@ export const GetEventTicketsAPI = async (eventId) => {
 
 // Get event discount codes
 export const GetEventDiscountCodesAPI = async (eventId) => {
-  return await apiClient.get(`/events/${eventId}/discount-codes`);
+  return await apiClient.get(`/api/events/${eventId}/discount-codes`);
 };
 
 // Get event creation status
 export const GetEventCreationStatusAPI = async (eventId) => {
   return await apiClient.get(`/events/${eventId}/status`);
+};
+
+// Get all orders for a specific event
+export const GetEventOrdersAPI = async (eventId) => {
+  return await apiClient.get(`/orgDashboard/admin/events/${eventId}/orders`);
+};
+
+// NEW: API to get all attendees for a specific event
+export const GetEventAttendeesAPI = async (eventId) => {
+  return await apiClient.get(`/orgDashboard/admin/events/${eventId}/attendees`);
+};
+
+// Donation notes for an event (donation ticket lines)
+export const GetEventDonationNotesAPI = async (eventId) => {
+  return await apiClient.get(`/orgDashboard/admin/events/${eventId}/donation-notes`);
+};
+
+// NEW: API to get all dashboard overview data for a specific event
+export const GetEventDashboardAPI = async (eventId) => {
+  return await apiClient.get(`/orgDashboard/events/${eventId}/dashboard`);
+};
+
+export const GetEventTicketStructuresAPI = async (eventId) => {
+  return await apiClient.get(`/api/events/${eventId}/ticket-structures`);
+};
+
+// NEW: API to update a ticket structure by its ID
+export const UpdateTicketStructureAPI = async (ticketStructureId, data) => {
+  return await apiClient.put(`/api/events/ticket-structures/${ticketStructureId}`, data);
+};
+
+export const DeleteTicketStructureAPI = async (ticketStructureId) => {
+  return await apiClient.delete(`/api/events/ticket-structures/${ticketStructureId}`);
+};
+
+export const CreateTicketStructureAPI = async (eventId, data) => {
+  return await apiClient.post(`/api/events/${eventId}/ticket-structures`, data);
+};
+
+// =============== EMAIL CAMPAIGN APIs ===============
+
+// Create a new campaign
+export const CreateEmailCampaignAPI = async (data) => {
+  return await apiClient.post("/admin/email-campaigns", data);
+};
+
+// Send a campaign by ID
+export const SendEmailCampaignAPI = async (campaignId) => {
+  return await apiClient.post(`/admin/email-campaigns/${campaignId}/send`);
+};
+
+// Get all campaigns (optional, for listing/history)
+export const GetAllEmailCampaignsAPI = async () => {
+  return await apiClient.get("/admin/email-campaigns");
+};
+
+// Get campaign by ID (optional, for preview/edit)
+export const GetEmailCampaignByIdAPI = async (id) => {
+  return await apiClient.get(`/admin/email-campaigns/${id}`);
+};
+
+// Update existing email campaign
+export const UpdateEmailCampaignAPI = async (id, data) => {
+  return await apiClient.put(`/admin/email-campaigns/${id}`, data);
+};
+
+// Delete email campaign
+export const DeleteEmailCampaignAPI = async (id) => {
+  return await apiClient.delete(`/admin/email-campaigns/${id}`);
+};
+
+// Send Test Emails for a Campaign
+export const SendTestEmailCampaignAPI = async (campaignId, data) => {
+  // data = { testEmails: ["a@b.com", "c@d.com"] }
+  return await apiClient.post(`/admin/email-campaigns/${campaignId}/test`, data);
+};
+
+// Upload Attachments to a Campaign
+export const UploadEmailCampaignAttachmentsAPI = async (campaignId, formData) => {
+  // formData = FormData with one or more files
+  return await apiClient.post(`/admin/email-campaigns/${campaignId}/attachments`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+};
+
+// =============== ORDER REISSUE EMAIL API ===============
+export const ReissueOrderEmailAPI = async (orderId) => {
+  return await apiClient.post(`/api/admin/orders/${orderId}/reissue-email`);
+};
+
+// =============== PAYOUT APIs (Organization Console – Manage Event) ===============
+
+// Get payout eligibility for an event (revenue summary + remaining payoutable)
+export const GetPayoutEligibilityAPI = async (eventId) => {
+  return await apiClient.get('/api/payouts/eligibility', { params: { eventId: Number(eventId) } });
+};
+
+// List payout requests for an event (newest first)
+export const GetPayoutRequestsAPI = async (eventId) => {
+  return await apiClient.get('/api/payouts/requests', { params: { eventId: Number(eventId) } });
+};
+
+// Create a payout request
+export const CreatePayoutRequestAPI = async (body) => {
+  return await apiClient.post('/api/payouts/request', {
+    eventId: Number(body.eventId),
+    amount: Number(body.amount),
+    payoutType: body.payoutType, // "FULL" | "CUSTOM" | "ADVANCE"
+  });
+};
+
+// =============== PAYOUT ACCOUNT APIs (Organization Console – Stripe Connect) ===============
+
+// Get current payout account status (live-synced from Stripe on the backend)
+export const GetPayoutAccountStatusAPI = async () => {
+  return await apiClient.get('/api/payout-account/status');
+};
+
+// Create or refresh the Stripe-hosted onboarding link
+export const CreatePayoutAccountOnboardingLinkAPI = async () => {
+  return await apiClient.post('/api/payout-account/onboarding-link');
+};
+
+
+// =============== SCANNER USER APIs ===============
+export const CreateScannerUserAPI = async (data) => {
+  return await apiClient.post("/admin/scanner-users", data);
+};
+
+export const GetAttendeeScanner = async (eventId) => {
+  return await apiClient.get(`/scanner/attendees`, {
+    params: eventId != null ? { eventId: Number(eventId) } : undefined,
+  });
+};
+
+export const CheckInAttendeeAPI = async (ticketId) => {
+  return await apiClient.post(`/scanner/checkin/${ticketId}`);
+};
+
+export const VerifyQrCodeAPI = async (data) => {
+  return await apiClient.post("/scanner/verify", data);
+};
+
+export const CheckoutAttendeeAPI = async (ticketId) => {
+  return await apiClient.post(`/scanner/checkout/${ticketId}`);
+};
+
+// =============== SUPPORT TICKET APIs ===============
+
+// Create a support ticket with subject, message, and optional attachments
+export const CreateSupportTicketAPI = async (formData) => {
+  // formData = FormData with 'subject', 'message', and optional 'attachments' file(s)
+  return await apiClient.post("/api/support/tickets", formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
 };

@@ -1,12 +1,31 @@
-import React from "react";
-import { Navigate, Outlet } from "react-router-dom";
-import Cookies from "js-cookie";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
+import { useAuth } from "../context/authContext";
 
-const ProtectedRoute = () => {
-  const isAuthenticated = Cookies.get("token");
-  // const token = localStorage.getItem("JWT");
+const normalizeRole = (role) => (role || "").replace(/^ROLE_/, "");
 
-  return isAuthenticated ? <Outlet /> : <Navigate to="/login" />;
+const ProtectedRoute = ({ allowedRoles }) => {
+  const { isAuthenticated, currentUser, isLoading } = useAuth();
+  const location = useLocation();
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  if (allowedRoles?.length) {
+    const role = normalizeRole(currentUser?.role);
+    const allowed = allowedRoles.map(normalizeRole);
+    if (!allowed.includes(role)) {
+      // Send scanners to their only usable page; others to home.
+      const fallback = role === "SCANNER" ? "/scanner" : "/";
+      return <Navigate to={fallback} replace />;
+    }
+  }
+
+  return <Outlet />;
 };
 
 export default ProtectedRoute;

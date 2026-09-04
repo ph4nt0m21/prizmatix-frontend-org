@@ -2,8 +2,12 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import Cookies from 'js-cookie';
-import { ResetPasswordAPI } from '../../services/allApis';
-import styles from "./authPages.module.scss";
+import {
+  notifyAuthError,
+  notifyAuthSuccess,
+  notifyAuthWarning,
+} from "../../utils/authFeedback";
+import styles from "./loginPage.module.scss";
 
 /**
  * ResetPasswordPage component
@@ -59,12 +63,11 @@ const ResetPasswordPage = () => {
    * @param {string} type - Type of error (error, warning, info)
    */
   const showError = (message, type = "error") => {
-    setError({ message, type });
-    
-    // Auto-clear error after 5 seconds
-    setTimeout(() => {
-      setError(null);
-    }, 5000);
+    if (type === "warning") {
+      notifyAuthWarning(message);
+      return;
+    }
+    notifyAuthError(message);
   };
   
   /**
@@ -124,6 +127,7 @@ const ResetPasswordPage = () => {
         
         // Set success message
         setSuccessMessage("Password has been reset successfully. You can now login with your new password.");
+        notifyAuthSuccess("Password has been reset successfully. You can now login with your new password.");
         
         // Clear form
         setFormData({
@@ -228,9 +232,6 @@ const ResetPasswordPage = () => {
             </div>
           </div>
           
-          <div className={styles.footerContainer}>
-            <p className={styles.copyrightText}>Copyright© 2025 PRIZMATIX</p>
-          </div>
         </div>
       </div>
     );
@@ -417,9 +418,6 @@ const ResetPasswordPage = () => {
           </form>
         </div>
         
-        <div className={styles.footerContainer}>
-          <p className={styles.copyrightText}>Copyright© 2025 PRIZMATIX</p>
-        </div>
       </div>
     </div>
   );
