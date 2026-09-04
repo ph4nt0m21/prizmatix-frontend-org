@@ -22,6 +22,7 @@ import EmailCampaignsListPage from './pages/emailCampaigns/emailCampaignsListPag
 import EmailCampaignsPage from './pages/emailCampaigns/emailCampaignsPage';
 import ReportsPage from './pages/reports/reportsPage';
 import ScannerPage from './pages/scanner/scannerPage';
+import PayoutAccountPage from './pages/payoutAccount/payoutAccountPage';
 // import UnauthorizedPage from './pages/unauthorized/unauthorizedPage';
 
 // Import utilities and components
@@ -111,6 +112,7 @@ const AppContent = () => {
               <Route path="campaigns/:campaignId/edit" element={<EmailCampaignsPage />} />
               <Route path="reports" element={<ReportsPage />} />
               <Route path="reports/:eventId" element={<ReportsPage />} />
+              <Route path="payout-account" element={<PayoutAccountPage />} />
             </Route>
           </Route>
 

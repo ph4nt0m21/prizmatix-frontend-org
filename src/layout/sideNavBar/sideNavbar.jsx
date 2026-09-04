@@ -40,6 +40,11 @@ import ScannerDefault from '../../assets/icons/Scanner-Default.svg';
 import ScannerHover from '../../assets/icons/Scanner-Hover.svg';
 import ScannerActive from '../../assets/icons/Scanner-Active.svg';
 
+// Payout Account Icons (3 states)
+import PayoutAccountDefault from '../../assets/icons/PayoutAccount-Default.svg';
+import PayoutAccountHover from '../../assets/icons/PayoutAccount-Hover.svg';
+import PayoutAccountActive from '../../assets/icons/PayoutAccount-Active.svg';
+
 // Keep these as SVG components (used in profile dropdown / settings)
 import { ReactComponent as SettingsIcon } from '../../assets/icons/settings-icon.svg';
 import { ReactComponent as LogoutIcon } from '../../assets/icons/logout-icon.svg';
@@ -151,6 +156,16 @@ const SideNavBar = ({ isMobileSidebarOpen, toggleMobileSidebar }) => {
           defaultIcon: ScannerDefault,
           hoverIcon: ScannerHover,
           activeIcon: ScannerActive,
+        }]
+      : []),
+    ...(userRole === 'ORGANIZER'
+      ? [{
+          id: 'payoutAccount',
+          path: '/payout-account',
+          label: 'Payout Account',
+          defaultIcon: PayoutAccountDefault,
+          hoverIcon: PayoutAccountHover,
+          activeIcon: PayoutAccountActive,
         }]
       : []),
   ];
