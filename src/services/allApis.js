@@ -310,6 +310,18 @@ export const CreatePayoutRequestAPI = async (body) => {
   });
 };
 
+// =============== PAYOUT ACCOUNT APIs (Organization Console – Stripe Connect) ===============
+
+// Get current payout account status (live-synced from Stripe on the backend)
+export const GetPayoutAccountStatusAPI = async () => {
+  return await apiClient.get('/api/payout-account/status');
+};
+
+// Create or refresh the Stripe-hosted onboarding link
+export const CreatePayoutAccountOnboardingLinkAPI = async () => {
+  return await apiClient.post('/api/payout-account/onboarding-link');
+};
+
 
 // =============== SCANNER USER APIs ===============
 export const CreateScannerUserAPI = async (data) => {
