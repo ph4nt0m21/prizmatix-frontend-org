@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { FiLock, FiZap, FiCheck, FiAlertTriangle, FiArrowRight } from 'react-icons/fi';
+import { FiLock, FiZap, FiCheck, FiAlertTriangle, FiArrowRight, FiExternalLink } from 'react-icons/fi';
 import styles from './payoutAccountPage.module.scss';
 import LoadingSpinner from '../../components/common/loadingSpinner/loadingSpinner';
 import {
   GetPayoutAccountStatusAPI,
   CreatePayoutAccountOnboardingLinkAPI,
+  CreatePayoutAccountManagementLinkAPI,
 } from '../../services/allApis';
 
 // view: 'loading' | 'not_started' | 'redirecting' | 'checking' | 'ready' | 'action_required' | 'error'
@@ -17,6 +18,8 @@ const PayoutAccountPage = () => {
   const [accountStatus, setAccountStatus] = useState(null);
   const [errorMessage, setErrorMessage] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
+  const [managementLoading, setManagementLoading] = useState(false);
+  const [managementError, setManagementError] = useState('');
 
   useEffect(() => {
     const queryParams = new URLSearchParams(location.search);
@@ -24,6 +27,31 @@ const PayoutAccountPage = () => {
     fetchStatus(returnStatus);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Login Links (used to manage an already-Ready account) have no return_url — Stripe
+  // doesn't support one. They open in a new tab instead of a full redirect, so this tab
+  // stays alive; refresh status quietly whenever the organiser comes back to it.
+  useEffect(() => {
+    const handleFocus = () => {
+      if (view === 'ready' || view === 'action_required') {
+        silentRefreshStatus();
+      }
+    };
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [view]);
+
+  const silentRefreshStatus = async () => {
+    try {
+      const res = await GetPayoutAccountStatusAPI();
+      const dto = res.data.data;
+      setAccountStatus(dto);
+      resolveView(dto);
+    } catch (err) {
+      // Background refresh — fail quietly rather than disrupt the current view.
+    }
+  };
 
   const resolveView = (dto) => {
     switch (dto.status) {
@@ -77,6 +105,21 @@ const PayoutAccountPage = () => {
       setErrorMessage(err.response?.data?.message || 'Could not start setup. Please try again.');
       setView('error');
       setActionLoading(false);
+    }
+  };
+
+  const handleManagePayoutAccount = async () => {
+    setManagementLoading(true);
+    setManagementError('');
+    try {
+      const res = await CreatePayoutAccountManagementLinkAPI();
+      // No return_url exists for Login Links — open in a new tab and leave this one
+      // alive so the focus listener above can refresh status when they come back.
+      window.open(res.data.data.url, '_blank', 'noopener,noreferrer');
+    } catch (err) {
+      setManagementError(err.response?.data?.message || 'Could not open your payout account right now. Please try again.');
+    } finally {
+      setManagementLoading(false);
     }
   };
 
@@ -177,7 +220,17 @@ const PayoutAccountPage = () => {
               <span>Payouts</span>
               <span className={styles.summaryValueGood}>Enabled</span>
             </div>
+            {accountStatus?.lastSyncedAt && (
+              <div className={styles.summaryRow}>
+                <span>Last Updated</span>
+                <span>{new Date(accountStatus.lastSyncedAt).toLocaleString()}</span>
+              </div>
+            )}
           </div>
+          <button className={styles.primaryButton} onClick={handleManagePayoutAccount} disabled={managementLoading}>
+            {managementLoading ? 'Opening…' : 'Manage Payout Account'} <FiExternalLink />
+          </button>
+          {managementError && <p className={styles.inlineError}>{managementError}</p>}
         </div>
       );
     }

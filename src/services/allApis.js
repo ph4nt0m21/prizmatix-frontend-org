@@ -322,6 +322,11 @@ export const CreatePayoutAccountOnboardingLinkAPI = async () => {
   return await apiClient.post('/api/payout-account/onboarding-link');
 };
 
+// Create a one-time Stripe Express Dashboard login link for managing an already-Ready account
+export const CreatePayoutAccountManagementLinkAPI = async () => {
+  return await apiClient.post('/api/payout-account/management-link');
+};
+
 
 // =============== SCANNER USER APIs ===============
 export const CreateScannerUserAPI = async (data) => {
