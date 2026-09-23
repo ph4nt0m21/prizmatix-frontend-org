@@ -53,11 +53,23 @@ apiClient.interceptors.response.use(
     const status = error.response?.status;
     const url = error.config?.url || "";
 
-    // Scanner accounts are not allowed on organizer-only endpoints (e.g. /admin/profile).
-    // Do not clear their session when those calls 403.
+    // Scanner accounts are not allowed on organizer-only endpoints (e.g. /admin/profile),
+    // so their 403 there is expected and must not clear a perfectly good session.
+    //
+    // The status check is load-bearing: this exemption must cover ONLY 403. A 401 on the
+    // same URL means something completely different — the token is expired — and has to
+    // force a logout. Matching on the URL alone swallowed both, and because /admin/profile
+    // is the first call on every page load (AuthProvider's bootstrap), an expired token
+    // produced a session that looked alive but failed every request. On the settings
+    // screen, where /admin/profile* are the only calls, nothing else triggered the logout
+    // and the user stayed stuck there indefinitely.
+    //
+    // Note this also covers PUT /admin/profile/basic-details, /organization and /photo by
+    // substring — intentional for 403, and previously the reason an expired-token save
+    // failed silently instead of redirecting to login.
     const skipForcedLogout =
       url.includes("/scanner/verify") ||
-      url.includes("/admin/profile") ||
+      (status === 403 && url.includes("/admin/profile")) ||
       isPublicAuthRequest(url);
 
     if ((status === 401 || status === 403) && !skipForcedLogout) {
