@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import QrScanner from 'react-qr-scanner';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { Html5Qrcode, Html5QrcodeScannerState } from 'html5-qrcode';
 import styles from './scannerPage.module.scss';
 import { FiXCircle, FiCheckCircle, FiMaximize, FiUsers } from 'react-icons/fi';
 import AttendeesTable from './components/attendeesTable';
@@ -13,6 +13,38 @@ import {
 } from '../../services/allApis';
 import { getUserData } from '../../utils/authUtil';
 import EventCombobox from '../../components/common/eventCombobox/eventCombobox';
+
+const SCANNER_REGION_ID = 'ticket-qr-scanner-region';
+
+// html5-qrcode rejects Html5Qrcode#start() with plain strings, not typed
+// errors (see its source: `Html5QrcodeStrings.errorGettingUserMedia` wraps
+// the underlying DOMException as "Error getting userMedia, error = <name>: ..."
+// and unsupported browsers get a fixed "Camera streaming not supported by
+// the browser." string) — so we pattern-match those strings here to turn
+// them into guidance staff can actually act on at an event.
+const describeCameraError = (err) => {
+  const message = typeof err === 'string' ? err : err?.message || String(err);
+
+  if (/camera streaming not supported/i.test(message)) {
+    return "This browser can't access the camera here. If you opened this link inside an app (WhatsApp, Instagram, Facebook, etc.), tap the menu (⋯) and choose \"Open in Browser\" (Safari or Chrome), then try again.";
+  }
+  if (/NotAllowedError|PermissionDeniedError/.test(message)) {
+    return "Camera access is blocked for this site. Open your browser's site settings, allow Camera, then reload the page.";
+  }
+  if (/NotFoundError|DevicesNotFoundError/.test(message)) {
+    return 'No camera was found on this device.';
+  }
+  if (/NotReadableError|TrackStartError/.test(message)) {
+    return 'The camera is already in use by another app. Close other apps using the camera and try again.';
+  }
+  if (/OverconstrainedError|ConstraintNotSatisfiedError/.test(message)) {
+    return "This device's camera doesn't support the required settings.";
+  }
+  if (/SecurityError/.test(message)) {
+    return 'Camera access requires a secure (https) connection.';
+  }
+  return 'Could not access the camera. Please check camera permissions for this site and try again.';
+};
 
 const normalizeRole = (role) => (role || '').replace(/^ROLE_/, '');
 
@@ -181,13 +213,13 @@ const ScannerPage = () => {
     return ['All', ...types];
   }, [ticketRows]);
 
-  const handleScan = async (data) => {
-    if (data) {
+  const handleScan = async (decodedText) => {
+    if (decodedText) {
       setHasScanned(true);
-      const qrContent = data.text.trim();
+      const qrContent = decodedText.trim();
       setError(null);
       setSuccessMessage(null);
-      setIsScannerOpen(false);
+      closeScanner();
 
       try {
         const response = await VerifyQrCodeAPI({ qrContent });
@@ -219,14 +251,61 @@ const ScannerPage = () => {
 
   const handleError = (err) => {
     console.error(err);
-    setError('Could not access the camera. Please check permissions.');
+    setError(describeCameraError(err));
     setIsScannerOpen(false);
   };
 
-  const openScanner = () => {
+  const openScanner = async () => {
     setError(null);
     setSuccessMessage(null);
-    setIsScannerOpen(true);
+
+    const config = {
+      fps: 10,
+      // The qrbox we return here is the exact region html5-qrcode both
+      // draws as the shaded viewfinder AND decodes QR codes from, so the
+      // visible scan box and the real detection region can never drift apart.
+      qrbox: (viewfinderWidth, viewfinderHeight) => {
+        const edge = Math.floor(Math.min(viewfinderWidth, viewfinderHeight) * 0.7);
+        return { width: edge, height: edge };
+      },
+      aspectRatio: 1.0,
+    };
+
+    try {
+      // Every call that can throw stays inside this try, the constructor
+      // included — it throws synchronously when its target element is
+      // missing. Anything escaping here reaches the route's ErrorBoundary
+      // and replaces the whole page with "Something went wrong / Try Again"
+      // instead of a message explaining what to do about the camera.
+      const html5Qr = new Html5Qrcode(SCANNER_REGION_ID);
+      html5QrRef.current = html5Qr;
+
+      // Requesting the camera here, directly inside the click handler
+      // (rather than in a useEffect that reacts to state a render later),
+      // keeps getUserMedia tied to the user's tap. Some in-app/embedded
+      // mobile browsers (WhatsApp, Instagram, Facebook, etc.) silently
+      // refuse camera access — no permission prompt at all — once that
+      // gesture link is broken, which matches reports of the scanner
+      // just not opening with no dialog ever appearing.
+      await html5Qr.start(
+        { facingMode: 'environment' },
+        config,
+        (decodedText) => handlersRef.current.handleScan(decodedText),
+        () => {
+          // Per-frame "no QR code found" callback — expected on every
+          // frame without a code in view, not an error worth surfacing.
+        }
+      );
+      setIsScannerOpen(true);
+    } catch (err) {
+      html5QrRef.current = null;
+      handleError(err);
+    }
+  };
+
+  const closeScanner = () => {
+    setIsScannerOpen(false);
+    stopScanner();
   };
 
   const handleToggleCheckIn = async (ticketId, isCurrentlyCheckedIn) => {
@@ -281,7 +360,33 @@ const ScannerPage = () => {
     }
   };
 
-  const cameraConstraints = { video: { facingMode: 'environment' } };
+  const handlersRef = useRef({ handleScan, handleError });
+  handlersRef.current = { handleScan, handleError };
+
+  const html5QrRef = useRef(null);
+
+  const stopScanner = async () => {
+    const instance = html5QrRef.current;
+    html5QrRef.current = null;
+    if (!instance) return;
+    try {
+      if (instance.getState() === Html5QrcodeScannerState.SCANNING) {
+        await instance.stop();
+      }
+      await instance.clear();
+    } catch (err) {
+      console.error('Failed to stop scanner:', err);
+    }
+  };
+
+  // Release the camera if the user navigates away while it's open.
+  useEffect(() => {
+    return () => {
+      stopScanner();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const isDonatorsTab = listTab === 'Donators';
 
   return (
@@ -316,23 +421,17 @@ const ScannerPage = () => {
             emptyListMessage="No events available"
           />
         </div>
-        {isScannerOpen ? (
-          <div className={styles.scannerActive}>
-            <div className={styles.scannerPreview}>
-              <QrScanner
-                delay={300}
-                onError={handleError}
-                onScan={handleScan}
-                style={{ width: '100%' }}
-                constraints={cameraConstraints}
-              />
-              <div className={styles.viewfinder}></div>
-            </div>
-            <button onClick={() => setIsScannerOpen(false)} className={styles.closeButton}>
-              <FiXCircle /> Close Scanner
-            </button>
+        <div
+          className={`${styles.scannerActive} ${!isScannerOpen ? styles.scannerActiveHidden : ''}`}
+        >
+          <div className={styles.scannerPreview}>
+            <div id={SCANNER_REGION_ID} className={styles.scannerRegion} />
           </div>
-        ) : (
+          <button onClick={closeScanner} className={styles.closeButton}>
+            <FiXCircle /> Close Scanner
+          </button>
+        </div>
+        {!isScannerOpen && (
           <div className={styles.scannerIdle}>
             {error && (
               <div className={`${styles.resultBox} ${styles.error}`}>

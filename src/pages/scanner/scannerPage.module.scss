@@ -19,6 +19,7 @@
 }
 
 .contentWrapper {
+  position: relative;
   width: 100%;
   max-width: 600px;
   text-align: center;
@@ -198,15 +199,36 @@
 }
 
 .scannerActive {
+  width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 1.5rem;
 }
 
+// The container stays mounted (with the camera preview div inside it) even
+// while closed, so Html5Qrcode's start() can find its target element and
+// read its real, final size synchronously on click, before React re-renders.
+// We deliberately avoid `display: none`/`hidden` here: html5-qrcode reads
+// clientWidth during start() to size the video surface and the qrbox scan
+// overlay, and a display:none element always reports clientWidth 0 (falling
+// back to a hardcoded 300px), which would size everything wrong and recreate
+// the scan-box/video misalignment bug this component exists to fix. Taking
+// it out of flow via absolute positioning keeps its real width intact while
+// keeping it invisible and out of the idle view's layout.
+.scannerActiveHidden {
+  position: absolute;
+  top: 0;
+  left: 0;
+  visibility: hidden;
+  pointer-events: none;
+  z-index: -1;
+}
+
 .scannerPreview {
   width: 100%;
   max-width: 400px;
+  aspect-ratio: 1 / 1;
   border-radius: 12px;
   overflow: hidden;
   border: 4px solid #E5E7EB;
@@ -214,15 +236,21 @@
   background-color: #111827;
 }
 
-.viewfinder {
-  position: absolute;
-  top: 10%;
-  left: 10%;
-  width: 80%;
-  height: 80%;
-  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5);
-  border: 2px dashed #FFFFFF;
-  border-radius: 8px;
+.scannerRegion {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  // html5-qrcode renders the <video> element itself; make sure it fills
+  // the fixed-aspect-ratio container instead of the library's own inline
+  // sizing (which can otherwise leave gaps or overflow on some devices).
+  video {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover;
+  }
 }
 
 .scannerIdle {
