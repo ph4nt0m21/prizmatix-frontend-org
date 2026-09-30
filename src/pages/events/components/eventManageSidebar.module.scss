@@ -3,20 +3,58 @@
 
 .sidebar {
   display: flex;
-  width: 280px;
-  min-width: 280px;
+  width: 260px;
+  min-width: 260px;
   flex-direction: column;
   align-items: flex-start;
   background: #FFF;
-  box-shadow: 0px 2px 4px 0px rgba(0, 0, 0, 0.05);
-  border-radius: 8px;
-  margin: 20px 0 20px 20px;
+  box-shadow: 0px 2px 4px 0px rgba(15, 23, 42, 0.04);
+  border-radius: 16px;
+  border: 1px solid #E5E7EB;
+  position: relative;
+  z-index: 1;
+  padding: 20px;
+  flex-shrink: 0;
+  height: 100%;
+  min-height: 0;
+  /* Popovers extend outside the card; scroll lives on .sectionsList */
+  overflow: visible;
+
+  @media (max-width: 768px) {
+    position: fixed;
+    top: 0;
+    left: -280px;
+    transform: translateX(0);
+    width: 280px;
+    height: 100vh;
+    max-height: 100vh;
+    z-index: 1001;
+    transition: transform 0.3s ease-in-out;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.5);
+    padding-top: 20px;
+    padding-bottom: 20px;
+    justify-content: flex-start;
+    margin: 0;
+    overflow: visible;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  &.open {
+    @media (max-width: 768px) {
+      transform: translateX(280px);
+    }
+  }
 }
 
 .sidebarHeader {
   padding: 24px 24px 16px;
   border-bottom: 1px solid #f0f0f0;
   width: 100%;
+
+  @media (max-width: 768px) {
+    padding: 10px 15px;
+    margin-bottom: 15px;
+  }
 }
 
 .sidebarTitle {
@@ -38,7 +76,10 @@
   flex-direction: column;
   width: 100%;
   padding: 16px 0;
+  min-height: 0;
+  overflow-x: hidden;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .sectionGroup {
@@ -56,26 +97,22 @@
   margin: 0 0 8px 0;
 }
 
-.section {
+.sectionItem {
   display: flex;
   align-items: center;
   padding: 10px 24px;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition: background-color 0.2s ease, color 0.2s ease;
   position: relative;
-  
+  border-radius: 8px;
+
   &:hover:not(.active) {
-    background-color: rgba(124, 58, 237, 0.05);
+    background-color: rgba(139, 92, 246, 0.05);
   }
-  
+
   &.active {
-    background-color: rgba(124, 58, 237, 0.1);
-  }
-  
-  &.completed {
-    .sectionLabel {
-      color: #7C3AED;
-    }
+    /* Full pill highlight like Figma example */
+    background-color: rgba(139, 92, 246, 0.08);
   }
 }
 
@@ -87,17 +124,40 @@
   height: 24px;
   margin-right: 12px;
   position: relative;
+  /* Base icon color */
+  color: #6B7280;
+}
+
+.sectionItem.active .sectionIconContainer {
+  /* Icon turns purple on active */
+  color: #8b5cf6;
+}
+
+/* Ensure icon outline follows current color */
+.sectionIconContainer svg path {
+  stroke: currentColor;
+}
+
+.sectionLabel {
+  font-size: 14px;
+  color: #4B5563;
+  flex: 1;
+}
+
+.sectionItem.active .sectionLabel {
+  color: #8b5cf6;
+  font-weight: 500;
 }
 
 .sectionIcon {
   width: 20px;
   height: 20px;
   opacity: 0.7;
-  
+
   .active & {
     opacity: 1;
   }
-  
+
   .completed & {
     opacity: 1;
   }
@@ -109,16 +169,18 @@
   border-radius: 50%;
   border: 1px solid #E9EAEC;
   background-color: #FFF;
-  margin-left: auto; /* This pushes it to the right */
+  margin-left: auto;
   display: flex;
   align-items: center;
   justify-content: center;
-  
+
   &.activeIndicator {
-    background-color: #7C3AED;
-    border-color: #7C3AED;
+    // UPDATED: Use the new purple color
+    background-color: #8b5cf6;
+    // UPDATED: Use the new purple color
+    border-color: #8b5cf6;
   }
-  
+
   &.completedIndicator {
     background-color: #22C55E;
     border-color: #22C55E;
@@ -132,28 +194,182 @@
 
 .sectionLabel {
   font-size: 14px;
-  color: #6b7280;
-  flex: 1; /* This ensures the label takes up available space */
-  
+  color: #4B5563;
+  flex: 1;
+
   .active & {
-    color: #7C3AED;
-    font-weight: 500;
-  }
-  
-  .completed & {
-    color: #7C3AED;
+    color: #8b5cf6;
     font-weight: 500;
   }
 }
 
-// Event actions section
-.eventActions {
+.publishActionWrap {
   border-top: 1px solid #f0f0f0;
-  padding: 16px 24px;
+  padding: 16px 24px 8px;
+  width: 100%;
+}
+
+.publishButtonWithHint {
+  position: relative;
+  width: 100%;
+}
+
+.publishDraftButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease, opacity 0.2s ease, border-color 0.2s ease;
+  border: 1px solid #7c3aed;
+  background-color: #7c3aed;
+  color: #fff;
+
+  &:hover:not(:disabled):not([aria-disabled="true"]) {
+    background-color: #6d28d9;
+    border-color: #6d28d9;
+  }
+
+  &:disabled,
+  &[aria-disabled="true"] {
+    opacity: 0.45;
+    cursor: not-allowed;
+    background-color: #e5e7eb;
+    border-color: #e5e7eb;
+    color: #9ca3af;
+  }
+}
+
+/*
+ * Publish requirements panel — visibility controlled in JS (hover + tap).
+ * Desktop: absolutely positioned to the right of the publish button (sidebar overflow is visible).
+ * Mobile: portaled to document.body — see .publishRequirementsPanelMobileFloat (fixed bottom sheet).
+ */
+.publishRequirementsPanel {
+  padding: 12px 14px;
+  box-sizing: border-box;
+  border-radius: 10px;
+  background-color: #181d27;
+  color: #f9fafb;
+  font-size: 13px;
+  line-height: 1.5;
+  box-shadow:
+    0 12px 16px rgba(10, 13, 18, 0.08),
+    0 4px 6px rgba(10, 13, 18, 0.03);
+  max-height: min(50vh, 320px);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (min-width: 769px) {
+  .publishRequirementsPanel {
+    position: absolute;
+    left: calc(100% + 12px);
+    top: 50%;
+    transform: translateY(-50%);
+    margin-top: 0;
+    width: min(300px, calc(100vw - 120px));
+    max-height: min(380px, 70vh);
+    z-index: 10050;
+  }
+}
+
+/*
+ * Portaled on mobile (fixed is not broken by sidebar transform).
+ * Same width / max-height as the desktop popover (769px+ rules above).
+ */
+.publishRequirementsPanelMobileFloat {
+  position: fixed;
+  left: 50%;
+  bottom: max(16px, env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  width: min(300px, calc(100vw - 120px));
+  max-height: min(380px, 70vh);
+  margin: 0;
+  z-index: 10050;
+  box-shadow:
+    0 12px 16px rgba(10, 13, 18, 0.08),
+    0 4px 6px rgba(10, 13, 18, 0.03);
+}
+
+.publishRequirementsTitle {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #d1d5db;
+  margin-bottom: 10px;
+}
+
+.publishRequirementsList {
+  margin: 0;
+  padding-left: 1.2rem;
+  color: #f9fafb;
+
+  li {
+    margin-bottom: 8px;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+}
+
+.eventActions {
+  border-top: none;
+  padding: 8px 24px 16px;
   width: 100%;
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+/* When publish block is hidden (already published), restore divider above duplicate/delete */
+.eventActionsNoPublishAbove {
+  border-top: 1px solid #f0f0f0;
+  padding-top: 16px;
+}
+
+.editEventButtonContainer {
+  width: 100%;
+  padding: 16px 12px 0;
+  border-top: 1px solid #E9EAEC;
+  margin-top: auto;
+}
+
+.editEventButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 40px;
+  padding: 0 16px;
+  background-color: #F3F4F6;
+  color: #4B5563;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+
+  &:hover {
+    background-color: #E5E7EB;
+  }
+}
+
+.editIcon {
+  width: 18px;
+  height: 18px;
+  margin-right: 8px;
+  color: #6B7280;
 }
 
 .duplicateButton, .deleteButton {
@@ -175,7 +391,7 @@
   background-color: #F9FAFB;
   border: 1px solid #E5E7EB;
   color: #4B5563;
-  
+
   &:hover {
     background-color: #F3F4F6;
     border-color: #D1D5DB;
@@ -186,18 +402,9 @@
   background-color: #FEF2F2;
   border: 1px solid #FEE2E2;
   color: #EF4444;
-  
-  &:hover {
-    background-color: #FEE2E2;
-    border-color: #FCA5A5;
-  }
-}
 
-// Responsive styles
-@media (max-width: 768px) {
-  .sidebar {
-    width: 100%;
-    min-width: auto;
-    margin: 20px;
+  &:hover {
+    background-color: #FEE2F2;
+    border-color: #FCA5A5;
   }
 }

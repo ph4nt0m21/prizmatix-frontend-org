@@ -1,0 +1,297 @@
+/* ================================
+   TABLE WRAPPER
+================================ */
+.tableContainer {
+  width: 100%;
+  overflow-x: visible;
+  background: #ffffff;
+  border-radius: 8px;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ================================
+   TABLE BASE
+================================ */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #ffffff;
+  font-size: 14px;
+  table-layout: fixed; /* required for colgroup */
+  min-width: 800px;
+}
+
+.colName { width: 480px; }
+.colTicket { width: 200px; }
+.colArrow { width: 48px; }
+
+/* ================================
+   HEADERS
+================================ */
+.table th {
+  padding: 16px 20px;
+  background: #F9FAFB;
+  border-bottom: 1px solid #E5E7EB;
+  color: #4B5563;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  white-space: nowrap;
+  text-align: left;
+}
+
+/* ================================
+   ROW STYLING
+================================ */
+.tableRow {
+  height: 62px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+
+  &:hover {
+    background: #F9FAFB;
+  }
+}
+
+/* ================================
+   CELLS
+================================ */
+.table td {
+  padding: 16px 20px;
+  border-bottom: 1px solid #E5E7EB;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+  color: #1F2937;
+  font-weight: 500;
+}
+
+.nameCell {
+  overflow: visible;
+}
+
+/* ================================
+   NAME + AVATAR BLOCK
+================================ */
+.nameWithAvatar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.avatarWrapper {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #EEF2FF;
+  color: #4F46E5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.checkedInDot {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #16A34A;
+  border: 2px solid #fff;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+}
+
+.nameEmail {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.nameText {
+  color: #111827;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.emailText {
+  color: #6B7280;
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ================================
+   ARROW
+================================ */
+.arrowCell {
+  text-align: right;
+}
+
+.arrowIcon {
+  color: #9CA3AF;
+  font-size: 18px;
+}
+
+/* ================================
+   TICKET TYPE BADGES
+================================ */
+.ticketType {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 14px;
+  border-radius: 4px;
+  border: 1px solid #16A34A;
+  background: #FFF;
+  color: #16A34A;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+  font-style: italic;
+  text-transform: uppercase;
+  white-space: nowrap;
+  letter-spacing: 0.01em;
+}
+
+.vip {
+  border-color: #D97706;
+  color: #D97706;
+}
+
+.standard {
+  border-color: #2563EB;
+  color: #2563EB;
+}
+
+.earlyBird {
+  border-color: #16A34A;
+  color: #16A34A;
+}
+
+/* ================================
+   EMPTY STATE
+================================ */
+.noResults {
+  text-align: center;
+  padding: 48px;
+  color: #6B7280;
+  font-size: 16px;
+}
+
+/* ================================
+   PAGINATION
+================================ */
+.pagination {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  flex-wrap: wrap;
+  padding: 16px 24px;
+  color: #6B7280;
+  gap: 24px;
+  background: #ffffff;
+  border-top: 1px solid #E5E7EB;
+
+  .rowsPerPage {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    select {
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      padding: 4px 8px;
+      background: #fff;
+      font-size: 14px;
+    }
+  }
+
+  button {
+    background: none;
+    border: none;
+    cursor: pointer;
+
+    &:hover {
+      color: #111827;
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+}
+
+@media (max-width: 900px) {
+  .tableContainer {
+    background: transparent;
+  }
+
+  .colName,
+  .colTicket,
+  .colArrow {
+    width: auto;
+  }
+
+  .table {
+    min-width: 100%;
+    table-layout: auto;
+    border-collapse: separate;
+    border-spacing: 0 12px;
+  }
+
+  .table thead {
+    display: none;
+  }
+
+  .table tbody tr {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    border: 1px solid #EEF0F4;
+    border-radius: 18px;
+    background: #fff;
+    box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 1px 8px rgba(16, 24, 40, 0.06);
+  }
+
+  .table td {
+    display: block;
+    padding: 0;
+    border: none;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+  }
+
+  .table td:nth-child(1) {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .table td:nth-child(2) {
+    flex-shrink: 0;
+  }
+
+  .table td:nth-child(3) {
+    flex-shrink: 0;
+  }
+}

@@ -1,7 +1,28 @@
 @import '../../styles/variables';
 @import '../../styles/mixins';
 
-// Main container for the create event page
+/* New container to control the overall page layout */
+.pageContainer {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  /* Make the page fill the entire screen height */
+  overflow: hidden;
+  /* Prevent the whole page from scrolling */
+  background-color: #F1F1F1;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  /* Match the content background */
+
+  @media (max-width: 768px) {
+    height: auto; // Allow height to adjust on mobile
+    min-height: 100vh; // Ensure it still takes full viewport height if content is short
+  }
+}
+
+// Main container for the create event page (this class is not directly used in the current JSX structure, can be removed if not needed elsewhere)
 .pageWrapper {
   display: flex;
   flex-direction: column;
@@ -10,12 +31,18 @@
 }
 
 // Container for the content area that accounts for the sidebar
+// (This class is not directly used in the current JSX structure, can be removed if not needed elsewhere)
 .createEventContainer {
   display: flex;
   flex-direction: column;
   width: calc(100% - 70px);
   margin-left: 70px; // Sidebar width
   flex: 1;
+
+  @media (max-width: 768px) {
+    width: 100%; // Take full width on mobile
+    margin-left: 0; // Remove sidebar margin
+  }
 }
 
 // Flex container for sidebar and main content
@@ -23,29 +50,75 @@
   display: flex;
   background: #F1F1F1;
   gap: 16px;
-  padding: 64px;
+  padding: 16px 24px;
   flex: 1;
-  overflow: hidden;
-  padding-top: 16px;
-  padding-bottom: 32px;
+  min-height: 0;
+  overflow: hidden; // Prevent this container from showing scrollbars
+
+  @media (max-width: 1280px) {
+    padding: 12px;
+  }
+
+  @media (max-width: 1024px) {
+    padding: 12px;
+  }
+
+  @media (max-width: 768px) {
+    flex-direction: column; // Stack sidebar and main content vertically
+    overflow-y: auto; // Allow content to scroll on smaller screens
+    padding: 16px; // Adjust padding for mobile
+  }
+
+  @media (max-width: 480px) {
+    padding: 8px;
+    gap: 8px;
+  }
 }
 
-// Main content area that contains the form
+// Overlay to close sidebar on mobile when clicking outside
+.sidebarOverlay {
+  display: none;
+
+  @media (max-width: 768px) {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 1000; // Below sidebar (1001) but above content
+    backdrop-filter: blur(2px);
+  }
+}
+
+// Main content area that contains the form (the step content and navigation)
 .mainContent {
   flex: 1;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  min-height: 0;
+  overflow: hidden; // Important: this keeps the main content from scrolling
   background-color: #FFFFFF;
-  border-radius: 8px;
-  box-shadow: 0px 2px 4px 0px rgba(0, 0, 0, 0.05);
+  border-radius: 12px;
+  border: 1px solid #EAECF0;
+  box-shadow: 0px 1px 3px rgba(16, 24, 40, 0.1), 0px 1px 2px rgba(16, 24, 40, 0.06);
+
+  @media (max-width: 768px) {
+    min-height: auto;
+    overflow-y: visible; /* Prevent nested scrollbars */
+  }
 }
 
-// Container for the step content
+// Container for the step content (the actual form for each step)
 .stepContent {
   flex: 1;
   display: flex;
-  overflow: auto;
+  flex-direction: column;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  @media (max-width: 768px) {
+    overflow-y: visible;
+  }
 }
 
 // Error message styling
@@ -57,7 +130,7 @@
   padding: 12px 16px;
   margin: 16px;
   position: relative;
-  
+
   .dismissButton {
     position: absolute;
     top: 8px;
@@ -81,7 +154,7 @@
   padding: 12px 16px;
   margin: 16px;
   position: relative;
-  
+
   .dismissButton {
     position: absolute;
     top: 8px;
@@ -104,7 +177,7 @@
   justify-content: center;
   height: 100%;
   width: 100%;
-  
+
   p {
     margin-top: 16px;
     color: #6b7280;
@@ -115,10 +188,36 @@
 .navigation {
   display: flex;
   height: 64px;
-  justify-content: space-between;
-  margin-top: auto;
-  padding: 16px 24px;
-  border-top: 1px solid #e5e7eb;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 32px;
+  padding: 24px 80px;
+  align-self: stretch;
+  flex-shrink: 0; // Prevent shrinking
+  
+  background-color: #FFFFFF;
+  border-top: 1px solid #EAECF0;
+
+  @media (max-width: 768px) {
+    position: sticky;
+    bottom: 0;
+    z-index: 20;
+    padding: 12px 20px;
+    gap: 16px;
+    justify-content: space-between;
+    box-shadow: 0 -4px 12px rgba(16, 24, 40, 0.08);
+  }
+
+  @media (max-width: 480px) {
+    padding: 12px 16px;
+  }
+}
+
+.publishButton {
+  @media (max-width: 480px) {
+    flex: 1;
+    text-align: center;
+  }
 }
 
 // Back button styling
@@ -132,15 +231,20 @@
   font-size: 14px;
   cursor: pointer;
   transition: all 0.2s ease;
-  
+
   &:hover:not(:disabled) {
     background-color: #f9fafb;
     border-color: #9ca3af;
   }
-  
+
   &:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+  }
+
+  @media (max-width: 480px) {
+    padding: 8px 16px;
+    font-size: 13px;
   }
 }
 
@@ -155,18 +259,23 @@
   font-size: 14px;
   cursor: pointer;
   transition: background-color 0.2s ease;
-  
+
   &:hover:not(:disabled) {
     background-color: #6d28d9;
   }
-  
+
   &:disabled {
     opacity: 0.7;
     cursor: not-allowed;
   }
+
+  @media (max-width: 480px) {
+    padding: 8px 16px;
+    font-size: 13px;
+  }
 }
 
-// Form container
+// Form container (this class is not directly used in the current JSX structure, can be removed if not needed elsewhere)
 .formContainer {
   background-color: #FFFFFF;
   border-radius: 8px;
@@ -176,18 +285,26 @@
   height: 100%;
 }
 
-// Tab content
+// Tab content (this class is not directly used in the current JSX structure, can be removed if not needed elsewhere)
 .tabContent {
   padding: 24px;
   height: 100%;
   overflow-y: auto;
+
+  @media (max-width: 768px) {
+    padding: 16px; // Reduce padding on mobile
+  }
 }
 
-// Step progress indicator
+// Step progress indicator (this class is not directly used in the current JSX structure, can be removed if not needed elsewhere)
 .stepProgress {
   display: flex;
   align-items: center;
   margin-bottom: 24px;
+
+  @media (max-width: 768px) {
+    margin-bottom: 16px; // Reduce margin on mobile
+  }
 }
 
 .stepIndicator {
@@ -202,16 +319,16 @@
   font-size: 12px;
   font-weight: 600;
   margin-right: 8px;
-  
+
   &.active {
     background-color: #7C3AED;
     color: white;
   }
-  
+
   &.completed {
     background-color: #7C3AED;
     color: white;
-    
+
     &:after {
       content: '✓';
     }
@@ -222,22 +339,30 @@
   font-size: 14px;
   font-weight: 500;
   color: #6b7280;
-  
+
   &.active {
     color: #111827;
   }
-  
+
   &.completed {
     color: #7C3AED;
+  }
+
+  @media (max-width: 768px) {
+    font-size: 13px; // Smaller font on mobile
   }
 }
 
 // Section containers
 .sectionContainer {
   margin-bottom: 32px;
-  
+
   &:last-child {
     margin-bottom: 0;
+  }
+
+  @media (max-width: 768px) {
+    margin-bottom: 24px; // Reduce margin on mobile
   }
 }
 
@@ -246,12 +371,21 @@
   font-weight: 600;
   color: #111827;
   margin: 0 0 8px 0;
+
+  @media (max-width: 768px) {
+    font-size: 15px; // Smaller font on mobile
+  }
 }
 
 .sectionDescription {
   font-size: 14px;
   color: #6b7280;
   margin: 0 0 16px 0;
+
+  @media (max-width: 768px) {
+    font-size: 13px; // Smaller font on mobile
+    margin-bottom: 12px;
+  }
 }
 
 .disabled {
@@ -275,66 +409,23 @@
   z-index: 100;
 }
 
-// Footer styling
+// Footer styling - Note: this footer is part of createEventPage.jsx, not mainLayout
 .footer {
   display: flex;
-  height: 25px;
-  padding: 16px;
-  flex-direction: column;
+  height: 48px;
+  /* Set a fixed height */
+  padding: 0 24px;
   justify-content: center;
   align-items: center;
-  gap: 10px;
-  align-self: stretch;
   background: #FFF;
   color: #6b7280;
   font-size: 14px;
   box-shadow: 0px -1px 3px rgba(0, 0, 0, 0.05);
-}
+  flex-shrink: 0;
+  /* Prevent footer from shrinking */
 
-// Responsive adjustments
-@media (max-width: 1280px) {
-  .content {
-    padding: 12px;
-  }
-}
-
-@media (max-width: 1024px) {
-  .createEventContainer {
-    width: calc(100% - 60px);
-    margin-left: 60px;
-  }
-}
-
-@media (max-width: 768px) {
-  .createEventContainer {
-    width: 100%;
-    margin-left: 0;
-  }
-  
-  .content {
-    flex-direction: column;
-    height: auto;
-    max-height: none;
-    overflow-y: auto;
-  }
-  
-  .mainContent {
-    min-height: 500px;
-  }
-}
-
-@media (max-width: 480px) {
-  .content {
-    padding: 8px;
-    gap: 8px;
-  }
-  
-  .navigation {
-    padding: 12px 16px;
-  }
-  
-  .backButton, .nextButton {
-    padding: 8px 16px;
-    font-size: 13px;
+  @media (max-width: 768px) {
+    padding: 0 16px; // Reduce padding on mobile
+    font-size: 12px; // Smaller font
   }
 }

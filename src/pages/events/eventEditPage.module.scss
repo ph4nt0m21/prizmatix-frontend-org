@@ -1,0 +1,416 @@
+@import '../../styles/variables';
+@import '../../styles/mixins';
+
+/* New container to control the overall page layout */
+.pageContainer {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  /* Make the page fill the entire screen height */
+  overflow: hidden;
+  /* Prevent the whole page from scrolling */
+  background-color: #F1F1F1;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  /* Match the content background */
+
+  @media (max-width: 768px) {
+    height: auto; // Allow height to adjust on mobile
+    min-height: 100vh; // Ensure it still takes full viewport height if content is short
+  }
+}
+
+// Main container for the create event page (this class is not directly used in the current JSX structure, can be removed if not needed elsewhere)
+.pageWrapper {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: #F8F8F8;
+}
+
+// Container for the content area that accounts for the sidebar
+// (This class is not directly used in the current JSX structure, can be removed if not needed elsewhere)
+.createEventContainer {
+  display: flex;
+  flex-direction: column;
+  width: calc(100% - 70px);
+  margin-left: 70px; // Sidebar width
+  flex: 1;
+
+  @media (max-width: 768px) {
+    width: 100%; // Take full width on mobile
+    margin-left: 0; // Remove sidebar margin
+  }
+}
+
+// Flex container for sidebar and main content
+.content {
+  display: flex;
+  background: #F1F1F1;
+  gap: 16px;
+  padding: 16px 24px;
+  flex: 1;
+  overflow: hidden; // Prevent this container from showing scrollbars
+
+  @media (max-width: 1280px) {
+    padding: 12px;
+  }
+
+  @media (max-width: 1024px) {
+    padding: 12px;
+  }
+
+  @media (max-width: 768px) {
+    flex-direction: column; // Stack sidebar and main content vertically
+    overflow-y: auto; // Allow content to scroll on smaller screens
+    padding: 16px; // Adjust padding for mobile
+  }
+
+  @media (max-width: 480px) {
+    padding: 8px;
+    gap: 8px;
+  }
+}
+
+// Overlay to close sidebar on mobile when clicking outside
+.sidebarOverlay {
+  display: none;
+
+  @media (max-width: 768px) {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 1000;
+    backdrop-filter: blur(2px);
+  }
+}
+
+// Main content area that contains the form (the step content and navigation)
+.mainContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; // Important: this keeps the main content from scrolling
+  background-color: #FFFFFF;
+  border-radius: 12px;
+  border: 1px solid #EAECF0;
+  box-shadow: 0px 1px 3px rgba(16, 24, 40, 0.1), 0px 1px 2px rgba(16, 24, 40, 0.06);
+
+  @media (max-width: 768px) {
+    min-height: auto;
+    overflow-y: visible; /* Prevent nested scrollbars */
+  }
+}
+
+// Container for the step content (the actual form for each step)
+.stepContent {
+  flex: 1;
+  display: flex;
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  @media (max-width: 768px) {
+    overflow-y: visible;
+  }
+}
+
+// Error message styling
+.errorMessage {
+  background-color: #fee2e2;
+  border: 1px solid #fca5a5;
+  border-radius: 6px;
+  color: #b91c1c;
+  padding: 12px 16px;
+  margin: 16px;
+  position: relative;
+
+  .dismissButton {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: none;
+    border: none;
+    color: #b91c1c;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 4px;
+    line-height: 1;
+  }
+}
+
+// Success message styling
+.successMessage {
+  background-color: #d1fae5;
+  border: 1px solid #6ee7b7;
+  border-radius: 6px;
+  color: #065f46;
+  padding: 12px 16px;
+  margin: 16px;
+  position: relative;
+
+  .dismissButton {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: none;
+    border: none;
+    color: #065f46;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 4px;
+    line-height: 1;
+  }
+}
+
+// Loading state container
+.loadingContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+
+  p {
+    margin-top: 16px;
+    color: #6b7280;
+  }
+}
+
+// Navigation buttons container
+.navigation {
+  display: flex;
+  height: 64px;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 32px;
+  padding: 24px 80px;
+  align-self: stretch;
+  flex-shrink: 0; // Prevent shrinking
+  
+  background-color: #FFFFFF;
+  border-top: 1px solid #EAECF0;
+
+  @media (max-width: 768px) {
+    padding: 12px 20px; // Adjust padding for mobile
+    gap: 16px; // Reduce gap
+    justify-content: space-between; // Distribute buttons
+  }
+
+  @media (max-width: 480px) {
+    padding: 12px 16px;
+  }
+}
+
+// Back button styling
+.backButton {
+  padding: 10px 24px;
+  border-radius: 6px;
+  background-color: white;
+  border: 1px solid #d1d5db;
+  color: #6b7280;
+  font-weight: 500;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover:not(:disabled) {
+    background-color: #f9fafb;
+    border-color: #9ca3af;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  @media (max-width: 480px) {
+    padding: 8px 16px;
+    font-size: 13px;
+  }
+}
+
+// Next button styling
+.nextButton {
+  padding: 10px 24px;
+  border-radius: 6px;
+  background-color: #7C3AED;
+  border: none;
+  color: white;
+  font-weight: 500;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+
+  &:hover:not(:disabled) {
+    background-color: #6d28d9;
+  }
+
+  &:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+
+  @media (max-width: 480px) {
+    padding: 8px 16px;
+    font-size: 13px;
+  }
+}
+
+// Form container (this class is not directly used in the current JSX structure, can be removed if not needed elsewhere)
+.formContainer {
+  background-color: #FFFFFF;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  height: 100%;
+}
+
+// Tab content (this class is not directly used in the current JSX structure, can be removed if not needed elsewhere)
+.tabContent {
+  padding: 24px;
+  height: 100%;
+  overflow-y: auto;
+
+  @media (max-width: 768px) {
+    padding: 16px; // Reduce padding on mobile
+  }
+}
+
+// Step progress indicator (this class is not directly used in the current JSX structure, can be removed if not needed elsewhere)
+.stepProgress {
+  display: flex;
+  align-items: center;
+  margin-bottom: 24px;
+
+  @media (max-width: 768px) {
+    margin-bottom: 16px; // Reduce margin on mobile
+  }
+}
+
+.stepIndicator {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: #e5e7eb;
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+  margin-right: 8px;
+
+  &.active {
+    background-color: #7C3AED;
+    color: white;
+  }
+
+  &.completed {
+    background-color: #7C3AED;
+    color: white;
+
+    &:after {
+      content: '✓';
+    }
+  }
+}
+
+.stepLabel {
+  font-size: 14px;
+  font-weight: 500;
+  color: #6b7280;
+
+  &.active {
+    color: #111827;
+  }
+
+  &.completed {
+    color: #7C3AED;
+  }
+
+  @media (max-width: 768px) {
+    font-size: 13px; // Smaller font on mobile
+  }
+}
+
+// Section containers
+.sectionContainer {
+  margin-bottom: 32px;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+
+  @media (max-width: 768px) {
+    margin-bottom: 24px; // Reduce margin on mobile
+  }
+}
+
+.sectionTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 8px 0;
+
+  @media (max-width: 768px) {
+    font-size: 15px; // Smaller font on mobile
+  }
+}
+
+.sectionDescription {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 0 0 16px 0;
+
+  @media (max-width: 768px) {
+    font-size: 13px; // Smaller font on mobile
+    margin-bottom: 12px;
+  }
+}
+
+.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Tooltip for disabled steps */
+.disabled:hover::after {
+  content: "Please complete Basic Info step first";
+  position: absolute;
+  left: 100%;
+  top: 0;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+  z-index: 100;
+}
+
+// Footer styling - Note: this footer is part of createEventPage.jsx, not mainLayout
+.footer {
+  display: flex;
+  height: 48px;
+  /* Set a fixed height */
+  padding: 0 24px;
+  justify-content: center;
+  align-items: center;
+  background: #FFF;
+  color: #6b7280;
+  font-size: 14px;
+  box-shadow: 0px -1px 3px rgba(0, 0, 0, 0.05);
+  flex-shrink: 0;
+  /* Prevent footer from shrinking */
+
+  @media (max-width: 768px) {
+    padding: 0 16px; // Reduce padding on mobile
+    font-size: 12px; // Smaller font
+  }
+}

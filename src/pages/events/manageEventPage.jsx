@@ -1,256 +1,288 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import EventHeaderNav from './components/eventHeaderNav';
-import EventManageSidebar from './components/eventManageSidebar';
-import LoadingSpinner from '../../components/common/loadingSpinner/loadingSpinner';
-import styles from './manageEventPage.module.scss';
+import React, { useState, useEffect, useCallback, useMemo } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import Cookies from "js-cookie";
+import { toast } from "react-toastify";
+import EventHeaderNav from "./components/eventHeaderNav";
+import EventManageSidebar from "./components/eventManageSidebar";
+import LoadingSpinner from "../../components/common/loadingSpinner/loadingSpinner";
+import styles from "./manageEventPage.module.scss";
 
-// Import section components
-import OverviewSection from './sections/overviewSection';
-import OrdersAndAttendeesSection from './sections/ordersAndAttendeesSection';
-import PayoutSection from './sections/payoutSection';
-import PromotionsSection from './sections/promotionsSection';
-import EventPageSection from './sections/eventPageSection';
+// Import API and section components
+import {
+  GetEventDashboardAPI,
+  GetEventAPI,
+  GetEventStatusAPI,
+  DeleteEventAPI,
+  DuplicateEventAPI,
+  GetEventTicketStructuresAPI,
+} from "../../services/allApis";
+import { getUserData } from "../../utils/authUtil";
+import OverviewSection from "./sections/overviewSection";
+import OrdersAndAttendeesSection from "./sections/ordersAndAttendeesSection/ordersAndAttendeesSection";
+import PayoutSection from "./sections/payoutSection";
+import TicketSection from "./sections/ticketSection";
+import DiscountSection from "./sections/discountSection";
+import { getPublishedEventTimingStatus } from "./eventStatusUtils";
+import { getManagePublishGate } from "../../utils/eventUtil";
 
-/**
- * EventManagePage component for managing existing events
- * Provides a dashboard view with metrics and management options
- */
 const EventManagePage = () => {
   const navigate = useNavigate();
   const { eventId, section } = useParams();
-  
-  // Loading state
-  const [isLoading, setIsLoading] = useState(true);
-  
-  // Error state
-  const [error, setError] = useState(null);
-  
-  // Success message state
-  const [successMessage, setSuccessMessage] = useState(null);
-  
-  // Event data state with dummy values
-  const [eventData, setEventData] = useState({
-    id: eventId || '12345',
-    name: 'NORR Festival 2022',
-    status: 'Live',
-    location: {
-      city: 'Queenstown',
-      country: 'New Zealand'
-    },
-    dateTime: {
-      startDate: '2025-05-12',
-      startTime: '10:00',
-      endDate: '2025-05-12',
-      endTime: '22:00'
-    },
-    earnings: {
-      total: 6583.25,
-      percentageChange: 15.8
-    },
-    tickets: {
-      issued: 250,
-      total: 1050,
-      percentageChange: 15.8
-    },
-    orders: {
-      count: 189,
-      percentageChange: 15.8
-    },
-    views: {
-      count: 1,
-      percentageChange: 15.8
-    },
-    ticketTypes: [
-      { name: 'Early Bird', sales: 3200.00 },
-      { name: 'VIP', sales: 3300.00 }
-    ],
-    salesData: {
-      dailyRevenue: 1220.00,
-      timeframe: '10 days'
-    }
-  });
-  
-  // Current section state (default to 'overview' if not specified)
-  const [currentSection, setCurrentSection] = useState('overview');
-  
-  // Track completion status for each step (dummy data)
-  const [sectionStatus, setSectionStatus] = useState({
-    overview: { completed: true, valid: true, visited: true },
-    ordersAndAttendees: { completed: true, valid: true, visited: false },
-    payout: { completed: true, valid: true, visited: false },
-    promotions: { completed: true, valid: true, visited: false },
-    eventPage: { completed: true, valid: true, visited: false },
-    tickets: { completed: true, valid: true, visited: false }
-  });
-  
-  // Simulate data fetching on mount
-  useEffect(() => {
-    const fetchEventData = async () => {
-      try {
-        setIsLoading(true);
-        // Simulate API call delay
-        await new Promise(resolve => setTimeout(resolve, 800));
-        
-        // In a real app, you would fetch event data here
-        // For now, we're using the dummy data from state
 
-        // Set loading to false after "fetching" data
-        setIsLoading(false);
-      } catch (error) {
-        console.error('Error fetching event data:', error);
-        setError('Failed to load event data. Please try again.');
-        setIsLoading(false);
+  const [isManageSidebarOpen, setIsManageSidebarOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [dashboardData, setDashboardData] = useState(null);
+  const [eventData, setEventData] = useState(null);
+  const [eventStatusFromApi, setEventStatusFromApi] = useState(null);
+  const [currentSection, setCurrentSection] = useState("overview");
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isDuplicating, setIsDuplicating] = useState(false);
+
+  const publishGate = useMemo(
+    () =>
+      getManagePublishGate({
+        statusData: eventStatusFromApi,
+        eventData,
+        dashboardData,
+        isPublished: !!eventData?.isPublished,
+      }),
+    [eventStatusFromApi, eventData, dashboardData]
+  );
+
+  const canPublishFromManage = publishGate.canPublish;
+
+  const fetchEventData = useCallback(
+    async ({ showLoader = true } = {}) => {
+      if (!eventId) return;
+
+      try {
+        if (showLoader) setIsLoading(true);
+        // Fetch dashboard, event details, publish status, and ticket structures in parallel.
+        const [dashboardRes, eventRes, statusRes, ticketsRes] = await Promise.all([
+          GetEventDashboardAPI(eventId),
+          GetEventAPI(eventId),
+          GetEventStatusAPI(eventId),
+          GetEventTicketStructuresAPI(eventId),
+        ]);
+
+        const isPublished =
+          statusRes.data?.step8Completed ?? eventRes.data?.isPublished ?? false;
+        const ticketStructures = Array.isArray(ticketsRes?.data)
+          ? ticketsRes.data.filter((ticket) => ticket?.isDeleted !== true)
+          : [];
+        const mergedEventData = {
+          ...eventRes.data,
+          tickets: ticketStructures,
+          ticketStructures,
+          isPublished,
+        };
+        setDashboardData(dashboardRes.data);
+        setEventData(mergedEventData);
+        setEventStatusFromApi(statusRes.data ?? null);
+        setError(null);
+      } catch (fetchError) {
+        console.error("Error fetching event data:", fetchError);
+        setError("Failed to load event data. Please try again.");
+      } finally {
+        if (showLoader) setIsLoading(false);
       }
-    };
-    
-    fetchEventData();
-  }, [eventId]);
-  
-  // Parse section parameter and update current section
+    },
+    [eventId]
+  );
+
   useEffect(() => {
-    if (section) {
-      setCurrentSection(section);
-      
-      // Mark the current section as visited
-      setSectionStatus(prevStatus => ({
-        ...prevStatus,
-        [section]: {
-          ...prevStatus[section],
-          visited: true
-        }
-      }));
-    } else {
-      setCurrentSection('overview');
-    }
+    fetchEventData();
+  }, [fetchEventData]);
+
+  useEffect(() => {
+    setCurrentSection(section || "overview");
   }, [section]);
-  
-  /**
-   * Navigate to a specific section
-   * @param {string} sectionName - Section to navigate to
-   */
-  const navigateToSection = (sectionName) => {
+
+  const navigateToManageSection = (sectionName) => {
     navigate(`/events/manage/${eventId}/${sectionName}`);
-    setCurrentSection(sectionName);
+    if (window.innerWidth <= 768 && isManageSidebarOpen) {
+      setIsManageSidebarOpen(false);
+    }
   };
 
-  /**
-   * Render placeholders for sections not yet implemented
-   * @param {string} sectionName - Name of the section
-   * @returns {JSX.Element} Placeholder component
-   */
-  const renderPlaceholder = (sectionName) => {
+  const navigateToEventEditPage = () => {
+    navigate(`/events/edit-page/${eventId}/1`);
+  };
+
+  const navigateToPublishStep = () => {
+    if (!eventId || !canPublishFromManage) return;
+    navigate(`/events/create/${eventId}/8`);
+    if (window.innerWidth <= 768 && isManageSidebarOpen) {
+      setIsManageSidebarOpen(false);
+    }
+  };
+
+  const duplicateEvent = async () => {
+    if (!eventId) return;
+
+    try {
+      setIsDuplicating(true);
+      const response = await DuplicateEventAPI(eventId);
+      const newEventId = response.data?.eventId;
+
+      if (!newEventId) {
+        throw new Error("Duplicate event ID missing from response.");
+      }
+
+      toast.success("Event duplicated successfully.");
+      const targetStep = eventStatus === "PAST" ? 3 : 8;
+      navigate(`/events/create/${newEventId}/${targetStep}`);
+    } catch (duplicateError) {
+      console.error("Failed to duplicate event:", duplicateError);
+      toast.error(
+        duplicateError.response?.data?.message || "Failed to duplicate the event."
+      );
+    } finally {
+      setIsDuplicating(false);
+    }
+  };
+
+  const confirmDeleteEvent = async () => {
+    if (!eventId) return;
+
+    const currentUserId = getUserData()?.id || Cookies.get("userId");
+    if (!currentUserId) {
+      toast.error("User ID not found. Cannot delete event.");
+      setShowDeleteConfirm(false);
+      return;
+    }
+
+    try {
+      setIsDeleting(true);
+      await DeleteEventAPI(eventId, currentUserId);
+      toast.success("Event moved to Deleted. You can restore it within 30 days.");
+      setShowDeleteConfirm(false);
+      navigate("/events");
+    } catch (deleteError) {
+      console.error("Failed to delete event:", deleteError);
+      toast.error(
+        deleteError.response?.data?.message || "Failed to delete the event."
+      );
+      setShowDeleteConfirm(false);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const eventStatus = eventData?.isPublished
+    ? getPublishedEventTimingStatus(eventData)
+    : 'DRAFT';
+
+  const goToOrdersAndAttendees = () => navigateToManageSection("ordersAndAttendees");
+
+  const renderCurrentSection = () => {
+    switch (currentSection) {
+      case "overview":
+        return (
+          <OverviewSection
+            dashboardData={dashboardData}
+            eventData={eventData}
+            onViewAllOrders={goToOrdersAndAttendees}
+          />
+        );
+      case "ordersAndAttendees":
+        return <OrdersAndAttendeesSection eventId={eventId} />;
+      case "payout":
+        return <PayoutSection eventId={eventId} dashboardData={dashboardData} />;
+      case "tickets":
+        return <TicketSection onCommitSuccess={() => fetchEventData({ showLoader: false })} />;
+      case "discounts":
+        return <DiscountSection onCommitSuccess={() => fetchEventData({ showLoader: false })} />;
+      default:
+        return (
+          <OverviewSection
+            dashboardData={dashboardData}
+            eventData={eventData}
+            onViewAllOrders={goToOrdersAndAttendees}
+          />
+        );
+    }
+  };
+
+  if (isLoading) {
     return (
-      <div className={styles.placeholderContainer}>
-        <h2 className={styles.placeholderTitle}>{sectionName} Section</h2>
-        <p className={styles.placeholderMessage}>This section is coming soon.</p>
-        <button 
-          className={styles.placeholderButton}
-          onClick={() => navigateToSection('overview')}
-        >
-          Back to Overview
-        </button>
+      <div className={styles.loadingContainerFullPage}>
+        <LoadingSpinner size="large" />
       </div>
     );
-  };
-  
-  /**
-   * Render the current section
-   * @returns {JSX.Element} Current section component
-   */
-  const renderCurrentSection = () => {
-    // Show loading spinner while loading
-    if (isLoading) {
-      return (
-        <div className={styles.loadingContainer}>
-          <LoadingSpinner size="large" />
-          <p>Loading event data...</p>
-        </div>
-      );
-    }
-    
-    // Handle different sections
-    switch (currentSection) {
-      case 'overview':
-        return <OverviewSection eventData={eventData} />;
-      case 'ordersAndAttendees':
-        return <OrdersAndAttendeesSection eventData={eventData} />;
-      case 'payout':
-        return <PayoutSection eventData={eventData} />;
-      case 'promotions':
-        return <PromotionsSection eventData={eventData} />;
-      case 'eventPage':
-        return <EventPageSection eventData={eventData} />;
-      case 'tickets':
-        return renderPlaceholder('Tickets');
-      default:
-        return <OverviewSection eventData={eventData} />;
-    }
-  };
-  
-  // Check if the current event is live
-  const isEventLive = eventData.status === 'Live';
-  
-  // Determine if preview is available
-  const canPreview = true; // In management view, preview should always be available
-  
+  }
+
+  if (error) {
+     return <div className={styles.errorMessage}>{error}</div>
+  }
+
   return (
     <>
-      
-      {/* Event-specific sub-header with breadcrumbs and actions */}
-      <EventHeaderNav 
-        currentStep={currentSection === 'overview' ? 'Overview' : currentSection} 
-        eventName={eventData.name}
-        isDraft={!isEventLive}
-        canPreview={canPreview}
+      <EventHeaderNav
+        eventName={eventData?.name || ''}
+        isDraft={!eventData?.isPublished}
+        eventStatus={eventStatus}
+        toggleMobileSidebar={() => setIsManageSidebarOpen(!isManageSidebarOpen)}
+        eventId={eventId}
+        eventSlug={eventData?.slug}
+        showActions={true}
       />
-       
-      <div className={styles.content}>
-        <EventManageSidebar 
+      <div className={styles.contentWrapper}>
+        {isManageSidebarOpen && (
+          <div className={styles.sidebarOverlay} onClick={() => setIsManageSidebarOpen(false)}></div>
+        )}
+        <EventManageSidebar
           currentSection={currentSection}
-          sectionStatus={sectionStatus}
-          navigateToSection={navigateToSection}
+          sectionStatus={{}} // sectionStatus can be implemented later
+          navigateToSection={navigateToManageSection}
+          navigateToEventEditPage={navigateToEventEditPage}
+          navigateToPublishStep={navigateToPublishStep}
+          canPublish={canPublishFromManage}
+          publishBlockers={publishGate.blockers}
+          isPublished={!!eventData?.isPublished}
           eventId={eventId}
+          onDeleteClick={() => setShowDeleteConfirm(true)}
+          onDuplicateClick={duplicateEvent}
+          isDuplicating={isDuplicating}
+          isMobileSidebarOpen={isManageSidebarOpen}
+          toggleMobileSidebar={() => setIsManageSidebarOpen(!isManageSidebarOpen)}
         />
-        
-        <div className={styles.mainContent}>
-          {/* Success message (if any) */}
-          {successMessage && (
-            <div className={styles.successMessage}>
-              {successMessage}
-              <button 
-                className={styles.dismissButton}
-                onClick={() => setSuccessMessage(null)}
+        <main className={styles.mainContent}>
+          {renderCurrentSection()}
+        </main>
+      </div>
+      {showDeleteConfirm && (
+        <div className={styles.deleteModalOverlay}>
+          <div className={styles.deleteModal}>
+            <h3>Confirm Deletion</h3>
+            <p>
+              Are you sure you want to delete the event &quot;{eventData?.name}&quot;?
+              It will move to Deleted for 30 days and can be restored during that time.
+              After 30 days it will be permanently removed from your lists.
+            </p>
+            <div className={styles.deleteModalActions}>
+              <button
+                type="button"
+                onClick={() => setShowDeleteConfirm(false)}
+                className={styles.cancelButton}
+                disabled={isDeleting}
               >
-                ✕
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={confirmDeleteEvent}
+                className={styles.confirmDeleteButton}
+                disabled={isDeleting}
+              >
+                {isDeleting ? "Deleting…" : "Delete"}
               </button>
             </div>
-          )}
-          
-          {/* Error message (if any) */}
-          {error && (
-            <div className={styles.errorMessage}>
-              {error}
-              <button 
-                className={styles.dismissButton}
-                onClick={() => setError(null)}
-              >
-                ✕
-              </button>
-            </div>
-          )}
-          
-          {/* Section content */}
-          <div className={styles.sectionContent}>
-            {renderCurrentSection()}
           </div>
         </div>
-      </div>
-      
-      {/* Footer */}
-      <div className={styles.footer}>
-        © 2025 Event Tickets Platform
-      </div>
+      )}
     </>
   );
 };

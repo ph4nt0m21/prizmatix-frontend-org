@@ -1,0 +1,66 @@
+.wrapper {
+  position: relative;
+  margin-bottom: 16px;
+}
+
+.missingKey {
+  padding: 12px 14px;
+  border-radius: 6px;
+  border: 1px dashed #d1d5db;
+  background: #f9fafb;
+  color: #6b7280;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.wrapper :global(.geoapify-geocoder-autocomplete-container) {
+  width: 100%;
+}
+
+.wrapper :global(.geoapify-input-wrapper) {
+  width: 100%;
+}
+
+.wrapper :global(.geoapify-autocomplete-input) {
+  width: 100%;
+  height: 44px;
+  padding: 0 40px 0 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  font-size: 14px;
+  color: #333;
+  box-sizing: border-box;
+  line-height: 44px;
+}
+
+.wrapper :global(.geoapify-autocomplete-input:focus) {
+  outline: none;
+  border-color: #7c3aed;
+  box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.05);
+}
+
+.wrapper :global(.geoapify-autocomplete-items) {
+  border: 1px solid #e5e7eb;
+  border-radius: 0 0 6px 6px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.wrapper :global(.geoapify-autocomplete-items div) {
+  font-size: 14px;
+  color: #1f2937;
+}
+
+.wrapper :global(.geoapify-autocomplete-items .active),
+.wrapper :global(.geoapify-autocomplete-items div:hover) {
+  background-color: rgba(124, 58, 237, 0.08);
+}
+
+@media (max-width: 768px) {
+  .wrapper :global(.geoapify-autocomplete-input) {
+    height: 40px;
+    line-height: 40px;
+    font-size: 13px;
+  }
+}
