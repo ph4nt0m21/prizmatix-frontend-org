@@ -11,6 +11,13 @@ import { REMEMBERED_LOGIN_EMAIL_KEY } from '../utils/authFeedback';
 
 const AuthContext = createContext();
 
+// The backend's JWT is valid for 10 hours (JwtService.createToken). Keep any persistent
+// cookie to the same window: a cookie that outlives its token leaves the app looking
+// signed in while every request 401s, which is exactly the state that got reported as
+// "your API is down". Until refresh tokens land, "Remember me" therefore remembers the
+// email and keeps the session for the token's full life — not for 7 days.
+const TOKEN_LIFETIME_DAYS = 10 / 24;
+
 export const useAuth = () => {
   return useContext(AuthContext);
 };
@@ -20,6 +27,15 @@ export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
   const [error, setError] = useState(null);
+
+  // Single place that tears a session down, so an expired token and a deliberate logout
+  // can never drift into clearing different things.
+  const clearSession = useCallback(() => {
+    Cookies.remove('token');
+    localStorage.removeItem('userData');
+    setCurrentUser(null);
+    setIsAuthenticated(false);
+  }, []);
 
   const refreshProfile = useCallback(async () => {
     const token = Cookies.get('token');
@@ -47,10 +63,20 @@ export const AuthProvider = ({ children }) => {
       notifyProfileUpdated();
       return mergedUser;
     } catch (err) {
+      // A 401 is the server saying the token is dead — that is an answer, not a failure,
+      // and it must end the session. Swallowing it here (returning the cached profile)
+      // was half of why an expired token left the app looking signed in.
+      //
+      // Everything else — offline, timeout, 5xx — must NOT log anyone out: a transient
+      // blip should leave them working against the cached profile.
+      if (err?.response?.status === 401) {
+        clearSession();
+        return null;
+      }
       console.error('Failed to refresh profile:', err);
       return getUserData();
     }
-  }, []);
+  }, [clearSession]);
 
   useEffect(() => {
     const checkAuthStatus = async () => {
@@ -61,6 +87,10 @@ export const AuthProvider = ({ children }) => {
         if (storedUserData) {
           setCurrentUser(storedUserData);
         }
+        // Optimistic: render the app from cache rather than blocking on the network.
+        // The presence of a cookie is not proof the token inside it is still valid, so
+        // this is only provisional — refreshProfile below is what actually validates it
+        // against the server, and clears the session if it comes back 401.
         setIsAuthenticated(true);
         await refreshProfile();
       } else {
@@ -84,7 +114,10 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await LoginAPI(normalizedCredentials);
 
-      const cookieOptions = rememberMe ? { expires: 7 } : undefined;
+      // Without "remember me" this stays a session cookie (undefined = cleared when the
+      // browser closes), which is the safer default on shared machines. With it, the
+      // cookie lasts exactly as long as the token — not the 7 days it used to claim.
+      const cookieOptions = rememberMe ? { expires: TOKEN_LIFETIME_DAYS } : undefined;
       Cookies.set('token', response.data.token, cookieOptions);
 
       if (rememberMe) {
@@ -133,7 +166,8 @@ export const AuthProvider = ({ children }) => {
 
       const token = response.data.token || response.data.accessToken;
       if (token) {
-        Cookies.set('token', token, { expires: 1 });
+        // Was 1 day against a 10-hour token — same mismatch as the login path.
+        Cookies.set('token', token, { expires: TOKEN_LIFETIME_DAYS });
       }
 
       const user = response.data.user || {};
@@ -155,10 +189,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
-    Cookies.remove('token');
-    localStorage.removeItem('userData');
-    setCurrentUser(null);
-    setIsAuthenticated(false);
+    clearSession();
   };
 
   const clearError = () => {

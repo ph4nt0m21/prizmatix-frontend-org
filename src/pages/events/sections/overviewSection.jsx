@@ -303,9 +303,9 @@ const OverviewSection = ({ dashboardData, eventData, onViewAllOrders }) => {
 
             <div className={styles.earningsRow}>
               <div>
-                <div className={styles.earningsLabel}>Gross Ticket Sales</div>
+                <div className={styles.earningsLabel}>Ticket Sales</div>
                 <div className={styles.earningsSub}>
-                  Total ticket and donation sales before organiser deductions.
+                  Total ticket and donation value, excluding buyer-paid fees.
                 </div>
               </div>
               <div className={styles.earningsValue}>

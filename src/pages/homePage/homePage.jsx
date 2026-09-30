@@ -358,9 +358,9 @@ const HomePage = () => {
               </div>
               <div className={styles.earningsRow}>
                 <div>
-                  <div className={styles.earningsLabel}>Gross Ticket Sales</div>
+                  <div className={styles.earningsLabel}>Ticket Sales</div>
                   <div className={styles.earningsSub}>
-                    Total ticket and donation sales before organiser deductions.
+                    Total ticket and donation value, excluding buyer-paid fees.
                   </div>
                 </div>
                 <div className={styles.earningsValue}>
@@ -422,7 +422,7 @@ const HomePage = () => {
                 <div>
                   <div className={styles.earningsLabel}>Net Organiser Revenue</div>
                   <div className={styles.earningsSub}>
-                    Gross sales minus Afterpay and international card fees.
+                    Ticket sales minus Afterpay and international card fees.
                   </div>
                 </div>
                 <div className={styles.earningsValue}>
