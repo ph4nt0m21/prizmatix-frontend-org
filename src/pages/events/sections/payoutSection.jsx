@@ -87,6 +87,10 @@ const PayoutSection = ({ eventId, dashboardData, tableOnly = false }) => {
     eligibility?.remainingPayoutable ??
     dashboardData?.availablePayout ??
     0;
+  // Event balance (revenue − paid). Distinct from remainingPayoutable above, which is what
+  // can still be requested and also excludes pending requests.
+  const remainingBalance =
+    eligibility?.remainingPayoutable ?? remainingPayoutable;
   const pendingBalance =
     eligibility?.pendingBalance ??
     requests
@@ -450,15 +454,15 @@ const PayoutSection = ({ eventId, dashboardData, tableOnly = false }) => {
         </div>
         <div className={styles.infoCard}>
           <h3 className={styles.cardTitle}>Remaining Balance</h3>
-          <p className={styles.cardValue}>{formatCurrency(remainingPayoutable)}</p>
+          <p className={styles.cardValue}>{formatCurrency(remainingBalance)}</p>
           <p className={styles.cardHint}>
             Net organiser revenue {formatCurrency(totalRevenue)} minus paid out.
           </p>
         </div>
       </div>
       <p className={styles.summaryNote}>
-        Remaining balance decreases only after requests are marked as <strong>Paid</strong>. Pending
-        requests are tracked separately and do not reduce available balance until paid.
+        Pending payout requests are reserved from <strong>Available for Payout</strong> as soon as they are
+        made. Remaining balance decreases once a request is marked as <strong>Paid</strong>.
       </p>
 
       {!canRequestNew && (
