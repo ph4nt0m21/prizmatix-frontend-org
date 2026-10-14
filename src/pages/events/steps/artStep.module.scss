@@ -1,27 +1,52 @@
-// Import variables and mixins from main style files
 @import '../../../styles/variables';
 @import '../../../styles/mixins';
 
 // Main container styling
 .stepContainer {
   width: 100%;
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  padding: 24px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
 }
 
-// Section header styling - matches the purple icon with text
 .stepHeader {
   display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 24px;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 24px 80px;
+  border-bottom: 1px solid #EAECF0;
+
+  @media (max-width: 768px) {
+    gap: 16px;
+    padding: 24px;
+  }
+}
+
+.stepTextContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-start;
+  flex: 1;
+}
+
+.stepDescription {
+  font-size: 14px;
+  color: #666;
+  margin: 0;
 }
 
 .stepIcon {
   flex-shrink: 0;
   color: #7C3AED;
+
+  @media (max-width: 768px) {
+    svg {
+      width: 20px; // Slightly smaller icon for mobile
+      height: 20px;
+    }
+  }
 }
 
 .stepTitle {
@@ -29,16 +54,28 @@
   font-weight: 600;
   color: #333;
   margin: 0;
+
+  @media (max-width: 768px) {
+    font-size: 16px; // Adjust font size for mobile
+  }
 }
 
 // Form section styling
 .formSection {
-  padding: 0;
+  padding: 32px 80px;
+
+  @media (max-width: 768px) {
+    padding: 24px;
+  }
 }
 
 .formGroup {
   margin-bottom: 40px;
   width: 100%;
+
+  @media (max-width: 768px) {
+    margin-bottom: 24px; // Adjust margin for mobile
+  }
 }
 
 // Label and description styling
@@ -48,6 +85,10 @@
   font-weight: 600;
   color: #333;
   margin-bottom: 4px;
+
+  @media (max-width: 768px) {
+    font-size: 14px; // Adjust font size for mobile
+  }
 }
 
 .formDescription {
@@ -55,11 +96,40 @@
   color: #6b7280;
   margin-top: 0;
   margin-bottom: 16px;
+
+  @media (max-width: 768px) {
+    font-size: 12px; // Adjust font size for mobile
+    margin-bottom: 12px; // Adjust margin for mobile
+  }
+}
+
+.recommendationsBox {
+  font-size: 12px;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+
+  @media (max-width: 768px) {
+    font-size: 11px; // Adjust font size for mobile
+  }
+}
+
+.recommendationsTitle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  @media (max-width: 768px) {
+    gap: 8px; // Adjust gap for mobile
+  }
 }
 
 // Upload dropzone - square for thumbnail, rectangle for banner
-.uploadDropzone {
+.uploadDropzoneThumbnail {
   display: flex;
+  width: 250px;
+  height: 250px;
+  margin-bottom: 8px;
   align-items: center;
   justify-content: center;
   background-color: white;
@@ -78,24 +148,50 @@
     border-color: #e5e7eb;
     background-color: white;
   }
+
+  @media (max-width: 768px) {
+    width: 180px; // Smaller thumbnail for mobile
+    height: 180px;
+    margin: 0 auto 8px auto; // Center it
+  }
 }
 
-/* Banner is rectangular and wider */
-.uploadDropzone:last-of-type {
-  width: 100%;
-  height: 200px; /* Increased height */
-  margin-bottom: 8px;
-}
-
-/* You might also want to update the thumbnail to keep it square but larger */
-.uploadDropzone:first-of-type {
-  width: 250px;
+.uploadDropzoneBanner {
+  display: flex;
+  width: 500px;
   height: 250px;
   margin-bottom: 8px;
+  align-items: center;
+  justify-content: center;
+  background-color: white;
+  border: 1px dashed #d1d5db;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  
+  &.dragActive {
+    border-color: #7C3AED;
+    background-color: rgba(124, 58, 237, 0.05);
+  }
+  
+  &.hasFile {
+    border-style: solid;
+    border-color: #e5e7eb;
+    background-color: white;
+  }
+
+  @media (max-width: 768px) {
+    width: 100%; // Full width banner for mobile
+    height: 180px; // Adjust height to maintain aspect ratio or fit
+    margin-bottom: 8px;
+  }
+  @media (max-width: 480px) {
+    height: 150px; // Even shorter on very small phones
+  }
 }
 
 // Upload interface with centered text
-.uploadInterface {
+.uploadInterfaceThumbnail {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -104,6 +200,25 @@
   height: 100%;
   text-align: center;
   padding: 16px;
+
+  @media (max-width: 768px) {
+    padding: 12px; // Adjust padding for mobile
+  }
+}
+
+.uploadInterfaceBanner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%; /* Make it 100% of its parent, which is already responsive */
+  height: 100%;
+  text-align: center;
+  padding: 16px;
+
+  @media (max-width: 768px) {
+    padding: 12px; // Adjust padding for mobile
+  }
 }
 
 // Hidden in current design
@@ -118,6 +233,10 @@
   margin: 0;
   text-align: center;
   line-height: 1.5;
+
+  @media (max-width: 768px) {
+    font-size: 12px; // Adjust font size for mobile
+  }
 }
 
 // Purple "click to browse" button
@@ -133,6 +252,49 @@
   &:hover {
     text-decoration: underline;
   }
+
+  @media (max-width: 768px) {
+    font-size: 12px; // Adjust font size for mobile
+  }
+}
+
+.generateAiButton {
+  margin-top: 12px;
+  padding: 8px 14px;
+  border-radius: 6px;
+  border: 1px solid #7C3AED;
+  background: #fff;
+  color: #7C3AED;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+
+  &:hover:not(:disabled) {
+    background: rgba(124, 58, 237, 0.06);
+  }
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
+  @media (max-width: 768px) {
+    font-size: 12px;
+    margin-top: 10px;
+  }
+}
+
+.puterNote {
+  margin: 8px 0 0;
+  font-size: 11px;
+  color: #9ca3af;
+  line-height: 1.4;
+  max-width: 100%;
+
+  @media (max-width: 768px) {
+    font-size: 10px;
+  }
 }
 
 // Hidden file input
@@ -146,19 +308,28 @@
 
 // File information text layout
 .fileInfoText {
-  display: flex;
+  display: block;
   justify-content: space-between;
   margin-top: 4px;
   padding: 0 4px;
+
+  @media (max-width: 768px) {
+    font-size: 11px; // Adjust font size for mobile
+  }
 }
 
 // Supported file types text
 .supportedTypes {
+  display: block;
   font-size: 12px;
   color: #6b7280;
   
   svg {
     display: none; // Hidden in the design
+  }
+
+  @media (max-width: 768px) {
+    font-size: 10px; // Adjust font size for mobile
   }
 }
 
@@ -170,6 +341,10 @@
   svg {
     display: none; // Hidden in the design
   }
+
+  @media (max-width: 768px) {
+    font-size: 10px; // Adjust font size for mobile
+  }
 }
 
 // Image preview styling
@@ -179,6 +354,7 @@
   display: flex;
   flex-direction: column;
   position: relative;
+  overflow: hidden;
 }
 
 .previewImage {
@@ -189,12 +365,26 @@
 }
 
 .fileInfo {
+  position: absolute; // Position it relative to .imagePreview
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  background-color: rgba(249, 250, 251, 0.9); // A semi-transparent light background
+  backdrop-filter: blur(4px); // Optional: creates a nice "glass" effect
   display: flex;
   justify-content: space-between;
-  padding: 8px 0;
+  align-items: center;
+  padding: 8px 12px; // Adjust padding for a better look
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+
+  @media (max-width: 768px) {
+    padding: 6px 10px; // Adjust padding for mobile
+  }
 }
 
 .fileName {
+  display: block;
   font-size: 12px;
   font-weight: 500;
   color: #333;
@@ -202,11 +392,22 @@
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 70%;
+  flex-shrink: 1;
+  min-width: 0;
+
+  @media (max-width: 768px) {
+    font-size: 11px; // Adjust font size for mobile
+    max-width: 60%; // Give more space if needed
+  }
 }
 
 .fileSize {
   font-size: 12px;
   color: #6b7280;
+
+  @media (max-width: 768px) {
+    font-size: 11px; // Adjust font size for mobile
+  }
 }
 
 // Remove button styling
@@ -233,6 +434,17 @@
     width: 14px;
     height: 14px;
   }
+
+  @media (max-width: 768px) {
+    width: 20px; // Smaller button for mobile
+    height: 20px;
+    top: 6px;
+    right: 6px;
+    svg {
+      width: 12px; // Smaller icon for mobile
+      height: 12px;
+    }
+  }
 }
 
 // Error message styling
@@ -248,6 +460,12 @@
   justify-content: flex-end;
   gap: 12px;
   margin-top: 32px;
+
+  @media (max-width: 768px) {
+    flex-direction: column-reverse; // Stack buttons vertically, "Next" usually on top
+    gap: 12px; // Space between buttons
+    margin-top: 24px; // Adjust top margin
+  }
 }
 
 .backButton {
@@ -262,6 +480,12 @@
   
   &:hover {
     background-color: #f9fafb;
+  }
+
+  @media (max-width: 768px) {
+    width: 100%; // Full width on mobile
+    padding: 10px 16px; // Adjust padding for mobile
+    font-size: 14px; // Consistent font size
   }
 }
 
@@ -282,5 +506,229 @@
   &:disabled {
     opacity: 0.6;
     cursor: not-allowed;
+  }
+
+  @media (max-width: 768px) {
+    width: 100%; // Full width on mobile
+    padding: 10px 24px; // Adjust padding for mobile
+    font-size: 14px; // Consistent font size
+  }
+}
+
+// --- [NEW] Styles for the Cropping Modal ---
+
+.cropModalBackdrop {
+  position: fixed;
+  z-index: 1050; // High z-index to ensure it's on top
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 1rem;
+}
+
+.cropModalContent {
+  background-color: #fff;
+  padding: 2rem;
+  border-radius: 8px;
+  width: 100%;
+  max-width: 700px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+
+  h2 {
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+    text-align: center;
+    font-size: 22px;
+    font-weight: 600;
+    color: #333;
+  }
+
+  @media (max-width: 768px) {
+    padding: 1.5rem; // Adjust padding for mobile
+    margin: 1rem; // Add some margin to prevent it from touching screen edges
+    max-width: 90%; // Make it take up more width on smaller screens
+
+    h2 {
+      font-size: 18px; // Adjust font size for mobile
+      margin-bottom: 1rem;
+    }
+  }
+}
+
+.cropContainer {
+  margin-bottom: 1.5rem;
+  display: flex;
+  justify-content: center;
+
+  // This targets the image inside the react-crop component
+  img {
+    max-width: 100%; // Ensure image doesn't overflow
+    max-height: 60vh; // Reduce max height for mobile
+  }
+
+  @media (max-width: 768px) {
+    margin-bottom: 1rem; // Adjust margin for mobile
+  }
+}
+
+.cropModalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+
+  @media (max-width: 768px) {
+    flex-direction: column-reverse; // Stack buttons
+    gap: 8px; // Adjust gap
+  }
+}
+
+// Re-use button styles for consistency
+.cancelButton, .doneButton {
+  padding: 8px 24px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+
+  @media (max-width: 768px) {
+    width: 100%; // Full width on mobile
+    padding: 10px 16px; // Adjust padding
+  }
+}
+
+.cancelButton {
+  background: #f3f4f6; // A light gray
+  border: 1px solid #e5e7eb;
+  color: #6b7280;
+
+  &:hover {
+    background-color: #e5e7eb;
+  }
+}
+
+.doneButton {
+  background: #7C3AED;
+  color: white;
+
+  &:hover {
+    background-color: #6D28D9; // Darker shade from your nextButton
+  }
+}
+
+.aiModalBackdrop {
+  position: fixed;
+  z-index: 1060;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.55);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 1rem;
+}
+
+.aiModalContent {
+  background: #fff;
+  border-radius: 8px;
+  width: 100%;
+  max-width: 480px;
+  padding: 1.5rem 1.5rem 1.25rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.aiModalTitle {
+  margin: 0 0 0.5rem;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.aiModalDescription {
+  margin: 0 0 1rem;
+  font-size: 13px;
+  color: #6b7280;
+  line-height: 1.45;
+}
+
+.aiLabel {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 6px;
+}
+
+.aiTextarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  font-size: 14px;
+  font-family: inherit;
+  line-height: 1.45;
+  resize: vertical;
+  min-height: 96px;
+
+  &:focus {
+    outline: none;
+    border-color: #7C3AED;
+    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15);
+  }
+
+  &:disabled {
+    opacity: 0.65;
+    background: #f9fafb;
+  }
+}
+
+.aiModalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 1.25rem;
+
+  @media (max-width: 768px) {
+    flex-direction: column-reverse;
+    gap: 8px;
+  }
+}
+
+// Existing media queries from your file, adjusted or kept
+@media (max-width: 768px) {
+  .formRow { // This was likely from another component, keeping as a general media query
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .formInput { // This was likely from another component, keeping as a general media query
+    width: 100%;
+  }
+
+  .buttonGroup { // This class isn't explicitly used in your provided JSX, but keeping the styling for buttons if it's applied via a parent div
+    flex-direction: column;
+    gap: 8px;
+
+    button {
+      width: 100%;
+    }
+  }
+
+  .stepHeading { // These classes don't seem to be in your provided JSX, but keeping the media queries
+    font-size: 16px;
+  }
+
+  .stepSubheading { // These classes don't seem to be in your provided JSX, but keeping the media queries
+    font-size: 14px;
   }
 }

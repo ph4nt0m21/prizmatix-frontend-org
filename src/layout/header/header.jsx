@@ -1,98 +1,124 @@
-// src/layout/header/header.jsx
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
 import { getUserData } from '../../utils/authUtil';
+import ProfileAvatar from '../../components/common/profileAvatar/profileAvatar';
 import styles from './header.module.scss';
+import PropTypes from 'prop-types'
+// Import Hamburger Icon
+import { ReactComponent as HamburgerIcon } from '../../assets/icons/hamburger-menu-icon.svg';
+
 
 /**
- * Header component displays the organization info, search bar, and create event button
- * Refactored to match the new design specifications and hide Create Event button on specific pages
+ * Header component displays the organization info, search bar, and create event button.
+ * Now includes a hamburger menu for mobile navigation.
+ *
+ * @param {Object} props - Component props
+ * @param {Function} props.toggleMobileSidebar - Function to toggle mobile sidebar visibility
+ * @returns {JSX.Element} Header component
  */
-const Header = () => {
+const Header = ({ toggleMobileSidebar }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const [userData, setUserData] = useState(null);
-  
+  const [profilePhotoUrl, setProfilePhotoUrl] = useState('');
+
   // Check if authenticated directly using cookies
   const isAuthenticated = !!Cookies.get('token');
-  
+
   // Determine if we're on the home page
   const isHomePage = location.pathname === '/';
-  
+
   // Check if we're in the event creation flow
   const isEventCreationRoute = location.pathname.includes('/events/create');
-  
+
   // Check if we're on the events page
   const isEventsPage = location.pathname === '/events' || location.pathname === '/events/';
-  
+
   // Fetch user data on component mount
   useEffect(() => {
     if (isAuthenticated) {
       const userInfo = getUserData();
       if (userInfo) {
         setUserData(userInfo);
+        setProfilePhotoUrl(userInfo.profilePhotoUrl || '');
       }
     }
   }, [isAuthenticated]);
-  
-  // Handler for the Create Event button
+
+  useEffect(() => {
+    const syncProfilePhoto = () => {
+      const userInfo = getUserData();
+      if (userInfo) {
+        setUserData(userInfo);
+        setProfilePhotoUrl(userInfo.profilePhotoUrl || '');
+      }
+    };
+    window.addEventListener('profile-updated', syncProfilePhoto);
+    return () => window.removeEventListener('profile-updated', syncProfilePhoto);
+  }, []);
+
   const handleCreateEvent = () => {
     navigate('/events/create');
   };
-  
-  // Get organization initials for logo
-  const getOrgInitials = () => {
-    if (userData?.organizationName) {
-      const nameParts = userData.organizationName.split(' ');
-      if (nameParts.length >= 2) {
-        return (nameParts[0][0] + nameParts[1][0]).toUpperCase();
-      }
-      return userData.organizationName.substring(0, 2).toUpperCase();
-    }
-    return 'CF'; // Default fallback
-  };
-  
+
   return (
     <header className={styles.header}>
+      {/* Hamburger menu icon for mobile (always present in main header) */}
+      <button className={styles.hamburgerButton} onClick={toggleMobileSidebar} aria-label="Open menu">
+        <HamburgerIcon />
+      </button>
+
       <div className={styles.orgInfo}>
         <div className={styles.orgLogo}>
-          <span>{getOrgInitials()}</span>
+          <ProfileAvatar
+            src={profilePhotoUrl}
+            alt="Organisation profile"
+            className={styles.orgLogoImage}
+          />
         </div>
         <div className={styles.orgDetails}>
-          <span className={styles.orgLabel}>Organisation</span>
-          <h2 className={styles.orgName}>{userData?.organizationName || 'City Music Festival'}</h2>
+          <span className={styles.orgLabel}>{userData?.role === 'SCANNER' || userData?.role === 'ROLE_SCANNER' ? 'Scanner' : 'Organisation'}</span>
+          <h2 className={styles.orgName}>
+            {userData?.organizationName ||
+              (userData?.name ? userData.name : null) ||
+              'Organisation'}
+          </h2>
         </div>
       </div>
-      
+
       <div className={styles.headerActions}>
-        <div className={styles.searchContainer}>
-          <input
-            type="text"
-            placeholder="Search"
-            className={styles.searchInput}
-          />
-          <button className={styles.searchButton}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M15.5 14H14.71L14.43 13.73C15.41 12.59 16 11.11 16 9.5C16 5.91 13.09 3 9.5 3C5.91 3 3 5.91 3 9.5C3 13.09 5.91 16 9.5 16C11.11 16 12.59 15.41 13.73 14.43L14 14.71V15.5L19 20.49L20.49 19L15.5 14ZM9.5 14C7.01 14 5 11.99 5 9.5C5 7.01 7.01 5 9.5 5C11.99 5 14 7.01 14 9.5C14 11.99 11.99 14 9.5 14Z" fill="currentColor"/>
+        {/* Search bar (can be hidden on mobile if desired) */}
+        {/* <div className={styles.searchContainer}>
+          <input type="text" placeholder="Search" className={styles.searchInput} />
+          <button type="button" className={styles.searchButton}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M15.5 14H14.71L14.43 13.73C15.41 12.59 16 11.11 16 9.5C16 5.91 13.09 3 9.5 3C5.91 3 3 5.91 3 9.5C3 13.09 5.91 16 9.5 16C11.11 16 12.59 15.41 13.73 14.43L14 14.71V15.5L19.75 21.25L21.25 19.75L15.5 14ZM9.5 14C7.01 14 5 11.99 5 9.5C5 7.01 7.01 5 9.5 5C11.99 5 14 7.01 14 9.5C14 11.99 11.99 14 9.5 14Z" fill="currentColor"/>
             </svg>
           </button>
-        </div>
-        
+        </div> */}
+
         {/* Only show Create Event button when not in event creation flow or events page */}
-        {!isEventCreationRoute && !isEventsPage && (
-          <button 
-            type="button" 
-            className={styles.createEventButton}
-            onClick={handleCreateEvent}
-          >
-            <span className={styles.plusIcon}>+</span>
-            Create Event
-          </button>
-        )}
+        {userData?.roles?.includes("ORGANIZER") || userData?.roles?.includes("SUPER_ADMIN") ? (
+          !isEventCreationRoute && !isEventsPage && (
+            <button
+              type="button"
+              className={styles.createEventButton}
+              onClick={handleCreateEvent}
+            >
+              <span className={styles.plusIcon}>+</span>
+              Create Event
+            </button>
+          )
+        ) : null}
+
       </div>
     </header>
   );
+};
+
+Header.propTypes = {
+  toggleMobileSidebar: PropTypes.func.isRequired, // Added propType
 };
 
 export default Header;

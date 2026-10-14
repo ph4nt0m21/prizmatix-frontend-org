@@ -65,6 +65,20 @@ This section has moved here: [https://facebook.github.io/create-react-app/docs/a
 
 This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
 
+Deploy on AWS Prod
+
+cd /var/www/apps/console
+
+git checkout dev
+
+git pull origin dev
+
+npm install
+
+npm run build
+
+pm2 restart prizmatix-frontend
+
 ### `npm run build` fails to minify
 
 This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)

@@ -1,0 +1,37 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1098;
+  background: transparent;
+}
+
+.menu {
+  position: fixed;
+  z-index: 1099;
+  min-width: 120px;
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.menuItem {
+  background: none;
+  border: none;
+  padding: 10px 12px;
+  min-height: 36px;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 4px;
+  font-size: 14px;
+  color: #333333;
+
+  &:hover {
+    background-color: #f3f4f6;
+  }
+}

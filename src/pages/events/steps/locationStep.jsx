@@ -1,10 +1,28 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import PropTypes from 'prop-types';
+import { toast } from 'react-toastify';
 import styles from './locationStep.module.scss';
+import OptionalLabel from '../../../components/common/optionalLabel/optionalLabel';
+import AddressAutocomplete from '../../../components/common/addressAutocomplete/addressAutocomplete';
+import {
+  buildLocationFormState,
+  serializeLocationFormState,
+  parseCoordsFromGoogleMapsUrl,
+  normalizeGoogleMapLink,
+  isShortGoogleMapLink,
+  buildAddressGeocodeQuery,
+  getLocationModeKey,
+  pickLocationModeFields,
+  buildLocationStateForTypeChange,
+} from '../../../utils/eventUtil';
+import {
+  buildLocationSearchLabel,
+  geocodeAddressWithGeoapify,
+} from '../../../utils/geoapifyUtil';
 
 /**
  * LocationStep component - Second step of event creation
- * Focused on Google Maps link pasting functionality
+ * Extracts latitude and longitude from a pasted Google Maps link to update the map.
  */
 const LocationStep = ({ 
   eventData = {}, 
@@ -14,393 +32,202 @@ const LocationStep = ({
 }) => {
   // Extract location data from eventData or use defaults
   const locationData = eventData.location || {};
+  const parentLocationKey = serializeLocationFormState(locationData);
   
-  // Map references
-  const mapRef = useRef(null);
-  const googleMapRef = useRef(null);
+  const skipParentSyncRef = useRef(true);
+  const lastSyncedToParentRef = useRef('');
+  const locationDraftsRef = useRef(null);
+  if (locationDraftsRef.current == null) {
+    const initial = buildLocationFormState(locationData);
+    const modeKey = getLocationModeKey(initial);
+    locationDraftsRef.current = { [modeKey]: pickLocationModeFields(initial, modeKey) };
+  }
   
   // Local state for form management
-  const [location, setLocation] = useState({
-    locationType: locationData.locationType || 'physical',
-    isToBeAnnounced: locationData.isToBeAnnounced || false,
-    isPrivateLocation: locationData.isPrivateLocation || false,
-    searchQuery: locationData.searchQuery || '',
-    venue: locationData.venue || '',
-    street: locationData.street || '',
-    streetNumber: locationData.streetNumber || '',
-    city: locationData.city || '',
-    postalCode: locationData.postalCode || '',
-    state: locationData.state || '',
-    country: locationData.country || '',
-    additionalInfo: locationData.additionalInfo || '',
-    latitude: locationData.latitude || '',
-    longitude: locationData.longitude || '',
-    formattedAddress: locationData.formattedAddress || ''
-  });
-  
-  // State for map UI
+  const [location, setLocation] = useState(() => buildLocationFormState(locationData));
+
   const [isLoadingMap, setIsLoadingMap] = useState(false);
-  const [activeTab, setActiveTab] = useState('map'); // 'map' or 'satellite'
-  
-  /**
-   * Initialize Google Maps
-   */
-  useEffect(() => {
-    // Check if Google Maps API is loaded
-    if (!window.google || !window.google.maps) {
-      const script = document.createElement('script');
-      script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyBAp9QrQIKe6JRxSiF5xV4HPMIym8GBi_0&libraries=places`;
-      script.async = true;
-      script.defer = true;
-      script.onload = initializeMap;
-      script.onerror = () => {
-        console.error('Google Maps API failed to load');
-        alert('Could not load Google Maps. Please check your internet connection and try again.');
-      };
-      document.head.appendChild(script);
-      
-      return () => {
-        // Clean up if component unmounts before script loads
-        if (document.head.contains(script)) {
-          document.head.removeChild(script);
-        }
-      };
-    } else {
-      initializeMap();
-    }
+
+  const addressSearchLabel = useMemo(
+    () => buildLocationSearchLabel(location),
+    [location]
+  );
+
+  const handleAddressSelect = useCallback((patch) => {
+    setLocation((prev) => ({
+      ...prev,
+      ...patch,
+    }));
   }, []);
-  
   /**
-   * Initialize the Google Map
+   * Extracts latitude and longitude from a Google Maps URL (or address fields for short links).
+   * Long search-bar URLs are normalized to a compact @lat,lng link before save.
+   * @param {string} url - The Google Maps URL
+   * @param {Object} [addressContext] - Current location fields for geocoding fallback
    */
-  const initializeMap = () => {
-    if (!mapRef.current) return;
-    
-    // Default to Australia as shown in your design image
-    const defaultPosition = { lat: -25.2744, lng: 133.7751 }; // Center of Australia
-    const position = location.latitude && location.longitude
-      ? { lat: parseFloat(location.latitude), lng: parseFloat(location.longitude) }
-      : defaultPosition;
-      
-    const mapOptions = {
-      center: position,
-      zoom: 4, // Zoom out for Australia view
-      mapTypeId: activeTab === 'map' ? 'roadmap' : 'satellite',
-      mapTypeControl: false,
-      streetViewControl: true,
-      fullscreenControl: true,
-      zoomControl: true,
-      gestureHandling: 'cooperative'
-    };
-    
-    // Create the map
-    const map = new window.google.maps.Map(mapRef.current, mapOptions);
-    googleMapRef.current = map;
-    
-    // Create a marker if location is set
-    if (location.latitude && location.longitude) {
-      new window.google.maps.Marker({
-        position,
-        map,
-        title: location.venue || 'Selected Location'
-      });
+  const extractCoordsFromUrl = (url, addressContext) => {
+    const trimmedUrl = String(url || '').trim();
+    if (!trimmedUrl) {
+      return null;
     }
-  };
 
-  /**
-   * Format address from location components
-   * @param {Object} locationData - Location data
-   * @returns {string} Formatted address
-   */
-  const formatAddress = (locationData) => {
-    const components = [];
-    
-    if (locationData.venue) components.push(locationData.venue);
-    if (locationData.streetNumber) components.push(locationData.streetNumber);
-    if (locationData.street) components.push(locationData.street);
-    if (locationData.city) components.push(locationData.city);
-    if (locationData.state) components.push(locationData.state);
-    if (locationData.country) components.push(locationData.country);
-    if (locationData.postalCode) components.push(locationData.postalCode);
-    
-    return components.join(', ');
-  };
+    setIsLoadingMap(true);
 
-  /**
-   * Parse a Google Maps URL to extract coordinates
-   * @param {string} url - Google Maps URL
-   * @returns {Object|null} - Latitude and longitude if found, null otherwise
-   */
-  const parseGoogleMapsUrl = (url) => {
+    const coords = parseCoordsFromGoogleMapsUrl(trimmedUrl);
+    const lat = coords?.lat;
+    const lng = coords?.lng;
+    const normalizedLink = normalizeGoogleMapLink(trimmedUrl, lat, lng);
+
+    const applyLinkAndCoords = (nextLat, nextLng) => {
+      setLocation((prevLocation) => ({
+        ...prevLocation,
+        googleMapLink: normalizeGoogleMapLink(trimmedUrl, nextLat, nextLng),
+        ...(Number.isFinite(nextLat) && Number.isFinite(nextLng)
+          ? { latitude: nextLat, longitude: nextLng }
+          : {}),
+      }));
+    };
+
+    const finishLoading = () => {
+      setTimeout(() => setIsLoadingMap(false), 500);
+    };
+
     try {
-      console.log('Attempting to parse Google Maps URL:', url);
-      
-      // Format: https://www.google.com/maps?q=-41.2865,174.7762
-      let match = url.match(/maps\?q=(-?\d+\.\d+),(-?\d+\.\d+)/);
-      if (match) {
-        const coords = {
-          lat: parseFloat(match[1]),
-          lng: parseFloat(match[2])
-        };
-        console.log('Coordinates extracted from ?q= parameter:', coords);
-        return coords;
+      if (Number.isFinite(lat) && Number.isFinite(lng)) {
+        applyLinkAndCoords(lat, lng);
+        finishLoading();
+        return { lat, lng };
       }
-      
-      // Format: https://www.google.com/maps/place/.../@-41.2865,174.7762,15z
-      match = url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
-      if (match) {
-        const coords = {
-          lat: parseFloat(match[1]),
-          lng: parseFloat(match[2])
-        };
-        console.log('Coordinates extracted from @ parameter:', coords);
-        return coords;
+
+      const addressQuery = buildAddressGeocodeQuery(addressContext || location);
+      if (addressQuery) {
+        geocodeAddressWithGeoapify(addressQuery).then((coords) => {
+          if (coords) {
+            applyLinkAndCoords(coords.lat, coords.lng);
+          } else {
+            applyLinkAndCoords(null, null);
+            if (!isShortGoogleMapLink(trimmedUrl)) {
+              toast.info(
+                'Map link saved. Coordinates could not be extracted — address fields will still be saved.'
+              );
+            }
+          }
+          finishLoading();
+        });
+        return null;
       }
-      
-      console.log('No coordinates found in URL, will use geocoding instead');
+
+      applyLinkAndCoords(null, null);
+      if (!isShortGoogleMapLink(trimmedUrl)) {
+        toast.info(
+          'Map link saved. Coordinates could not be extracted — address fields will still be saved.'
+        );
+      }
+      finishLoading();
       return null;
     } catch (error) {
-      console.error('Error parsing Google Maps URL:', error);
+      console.error('Error parsing URL:', error);
+      toast.error('Could not process the map link. You can still save address fields.');
+      setLocation((prevLocation) => ({
+        ...prevLocation,
+        googleMapLink: normalizedLink,
+      }));
+      finishLoading();
       return null;
     }
   };
 
   /**
-   * Process geocoding result and extract address components
-   */
-  const processGeocodingResult = (result, position) => {
-    // Extract address components
-    let updatedLocation = {
-      ...location,
-      latitude: position.lat(),
-      longitude: position.lng(),
-      searchQuery: result.formatted_address
-    };
-    
-    console.log('Processing geocoding result:');
-    console.log('Latitude:', position.lat());
-    console.log('Longitude:', position.lng());
-    console.log('Formatted address:', result.formatted_address);
-    
-    // Process address components
-    for (const component of result.address_components) {
-      const types = component.types;
-      
-      if (types.includes('street_number')) {
-        updatedLocation.streetNumber = component.long_name;
-        console.log('Street Number:', component.long_name);
-      } else if (types.includes('route')) {
-        updatedLocation.street = component.long_name;
-        console.log('Street:', component.long_name);
-      } else if (types.includes('locality')) {
-        updatedLocation.city = component.long_name;
-        console.log('City:', component.long_name);
-      } else if (types.includes('administrative_area_level_1')) {
-        updatedLocation.state = component.long_name;
-        console.log('State/Province:', component.long_name);
-      } else if (types.includes('country')) {
-        updatedLocation.country = component.long_name;
-        console.log('Country:', component.long_name);
-      } else if (types.includes('postal_code')) {
-        updatedLocation.postalCode = component.long_name;
-        console.log('Postal Code:', component.long_name);
-      }
-    }
-    
-    // Try to determine the venue name
-    const pointOfInterest = result.address_components.find(comp => 
-      comp.types.includes('point_of_interest') || 
-      comp.types.includes('establishment')
-    );
-    
-    if (pointOfInterest) {
-      updatedLocation.venue = pointOfInterest.long_name;
-      console.log('Venue (from POI):', pointOfInterest.long_name);
-    } else {
-      // Default to first line of formatted address
-      updatedLocation.venue = result.formatted_address.split(',')[0];
-      console.log('Venue (from first part of address):', updatedLocation.venue);
-    }
-    
-    // Create formatted address string
-    updatedLocation.formattedAddress = formatAddress(updatedLocation);
-    console.log('Final formatted address string:', updatedLocation.formattedAddress);
-    
-    // Log the complete location object
-    console.log('Final location object:', updatedLocation);
-    
-    // Update location state
-    setLocation(updatedLocation);
-    setIsLoadingMap(false);
-  };
-
-  /**
-   * Handle Google Maps link pasting
+   * Handle Google Maps link pasting — always keep the URL even if coords fail.
    * @param {Event} e - Paste event
    */
   const handlePasteMapLink = (e) => {
-    // Get pasted text
     const pastedText = e.clipboardData.getData('text');
-    
-    console.log('Pasted text:', pastedText);
-    
-    // Check if it looks like a Google Maps link
-    if (pastedText.includes('google.com/maps') || pastedText.includes('goo.gl/maps')) {
-      e.preventDefault(); // Prevent default paste behavior
-      
-      console.log('Google Maps link detected');
-      
-      // Set the search query to the pasted link
-      setLocation(prev => ({
-        ...prev,
-        searchQuery: pastedText
-      }));
-      
-      // Show loading state
-      setIsLoadingMap(true);
-      
-      // Parse the URL to get coordinates
-      const coordinates = parseGoogleMapsUrl(pastedText);
-      console.log('Extracted coordinates from URL:', coordinates);
-      
-      // If we have coordinates from the URL
-      if (coordinates) {
-        console.log('Using coordinates directly from URL:', coordinates);
-        
-        // Update map with the coordinates
-        if (googleMapRef.current) {
-          // Clear any existing markers
-          googleMapRef.current.setCenter(coordinates);
-          googleMapRef.current.setZoom(15);
-          
-          // Add marker
-          new window.google.maps.Marker({
-            position: coordinates,
-            map: googleMapRef.current,
-            title: 'Selected Location',
-          });
-        }
-        
-        // Get address details using reverse geocoding
-        if (window.google && window.google.maps) {
-          console.log('Starting reverse geocoding with coordinates:', coordinates);
-          const geocoder = new window.google.maps.Geocoder();
-          geocoder.geocode({ location: coordinates }, (results, status) => {
-            if (status === 'OK' && results[0]) {
-              console.log('Reverse geocoding successful, result:', results[0]);
-              
-              // Log formatted address 
-              console.log('Formatted address:', results[0].formatted_address);
-              
-              // Log address components in detail
-              console.log('Address components:');
-              results[0].address_components.forEach(component => {
-                console.log(`${component.types.join(', ')}: ${component.long_name}`);
-              });
-              
-              processGeocodingResult(results[0], new window.google.maps.LatLng(coordinates.lat, coordinates.lng));
-            } else {
-              console.error('Reverse geocoding failed:', status);
-              setIsLoadingMap(false);
-            }
-          });
-        }
-      } else {
-        // If no coordinates in URL, try geocoding the entire URL
-        console.log('No coordinates in URL, attempting to geocode the entire URL');
-        
-        if (window.google && window.google.maps) {
-          const geocoder = new window.google.maps.Geocoder();
-          geocoder.geocode({ address: pastedText }, (results, status) => {
-            if (status === 'OK' && results[0]) {
-              const result = results[0];
-              const position = result.geometry.location;
-              
-              console.log('Geocoding successful, result:', result);
-              console.log('Location:', { 
-                lat: position.lat(), 
-                lng: position.lng(), 
-                address: result.formatted_address 
-              });
-              
-              // Log address components in detail
-              console.log('Address components:');
-              result.address_components.forEach(component => {
-                console.log(`${component.types.join(', ')}: ${component.long_name}`);
-              });
-              
-              // Update map
-              if (googleMapRef.current) {
-                googleMapRef.current.setCenter(position);
-                googleMapRef.current.setZoom(15);
-                
-                // Add marker
-                new window.google.maps.Marker({
-                  position,
-                  map: googleMapRef.current,
-                  title: 'Selected Location',
-                });
-              }
-              
-              // Process the result
-              processGeocodingResult(result, position);
-            } else {
-              console.error('Geocoding failed:', status);
-              alert('Could not process the Google Maps link. Please try a different link format.');
-              setIsLoadingMap(false);
-            }
-          });
-        } else {
-          console.error('Google Maps API not available');
-          setIsLoadingMap(false);
-        }
-      }
+    if (!pastedText?.trim()) {
+      return;
+    }
+    e.preventDefault();
+    extractCoordsFromUrl(pastedText);
+  };
+
+  const handleMapLinkBlur = () => {
+    if (location.googleMapLink?.trim()) {
+      extractCoordsFromUrl(location.googleMapLink);
     }
   };
-  
+
   /**
-   * Switch map type (map or satellite)
+   * Hydrate local form state when parent loads saved/API location data.
    */
-  const switchMapType = (type) => {
-    setActiveTab(type);
-    if (googleMapRef.current) {
-      googleMapRef.current.setMapTypeId(type === 'map' ? 'roadmap' : 'satellite');
-    }
-  };
-  
-  // Effect to propagate location changes to parent component
   useEffect(() => {
-    // Send the updated location data to parent component
-    handleInputChange(location, 'location');
-  }, [location, handleInputChange]);
-  
+    const nextLocation = buildLocationFormState(locationData);
+    const modeKey = getLocationModeKey(nextLocation);
+    locationDraftsRef.current[modeKey] = pickLocationModeFields(nextLocation, modeKey);
+    setLocation((prev) => {
+      if (serializeLocationFormState(prev) === serializeLocationFormState(nextLocation)) {
+        return prev;
+      }
+      skipParentSyncRef.current = true;
+      return nextLocation;
+    });
+  }, [parentLocationKey]);
+
   /**
-   * Handle location type selection
+   * Propagate local edits to parent — skip first run to avoid wiping fetched data.
    */
-  const handleLocationTypeChange = (type) => {
-    let updatedLocation = { ...location, locationType: type };
-    
-    // Update isToBeAnnounced flag based on type
-    if (type === 'tba') {
-      updatedLocation.isToBeAnnounced = true;
-    } else {
-      updatedLocation.isToBeAnnounced = false;
-      updatedLocation.isPrivateLocation = type === 'private';
+  useEffect(() => {
+    if (skipParentSyncRef.current) {
+      skipParentSyncRef.current = false;
+      lastSyncedToParentRef.current = serializeLocationFormState(location);
+      return;
     }
-    
-    setLocation(updatedLocation);
+
+    const serialized = serializeLocationFormState(location);
+    if (serialized === lastSyncedToParentRef.current) {
+      return;
+    }
+
+    lastSyncedToParentRef.current = serialized;
+    handleInputChange({ ...location }, 'location');
+  }, [location, handleInputChange]);
+
+  const handleLocationTypeChange = (type) => {
+    if (type === 'physical' || type === 'private') {
+      setLocation((prev) => {
+        if (getLocationModeKey(prev) === 'inPerson') {
+          return {
+            ...prev,
+            locationType: type,
+            isPrivateLocation: type === 'private',
+            isToBeAnnounced: false,
+          };
+        }
+
+        const { next, drafts } = buildLocationStateForTypeChange(
+          prev,
+          type,
+          locationDraftsRef.current
+        );
+        locationDraftsRef.current = drafts;
+        return next;
+      });
+      return;
+    }
+
+    setLocation((prev) => {
+      const { next, drafts } = buildLocationStateForTypeChange(
+        prev,
+        type,
+        locationDraftsRef.current
+      );
+      locationDraftsRef.current = drafts;
+      return next;
+    });
   };
   
-  /**
-   * Handle input changes
-   */
   const handleFieldChange = (e) => {
     const { name, value } = e.target;
-    
-    setLocation(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    setLocation(prev => ({ ...prev, [name]: value }));
   };
   
   return (
@@ -411,7 +238,10 @@ const LocationStep = ({
             <path d="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9C9.5 7.62 10.62 6.5 12 6.5C13.38 6.5 14.5 7.62 14.5 9C14.5 10.38 13.38 11.5 12 11.5Z" fill="#7C3AED"/>
           </svg>
         </div>
-        <h2 className={styles.stepTitle}>Event Location</h2>
+        <div className={styles.stepTextContainer}>
+          <h2 className={styles.stepTitle}>Event Location</h2>
+          <p className={styles.stepDescription}>Add details about where your event is happening.</p>
+        </div>
       </div>
 
       <div className={styles.formSection}>
@@ -426,12 +256,12 @@ const LocationStep = ({
           
           <div className={styles.locationOptions}>
             <div 
-              className={`${styles.locationOption} ${location.locationType === 'physical' && !location.isToBeAnnounced ? styles.selected : ''}`}
+              className={`${styles.locationOption} ${location.locationType === 'physical' ? styles.selected : ''}`}
               onClick={() => handleLocationTypeChange('physical')}
             >
               <div className={styles.locationIcon}>
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9C9.5 7.62 10.62 6.5 12 6.5C13.38 6.5 14.5 7.62 14.5 9C14.5 10.38 13.38 11.5 12 11.5Z" fill={location.locationType === 'physical' && !location.isToBeAnnounced ? "#7C3AED" : "#666666"}/>
+                  <path d="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9C9.5 7.62 10.62 6.5 12 6.5C13.38 6.5 14.5 7.62 14.5 9C14.5 10.38 13.38 11.5 12 11.5Z" fill={location.locationType === 'physical' ? "#7C3AED" : "#666666"}/>
                 </svg>
               </div>
               <div className={styles.locationContent}>
@@ -441,7 +271,7 @@ const LocationStep = ({
                 </p>
               </div>
               <div className={styles.locationSelector}>
-                {location.locationType === 'physical' && !location.isToBeAnnounced && (
+                {location.locationType === 'physical' && (
                   <div className={styles.selectedDot}></div>
                 )}
               </div>
@@ -492,11 +322,88 @@ const LocationStep = ({
                 )}
               </div>
             </div>
+
+            <div
+              className={`${styles.locationOption} ${location.locationType === 'online' ? styles.selected : ''}`}
+              onClick={() => handleLocationTypeChange('online')}
+            >
+              <div className={styles.locationIcon}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M4 6C4 4.89543 4.89543 4 6 4H18C19.1046 4 20 4.89543 20 6V18C20 19.1046 19.1046 20 18 20H6C4.89543 20 4 19.1046 4 18V6Z" stroke={location.locationType === 'online' ? '#7C3AED' : '#666666'} strokeWidth="1.5"/>
+                  <path d="M9 10L12 13L15 10" stroke={location.locationType === 'online' ? '#7C3AED' : '#666666'} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M8 15H16" stroke={location.locationType === 'online' ? '#7C3AED' : '#666666'} strokeWidth="1.5" strokeLinecap="round"/>
+                </svg>
+              </div>
+              <div className={styles.locationContent}>
+                <h3 className={styles.locationTitle}>Online</h3>
+                <p className={styles.locationDescription}>
+                  Virtual event — share a join link and optional details for attendees
+                </p>
+              </div>
+              <div className={styles.locationSelector}>
+                {location.locationType === 'online' && (
+                  <div className={styles.selectedDot}></div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
+
+        {/* Online event details */}
+        {location.locationType === 'online' && (
+          <div className={styles.formGroup}>
+            <label className={styles.formLabel}>Online event details</label>
+            <p className={styles.formDescription}>
+              Meeting or stream link is stored securely and shown to attendees as appropriate.
+            </p>
+            <div className={styles.formGroup}>
+              <label htmlFor="onlineEventUrl" className={styles.formLabel}>
+                Meeting link URL
+              </label>
+              <input
+                type="url"
+                id="onlineEventUrl"
+                name="onlineEventUrl"
+                className={styles.formInput}
+                placeholder="Meeting link URL"
+                value={location.onlineEventUrl}
+                onChange={handleFieldChange}
+                autoComplete="off"
+              />
+            </div>
+            <div className={styles.formGroup}>
+              <label htmlFor="onlineEventDescription" className={styles.formLabel}>
+                How to join / platform notes<OptionalLabel />
+              </label>
+              <textarea
+                id="onlineEventDescription"
+                name="onlineEventDescription"
+                className={styles.formTextarea}
+                placeholder="Streaming or access instructions"
+                value={location.onlineEventDescription}
+                onChange={handleFieldChange}
+                rows={4}
+              />
+            </div>
+            <div className={styles.formGroup}>
+              <label htmlFor="additionalInfoOnline" className={styles.formLabel}>
+                Additional information<OptionalLabel />
+              </label>
+              <textarea
+                id="additionalInfoOnline"
+                name="additionalInfo"
+                className={styles.formTextarea}
+                placeholder="Any extra details"
+                value={location.additionalInfo}
+                onChange={handleFieldChange}
+                rows={3}
+              />
+            </div>
+          </div>
+        )}
         
-        {/* Location Details Section - Only show if not TBA */}
-        {!location.isToBeAnnounced && (
+        {/* Location Details Section - physical / private venue only */}
+        {!location.isToBeAnnounced && location.locationType !== 'online' && (
           <div className={styles.formGroup}>
             <label className={styles.formLabel}>
               Location Details
@@ -504,19 +411,35 @@ const LocationStep = ({
             <p className={styles.formDescription}>
               The exact location to showcase on your event page and calendar events
             </p>
+
+            <label htmlFor="addressSearch" className={styles.formLabel}>
+              Search address or venue
+            </label>
+            <p className={styles.formDescription}>
+              Start typing to autocomplete — fields below will fill in automatically. A Google
+              Maps link is generated from the selected location for your event page.
+            </p>
+            <AddressAutocomplete
+              initialValue={addressSearchLabel}
+              onSelect={handleAddressSelect}
+            />
             
-            {/* Google Maps Link Field */}
+            <label htmlFor="googleMapLink" className={styles.formLabel}>
+              Google Maps link<OptionalLabel />
+            </label>
             <div className={styles.searchContainer}>
               <input
-                type="text"
-                name="searchQuery"
-                className={styles.searchInput}
-                placeholder="Paste Google Maps link here"
-                value={location.searchQuery}
-                onChange={handleFieldChange}
-                onPaste={handlePasteMapLink}
-              />
-              <div className={styles.searchButton}>
+          type="text"
+          id="googleMapLink"
+          name="googleMapLink"
+          className={styles.searchInput}
+          placeholder="Paste Google Maps link here"
+          value={location.googleMapLink}
+          onChange={handleFieldChange}
+          onPaste={handlePasteMapLink}
+          onBlur={handleMapLinkBlur}
+        />
+              {/* <div className={styles.searchButton}>
                 {isLoadingMap ? (
                   <span className={styles.loadingSpinner}></span>
                 ) : (
@@ -524,11 +447,30 @@ const LocationStep = ({
                     <path d="M15.5 14H14.71L14.43 13.73C15.41 12.59 16 11.11 16 9.5C16 5.91 13.09 3 9.5 3C5.91 3 3 5.91 3 9.5C3 13.09 5.91 16 9.5 16C11.11 16 12.59 15.41 13.73 14.43L14 14.71V15.5L19 20.49L20.49 19L15.5 14ZM9.5 14C7.01 14 5 11.99 5 9.5C5 7.01 7.01 5 9.5 5C11.99 5 14 7.01 14 9.5C14 11.99 11.99 14 9.5 14Z" fill="#7C3AED"/>
                   </svg>
                 )}
-              </div>
+              </div> */}
+            </div>
+
+            <div className={styles.formGroup}>
+              <label htmlFor="virtualMeetingUrl" className={styles.formLabel}>
+                Virtual meeting URL<OptionalLabel />
+              </label>
+              <p className={styles.formDescription}>
+                For hybrid events: Zoom, Google Meet, Teams, or other link for people joining remotely.
+              </p>
+              <input
+                type="url"
+                id="virtualMeetingUrl"
+                name="virtualMeetingUrl"
+                className={styles.formInput}
+                placeholder="Meeting link URL"
+                value={location.virtualMeetingUrl}
+                onChange={handleFieldChange}
+                autoComplete="off"
+              />
             </div>
             
             {/* Map Container */}
-            <div className={styles.mapContainerWithControls}>
+            {/* <div className={styles.mapContainerWithControls}>
               <div className={styles.mapTabControls}>
                 <button 
                   type="button" 
@@ -556,7 +498,7 @@ const LocationStep = ({
                   />
                 )}
               </div>
-            </div>
+            </div> */}
             
             {/* Location Form Fields */}
             {/* Venue */}
@@ -570,19 +512,19 @@ const LocationStep = ({
                   id="venue"
                   name="venue"
                   className={styles.formInput}
-                  placeholder="Enter venue name (e.g., Conference Center, Stadium)"
+                  placeholder="Venue name"
                   value={location.venue}
                   onChange={handleFieldChange}
                 />
-                <div className={styles.dropdownArrow}>
+                {/* <div className={styles.dropdownArrow}>
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M7 10L12 15L17 10H7Z" fill="#666666"/>
                   </svg>
-                </div>
+                </div> */}
               </div>
-              {stepStatus.visited && !location.venue && (
+              {/* {stepStatus.visited && !location.venue && (
                 <div className={styles.fieldError}>Venue is required</div>
-              )}
+              )} */}
             </div>
             
             {/* Street & Street No */}
@@ -601,15 +543,15 @@ const LocationStep = ({
                     value={location.street}
                     onChange={handleFieldChange}
                   />
-                  <div className={styles.dropdownArrow}>
+                  {/* <div className={styles.dropdownArrow}>
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <path d="M7 10L12 15L17 10H7Z" fill="#666666"/>
                     </svg>
-                  </div>
+                  </div> */}
                 </div>
-                {stepStatus.visited && !location.street && (
+                {/* {stepStatus.visited && !location.street && (
                   <div className={styles.fieldError}>Street is required</div>
-                )}
+                )} */}
               </div>
               <div className={styles.formGroup}>
                 <label htmlFor="streetNumber" className={styles.formLabel}>
@@ -625,11 +567,11 @@ const LocationStep = ({
                     value={location.streetNumber}
                     onChange={handleFieldChange}
                   />
-                  <div className={styles.dropdownArrow}>
+                  {/* <div className={styles.dropdownArrow}>
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <path d="M7 10L12 15L17 10H7Z" fill="#666666"/>
                     </svg>
-                  </div>
+                  </div> */}
                 </div>
               </div>
             </div>
@@ -650,15 +592,15 @@ const LocationStep = ({
                     value={location.city}
                     onChange={handleFieldChange}
                   />
-                  <div className={styles.dropdownArrow}>
+                  {/* <div className={styles.dropdownArrow}>
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <path d="M7 10L12 15L17 10H7Z" fill="#666666"/>
                     </svg>
-                  </div>
+                  </div> */}
                 </div>
-                {stepStatus.visited && !location.city && (
+                {/* {stepStatus.visited && !location.city && (
                   <div className={styles.fieldError}>City is required</div>
-                )}
+                )} */}
               </div>
               <div className={styles.formGroup}>
                 <label htmlFor="postalCode" className={styles.formLabel}>
@@ -674,11 +616,11 @@ const LocationStep = ({
                     value={location.postalCode}
                     onChange={handleFieldChange}
                   />
-                  <div className={styles.dropdownArrow}>
+                  {/* <div className={styles.dropdownArrow}>
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <path d="M7 10L12 15L17 10H7Z" fill="#666666"/>
                     </svg>
-                  </div>
+                  </div> */}
                 </div>
               </div>
             </div>
@@ -687,7 +629,7 @@ const LocationStep = ({
             <div className={styles.formRow}>
               <div className={styles.formGroup}>
                 <label htmlFor="state" className={styles.formLabel}>
-                  State/Province
+                  State/Province<OptionalLabel />
                 </label>
                 <div className={styles.dropdownInput}>
                   <input
@@ -699,15 +641,15 @@ const LocationStep = ({
                     value={location.state}
                     onChange={handleFieldChange}
                   />
-                  <div className={styles.dropdownArrow}>
+                  {/* <div className={styles.dropdownArrow}>
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M7 10L12 15L17 10H7Z" fill="#666666"/>
                     </svg>
-                  </div>
+                  </div> */}
                 </div>
-                {stepStatus.visited && !location.state && (
+                {/* {stepStatus.visited && !location.state && (
                   <div className={styles.fieldError}>State/Province is required</div>
-                )}
+                )} */}
               </div>
               <div className={styles.formGroup}>
                 <label htmlFor="country" className={styles.formLabel}>
@@ -723,11 +665,11 @@ const LocationStep = ({
                     value={location.country}
                     onChange={handleFieldChange}
                   />
-                  <div className={styles.dropdownArrow}>
+                  {/* <div className={styles.dropdownArrow}>
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <path d="M7 10L12 15L17 10H7Z" fill="#666666"/>
                     </svg>
-                  </div>
+                  </div> */}
                 </div>
               </div>
             </div>
@@ -735,13 +677,13 @@ const LocationStep = ({
             {/* Additional Information */}
             <div className={styles.formGroup}>
               <label htmlFor="additionalInfo" className={styles.formLabel}>
-                Additional Information
+                Additional Information<OptionalLabel />
               </label>
               <textarea
                 id="additionalInfo"
                 name="additionalInfo"
                 className={styles.formTextarea}
-                placeholder="Additional details about the location (e.g., parking instructions, entrance information)"
+                placeholder="Additional location details"
                 value={location.additionalInfo}
                 onChange={handleFieldChange}
                 rows={4}

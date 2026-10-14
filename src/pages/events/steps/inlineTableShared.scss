@@ -1,0 +1,94 @@
+// Shared layout for inline ticket / discount tables (create wizard + manage sections).
+// Keeps horizontal scroll on narrow viewports while avoiding cramped vertical scroll for row menus.
+
+$inline-table-row-padding-y: 16px;
+$inline-table-row-padding-x: 16px;
+$inline-table-row-min-height: 56px;
+$inline-table-column-gap: 14px;
+$inline-table-menu-z: 30;
+
+@mixin inline-table-row-spacing {
+  column-gap: $inline-table-column-gap;
+  padding: $inline-table-row-padding-y $inline-table-row-padding-x;
+  min-height: $inline-table-row-min-height;
+}
+
+.tableWrapper {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: visible;
+  -webkit-overflow-scrolling: touch;
+  // Room for absolutely positioned row menus / dropdowns below the last row
+  padding-bottom: 12px;
+}
+
+.tableContent {
+  overflow: visible;
+}
+
+@mixin inline-table-container {
+  overflow: visible;
+}
+
+@mixin inline-table-row-cell {
+  overflow: visible;
+}
+
+@mixin inline-table-action-menu {
+  .actionMenuContainer {
+    position: relative;
+    overflow: visible;
+  }
+}
+
+@mixin inline-table-dropdown {
+  .customDropdown {
+    overflow: visible;
+  }
+
+  .dropdownMenu {
+    z-index: $inline-table-menu-z - 1;
+    max-height: 280px;
+    overflow-y: auto;
+    margin-top: 6px;
+    padding: 10px;
+  }
+
+  .checkboxLabel {
+    padding: 10px;
+    min-height: 40px;
+  }
+}
+
+// Vertical labelled rows on mobile — use inside a CSS module file so class names are hashed.
+@mixin inline-table-labelled-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid #f3f4f6;
+  min-width: 0;
+  width: 100%;
+  text-align: left;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &::before {
+    content: attr(data-label);
+    font-size: 11px;
+    color: #6b7280;
+    text-transform: uppercase;
+    font-weight: 600;
+    flex-shrink: 0;
+    min-width: 96px;
+    max-width: 40%;
+  }
+
+  > * {
+    flex: 1;
+    min-width: 0;
+  }
+}

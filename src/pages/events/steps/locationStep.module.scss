@@ -1,24 +1,75 @@
-// Import variables and mixins from main style files
 @import '../../../styles/variables';
 @import '../../../styles/mixins';
+
+/*
+  This file contains styles for the Location Step component,
+  including responsive adjustments for mobile devices.
+  It aims to match the provided Figma design for smaller screens.
+*/
 
 // Main container styling
 .stepContainer {
   width: 100%;
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  padding: 24px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+// Header styling
+.stepHeader {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 24px 80px;
+  border-bottom: 1px solid #EAECF0;
+
+  @media (max-width: 768px) {
+    gap: 16px;
+    padding: 24px;
+  }
+}
+
+.stepTextContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-start;
+  flex: 1;
+}
+
+.stepTitle {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+
+  @media (max-width: 768px) {
+    font-size: 16px; // Adjust font size for mobile
+  }
+}
+
+.stepDescription {
+  font-size: 14px;
+  color: #666;
+  margin: 0;
 }
 
 // Form section styling
 .formSection {
-  padding: 0;
+  padding: 32px 80px;
+
+  @media (max-width: 768px) {
+    padding: 24px;
+  }
 }
 
 .formGroup {
   margin-bottom: 24px;
   width: 100%;
+
+  @media (max-width: 768px) {
+    margin-bottom: 16px; // Adjust margin for mobile
+  }
 }
 
 .formLabel {
@@ -34,6 +85,11 @@
   color: #666;
   margin-top: 0;
   margin-bottom: 12px;
+
+  @media (max-width: 768px) {
+    font-size: 12px; // Adjust font size for mobile
+    margin-bottom: 8px; // Adjust margin for mobile
+  }
 }
 
 // Error message styling
@@ -54,6 +110,11 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+
+  @media (max-width: 768px) {
+    margin-bottom: 12px; // Adjust margin for mobile
+    padding: 10px 12px; // Adjust padding for mobile
+  }
 }
 
 .dismissButton {
@@ -75,7 +136,7 @@
   margin-bottom: 24px;
   
   @media (max-width: 640px) {
-    flex-direction: column;
+    flex-direction: column; // Stack options vertically on small screens
   }
 }
 
@@ -100,6 +161,10 @@
     border-color: #7C3AED;
     background-color: rgba(124, 58, 237, 0.05);
   }
+
+  @media (max-width: 768px) {
+    padding: 12px; // Adjust padding for mobile
+  }
 }
 
 .locationIcon {
@@ -114,6 +179,10 @@
     width: 24px;
     height: 24px;
   }
+
+  @media (max-width: 768px) {
+    margin-bottom: 8px; // Adjust margin for mobile
+  }
 }
 
 .locationContent {
@@ -126,12 +195,20 @@
   font-weight: 600;
   color: #333;
   margin: 0 0 4px 0;
+
+  @media (max-width: 768px) {
+    font-size: 13px; // Adjust font size for mobile
+  }
 }
 
 .locationDescription {
   font-size: 12px;
   color: #666;
   margin: 0;
+
+  @media (max-width: 768px) {
+    font-size: 11px; // Adjust font size for mobile
+  }
 }
 
 // Radio button styling for location options
@@ -190,6 +267,11 @@
       box-shadow: 0 0 0 2px rgba(229, 62, 62, 0.1);
     }
   }
+
+  @media (max-width: 768px) {
+    height: 40px; // Slightly smaller input height for mobile
+    font-size: 13px; // Adjust font size for mobile
+  }
 }
 
 .searchButton {
@@ -215,6 +297,13 @@
     opacity: 0.5;
     cursor: not-allowed;
   }
+
+  @media (max-width: 768px) {
+    svg {
+      width: 16px; // Smaller icon for mobile
+      height: 16px; // Smaller icon for mobile
+    }
+  }
 }
 
 // Loading spinner
@@ -239,12 +328,21 @@
   border-radius: 8px;
   overflow: hidden;
   border: 1px solid #e5e7eb;
+
+  @media (max-width: 768px) {
+    margin-bottom: 16px; // Adjust margin for mobile
+    border-radius: 6px; // Slightly smaller border-radius
+  }
 }
 
 .mapTabControls {
   display: flex;
   background-color: #f9fafb;
   border-bottom: 1px solid #e5e7eb;
+
+  @media (max-width: 768px) {
+    justify-content: space-around; // Distribute tabs evenly
+  }
 }
 
 .mapTabButton {
@@ -275,11 +373,20 @@
     opacity: 0.5;
     cursor: not-allowed;
   }
+
+  @media (max-width: 768px) {
+    padding: 10px 12px; // Adjust padding for mobile
+    font-size: 12px; // Adjust font size for mobile
+  }
 }
 
 .mapContainer {
   width: 100%;
   height: 300px;
+
+  @media (max-width: 768px) {
+    height: 200px; // Shorter map height for mobile
+  }
 }
 
 .googleMap {
@@ -296,6 +403,10 @@
   color: #6b7280;
   font-size: 14px;
   background-color: #f9fafb;
+
+  @media (max-width: 768px) {
+    font-size: 13px; // Adjust font size for mobile
+  }
 }
 
 // Form inputs with dropdown styling
@@ -318,6 +429,11 @@
   
   &::placeholder {
     color: #9ca3af;
+  }
+
+  @media (max-width: 768px) {
+    height: 40px; // Slightly smaller input height for mobile
+    font-size: 13px; // Adjust font size for mobile
   }
 }
 
@@ -342,9 +458,9 @@
   display: flex;
   gap: 16px;
   
-  @media (max-width: 640px) {
-    flex-direction: column;
-    gap: 20px;
+  @media (max-width: 768px) {
+    flex-direction: column; // Stack columns vertically on small screens
+    gap: 16px; // Adjust gap for mobile
   }
   
   .formGroup {
@@ -374,6 +490,12 @@
   &::placeholder {
     color: #9ca3af;
   }
+
+  @media (max-width: 768px) {
+    min-height: 80px; // Shorter textarea height for mobile
+    padding: 10px 14px; // Adjust padding for mobile
+    font-size: 13px; // Adjust font size for mobile
+  }
 }
 
 // Input error state
@@ -392,6 +514,11 @@
   margin-bottom: 16px;
   font-size: 14px;
   color: #6b7280;
+
+  @media (max-width: 768px) {
+    font-size: 13px; // Adjust font size for mobile
+    margin-bottom: 12px; // Adjust margin for mobile
+  }
 }
 
 .spinner {
@@ -412,6 +539,11 @@
   background-color: #f9fafb;
   border: 1px solid #e5e7eb;
   border-radius: 6px;
+
+  @media (max-width: 768px) {
+    margin-top: 16px; // Adjust margin for mobile
+    padding: 12px; // Adjust padding for mobile
+  }
 }
 
 .tipTitle {
@@ -428,6 +560,15 @@
     width: 18px;
     height: 18px;
   }
+
+  @media (max-width: 768px) {
+    font-size: 13px; // Adjust font size for mobile
+    margin-bottom: 8px; // Adjust margin for mobile
+    svg {
+      width: 16px; // Smaller icon for mobile
+      height: 16px; // Smaller icon for mobile
+    }
+  }
 }
 
 .tipsList {
@@ -442,6 +583,10 @@
     &:last-child {
       margin-bottom: 0;
     }
+
+    @media (max-width: 768px) {
+      font-size: 12px; // Adjust font size for mobile
+    }
   }
 }
 
@@ -455,4 +600,40 @@
   font-size: 14px;
   color: #666;
   margin: 4px 0 0 0;
+
+  @media (max-width: 768px) {
+    font-size: 12px; // Adjust font size for mobile
+  }
+}
+
+@media (max-width: 768px) {
+  .buttonGroup {
+    flex-direction: column;
+    gap: 8px;
+
+    button {
+      width: 100%;
+    }
+  }
+}
+
+// Ensure full width for form inputs on mobile
+@media (max-width: 768px) {
+  .formInput {
+    width: 100%; // Ensure form inputs take full width on mobile
+  }
+  .formTextarea {
+    width: 100%; // Ensure textarea takes full width on mobile
+  }
+}
+
+// Existing media queries from your file, kept for completeness
+@media (max-width: 768px) {
+  .stepHeading {
+    font-size: 16px;
+  }
+
+  .stepSubheading {
+    font-size: 14px;
+  }
 }

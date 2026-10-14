@@ -3,34 +3,53 @@
 
 // Outer container that wraps the entire application
 .outerContainer {
+  
   display: flex;
   width: 100%;
+  max-width: 100vw;
+  min-width: 350px;
+  height: 100vh;
   padding: 8px 8px 8px 0px;
-  align-items: flex-start;
+  align-items: stretch;
   background: var(--gradient, linear-gradient(180deg, #31204B 0%, #1E202C 100%));
+  box-sizing: border-box;
+  overflow: hidden; // prevent outer page scroll; inner content handles scrolling
+
+  @media (max-width: 768px) {
+    padding: 0; // Remove padding on mobile to allow sidebar to fill screen edge
+  }
 }
 
 // Wrapper for all content except sidebar
 .mainContentWrapper {
   flex: 1;
-  height: 1356px;
   display: flex;
   flex-direction: column;
-  margin-left: 70px; // Match sidebar width
-  width: calc(100% - 70px);
-  min-height: 100%;
+  margin-left: 64px; // Match sidebar width on desktop
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+
+  @media (max-width: 768px) {
+    margin-left: 0; // Take full width on mobile
+    width: 100%; // Ensure it spans full width
+    border-radius: 0; // Remove rounded corners on mobile
+  }
 }
 
 .contentArea {
   flex: 1;
-  height: 1356px;
-  padding: 20px 30px;
+  // padding: 20px 0px;
   position: relative;
   overflow-y: auto;
   background-color: #ffffff;
   display: flex;
   flex-direction: column;
-  
+  min-height: 0;
+
   // Create a subtle gradient overlay for the background
   &::before {
     content: '';
@@ -43,37 +62,43 @@
     z-index: -1;
     pointer-events: none;
   }
-  
+
   // For event creation routes, ensure full height and no background
   &.fullHeight {
     padding: 0;
     background-color: #ffffff;
-    
+
     &::before {
       display: none; // Remove the gradient overlay for event creation pages
     }
   }
-}
 
-// Responsive styles
-@media (max-width: 1440px) {
-  .outerContainer {
-    width: 100%;
-    height: auto;
+  @media (max-width: 768px) {
+    padding: 15px 16px; // Adjust padding for mobile
+    // No change to fullHeight padding here, as it's already 0
+  }
+
+  @media (max-width: 400px) {
+    padding: 12px;
   }
 }
 
-@media (max-width: 768px) {
-  .mainContentWrapper {
-    width: calc(100% - 70px);
-    margin-left: 70px;
-  }
-  
-  .contentArea {
-    padding: 15px 20px;
-    
-    &.fullHeight {
-      padding: 0;
-    }
+// Mobile Overlay for when the sidebar is open
+.mobileOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5); // Semi-transparent black overlay
+  z-index: 999; // Below any open sidebar, above main content
+  display: block; // Always present, but hidden/shown by JS
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease-in-out;
+
+  &.active {
+    opacity: 1;
+    pointer-events: auto;
   }
 }

@@ -188,7 +188,7 @@ const handlePasswordBlur = () => {
                   id="password"
                   name="password"
                   className={styles.input}
-                  placeholder="Enter your password"
+
                   value={formData.password}
                   onChange={handleChange}
                   onFocus={handlePasswordFocus}
@@ -217,51 +217,31 @@ const handlePasswordBlur = () => {
               {/* Password validation requirements - only show when field is focused */}
               {passwordFieldFocused && (
                 <div className={styles.passwordRequirements}>
-                  <div className={styles.requirementItem}>
-                    <svg className={`${styles.checkIcon} ${passwordValidation.length ? styles.validIcon : ''}`} width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <circle cx="8" cy="8" r="7.5" stroke="currentColor"/>
-                      <path d="M5 8L7 10L11 6" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                    <span className={passwordValidation.length ? styles.validText : ''}>
-                      Must be at least 8 characters
-                    </span>
-                  </div>
-                  <div className={styles.requirementItem}>
-                    <svg className={`${styles.checkIcon} ${passwordValidation.lowercase ? styles.validIcon : ''}`} width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <circle cx="8" cy="8" r="7.5" stroke="currentColor"/>
-                      <path d="M5 8L7 10L11 6" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                    <span className={passwordValidation.lowercase ? styles.validText : ''}>
-                      One lowercase character
-                    </span>
-                  </div>
-                  <div className={styles.requirementItem}>
-                    <svg className={`${styles.checkIcon} ${passwordValidation.uppercase ? styles.validIcon : ''}`} width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <circle cx="8" cy="8" r="7.5" stroke="currentColor"/>
-                      <path d="M5 8L7 10L11 6" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                    <span className={passwordValidation.uppercase ? styles.validText : ''}>
-                      One uppercase character
-                    </span>
-                  </div>
-                  <div className={styles.requirementItem}>
-                    <svg className={`${styles.checkIcon} ${passwordValidation.special ? styles.validIcon : ''}`} width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <circle cx="8" cy="8" r="7.5" stroke="currentColor"/>
-                      <path d="M5 8L7 10L11 6" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                    <span className={passwordValidation.special ? styles.validText : ''}>
-                      One special character
-                    </span>
-                  </div>
-                  <div className={styles.requirementItem}>
-                    <svg className={`${styles.checkIcon} ${passwordValidation.number ? styles.validIcon : ''}`} width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <circle cx="8" cy="8" r="7.5" stroke="currentColor"/>
-                      <path d="M5 8L7 10L11 6" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                    <span className={passwordValidation.number ? styles.validText : ''}>
-                      One number
-                    </span>
-                  </div>
+                  {[
+                    ['length', 'Must be at least 8 characters'],
+                    ['lowercase', 'One lowercase character'],
+                    ['uppercase', 'One uppercase character'],
+                    ['special', 'One special character'],
+                    ['number', 'One number'],
+                  ].map(([key, label]) => {
+                    const met = passwordValidation[key];
+                    return (
+                      <div
+                        key={key}
+                        className={`${styles.requirementItem} ${met ? styles.metRequirement : styles.unmetRequirement}`}
+                      >
+                        <svg className={styles.checkIcon} width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <circle cx="8" cy="8" r="7.5" stroke="currentColor"/>
+                          {met ? (
+                            <path d="M5 8L7 10L11 6" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round"/>
+                          ) : (
+                            <path d="M5.5 5.5L10.5 10.5M10.5 5.5L5.5 10.5" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round"/>
+                          )}
+                        </svg>
+                        <span>{label}</span>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -277,7 +257,7 @@ const handlePasswordBlur = () => {
                   id="confirmPassword"
                   name="confirmPassword"
                   className={styles.input}
-                  placeholder="Enter your password"
+
                   value={formData.confirmPassword}
                   onChange={handleConfirmPasswordChange}
                   disabled={isLoading}
@@ -287,7 +267,7 @@ const handlePasswordBlur = () => {
                 {confirmPasswordTouched && passwordsMatch && (
                   <span className={styles.validationIcon}>
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" className={styles.matchIcon}>
-                      <path fill="#7c3aed" d="M9,16.17L4.83,12l-1.42,1.41L9,19L21,7l-1.41-1.41L9,16.17z"/>
+                      <path fill="#16a34a" d="M9,16.17L4.83,12l-1.42,1.41L9,19L21,7l-1.41-1.41L9,16.17z"/>
                     </svg>
                   </span>
                 )}
@@ -296,27 +276,28 @@ const handlePasswordBlur = () => {
                 <span className={styles.fieldError}>{errors.confirmPassword}</span>
               )}
             </div>
-            
-            <button
-              type="submit"
-              className={styles.signInButton}
-              disabled={isLoading || !isFormValid}
-            >
-              {isLoading ? (
-                <div className={styles.spinner}></div>
-              ) : (
-                "Next"
+
+            <div className={styles.buttonTooltipWrapper}>
+              <button
+                type="submit"
+                className={styles.signInButton}
+                disabled={isLoading || !isFormValid}
+              >
+                {isLoading ? (
+                  <div className={styles.spinner}></div>
+                ) : (
+                  "Next"
+                )}
+              </button>
+              {confirmPasswordTouched && formData.confirmPassword && (
+                <span className={`${styles.buttonTooltip} ${passwordsMatch ? styles.tooltipSuccess : styles.tooltipError}`}>
+                  {passwordsMatch ? "Passwords match" : "Passwords do not match"}
+                </span>
               )}
-            </button>
+            </div>
           </form>
         </div>
         
-        {/* Footer */}
-        <div className={styles.footer}>
-          <p className={styles.copyright}>
-            Copyright © 2025 <span className={styles.companyName}>Prizmatix</span>
-          </p>
-        </div>
       </div>
     </div>
   );

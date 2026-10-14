@@ -1,0 +1,581 @@
+import React, { useState, useEffect } from "react";
+import PropTypes from "prop-types";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import styles from "./ticketDetailsModal.module.scss";
+import OptionalLabel from "../../../components/common/optionalLabel/optionalLabel";
+
+const combineDateAndTime = (dateStr, timeStr) => {
+  if (!dateStr || !timeStr) {
+    return null;
+  }
+  const dateTimeString = `${dateStr}T${timeStr}`;
+  const date = new Date(dateTimeString);
+  return Number.isNaN(date.getTime()) ? null : date;
+};
+
+/**
+ * TicketDetailsModal component for creating and editing tickets
+ *
+ * @param {Object} props Component props
+ * @param {Object} props.ticket Ticket data
+ * @param {boolean} props.isOpen Whether the modal is open
+ * @param {Function} props.onClose Function to close the modal
+ * @param {Function} props.onSave Function to save the ticket
+ * @returns {JSX.Element} TicketDetailsModal component
+ */
+const TicketDetailsModal = ({
+  ticket = {},
+  isOpen = false,
+  onClose = () => {},
+  onSave = () => {},
+  saveButtonText = "Create Ticket",
+  editingTicket,
+  allTickets = [],
+}) => {
+  // State for active panel (Basic or Advance)
+  const [activePanel, setActivePanel] = useState("basic");
+
+  // State for sale date type
+  const [saleDateType, setSaleDateType] = useState("custom");
+
+  // State for quantity type
+  const [quantityType, setQuantityType] = useState("limited");
+
+  // Local state for ticket data
+  const [localTicket, setLocalTicket] = useState({
+    name: "",
+    price: "",
+    quantity: "",
+    maxPurchaseAmount: "",
+    enableMaxPurchase: false,
+    purchaseLimit: "",
+    salesStartDate: "",
+    salesStartTime: "",
+    salesEndDate: "",
+    salesEndTime: "",
+    isAdvance: false,
+    description: "",
+    startsAfterTicketStructureId: null,
+    ...ticket,
+  });
+
+  // Update local ticket when prop changes
+  useEffect(() => {
+    const hasDependency =
+      ticket.startsAfterTicketStructureId != null &&
+      ticket.startsAfterTicketStructureId !== "" &&
+      Number.isFinite(Number(ticket.startsAfterTicketStructureId));
+
+    setSaleDateType(hasDependency ? "beforeAfter" : "custom");
+
+    setLocalTicket({
+      name: "",
+      price: "",
+      quantity: "",
+      maxPurchaseAmount: "",
+      enableMaxPurchase: false,
+      purchaseLimit: "",
+      salesStartDate: "",
+      salesStartTime: "",
+      salesEndDate: "",
+      salesEndTime: "",
+      isAdvance: false,
+      advanceAmount: "",
+      description: "",
+      startsAfterTicketStructureId: null,
+      ...ticket,
+    });
+
+    // Set quantity type based on ticket data
+    if (ticket.quantity === "No Limit" || !ticket.quantity) {
+      setQuantityType("unlimited");
+    } else {
+      setQuantityType("limited");
+    }
+
+    // Set max purchase checkbox based on ticket data
+    if (ticket.purchaseLimit) {
+      setLocalTicket((prev) => ({
+        ...prev,
+        enableMaxPurchase: true,
+      }));
+    } else {
+      setLocalTicket((prev) => ({
+        ...prev,
+        enableMaxPurchase: false,
+      }));
+    }
+  }, [ticket]);
+
+  /**
+   * Handle input change
+   * @param {Object} e - Event object
+   */
+  const handleInputChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setLocalTicket((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    }));
+  };
+
+  const handleDateChange = (date, dateFieldName, timeFieldName) => {
+    if (date) {
+      const dateString = date.toISOString().split("T")[0];
+      const timeString = date.toTimeString().split(" ")[0].substring(0, 5);
+      setLocalTicket((prev) => ({
+        ...prev,
+        [dateFieldName]: dateString,
+        [timeFieldName]: timeString,
+      }));
+    } else {
+      setLocalTicket((prev) => ({
+        ...prev,
+        [dateFieldName]: "",
+        [timeFieldName]: "",
+      }));
+    }
+  };
+
+  /**
+   * Handle quantity type change
+   * @param {string} type - Quantity type ('limited' or 'unlimited')
+   */
+  const handleQuantityTypeChange = (type) => {
+    setQuantityType(type);
+    if (type === "unlimited") {
+      setLocalTicket((prev) => ({
+        ...prev,
+        quantity: "No Limit",
+      }));
+    } else if (localTicket.quantity === "No Limit") {
+      setLocalTicket((prev) => ({
+        ...prev,
+        quantity: "",
+      }));
+    }
+  };
+
+  /**
+   * Handle form submission
+   */
+  const handleSubmit = () => {
+    let startsAfterTicketStructureId = null;
+    if (saleDateType === "beforeAfter") {
+      const v = localTicket.startsAfterTicketStructureId;
+      if (v != null && v !== "" && Number.isFinite(Number(v))) {
+        startsAfterTicketStructureId = parseInt(String(v), 10);
+      }
+    }
+    onSave({
+      ...localTicket,
+      startsAfterTicketStructureId,
+    });
+  };
+
+  const dependencyOptions = allTickets.filter(
+    (t) => t.id != null && t.id !== "" && (!editingTicket || t.id !== editingTicket.id)
+  );
+
+  if (!isOpen) return null;
+
+  // The modal component
+  return (
+    <div className={styles.modalOverlay}>
+      <div className={styles.modalContainer}>
+        <div className={styles.sidePanel}>
+          <div className={styles.ticketIcon}>
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M20 12C20 10.9 19.1 10 18 10H17.74C17.9 9.55 18 9.03 18 8.5C18 6.57 16.43 5 14.5 5C13.45 5 12.46 5.45 11.83 6.39C11.35 5.32 10.24 4.5 8.89 4.5C7.16 4.5 5.75 5.91 5.75 7.64C5.75 8.47 6.09 9.24 6.64 9.81C5.09 10.24 4 11.7 4 13.34C4 15.3 5.54 16.91 7.5 16.98V17H18C19.1 17 20 16.1 20 15V12Z"
+                fill="#7C3AED"
+              />
+            </svg>
+          </div>
+          <h3 className={styles.sidePanelTitle}>
+            {editingTicket ? "Edit Ticket" : "New Ticket"}
+          </h3>
+          <p className={styles.sidePanelSubtitle}>Ticket Advance Options</p>
+
+          <div className={styles.navigationMenu}>
+            <button
+              type="button"
+              className={`${styles.navItem} ${
+                activePanel === "basic" ? styles.active : ""
+              }`}
+              onClick={() => setActivePanel("basic")}
+            >
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M14 2H6C4.9 2 4.01 2.9 4.01 4L4 20C4 21.1 4.89 22 5.99 22H18C19.1 22 20 21.1 20 20V8L14 2ZM16 18H8V16H16V18ZM16 14H8V12H16V14ZM13 9V3.5L18.5 9H13Z"
+                  fill="currentColor"
+                />
+              </svg>
+              Basic Details
+            </button>
+
+            <button
+              type="button"
+              className={`${styles.navItem} ${
+                activePanel === "advance" ? styles.active : ""
+              }`}
+              onClick={() => setActivePanel("advance")}
+            >
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M19.14 12.94C19.59 12.64 19.89 12.12 19.89 11.5C19.89 10.88 19.59 10.36 19.14 10.06L12.36 5.93C12.08 5.75 11.75 5.65 11.39 5.65C10.32 5.65 9.39 6.55 9.39 7.65V16.35C9.39 17.45 10.32 18.35 11.39 18.35C11.75 18.35 12.08 18.25 12.36 18.07L19.14 13.94C19.59 13.64 19.89 13.12 19.89 12.5C19.89 11.88 19.59 11.36 19.14 11.06Z"
+                  fill="currentColor"
+                />
+                <path d="M4 20H6V4H4V20Z" fill="currentColor" />
+              </svg>
+              Advance details
+            </button>
+          </div>
+        </div>
+
+        <div className={styles.contentPanel}>
+          <div className={styles.modalHeader}>
+            <h2 className={styles.modalTitle}>
+              {activePanel === "basic" ? "Basic Details" : "Advance Details"}
+            </h2>
+            <button
+              className={styles.closeButton}
+              onClick={onClose}
+              aria-label="Close modal"
+            >
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M19 6.41L17.59 5L12 10.59L6.41 5L5 6.41L10.59 12L5 17.59L6.41 19L12 13.41L17.59 19L19 17.59L13.41 12L19 6.41Z"
+                  fill="#333333"
+                />
+              </svg>
+            </button>
+          </div>
+
+          <div className={styles.modalContent}>
+            {activePanel === "basic" ? (
+              // Basic Details Panel
+              <>
+                <div className={styles.formGroup}>
+                  <label htmlFor="name" className={styles.formLabel}>
+                    Ticket Name
+                  </label>
+                  <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    className={styles.formInput}
+                    value={localTicket.name || ""}
+                    onChange={handleInputChange}
+                  />
+                </div>
+
+                <div className={styles.formGroup}>
+                  <label htmlFor="price" className={styles.formLabel}>
+                    Ticket Price
+                  </label>
+                  <div className={styles.inputWithPrefix}>
+                    <span className={styles.prefix}>$</span>
+                    <input
+                      type="text"
+                      id="price"
+                      name="price"
+                      className={styles.formInput}
+                      value={localTicket.price || ""}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                </div>
+
+                <div className={styles.formGroup}>
+                  <label htmlFor="quantity" className={styles.formLabel}>
+                    Ticket Quantity
+                  </label>
+                  <div className={styles.quantityToggle}>
+                    <div className={styles.saleTypeToggle}>
+                      <button
+                        type="button"
+                        className={`${styles.saleTypeBtn} ${
+                          quantityType === "limited" ? styles.active : ""
+                        }`}
+                        onClick={() => handleQuantityTypeChange("limited")}
+                      >
+                        Limited
+                      </button>
+                      <button
+                        type="button"
+                        className={`${styles.saleTypeBtn} ${
+                          quantityType === "unlimited" ? styles.active : ""
+                        }`}
+                        onClick={() => handleQuantityTypeChange("unlimited")}
+                      >
+                        Unlimited
+                      </button>
+                    </div>
+
+                    {quantityType === "limited" ? (
+                      <input
+                        type="text"
+                        id="quantity"
+                        name="quantity"
+                        className={styles.formInput}
+                        value={
+                          localTicket.quantity === "No Limit"
+                            ? ""
+                            : localTicket.quantity || ""
+                        }
+                        onChange={handleInputChange}
+                      />
+                    ) : (
+                      <div className={styles.noLimitText}>
+                        No limit on the number of tickets
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className={styles.formGroup}>
+                  <div className={styles.checkboxContainer}>
+                    <input
+                      type="checkbox"
+                      id="enableMaxPurchase"
+                      name="enableMaxPurchase"
+                      className={styles.checkboxInput}
+                      checked={localTicket.enableMaxPurchase || false}
+                      onChange={handleInputChange}
+                    />
+                    <label
+                      htmlFor="enableMaxPurchase"
+                      className={styles.checkboxLabel}
+                    >
+                      Maximum Purchase Limit
+                    </label>
+                  </div>
+
+                  {localTicket.enableMaxPurchase && (
+                    <div className={styles.formGroup}>
+                      <label
+                        htmlFor="maxPurchaseAmount"
+                        className={styles.formLabel}
+                      >
+                        Purchase Limit<OptionalLabel />
+                      </label>
+                      <input
+                        type="text"
+                        id="maxPurchaseAmount"
+                        name="maxPurchaseAmount" // CORRECTED: Renamed from "purchaseLimit"
+                        className={styles.formInput}
+                        value={localTicket.maxPurchaseAmount || ""}
+                        onChange={handleInputChange}
+                      />
+                    </div>
+                  )}
+                </div>
+              </>
+            ) : (
+              // Advance Details Panel
+              <>
+                <div className={styles.formGroup}>
+                  <label htmlFor="description" className={styles.formLabel}>
+                    Description<OptionalLabel />
+                  </label>
+                  <div className={styles.richTextEditor}>
+                    <div className={styles.editorToolbar}>
+                      <button type="button" className={styles.editorButton}>
+                        <svg
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                        >
+                          <path
+                            d="M3.9 12C3.9 10.29 5.29 8.9 7 8.9H11V7H7C4.24 7 2 9.24 2 12C2 14.76 4.24 17 7 17H11V15.1H7C5.29 15.1 3.9 13.71 3.9 12ZM8 13H16V11H8V13ZM17 7H13V8.9H17C18.71 8.9 20.1 10.29 20.1 12C20.1 13.71 18.71 15.1 17 15.1H13V17H17C19.76 17 22 14.76 22 12C22 9.24 19.76 7 17 7Z"
+                            fill="currentColor"
+                          />
+                        </svg>
+                      </button>
+                    </div>
+                    <textarea
+                      id="description"
+                      name="description"
+                      className={styles.editorContent}
+                      value={localTicket.description || ""}
+                      onChange={handleInputChange}
+                    ></textarea>
+                  </div>
+                </div>
+
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>Sale start/end</label>
+                  <p className={styles.formHelper}>
+                    Use fixed dates or start sales after another ticket sells out. Leave dates blank to use defaults (on sale now until event end).
+                  </p>
+
+                  <div className={styles.saleTypeToggle}>
+                    <button
+                      type="button"
+                      className={`${styles.saleTypeBtn} ${
+                        saleDateType === "custom" ? styles.active : ""
+                      }`}
+                      onClick={() => {
+                        setSaleDateType("custom");
+                        setLocalTicket((prev) => ({
+                          ...prev,
+                          startsAfterTicketStructureId: null,
+                        }));
+                      }}
+                    >
+                      Custom
+                    </button>
+                    <button
+                      type="button"
+                      className={`${styles.saleTypeBtn} ${
+                        saleDateType === "beforeAfter" ? styles.active : ""
+                      }`}
+                      onClick={() => setSaleDateType("beforeAfter")}
+                    >
+                      Before/After
+                    </button>
+                  </div>
+
+                  {saleDateType === "custom" ? (
+                    <>
+                      <div className={styles.formGroup}>
+                        <label className={styles.formLabel}>Sales Start<OptionalLabel /></label>
+                        <p className={styles.formHelper}>Optional. Defaults to on sale immediately.</p>
+                        <DatePicker
+                          selected={combineDateAndTime(
+                            localTicket.salesStartDate,
+                            localTicket.salesStartTime
+                          )}
+                          onChange={(date) =>
+                            handleDateChange(date, "salesStartDate", "salesStartTime")
+                          }
+                          showTimeSelect
+                          dateFormat="MM/dd/yyyy h:mm aa"
+                          className={styles.formInput}
+                          placeholderText="Optional"
+                          isClearable
+                        />
+                      </div>
+
+                      <div className={styles.formGroup}>
+                        <label className={styles.formLabel}>Sales End<OptionalLabel /></label>
+                        <p className={styles.formHelper}>Optional. Defaults to event end date.</p>
+                        <DatePicker
+                          selected={combineDateAndTime(
+                            localTicket.salesEndDate,
+                            localTicket.salesEndTime
+                          )}
+                          onChange={(date) =>
+                            handleDateChange(date, "salesEndDate", "salesEndTime")
+                          }
+                          showTimeSelect
+                          dateFormat="MM/dd/yyyy h:mm aa"
+                          className={styles.formInput}
+                          placeholderText="Optional"
+                          isClearable
+                        />
+                      </div>
+                    </>
+                  ) : (
+                    // Before/After sales
+                    <div className={styles.formGroup}>
+                      <label className={styles.formLabel}>Sales After<OptionalLabel /></label>
+                      <p
+                        className={`${styles.formHelper} ${styles.salesAfter}`}
+                      >
+                        Start sales after the selected ticket is sold out
+                      </p>
+
+                      {dependencyOptions.length === 0 ? (
+                        <p className={styles.formHelper}>
+                          Add at least one other ticket with a saved ID to use
+                          this option.
+                        </p>
+                      ) : (
+                        <select
+                          id="startsAfterTicketStructureId"
+                          name="startsAfterTicketStructureId"
+                          className={styles.formSelect}
+                          value={
+                            localTicket.startsAfterTicketStructureId != null &&
+                            localTicket.startsAfterTicketStructureId !== ""
+                              ? String(localTicket.startsAfterTicketStructureId)
+                              : ""
+                          }
+                          onChange={(e) => {
+                            const v = e.target.value;
+                            setLocalTicket((prev) => ({
+                              ...prev,
+                              startsAfterTicketStructureId:
+                                v === "" ? null : parseInt(v, 10),
+                            }));
+                          }}
+                        >
+                          <option value="">Select ticket type</option>
+                          {dependencyOptions.map((t) => (
+                            <option key={t.id} value={String(t.id)}>
+                              {t.name || `Ticket #${t.id}`}
+                            </option>
+                          ))}
+                        </select>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
+
+          <div className={styles.modalFooter}>
+            <button
+              type="button"
+              className={styles.createButton}
+              onClick={handleSubmit}
+            >
+              {saveButtonText}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+TicketDetailsModal.propTypes = {
+  ticket: PropTypes.object,
+  isOpen: PropTypes.bool,
+  onClose: PropTypes.func,
+  onSave: PropTypes.func,
+  saveButtonText: PropTypes.string,
+  editingTicket: PropTypes.object,
+  allTickets: PropTypes.array,
+};
+
+export default TicketDetailsModal;

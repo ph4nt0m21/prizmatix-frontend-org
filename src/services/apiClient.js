@@ -1,7 +1,7 @@
 import axios from "axios";
 import Cookies from "js-cookie";
 
-const BASEURL = process.env.REACT_APP_API_URL || "https://sascode.sbs";
+const BASEURL = process.env.REACT_APP_API_URL;
 
 console.log("API Base URL:", BASEURL); // Add this for debugging
 
@@ -9,14 +9,23 @@ const apiClient = axios.create({
   baseURL: BASEURL,
 });
 
+/** Public auth routes must not send a stale JWT or trigger a forced logout redirect. */
+const isPublicAuthRequest = (url = "") =>
+  url.includes("/login") ||
+  url.includes("/api/organizations/register") ||
+  url.includes("/api/auth/forgot-password") ||
+  url.includes("/forgot-password") ||
+  url.includes("/reset-password");
+
 // Request Interceptor: Attach Token to Requests
 apiClient.interceptors.request.use(
   (config) => {
     const token = Cookies.get("token");
-    if (token) {
+    const isPublic = isPublicAuthRequest(config.url || "");
+    if (token && !isPublic) {
       config.headers.Authorization = `Bearer ${token}`;
       console.log("Adding token to request:", config.url);
-    } else {
+    } else if (!isPublic) {
       console.warn("No token found for request:", config.url);
     }
     
@@ -41,11 +50,32 @@ apiClient.interceptors.response.use(
     return response;
   },
   (error) => {
-    if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+    const status = error.response?.status;
+    const url = error.config?.url || "";
+
+    // Scanner accounts are not allowed on organizer-only endpoints (e.g. /admin/profile),
+    // so their 403 there is expected and must not clear a perfectly good session.
+    //
+    // The status check is load-bearing: this exemption must cover ONLY 403. A 401 on the
+    // same URL means something completely different — the token is expired — and has to
+    // force a logout. Matching on the URL alone swallowed both, and because /admin/profile
+    // is the first call on every page load (AuthProvider's bootstrap), an expired token
+    // produced a session that looked alive but failed every request. On the settings
+    // screen, where /admin/profile* are the only calls, nothing else triggered the logout
+    // and the user stayed stuck there indefinitely.
+    //
+    // Note this also covers PUT /admin/profile/basic-details, /organization and /photo by
+    // substring — intentional for 403, and previously the reason an expired-token save
+    // failed silently instead of redirecting to login.
+    const skipForcedLogout =
+      url.includes("/scanner/verify") ||
+      (status === 403 && url.includes("/admin/profile")) ||
+      isPublicAuthRequest(url);
+
+    if ((status === 401 || status === 403) && !skipForcedLogout) {
       Cookies.remove("token");
-      // Also clear user data
-      localStorage.removeItem('userData');
-      window.location.href = "/login"; 
+      localStorage.removeItem("userData");
+      window.location.href = "/login";
     }
     return Promise.reject(error);
   }

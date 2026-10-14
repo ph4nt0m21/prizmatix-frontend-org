@@ -1,0 +1,285 @@
+/* ================================
+   TABLE CONTAINER
+================================ */
+.tableContainer {
+  width: 100%;
+  max-height: calc(100vh - 400px);
+  overflow-x: visible;
+  overflow-y: auto;
+  background: #ffffff;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ================================
+   TABLE
+================================ */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  font-size: 14px;
+  table-layout: fixed; /* required for colgroup to work */
+  min-width: 800px;
+}
+
+/* ================================
+   HEADERS
+================================ */
+.table th {
+  padding: 16px 20px;
+  background: #F9FAFB;
+  border-bottom: 1px solid #E5E7EB;
+  color: #4B5563;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  white-space: nowrap;
+  text-align: left;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+/* ================================
+   CELLS
+================================ */
+.table td {
+  padding: 16px 20px;
+  border-bottom: 1px solid #E5E7EB;
+  vertical-align: middle;
+  white-space: nowrap;
+  overflow: hidden;      /* ensures ellipsis works */
+  text-overflow: ellipsis;
+  color: #1F2937;
+  font-weight: 500;
+}
+
+/* Specific columns */
+.orderIdCell {
+  font-weight: 700;
+  color: #111827;
+}
+
+.nameCell {
+  font-weight: 600;
+  color: #111827;
+}
+
+.emailCell {
+  color: #374151;
+  white-space: nowrap;
+}
+
+.dateCell {
+  color: #374151;
+}
+
+/* ================================
+   CHECKBOX
+================================ */
+.rowCheckbox {
+  transform: scale(1.1);
+  cursor: pointer;
+}
+
+/* ================================
+   TICKET TYPE
+================================ */
+// .ticketType {
+//   background: #E0F2FE;
+//   color: #0369A1;
+//   padding: 4px 12px;
+//   border-radius: 12px;
+//   font-size: 12px;
+//   font-weight: 600;
+//   white-space: nowrap;
+// }
+.ticketType {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 14px;
+  border-radius: 4px;        // pill
+  border: 1px solid #16A34A;   // green outline
+  background: #FFF;         // very light green bg
+  color: #16A34A;              // green text
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+  font-style: italic;
+  text-transform: uppercase;
+  white-space: nowrap;
+  letter-spacing: 0.01em;
+}
+
+/* ================================
+   REISSUE BUTTON
+================================ */
+// .reissueButton {
+//   background: #EEF2FF;
+//   border: 1px solid #C7D2FE;
+//   color: #4338CA;
+//   border-radius: 8px;
+//   padding: 6px 12px;
+//   display: inline-flex;
+//   align-items: center;
+//   gap: 6px;
+//   font-size: 13px;
+//   font-weight: 500;
+
+//   &:hover {
+//     background: #E0E7FF;
+//   }
+
+//   &:disabled {
+//     opacity: 0.6;
+//   }
+// }
+.reissueButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 16px;
+  border-radius: 4px;
+  border: 1px solid #2563EB;   // blue outline
+  background: #FFF;         // light blue bg
+  color: #005DA5;
+  font-size: 13px;
+    font-style: italic;
+  font-weight: 500;
+  line-height: 1;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+
+  svg {
+    font-size: 14px;
+  }
+
+  &:hover:not(:disabled) {
+    background: #DBEAFE;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: default;
+  }
+}
+
+
+/* ================================
+   DOWNLOAD ICON
+================================ */
+.iconButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  color: #6B7280;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover {
+    background: #E5E7EB;
+    color: #111827;
+  }
+}
+
+.actionCell {
+  text-align: center;
+}
+
+/* ================================
+   PAGINATION
+================================ */
+.pagination {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  flex-wrap: wrap;
+  padding: 16px 24px;
+  color: #6B7280;
+  gap: 24px;
+  background: #ffffff;
+  border-top: 1px solid #E5E7EB;
+
+  .rowsPerPage {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    select {
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      padding: 4px 8px;
+      background: #fff;
+      font-size: 14px;
+    }
+  }
+
+  button {
+    background: none;
+    border: none;
+    cursor: pointer;
+
+    &:hover {
+      color: #111827;
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+}
+
+.noResults {
+  text-align: center;
+  padding: 40px;
+  color: #6B7280;
+}
+
+@media (max-width: 900px) {
+  .tableContainer {
+    max-height: none;
+    overflow-y: visible;
+  }
+
+  .table {
+    min-width: 100%;
+    table-layout: auto;
+  }
+
+  .table thead {
+    display: none;
+  }
+
+  .table tbody tr {
+    display: block;
+    margin: 0 0 12px;
+    border: 1px solid #E5E7EB;
+    border-radius: 8px;
+    background: #fff;
+  }
+
+  .table td {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+  }
+
+  .table td::before {
+    content: attr(data-label);
+    font-size: 11px;
+    color: #6B7280;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+}

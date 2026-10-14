@@ -1,0 +1,209 @@
+@import '../../../styles/variables';
+@import '../../../styles/mixins';
+
+.discountSectionContainer {
+  background: #FFFFFF;
+  border-radius: 8px;
+  padding: 24px;
+  box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.05);
+  width: 100%;
+}
+
+.errorMessage {
+  padding: 12px 14px;
+  margin-bottom: 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #b91c1c;
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+}
+
+.saveActions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.saveButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 22px;
+  background-color: #7c3aed;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+
+  &:hover:not(:disabled) {
+    background-color: #6d28d9;
+  }
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+}
+
+.createDiscountButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background-color: #7C3AED;
+  color: #FFFFFF;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+
+  &:hover {
+    background-color: #6D28D9;
+  }
+}
+
+.tableWrapper {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.discountsList {
+  display: flex;
+  flex-direction: column;
+}
+
+.discountRow {
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid #E9EAEC;
+  padding: 16px 0;
+  transition: background-color 0.2s ease;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &:not(.discountsHeader):hover {
+    background-color: #F9FAFB;
+  }
+}
+
+.discountsHeader {
+  border-bottom: 1px solid #D1D5DB;
+  padding-bottom: 12px;
+  margin-bottom: 8px;
+
+  .discountCell {
+    color: #6B7280;
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+    padding: 0 8px;
+  }
+}
+
+.discountCell {
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  font-size: 14px;
+  color: #374151;
+  
+  &.cellCode { flex-basis: 15%; font-weight: 500; }
+  &.cellType { flex-basis: 10%; text-transform: capitalize; }
+  &.cellValue { flex-basis: 10%; }
+  &.cellUsage { flex-basis: 15%; }
+  &.cellTickets { flex-basis: 25%; }
+  &.cellStatus { flex-basis: 15%; }
+  &.cellActions { flex-basis: 10%; justify-content: flex-end; }
+}
+
+.editButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #9CA3AF;
+  padding: 4px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s, background-color 0.2s;
+
+  &:hover {
+    color: #4B5563;
+    background-color: #E5E7EB;
+  }
+}
+
+.statusBadge {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  
+  &.active {
+    background-color: #ECFDF5;
+    color: #065F46;
+  }
+  
+  &.expired {
+    background-color: #FEF2F2;
+    color: #991B1B;
+  }
+}
+
+// ===================================
+// ===== Mobile Responsive Styles ====
+// ===================================
+@media (max-width: 768px) {
+  .discountSectionContainer {
+    padding: 16px;
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .createDiscountButton {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .saveActions {
+    justify-content: stretch;
+    margin-top: 20px;
+    padding-top: 16px;
+  }
+
+  .saveButton {
+    width: 100%;
+  }
+
+}

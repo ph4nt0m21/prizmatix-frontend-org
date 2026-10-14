@@ -1,32 +1,53 @@
-// Import variables and mixins from main style files
 @import '../../../styles/variables';
 @import '../../../styles/mixins';
 
 // Main container styling
 .stepContainer {
   width: 100%;
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  padding: 24px;
-}
-
-// Form section styling
-.formSection {
   padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
 }
 
-// Section header styling
 .stepHeader {
   display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 24px;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 24px 80px;
+  border-bottom: 1px solid #EAECF0;
+
+  @media (max-width: 768px) {
+    gap: 16px;
+    padding: 24px;
+  }
+}
+
+.stepTextContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-start;
+  flex: 1;
+}
+
+.stepDescription {
+  font-size: 14px;
+  color: #666;
+  margin: 0;
 }
 
 .stepIcon {
   flex-shrink: 0;
   color: #7C3AED;
+
+  @media (max-width: 768px) {
+    // Optionally resize icon if needed for mobile, but 24px is often fine
+    svg {
+      width: 20px;
+      height: 20px;
+    }
+  }
 }
 
 .stepTitle {
@@ -34,6 +55,19 @@
   font-weight: 600;
   color: #333;
   margin: 0;
+
+  @media (max-width: 768px) {
+    font-size: 16px; // Adjust font size for mobile
+  }
+}
+
+// Form section styling
+.formSection {
+  padding: 32px 80px;
+
+  @media (max-width: 768px) {
+    padding: 24px;
+  }
 }
 
 // Rich Text Editor Toolbar - matches the minimal toolbar in the image
@@ -47,6 +81,14 @@
   border-bottom: none;
   border-top-left-radius: 6px;
   border-top-right-radius: 6px;
+  flex-wrap: wrap; // Allow items to wrap on smaller screens
+
+  @media (max-width: 768px) {
+    height: auto; // Allow height to adjust if items wrap
+    min-height: 40px; // Ensure minimum height
+    padding: 8px 10px; // Adjust padding for mobile
+    gap: 4px; // Add a small gap between buttons if they wrap
+  }
 }
 
 // Style for each editor button (B, I, U, etc.)
@@ -71,6 +113,15 @@
     width: 18px;
     height: 18px;
   }
+
+  @media (max-width: 768px) {
+    width: 28px; // Slightly smaller buttons for mobile
+    height: 28px;
+    svg {
+      width: 16px; // Slightly smaller icons for mobile
+      height: 16px;
+    }
+  }
 }
 
 // Divider between button groups
@@ -79,6 +130,11 @@
   height: 24px;
   background-color: #e5e7eb;
   margin: 0 8px;
+
+  @media (max-width: 768px) {
+    height: 20px; // Slightly shorter divider for mobile
+    margin: 0 6px; // Adjust margin for mobile
+  }
 }
 
 // Rich Text Editor Content area
@@ -112,6 +168,12 @@
       margin-bottom: 0;
     }
   }
+
+  @media (max-width: 768px) {
+    min-height: 150px; // Shorter min-height for mobile
+    padding: 12px; // Adjust padding for mobile
+    font-size: 13px; // Adjust font size for mobile
+  }
 }
 
 // Character counter at the bottom of the editor
@@ -121,15 +183,30 @@
   align-items: center;
   margin-top: 8px;
   padding: 0 4px;
+
+  @media (max-width: 768px) {
+    flex-direction: column; // Stack elements on smaller screens
+    align-items: flex-start; // Align to start when stacked
+    margin-top: 12px; // Adjust margin for mobile
+  }
 }
 
 .characterCount {
   font-size: 12px;
   color: #9ca3af;
+
+  @media (max-width: 768px) {
+    font-size: 11px; // Adjust font size for mobile
+    margin-bottom: 4px; // Add margin when stacked
+  }
 }
 
 .editorTip {
   display: none; // Not shown in the image
+
+  @media (max-width: 768px) {
+    font-size: 11px; // Adjust font size for mobile if ever displayed
+  }
 }
 
 // Error message styling
@@ -150,6 +227,12 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+
+  @media (max-width: 768px) {
+    margin-bottom: 12px; // Adjust margin for mobile
+    padding: 10px 12px; // Adjust padding for mobile
+    font-size: 13px; // Adjust font size for mobile
+  }
 }
 
 .dismissButton {
@@ -170,6 +253,12 @@
   justify-content: flex-end;
   gap: 12px;
   margin-top: 32px;
+
+  @media (max-width: 768px) {
+    flex-direction: column-reverse; // Stack buttons vertically, "Next" usually on top
+    gap: 12px; // Space between buttons
+    margin-top: 24px; // Adjust top margin
+  }
 }
 
 .backButton {
@@ -184,6 +273,12 @@
   
   &:hover {
     background-color: #f9fafb;
+  }
+
+  @media (max-width: 768px) {
+    width: 100%; // Full width on mobile
+    padding: 10px 16px; // Adjust padding for mobile
+    font-size: 14px; // Consistent font size
   }
 }
 
@@ -205,6 +300,12 @@
     opacity: 0.6;
     cursor: not-allowed;
   }
+
+  @media (max-width: 768px) {
+    width: 100%; // Full width on mobile
+    padding: 10px 24px; // Adjust padding for mobile
+    font-size: 14px; // Consistent font size
+  }
 }
 
 /* Add this style to descriptionStep.module.scss */
@@ -212,6 +313,10 @@
   font-size: 12px;
   color: #666;
   margin-left: 8px;
+
+  @media (max-width: 768px) {
+    margin-left: 0; // Remove left margin when stacked
+  }
 }
 
 /* Add text color change for warnings when character count approaches limit */
@@ -221,5 +326,34 @@
   }
   &.error {
     color: #ef4444;
+  }
+}
+
+// Existing media queries from your file, adjusted or kept
+@media (max-width: 768px) {
+  .formRow { // This was from locationStep and dateTimeStep, ensure it's removed if not relevant to this component's JSX structure
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .formInput { // This was from locationStep and dateTimeStep, ensure it's removed if not relevant to this component's JSX structure
+    width: 100%;
+  }
+
+  .buttonGroup { // This class isn't explicitly used in your JSX, but keeping the styling for buttons if it's applied via a parent div
+    flex-direction: column;
+    gap: 8px;
+
+    button {
+      width: 100%;
+    }
+  }
+
+  .stepHeading { // These classes don't seem to be in your provided JSX, but keeping the media queries
+    font-size: 16px;
+  }
+
+  .stepSubheading { // These classes don't seem to be in your provided JSX, but keeping the media queries
+    font-size: 14px;
   }
 }

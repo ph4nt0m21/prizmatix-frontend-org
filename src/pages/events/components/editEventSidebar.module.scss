@@ -1,0 +1,121 @@
+@import '../../../styles/variables';
+@import '../../../styles/mixins';
+
+.sidebar {
+  display: flex;
+  width: 292px;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 1px;
+  align-self: stretch;
+  border-radius: 8px;
+  background: #FFF;
+  box-shadow: 0px 2px 4px 0px rgba(0, 0, 0, 0.05);
+  // Default desktop position
+  position: relative; // Ensures it takes up space in the flex layout
+  z-index: 1; // Default z-index for desktop
+
+  @media (max-width: 768px) {
+    position: fixed; // Make it an overlay on mobile
+    top: 0;
+    left: -292px; // Hidden by default (starts off-screen)
+    transform: translateX(0); // Reset transform initially
+    width: 292px; // Fixed width
+    height: 100vh; // Full viewport height
+    z-index: 1001; // Higher z-index than main SideNavBar (1000) and overlay (999)
+    transition: transform 0.3s ease-in-out; // Smooth slide animation
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.5); // Add shadow for depth
+    padding-top: 20px; // Add some top padding for mobile
+    padding-bottom: 20px; // Add some bottom padding
+    justify-content: space-between; // Distribute content vertically
+  }
+
+  &.open {
+    @media (max-width: 768px) {
+      transform: translateX(100%); // Slide in from left (covers 292px from left edge)
+    }
+  }
+}
+
+.sidebarHeader {
+  padding: 16px 24px 16px;
+  margin-bottom: 20px;
+
+  @media (max-width: 768px) {
+    padding: 10px 15px; // Adjust padding
+    margin-bottom: 15px; // Adjust margin
+  }
+}
+
+.sidebarTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 4px 0;
+}
+
+.sidebarSubtitle {
+  font-size: 12px;
+  color: #6b7280;
+  margin: 0;
+}
+
+.stepsList {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 0 12px;
+  overflow-y: auto; // Add scroll if many steps
+}
+
+.step {
+  display: flex;
+  align-items: center;
+  padding: 10px 12px;
+  margin-bottom: 4px;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background-color 0.2s ease;
+  position: relative;
+
+  &:hover:not(.active) {
+    background-color: rgba(124, 58, 237, 0.05);
+  }
+
+  &.active {
+    background-color: rgba(124, 58, 237, 0.1);
+  }
+}
+
+.stepIconContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  margin-right: 12px;
+  position: relative;
+}
+
+.stepIcon {
+  width: 20px;
+  height: 20px;
+  opacity: 0.7;
+
+  .active & {
+    opacity: 1;
+  }
+}
+
+.stepLabel {
+  font-size: 14px;
+  color: #6b7280;
+  flex: 1;
+
+  .active & {
+    color: #7C3AED;
+    font-weight: 500;
+  }
+}
