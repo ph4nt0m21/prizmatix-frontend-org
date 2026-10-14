@@ -244,7 +244,14 @@ const ScannerPage = () => {
         );
       } catch (err) {
         console.error('QR verification failed:', err);
-        setError('Invalid QR Code or ticket does not belong to this event.');
+        const serverMessage =
+          typeof err?.response?.data === 'string' ? err.response.data : err?.response?.data?.message;
+        // A revoked ticket is a definite "no" — say so, so door staff don't keep re-scanning.
+        setError(
+          serverMessage && /revoked/i.test(serverMessage)
+            ? 'This ticket has been revoked and is not valid for entry.'
+            : 'Invalid QR Code or ticket does not belong to this event.'
+        );
       }
     }
   };

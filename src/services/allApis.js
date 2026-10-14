@@ -328,6 +328,32 @@ export const CreatePayoutAccountManagementLinkAPI = async () => {
 };
 
 
+// =============== COMPLIMENTARY TICKET APIs ===============
+// Organiser-issued, non-payment tickets. Ownership of the event is enforced server-side.
+export const GetComplimentaryTicketsAPI = async (eventId) => {
+  return await apiClient.get(`/api/events/${eventId}/complimentary-tickets`);
+};
+
+// idempotencyKey: generated once per issue attempt; a retry with the same key returns the
+// original tickets instead of issuing again.
+export const IssueComplimentaryTicketAPI = async (eventId, data, idempotencyKey) => {
+  return await apiClient.post(`/api/events/${eventId}/complimentary-tickets`, data, {
+    headers: { 'Idempotency-Key': idempotencyKey },
+  });
+};
+
+export const ResendComplimentaryTicketAPI = async (eventId, orderId) => {
+  return await apiClient.post(`/api/events/${eventId}/complimentary-tickets/${orderId}/resend`);
+};
+
+export const RevokeComplimentaryTicketAPI = async (eventId, orderId) => {
+  return await apiClient.post(`/api/events/${eventId}/complimentary-tickets/${orderId}/revoke`);
+};
+
+export const GetComplimentaryTicketHistoryAPI = async (eventId, orderId) => {
+  return await apiClient.get(`/api/events/${eventId}/complimentary-tickets/${orderId}/history`);
+};
+
 // =============== SCANNER USER APIs ===============
 export const CreateScannerUserAPI = async (data) => {
   return await apiClient.post("/admin/scanner-users", data);

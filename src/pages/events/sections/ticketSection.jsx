@@ -4,6 +4,7 @@ import { toast } from "react-toastify";
 import styles from "./ticketSection.module.scss";
 import TicketsStep from "../steps/ticketsStep";
 import LoadingSpinner from "../../../components/common/loadingSpinner/loadingSpinner";
+import ComplimentaryTicketsPanel from "./complimentary/complimentaryTicketsPanel";
 import {
   GetEventTicketStructuresAPI,
   UpdateTicketStructureAPI,
@@ -65,6 +66,25 @@ const TicketSection = ({ onCommitSuccess = () => {} }) => {
       setError("Failed to load ticket section. Please try again.");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // After a complimentary issue/revoke, capacity moved server-side. The editor saves
+  // remaining = total − soldCount, so a stale soldCount would write the reserved places
+  // back on the next "Save changes". Patch only soldCount, keeping any unsaved edits.
+  const refreshSoldCounts = async () => {
+    try {
+      const res = await GetEventTicketStructuresAPI(eventId);
+      const byId = new Map((res?.data || []).map((t) => [t.id, t]));
+      setEventData((prev) => ({
+        ...prev,
+        tickets: (prev.tickets || []).map((t) => {
+          const fresh = t.id ? byId.get(t.id) : null;
+          return fresh && Number.isFinite(fresh.soldCount) ? { ...t, soldCount: fresh.soldCount } : t;
+        }),
+      }));
+    } catch (err) {
+      console.error("Failed to refresh ticket counts:", err);
     }
   };
 
@@ -301,6 +321,11 @@ const TicketSection = ({ onCommitSuccess = () => {} }) => {
               {isSavingTickets ? "Saving…" : "Save changes"}
             </button>
           </div>
+          <ComplimentaryTicketsPanel
+            eventId={eventId}
+            tickets={eventData.tickets}
+            onCapacityChange={refreshSoldCounts}
+          />
         </>
       )}
     </div>
