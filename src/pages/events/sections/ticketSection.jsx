@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import styles from "./ticketSection.module.scss";
@@ -94,10 +94,12 @@ const TicketSection = ({ onCommitSuccess = () => {} }) => {
     }
   }, [eventId]);
 
-  const handleInputChange = (value, fieldName) => {
+  // Stable: TicketsStep pushes its tickets up whenever this changes, so a new function
+  // each render would overwrite refreshed soldCounts with its stale copy.
+  const handleInputChange = useCallback((value, fieldName) => {
     if (fieldName !== "tickets") return;
     setEventData((prev) => ({ ...prev, tickets: value || [] }));
-  };
+  }, []);
 
   const isDonationTicket = (ticket) =>
     String(ticket?.ticketKind || "").toUpperCase() === "DONATION";

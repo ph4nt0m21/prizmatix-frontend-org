@@ -289,6 +289,14 @@ export const ReissueOrderEmailAPI = async (orderId) => {
   return await apiClient.post(`/api/admin/orders/${orderId}/reissue-email`);
 };
 
+// Returns the same receipt PDF that is attached to the customer's
+// order confirmation email.
+export const GetOrderReceiptPdfAPI = async (orderId) => {
+  return await apiClient.get(`/api/admin/orders/${orderId}/receipt`, {
+    responseType: 'blob',
+  });
+};
+
 // =============== PAYOUT APIs (Organization Console – Manage Event) ===============
 
 // Get payout eligibility for an event (revenue summary + remaining payoutable)
