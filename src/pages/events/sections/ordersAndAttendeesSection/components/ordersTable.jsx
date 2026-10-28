@@ -126,14 +126,13 @@ import { flexRender, getCoreRowModel, getPaginationRowModel, getSortedRowModel, 
 import { isValid, parse } from 'date-fns';
 import styles from './ordersTable.module.scss';
 import { FiDownload, FiMail } from 'react-icons/fi';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
-import { ReissueOrderEmailAPI } from '../../../../../services/allApis';
+import { ReissueOrderEmailAPI, GetOrderReceiptPdfAPI } from '../../../../../services/allApis';
 
 const OrdersTable = ({ orders, onOrderSelect }) => {
   const [sorting, setSorting] = useState([]);
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
   const [loadingOrderId, setLoadingOrderId] = useState(null);
+  const [downloadingOrderId, setDownloadingOrderId] = useState(null);
 
   useEffect(() => {
     setPagination((p) => ({ ...p, pageIndex: 0 }));
@@ -143,21 +142,28 @@ const OrdersTable = ({ orders, onOrderSelect }) => {
     setPagination((p) => ({ ...p, pageIndex: 0 }));
   }, [orders?.length]);
 
-  const handleDownloadDetailsPDF = (order, e) => {
+  const handleDownloadDetailsPDF = async (order, e) => {
     e.stopPropagation();
-    const doc = new jsPDF();
-    doc.text(`Order Details - ${order.id}`, 10, 10);
-    autoTable(doc, {
-      startY: 20,
-      body: [
-        ['Order ID', order.id],
-        ['Name', order.customer.name],
-        ['Email', order.customer.email],
-        ['Order Date', order.orderDate],
-        ['Ticket Type', order.ticketType],
-      ],
-    });
-    doc.save(`order-details-${order.id}.pdf`);
+    const cleanOrderId = String(order.id).replace(/#/g, '');
+    try {
+      setDownloadingOrderId(order.id);
+      const response = await GetOrderReceiptPdfAPI(cleanOrderId);
+      const url = window.URL.createObjectURL(
+        new Blob([response.data], { type: 'application/pdf' })
+      );
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `receipt-${cleanOrderId}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Failed to download order receipt:', err);
+      alert(`Could not download the receipt for Order ${order.id}. Please try again.`);
+    } finally {
+      setDownloadingOrderId(null);
+    }
   };
 
   const handleReissueEmail = async (orderId, e) => {
@@ -259,10 +265,14 @@ const OrdersTable = ({ orders, onOrderSelect }) => {
         <button
           className={styles.iconButton}
           type="button"
-          title="Download"
+          title="Download receipt"
+          disabled={downloadingOrderId === row.original.id}
           onClick={(e) => handleDownloadDetailsPDF(row.original, e)}
         >
-          <FiDownload /> <span className={styles.mobileOnly}>Download Ticket</span>
+          <FiDownload />{' '}
+          <span className={styles.mobileOnly}>
+            {downloadingOrderId === row.original.id ? 'Downloading...' : 'Download Receipt'}
+          </span>
         </button>
       ),
     },
