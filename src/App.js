@@ -28,6 +28,7 @@ import PayoutAccountPage from './pages/payoutAccount/payoutAccountPage';
 // Import utilities and components
 import ProtectedRoute from "./security/protectedRoute";
 import LoadingSpinner from "./components/common/loadingSpinner/loadingSpinner";
+import ErrorBoundary from "./components/common/errorBoundary/errorBoundary";
 import { setupEventDataCleanup, checkAndCleanupEventData } from './utils/eventUtil';
 
 import { ToastContainer } from "react-toastify";
@@ -55,8 +56,10 @@ const AppContent = () => {
     );
   }
 
+  // Header and SideNavBar render outside MainLayout's own boundary; without this, a
+  // crash in either unmounts the whole app and leaves a blank page.
   return (
-    <>
+    <ErrorBoundary>
       <Routes>
         {/* ======================================== */}
         {/* ========= 1. PUBLIC ROUTES ========= */}
@@ -133,7 +136,7 @@ const AppContent = () => {
         {/* <Route path="/unauthorized" element={<UnauthorizedPage />} /> */}
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
-    </>
+    </ErrorBoundary>
   );
 };
 
