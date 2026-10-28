@@ -47,6 +47,28 @@ const TicketsStep = ({
   const [openMenuIndex, setOpenMenuIndex] = useState(null); //state for managing the action menu dropdown
   const menuAnchorRefs = useRef({});
 
+  // The parent refreshes soldCount after complimentary tickets are issued or revoked.
+  // Pull those counts into local state, or the effect below would push the stale ones
+  // back up — the "N left" figure wouldn't move and saving would hand reserved places
+  // back to public sale.
+  const soldCountKey = (eventData.tickets || []).map((t) => `${t.id}:${t.soldCount}`).join(",");
+  useEffect(() => {
+    const freshSold = new Map(
+      (eventData.tickets || []).filter((t) => t?.id != null).map((t) => [t.id, t.soldCount])
+    );
+    setTickets((prev) => {
+      let changed = false;
+      const next = prev.map((t) => {
+        const sold = t?.id != null ? freshSold.get(t.id) : undefined;
+        if (!Number.isFinite(sold) || sold === t.soldCount) return t;
+        changed = true;
+        return { ...t, soldCount: sold };
+      });
+      return changed ? next : prev;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [soldCountKey]);
+
   // Effect to propagate tickets changes to parent component
   useEffect(() => {
     // Send the updated tickets data to parent component
