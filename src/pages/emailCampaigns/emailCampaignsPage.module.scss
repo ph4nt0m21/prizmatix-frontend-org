@@ -1035,6 +1035,47 @@
   }
 }
 
+.previewMeta {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 12px;
+  margin: 0 0 16px;
+  padding: 12px;
+  font-size: 14px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+
+  dt {
+    color: #6b7280;
+  }
+
+  dd {
+    margin: 0;
+    color: #111827;
+    overflow-wrap: anywhere;
+  }
+}
+
+.previewBody {
+  padding: 16px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #111827;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  overflow-wrap: anywhere;
+}
+
+.alreadySentNote {
+  margin: 16px 0 0;
+  padding: 10px 12px;
+  font-size: 14px;
+  color: #4c1d95;
+  background: #ede9fe;
+  border-radius: 6px;
+}
+
 .testEmailList {
   list-style: none;
   margin: 12px 0 0 0;

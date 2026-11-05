@@ -649,7 +649,6 @@ import Toolbar from "./toolbar";
 
 import {
   GetAllOrganizationEventsAPI,
-  GetEventAPI,
   CreateEmailCampaignAPI,
   SendEmailCampaignAPI,
   GetEmailCampaignByIdAPI,
@@ -660,11 +659,6 @@ import {
 
 import { getUserData } from "../../utils/authUtil";
 import {
-  getCachedAttachments,
-  addCachedAttachment,
-  removeCachedAttachment,
-  clearCachedAttachments,
-  cleanupOldCachedAttachments,
   setDraftCampaignId,
   getDraftCampaignId,
   clearDraftCampaignId,
@@ -681,6 +675,26 @@ const DECORATORS = [
   "@LastName",
   "@OrderNumber",
 ];
+
+const PREVIEW_SAMPLE = {
+  "@FirstName": "Alex",
+  "@LastName": "Taylor",
+  "@OrderNumber": "12345",
+};
+
+const escapeHtml = (text) =>
+  String(text ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+
+/** The API answers errors as plain text or as { message }. */
+const apiErrorMessage = (err, fallback) => {
+  const data = err?.response?.data;
+  if (typeof data === "string" && data) return data;
+  return data?.message || fallback;
+};
 
 const EmailCampaignsPage = () => {
   const navigate = useNavigate();
@@ -709,11 +723,11 @@ const EmailCampaignsPage = () => {
   const [newTestEmail, setNewTestEmail] = useState("");
 
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
-  const [eventDetails, setEventDetails] = useState(null);
   const [showSubjectSuggestions, setShowSubjectSuggestions] = useState(false);
   const [subjectCursorPosition, setSubjectCursorPosition] = useState(0);
   const [isSaved, setIsSaved] = useState(false);
   const [campaignSavedId, setCampaignSavedId] = useState(null);
+  const [isAlreadySent, setIsAlreadySent] = useState(false);
 
   const MAX_FILE_SIZE_MB = 5;
 
@@ -785,10 +799,12 @@ const EmailCampaignsPage = () => {
             ? "at"
             : "now"
         );
+        // Saved as UTC and returned without a timezone, so mark it as UTC when reading it back.
         setScheduledAt(
-          data.scheduledAt ? new Date(data.scheduledAt) : new Date()
+          data.scheduledAt ? new Date(`${data.scheduledAt}Z`) : new Date()
         );
         setAttachments(data.attachments || []);
+        setIsAlreadySent(Boolean(data.sent));
       } catch {
         toast.error("Failed to load campaign");
       } finally {
@@ -799,12 +815,11 @@ const EmailCampaignsPage = () => {
     fetchCampaign();
   }, [campaignId, editor, isPreviewOnly]);
 
-  // Restore valid cached attachments on mount
+  // A new campaign starts clean, not attached to a draft left over from an earlier visit.
   useEffect(() => {
     if (campaignId) {
       return;
     }
-    clearCachedAttachments();
     clearDraftCampaignId();
     setAttachments([]);
   }, [campaignId]);
@@ -812,9 +827,6 @@ const EmailCampaignsPage = () => {
   // ---------------- PAYLOAD BUILDER ----------------
   const createCampaignPayload = (isSent = false) => {
     const userData = getUserData();
-
-    const cached = getCachedAttachments();
-    const urls = cached.map((a) => a.url);
 
     const sanitizeMentions = (html) => {
       let clean = html.replace(/\sdata-[^=]+="[^"]*"/g, "");
@@ -839,7 +851,7 @@ const EmailCampaignsPage = () => {
       replyTo: userData?.email || "support@prizmatix.nz",
       recipientType: "EVENT_BUYERS",
       organizationId: userData?.organizationId,
-      attachments: urls && urls.length > 0 ? urls : [],
+      attachments,
     };
   };
 
@@ -902,7 +914,6 @@ const EmailCampaignsPage = () => {
         }
 
         if (url) {
-          addCachedAttachment(url);
           setAttachments((prev) => [...prev, url]);
         }
       }
@@ -919,7 +930,6 @@ const EmailCampaignsPage = () => {
 
   const handleRemoveAttachment = (url) => {
     setAttachments((prev) => prev.filter((a) => a !== url));
-    removeCachedAttachment(url);
   };
 
   const handleSaveCampaign = async () => {
@@ -947,13 +957,17 @@ const EmailCampaignsPage = () => {
       setIsSaved(true);
     } catch (err) {
       console.error("Error saving campaign:", err);
-      toast.error("Failed to save campaign");
+      toast.error(apiErrorMessage(err, "Failed to save campaign"));
     } finally {
       setLoading(false);
     }
   };
 
   const handleSend = async () => {
+    if (selectedEvents.length === 0) {
+      return toast.error("Select at least one event before sending.");
+    }
+
     try {
       setLoading(true);
       const effectiveCampaignId =
@@ -978,18 +992,20 @@ const EmailCampaignsPage = () => {
           createCampaignPayload(false)
         );
         await SendEmailCampaignAPI(effectiveCampaignId);
-        toast.success("Campaign sent successfully!");
+        toast.success("Your campaign is on its way. Check the Campaigns list for progress.");
       }
 
-      clearCachedAttachments();
       clearDraftCampaignId();
       navigate("/campaigns");
     } catch (err) {
       console.error(err);
       toast.error(
-        sendOption === "at"
-          ? "Error scheduling campaign"
-          : "Error sending campaign"
+        apiErrorMessage(
+          err,
+          sendOption === "at"
+            ? "Error scheduling campaign"
+            : "Error sending campaign"
+        )
       );
     } finally {
       setLoading(false);
@@ -1031,19 +1047,27 @@ const EmailCampaignsPage = () => {
     setShowSubjectSuggestions(false);
   };
 
-  const handleOpenPreview = async () => {
-    if (selectedEvents.length === 1) {
-      try {
-        const res = await GetEventAPI(selectedEvents[0]);
-        setEventDetails(res.data);
-      } catch {
-        setEventDetails(null);
-      }
-    }
-    setIsPreviewOpen(true);
-  };
+  const handleOpenPreview = () => setIsPreviewOpen(true);
 
   const eventOptions = events.map((e) => ({ value: e.id, label: e.name }));
+
+  // The editor's own output, so it can only hold the formatting the editor allows.
+  // Only the sample values come from elsewhere, and those are escaped.
+  const buildPreviewHtml = () => {
+    const firstEvent = eventOptions.find((o) =>
+      selectedEvents.includes(o.value.toString())
+    );
+    const samples = {
+      ...PREVIEW_SAMPLE,
+      "@EventName": firstEvent?.label || "Your event",
+      "@OrganiserName": getUserData()?.organizationName || "Your organisation",
+    };
+    let html = (editor?.getHTML() || "").replace(/\sdata-[^=]+="[^"]*"/g, "");
+    Object.entries(samples).forEach(([token, value]) => {
+      html = html.split(token).join(escapeHtml(value));
+    });
+    return html.split("@AddToCalendar").join("<u>Add to Calendar</u>");
+  };
 
   return (
     <div className={styles.emailCampaignsPageContainer}>
@@ -1214,11 +1238,19 @@ const EmailCampaignsPage = () => {
             )}
           </div>
 
+          {isAlreadySent && (
+            <p className={styles.alreadySentNote}>
+              This campaign has already been sent, so it can no longer be changed.
+              Start a new campaign to send another email.
+            </p>
+          )}
+
           <div className={styles.footerActions}>
   <button className={styles.secondaryButton} onClick={handleBack}>
     Back
   </button>
 
+  {!isAlreadySent && (
   <button
     className={styles.primaryButton}
     onClick={handleSaveCampaign}
@@ -1230,9 +1262,10 @@ const EmailCampaignsPage = () => {
       ? "Update Campaign"
       : "Save Campaign"}
   </button>
+  )}
 
   {/* Show Send Test Mail + Send Campaign only when saved */}
-  {isSaved && (
+  {isSaved && !isAlreadySent && (
     <>
       <button
         className={styles.primaryButton}
@@ -1260,6 +1293,49 @@ const EmailCampaignsPage = () => {
 </div>
         </div>
       </div>
+
+      {/* preview modal */}
+      {isPreviewOpen && (
+        <div className={styles.previewOverlay}>
+          <div className={styles.previewModal}>
+            <h2>Email preview</h2>
+            <p>
+              This is how your email will look. Sample details stand in for the @
+              words, and each person sees their own.
+            </p>
+            <dl className={styles.previewMeta}>
+              <dt>From</dt>
+              <dd>no-reply@prizmatix.nz</dd>
+              <dt>Reply to</dt>
+              <dd>{getUserData()?.email || "support@prizmatix.nz"}</dd>
+              <dt>Subject</dt>
+              <dd>{subject || "(no subject yet)"}</dd>
+              {attachments.length > 0 && (
+                <>
+                  <dt>Attachments</dt>
+                  <dd>
+                    {attachments
+                      .map((url) => url.split("/").pop().split("?")[0])
+                      .join(", ")}
+                  </dd>
+                </>
+              )}
+            </dl>
+            <div
+              className={styles.previewBody}
+              dangerouslySetInnerHTML={{ __html: buildPreviewHtml() }}
+            />
+            <div className={styles.previewActions}>
+              <button
+                className={styles.secondaryButton}
+                onClick={() => setIsPreviewOpen(false)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* test email modal */}
       {isTestModalOpen && (
