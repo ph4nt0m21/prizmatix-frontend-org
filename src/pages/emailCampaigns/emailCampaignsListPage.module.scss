@@ -502,6 +502,40 @@
   }
 }
 
+.statusBadge {
+  display: inline-block;
+  padding: 2px 8px;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  border-radius: 999px;
+}
+
+.statusDraft {
+  color: #374151;
+  background: #f3f4f6;
+}
+
+.statusScheduled {
+  color: #1e40af;
+  background: #dbeafe;
+}
+
+.statusSending {
+  color: #4c1d95;
+  background: #ede9fe;
+}
+
+.statusSent {
+  color: #065f46;
+  background: #d1fae5;
+}
+
+.statusFailed {
+  color: #92400e;
+  background: #fef3c7;
+}
+
 .actions {
   display: flex;
   gap: 4px;

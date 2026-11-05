@@ -260,6 +260,25 @@ const IconDelete = () => (
   </svg>
 );
 
+const campaignStatus = (c) => {
+  if (c.sent) {
+    if (c.sendStartedAt && !c.sendFinishedAt) {
+      return { label: 'Sending...', className: styles.statusSending };
+    }
+    if (c.recipientCount == null) {
+      return { label: 'Sent', className: styles.statusSent };
+    }
+    const people = `${c.recipientCount} ${c.recipientCount === 1 ? 'person' : 'people'}`;
+    return c.failedCount > 0
+      ? { label: `Sent to ${c.recipientCount - c.failedCount} of ${people}`, className: styles.statusFailed }
+      : { label: `Sent to ${people}`, className: styles.statusSent };
+  }
+  if (c.scheduledAt && ['AT', 'SCHEDULE', 'SCHEDULED'].includes(String(c.sendType).toUpperCase())) {
+    return { label: 'Scheduled', className: styles.statusScheduled };
+  }
+  return { label: 'Draft', className: styles.statusDraft };
+};
+
 const EmailCampaignsListPage = () => {
   const navigate = useNavigate();
   const [campaigns, setCampaigns] = useState([]);
@@ -328,7 +347,8 @@ const EmailCampaignsListPage = () => {
       await loadCampaigns();
     } catch (err) {
       console.error('Delete failed', err);
-      toast.error('Failed to delete campaign');
+      const data = err?.response?.data;
+      toast.error(typeof data === 'string' && data ? data : 'Failed to delete campaign');
     } finally {
       setDeletingId(null);
     }
@@ -361,6 +381,16 @@ const EmailCampaignsListPage = () => {
       enableSorting: true,
       cell: ({ row }) => row.original.subject,
       meta: { cellClassName: styles.subjectCell },
+    },
+    {
+      id: 'status',
+      accessorFn: (row) => campaignStatus(row).label,
+      header: 'Status',
+      enableSorting: true,
+      cell: ({ row }) => {
+        const status = campaignStatus(row.original);
+        return <span className={`${styles.statusBadge} ${status.className}`}>{status.label}</span>;
+      },
     },
     {
       id: 'createdAt',
@@ -547,7 +577,7 @@ const EmailCampaignsListPage = () => {
             <tbody>
               {isLoading ? (
                 <tr>
-                  <td colSpan="4" style={{ textAlign: 'center', padding: '2rem' }}>
+                  <td colSpan="5" style={{ textAlign: 'center', padding: '2rem' }}>
                     Loading campaigns...
                   </td>
                 </tr>
