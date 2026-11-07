@@ -332,6 +332,44 @@ a.breadcrumbLink:nth-of-type(2),
   }
 }
 
+.qrCodeButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  border: 1px solid #8B5CF6;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  white-space: nowrap;
+  background-color: #FFFFFF;
+  color: #7C3AED;
+
+  &:hover {
+    background-color: #F5F3FF;
+    border-color: #7C3AED;
+  }
+
+  // Icon only on tablets, so the breadcrumb keeps room for the event name.
+  @media (min-width: 769px) and (max-width: 1100px) {
+    padding: 8px;
+
+    span {
+      display: none;
+    }
+  }
+
+  @media (max-width: 768px) {
+    width: 100%;
+    justify-content: flex-start;
+    font-size: 13px;
+    padding: 10px 12px;
+  }
+}
+
 .copyLinkButton {
   position: relative;
   display: flex;
@@ -501,5 +539,85 @@ a.breadcrumbLink:nth-of-type(2),
 
   &:hover {
     background-color: #7C3AED;
+  }
+}
+
+/* --- Scanner QR modal --- */
+.qrModal {
+  box-sizing: border-box;
+  width: calc(100% - 32px);
+  max-width: 400px;
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
+
+  .qrEventName {
+    margin: 0 0 16px;
+    font-size: 15px;
+    font-weight: 600;
+    color: #111827;
+    text-align: center;
+    overflow-wrap: anywhere;
+  }
+
+  .qrHelp {
+    margin: 16px 0 0;
+    font-size: 13px;
+    text-align: center;
+  }
+}
+
+.qrFrame {
+  display: flex;
+  justify-content: center;
+  width: fit-content;
+  margin: 0 auto;
+  padding: 16px;
+  border: 1px solid #E5E7EB;
+  border-radius: 12px;
+  background: #FFFFFF;
+  line-height: 0;
+}
+
+.qrActions {
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.qrPrimaryAction,
+.qrSecondaryAction {
+  display: flex;
+  flex: 1 1 140px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+.qrPrimaryAction {
+  border: 1px solid #8B5CF6;
+  background-color: #8B5CF6;
+  color: #FFFFFF;
+
+  &:hover {
+    border-color: #7C3AED;
+    background-color: #7C3AED;
+  }
+}
+
+.qrSecondaryAction {
+  border: 1px solid #D1D5DB;
+  background-color: #FFFFFF;
+  color: #374151;
+
+  &:hover {
+    border-color: #A9AFB6;
+    background-color: #F9FAFB;
   }
 }
