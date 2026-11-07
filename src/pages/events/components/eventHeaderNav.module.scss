@@ -542,7 +542,7 @@ a.breadcrumbLink:nth-of-type(2),
   }
 }
 
-/* --- Scanner QR modal --- */
+/* --- Event QR modal --- */
 .qrModal {
   box-sizing: border-box;
   width: calc(100% - 32px);
@@ -559,8 +559,27 @@ a.breadcrumbLink:nth-of-type(2),
     overflow-wrap: anywhere;
   }
 
+  .qrLink {
+    display: block;
+    margin: 12px 0 0;
+    font-size: 13px;
+    color: #7C3AED;
+    text-align: center;
+    overflow-wrap: anywhere;
+  }
+
   .qrHelp {
-    margin: 16px 0 0;
+    margin: 12px 0 0;
+    font-size: 13px;
+    text-align: center;
+  }
+
+  .qrDraftNote {
+    margin: 12px 0 0;
+    padding: 8px 12px;
+    border-radius: 6px;
+    background-color: #FFFBEB;
+    color: #92400E;
     font-size: 13px;
     text-align: center;
   }

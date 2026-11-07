@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Html5Qrcode, Html5QrcodeScannerState } from 'html5-qrcode';
-import { useSearchParams } from 'react-router-dom';
 import styles from './scannerPage.module.scss';
 import { FiXCircle, FiCheckCircle, FiMaximize, FiUsers } from 'react-icons/fi';
 import AttendeesTable from './components/attendeesTable';
@@ -68,8 +67,6 @@ const ScannerPage = () => {
   const userRole = normalizeRole(userData?.role);
   const isScannerUser = userRole === 'SCANNER';
   const assignedEventId = userData?.assignedEventId;
-  const [searchParams] = useSearchParams();
-  const eventFromLink = searchParams.get('event'); // Set by the event's Scanner QR Code.
 
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [error, setError] = useState(null);
@@ -118,13 +115,6 @@ const ScannerPage = () => {
         const response = await GetAllOrganizationEventsAPI(orgId);
         const list = Array.isArray(response.data) ? response.data : response.data?.content || [];
         setEvents(list);
-        if (eventFromLink) {
-          if (list.some((event) => String(event.id) === eventFromLink)) {
-            setSelectedEventId(eventFromLink);
-          } else {
-            setError("This QR code is for an event your account can't scan. Choose an event below.");
-          }
-        }
       } catch (err) {
         console.error('Failed to fetch organization events:', err);
         setError('Could not load organisation events.');
@@ -134,7 +124,7 @@ const ScannerPage = () => {
     };
 
     fetchOrganizationEvents();
-  }, [isScannerUser, assignedEventId, userData?.organizationId, eventFromLink]);
+  }, [isScannerUser, assignedEventId, userData?.organizationId]);
 
   useEffect(() => {
     const fetchTicketsForEvent = async () => {

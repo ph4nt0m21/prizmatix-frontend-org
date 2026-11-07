@@ -20,15 +20,6 @@ import wallpaperBg from "../../assets/images/auth-bg.jpg";
 import logoImage from "../../assets/images/logo.svg";
 import emojiSparkles from "../../assets/images/emoji-sparkles_.svg";
 
-// Scanners may only use scanner routes, so they ignore deep-links into organiser pages.
-// The query string is kept so a Scanner QR Code still opens its event after logging in.
-const getPostLoginPath = (user, from) => {
-  const role = (user?.role || "").replace(/^ROLE_/, "");
-  if (role === "SCANNER") return "/scanner";
-  if (!from?.pathname || from.pathname === "/login") return "/";
-  return `${from.pathname}${from.search || ""}`;
-};
-
 const LoginPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -43,6 +34,11 @@ const LoginPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
+  const getDefaultPath = (user) => {
+    const role = (user?.role || "").replace(/^ROLE_/, "");
+    return role === "SCANNER" ? "/scanner" : "/";
+  };
+
   useEffect(() => {
     const rememberedEmail = localStorage.getItem(REMEMBERED_LOGIN_EMAIL_KEY);
     if (rememberedEmail) {
@@ -53,7 +49,17 @@ const LoginPage = () => {
 
   useEffect(() => {
     if (isAuthenticated) {
-      navigate(getPostLoginPath(currentUser, location.state?.from), { replace: true });
+      const from = location.state?.from?.pathname;
+      const fallback = getDefaultPath(currentUser);
+      // Scanners may only use scanner routes; ignore deep-links into organizer pages.
+      const role = (currentUser?.role || "").replace(/^ROLE_/, "");
+      const destination =
+        role === "SCANNER"
+          ? "/scanner"
+          : from && from !== "/login"
+            ? from
+            : fallback;
+      navigate(destination, { replace: true });
     }
   }, [isAuthenticated, navigate, location, currentUser]);
 
@@ -77,7 +83,8 @@ const LoginPage = () => {
 
     try {
       const data = await login({ username, password }, rememberMe);
-      navigate(getPostLoginPath(data, location.state?.from), { replace: true });
+      const role = (data?.role || "").replace(/^ROLE_/, "");
+      navigate(role === "SCANNER" ? "/scanner" : "/", { replace: true });
     } catch (err) {
       notifyAuthError(getLoginErrorMessage(err));
     } finally {

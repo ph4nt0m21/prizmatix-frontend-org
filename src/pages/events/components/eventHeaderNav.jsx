@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import { Link } from 'react-router-dom';
 import styles from './eventHeaderNav.module.scss';
 import GenerateScannerIdModal from '../components/generateScannerIdModal';
-import GenerateScannerQrModal from '../components/generateScannerQrModal';
+import EventLinkQrModal from '../components/eventLinkQrModal';
 import { copyPublicEventLink } from '../../../utils/eventLinkUtil';
 import {  useNavigate } from 'react-router-dom';
 // --- SVG Icons ---
@@ -167,11 +167,11 @@ const navigate = useNavigate();
                     <button
                       className={styles.qrCodeButton}
                       onClick={handleOpenQrModal}
-                      aria-label="Scanner QR Code"
-                      title="Scanner QR Code"
+                      aria-label="Event QR Code"
+                      title="Event QR Code"
                     >
                       <QrCodeIcon />
-                      <span>Scanner QR Code</span>
+                      <span>Event QR Code</span>
                     </button>
                   )}
                   <button
@@ -197,11 +197,13 @@ const navigate = useNavigate();
         />
       )}
       {!children && hasManageTarget && (
-        <GenerateScannerQrModal
+        <EventLinkQrModal
           isOpen={isQrModalOpen}
           onClose={() => setIsQrModalOpen(false)}
           eventId={eventId}
+          eventSlug={eventSlug}
           eventName={eventName}
+          isDraft={isDraft}
         />
       )}
     </>
