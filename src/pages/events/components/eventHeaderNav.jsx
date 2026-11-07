@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import { Link } from 'react-router-dom';
 import styles from './eventHeaderNav.module.scss';
 import GenerateScannerIdModal from '../components/generateScannerIdModal';
+import EventLinkQrModal from '../components/eventLinkQrModal';
 import { copyPublicEventLink } from '../../../utils/eventLinkUtil';
 import {  useNavigate } from 'react-router-dom';
 // --- SVG Icons ---
@@ -31,6 +32,18 @@ const ScannerIcon = () => (
   </svg>
 );
 
+const QrCodeIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <rect x="3" y="3" width="7" height="7" rx="1" />
+    <rect x="14" y="3" width="7" height="7" rx="1" />
+    <rect x="3" y="14" width="7" height="7" rx="1" />
+    <path d="M14 14h3v3h-3z" />
+    <path d="M21 14v.01" />
+    <path d="M21 18v3h-3" />
+    <path d="M14 21v-.01" />
+  </svg>
+);
+
 const LinkIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.72" />
@@ -56,6 +69,7 @@ const EventHeaderNav = ({
   showActions, // Add prop to conditionally show action buttons
 }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isQrModalOpen, setIsQrModalOpen] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
   const [isActionMenuOpen, setIsActionMenuOpen] = useState(false);
   const actionMenuRef = useRef(null);
@@ -88,6 +102,11 @@ const navigate = useNavigate();
 
   const handleOpenScannerModal = () => {
     setIsModalOpen(true);
+    setIsActionMenuOpen(false);
+  };
+
+  const handleOpenQrModal = () => {
+    setIsQrModalOpen(true);
     setIsActionMenuOpen(false);
   };
 
@@ -144,6 +163,17 @@ const navigate = useNavigate();
                     <ScannerIcon />
                     <span>Generate Scanner ID</span>
                   </button>
+                  {hasManageTarget && (
+                    <button
+                      className={styles.qrCodeButton}
+                      onClick={handleOpenQrModal}
+                      aria-label="Event QR Code"
+                      title="Event QR Code"
+                    >
+                      <QrCodeIcon />
+                      <span>Event QR Code</span>
+                    </button>
+                  )}
                   <button
                     className={styles.copyLinkButton}
                     onClick={handleCopyLink}
@@ -164,6 +194,16 @@ const navigate = useNavigate();
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
           assignedEventId={eventId}
+        />
+      )}
+      {!children && hasManageTarget && (
+        <EventLinkQrModal
+          isOpen={isQrModalOpen}
+          onClose={() => setIsQrModalOpen(false)}
+          eventId={eventId}
+          eventSlug={eventSlug}
+          eventName={eventName}
+          isDraft={isDraft}
         />
       )}
     </>
