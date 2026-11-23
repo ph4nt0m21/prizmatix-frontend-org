@@ -3,6 +3,7 @@ import { Html5Qrcode, Html5QrcodeScannerState } from 'html5-qrcode';
 import styles from './scannerPage.module.scss';
 import { FiXCircle, FiCheckCircle, FiMaximize, FiUsers } from 'react-icons/fi';
 import AttendeesTable from './components/attendeesTable';
+import ScanResultModal from './components/scanResultModal';
 import Toolbar from '../reports/components/toolbar';
 import {
   GetAllOrganizationEventsAPI,
@@ -48,6 +49,29 @@ const describeCameraError = (err) => {
 
 const normalizeRole = (role) => (role || '').replace(/^ROLE_/, '');
 
+const serverMessageOf = (err) =>
+  typeof err?.response?.data === 'string' ? err.response.data : err?.response?.data?.message;
+
+// Check one ticket in. Another scanner (or another tab) may have checked it in
+// since the list loaded; the server answers 409 then, and the ticket is in, so
+// that counts as checked in rather than as a failure.
+const checkInTicket = async (ticketId) => {
+  try {
+    await CheckInAttendeeAPI(ticketId);
+    return 'checked-in';
+  } catch (err) {
+    if (err?.response?.status === 409) return 'already-checked-in';
+    throw err;
+  }
+};
+
+const describeCheckInError = (err) => {
+  const serverMessage = serverMessageOf(err);
+  return serverMessage && /revoked/i.test(serverMessage)
+    ? 'This ticket has been revoked and is not valid for entry.'
+    : 'Failed to update check-in status. Please try again.';
+};
+
 const mapTicketRows = (list = []) =>
   list.map((a, index) => ({
     id: a.ticketId || `att-${index}`,
@@ -80,6 +104,11 @@ const ScannerPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isEventLoading, setIsEventLoading] = useState(true);
   const [hasScanned, setHasScanned] = useState(false);
+  // The order behind the last scanned QR code, shown in the pop-up:
+  // { orderId, eventName, ids, alreadyCheckedInIds: Set, error }
+  const [scanResult, setScanResult] = useState(null);
+  const [pendingIds, setPendingIds] = useState(() => new Set());
+  const scanInFlightRef = useRef(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [attendeeFilters, setAttendeeFilters] = useState({
     ticketType: 'All',
@@ -214,45 +243,58 @@ const ScannerPage = () => {
   }, [ticketRows]);
 
   const handleScan = async (decodedText) => {
-    if (decodedText) {
-      setHasScanned(true);
-      const qrContent = decodedText.trim();
-      setError(null);
-      setSuccessMessage(null);
-      closeScanner();
+    // html5-qrcode can report the same code on several frames before the
+    // camera stops; verify it once.
+    if (!decodedText || scanInFlightRef.current) return;
+    scanInFlightRef.current = true;
 
-      try {
-        const response = await VerifyQrCodeAPI({ qrContent });
-        const { orderId, eventName, attendees: attendeesFromOrder } = response.data;
+    setHasScanned(true);
+    const qrContent = decodedText.trim();
+    setError(null);
+    setSuccessMessage(null);
+    closeScanner();
 
-        const scannedRows = mapTicketRows(attendeesFromOrder || []);
-        const scannedById = new Map(scannedRows.map((a) => [a.id, a]));
-        setTicketRows((current) =>
-          current.map((row) => scannedById.get(row.id) || row)
-        );
+    try {
+      const response = await VerifyQrCodeAPI({ qrContent });
+      const { orderId, eventName, attendees: attendeesFromOrder } = response.data;
 
-        const hasDonators = scannedRows.some((r) => r.isDonation);
-        const hasAttendees = scannedRows.some((r) => !r.isDonation);
-        if (hasDonators && !hasAttendees) {
-          setListTab('Donators');
-        } else if (hasAttendees) {
-          setListTab('Attendees');
-        }
+      // A QR code identifies an order. Its tickets and donations are what
+      // staff check in, so show exactly those in the pop-up.
+      const scannedRows = mapTicketRows(attendeesFromOrder || []);
+      const scannedById = new Map(scannedRows.map((a) => [a.id, a]));
+      setTicketRows((current) => {
+        const knownIds = new Set(current.map((row) => row.id));
+        // Bought after the list loaded: add it, so the pop-up and the list agree.
+        const added = scannedRows.filter((row) => !knownIds.has(row.id));
+        return [...current.map((row) => scannedById.get(row.id) || row), ...added];
+      });
 
-        setSuccessMessage(
-          `Order #${orderId} verified for ${eventName}. Found ${scannedRows.length} ticket(s).`
-        );
-      } catch (err) {
-        console.error('QR verification failed:', err);
-        const serverMessage =
-          typeof err?.response?.data === 'string' ? err.response.data : err?.response?.data?.message;
-        // A revoked ticket is a definite "no" — say so, so door staff don't keep re-scanning.
-        setError(
-          serverMessage && /revoked/i.test(serverMessage)
-            ? 'This ticket has been revoked and is not valid for entry.'
-            : 'Invalid QR Code or ticket does not belong to this event.'
-        );
+      const hasDonators = scannedRows.some((r) => r.isDonation);
+      const hasAttendees = scannedRows.some((r) => !r.isDonation);
+      if (hasDonators && !hasAttendees) {
+        setListTab('Donators');
+      } else if (hasAttendees) {
+        setListTab('Attendees');
       }
+
+      setScanResult({
+        orderId,
+        eventName,
+        ids: scannedRows.map((r) => r.id),
+        alreadyCheckedInIds: new Set(scannedRows.filter((r) => r.isCheckedIn).map((r) => r.id)),
+        error: null,
+      });
+    } catch (err) {
+      console.error('QR verification failed:', err);
+      const serverMessage = serverMessageOf(err);
+      // A revoked ticket is a definite "no" — say so, so door staff don't keep re-scanning.
+      setError(
+        serverMessage && /revoked/i.test(serverMessage)
+          ? 'This ticket has been revoked and is not valid for entry.'
+          : 'Invalid QR Code or ticket does not belong to this event.'
+      );
+    } finally {
+      scanInFlightRef.current = false;
     }
   };
 
@@ -315,29 +357,111 @@ const ScannerPage = () => {
     stopScanner();
   };
 
-  const handleToggleCheckIn = async (ticketId, isCurrentlyCheckedIn) => {
+  const markCheckedIn = (ids) => {
+    const now = new Date().toISOString();
+    setTicketRows((current) =>
+      current.map((att) =>
+        ids.has(att.id) && !att.isCheckedIn ? { ...att, isCheckedIn: true, checkedInAt: now } : att
+      )
+    );
+  };
+
+  const markCheckedOut = (ticketId) => {
+    setTicketRows((current) =>
+      current.map((att) =>
+        att.id === ticketId ? { ...att, isCheckedIn: false, checkedInAt: null } : att
+      )
+    );
+  };
+
+  // Shared by the attendee list and the scan pop-up, so both check people in
+  // the same way. Returns an error message, or null when it worked.
+  const toggleCheckIn = async (ticketId, isCurrentlyCheckedIn) => {
     try {
       if (isCurrentlyCheckedIn) {
         await CheckoutAttendeeAPI(ticketId);
-        setTicketRows((current) =>
-          current.map((att) =>
-            att.id === ticketId ? { ...att, isCheckedIn: false, checkedInAt: null } : att
-          )
-        );
+        markCheckedOut(ticketId);
       } else {
-        await CheckInAttendeeAPI(ticketId);
-        setTicketRows((current) =>
-          current.map((att) =>
-            att.id === ticketId
-              ? { ...att, isCheckedIn: true, checkedInAt: new Date().toISOString() }
-              : att
-          )
-        );
+        await checkInTicket(ticketId);
+        markCheckedIn(new Set([ticketId]));
       }
+      return null;
     } catch (err) {
       console.error('Check-in/out failed:', err);
-      setError('Failed to update check-in status. Please try again.');
+      return describeCheckInError(err);
     }
+  };
+
+  const handleToggleCheckIn = async (ticketId, isCurrentlyCheckedIn) => {
+    const message = await toggleCheckIn(ticketId, isCurrentlyCheckedIn);
+    if (message) setError(message);
+  };
+
+  const setScanError = (message) =>
+    setScanResult((current) => (current ? { ...current, error: message } : current));
+
+  const withPending = async (ids, action) => {
+    setPendingIds((current) => new Set([...current, ...ids]));
+    try {
+      return await action();
+    } finally {
+      setPendingIds((current) => {
+        const next = new Set(current);
+        ids.forEach((id) => next.delete(id));
+        return next;
+      });
+    }
+  };
+
+  const handleScanToggle = (ticketId, isCurrentlyCheckedIn) =>
+    withPending([ticketId], async () => {
+      setScanError(null);
+      const message = await toggleCheckIn(ticketId, isCurrentlyCheckedIn);
+      if (message) {
+        setScanError(message);
+      } else if (isCurrentlyCheckedIn) {
+        // Undone on purpose: no longer "used before this scan".
+        setScanResult((current) => {
+          if (!current) return current;
+          const alreadyCheckedInIds = new Set(current.alreadyCheckedInIds);
+          alreadyCheckedInIds.delete(ticketId);
+          return { ...current, alreadyCheckedInIds };
+        });
+      }
+    });
+
+  const handleScanCheckInAll = () => {
+    if (!scanResult) return;
+    const idsInOrder = new Set(scanResult.ids);
+    const unchecked = ticketRows
+      .filter((row) => idsInOrder.has(row.id) && !row.isCheckedIn)
+      .map((row) => row.id);
+    if (unchecked.length === 0) return;
+
+    return withPending(unchecked, async () => {
+      setScanError(null);
+      // allSettled, not all: one failure must not hide the ones that worked.
+      const results = await Promise.allSettled(unchecked.map((id) => checkInTicket(id)));
+      const done = new Set(unchecked.filter((_, i) => results[i].status === 'fulfilled'));
+      markCheckedIn(done);
+      const failed = results.filter((r) => r.status === 'rejected');
+      if (failed.length > 0) {
+        console.error('Check-in failed:', failed.map((r) => r.reason));
+        setScanError(
+          failed.length === unchecked.length
+            ? describeCheckInError(failed[0].reason)
+            : `${failed.length} of ${unchecked.length} could not be checked in. Please try them again.`
+        );
+      }
+    });
+  };
+
+  const closeScanResult = () => setScanResult(null);
+
+  const handleScanNext = () => {
+    setScanResult(null);
+    // Still inside the tap, so the camera request keeps its user gesture.
+    openScanner();
   };
 
   const handleCheckInAll = async () => {
@@ -395,6 +519,13 @@ const ScannerPage = () => {
   }, []);
 
   const isDonatorsTab = listTab === 'Donators';
+
+  // The pop-up reads the live rows, so a check-in shows in it and in the list at once.
+  const scanItems = useMemo(() => {
+    if (!scanResult) return [];
+    const rowsById = new Map(ticketRows.map((row) => [row.id, row]));
+    return scanResult.ids.map((id) => rowsById.get(id)).filter(Boolean);
+  }, [scanResult, ticketRows]);
 
   return (
     <div className={styles.scannerContainer}>
@@ -527,6 +658,22 @@ const ScannerPage = () => {
           </>
         )}
       </div>
+
+      {scanResult && (
+        <ScanResultModal
+          orderId={scanResult.orderId}
+          eventName={scanResult.eventName}
+          items={scanItems}
+          alreadyCheckedInIds={scanResult.alreadyCheckedInIds}
+          pendingIds={pendingIds}
+          error={scanResult.error}
+          onCheckIn={(id) => handleScanToggle(id, false)}
+          onUndo={(id) => handleScanToggle(id, true)}
+          onCheckInAll={handleScanCheckInAll}
+          onScanNext={handleScanNext}
+          onClose={closeScanResult}
+        />
+      )}
     </div>
   );
 };
