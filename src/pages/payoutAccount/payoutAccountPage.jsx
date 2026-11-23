@@ -118,6 +118,11 @@ const PayoutAccountPage = () => {
       window.open(res.data.data.url, '_blank', 'noopener,noreferrer');
     } catch (err) {
       setManagementError(err.response?.data?.message || 'Could not open your payout account right now. Please try again.');
+      if (err.response?.status === 409) {
+        // The stored account belonged to Stripe test mode and has been unlinked —
+        // refresh so the organiser lands on "Set Up Payout Account".
+        silentRefreshStatus();
+      }
     } finally {
       setManagementLoading(false);
     }
