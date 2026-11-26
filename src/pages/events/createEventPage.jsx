@@ -1293,6 +1293,8 @@ const validateDiscountCodes = () =>
                 eventId,
                 isPrivate
               );
+              descriptionData.confirmationEmailMessage =
+                eventData.confirmationEmailMessage ?? "";
               console.log("Submitting description data:", descriptionData);
               const response = await UpdateEventDescriptionAPI(
                 eventId,

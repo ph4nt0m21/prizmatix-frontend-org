@@ -1,6 +1,8 @@
 // src/pages/events/steps/descriptionStep.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
+import { FiInfo } from 'react-icons/fi';
+import OptionalLabel from '../../../components/common/optionalLabel/optionalLabel';
 import styles from './descriptionStep.module.scss';
 
 /**
@@ -24,9 +26,49 @@ const DescriptionStep = ({
   const editorRef = useRef(null);
 
   const MAX_CHARS = 250;
-  
+  // Keep in step with EventCreationService.CONFIRMATION_EMAIL_MESSAGE_MAX_LENGTH.
+  const CONFIRMATION_MESSAGE_MAX = 1000;
+
   // Extract description data from eventData or use defaults
   const [description, setDescription] = useState(eventData.description || '');
+  const [confirmationMessage, setConfirmationMessage] = useState(
+    eventData.confirmationEmailMessage || ''
+  );
+
+  // (i) beside "Message from Organiser" behaves like the app's other info buttons: opens on
+  // hover or click, closes on a click outside or Escape.
+  const [isConfirmationInfoOpen, setConfirmationInfoOpen] = useState(false);
+  const confirmationInfoRef = useRef(null);
+  // A click right after the hover that opened it (and a tap, which fires both) must keep it
+  // open rather than toggle it shut.
+  const confirmationInfoOpenedByHover = useRef(false);
+
+  useEffect(() => {
+    if (!isConfirmationInfoOpen) {
+      confirmationInfoOpenedByHover.current = false;
+      return undefined;
+    }
+    const handlePointerDown = (event) => {
+      if (confirmationInfoRef.current && !confirmationInfoRef.current.contains(event.target)) {
+        setConfirmationInfoOpen(false);
+      }
+    };
+    const handleEscape = (event) => {
+      if (event.key === 'Escape') setConfirmationInfoOpen(false);
+    };
+    document.addEventListener('mousedown', handlePointerDown);
+    document.addEventListener('keydown', handleEscape);
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [isConfirmationInfoOpen]);
+
+  const handleConfirmationMessageChange = (e) => {
+    const value = e.target.value.slice(0, CONFIRMATION_MESSAGE_MAX);
+    setConfirmationMessage(value);
+    handleInputChange(value, 'confirmationEmailMessage');
+  };
   
   /**
    * Initialize the rich text editor
@@ -40,9 +82,13 @@ const DescriptionStep = ({
     }
   }, []);
   
-  // Effect to propagate description changes to parent component
+  // Send the description to the parent only when it actually changes. The parent's
+  // handleInputChange is re-created on every render, so depending on it alone re-ran this
+  // effect after every update it caused: a render loop React warned about 200+ times.
+  const lastSentDescription = useRef(null);
   useEffect(() => {
-    // Send the updated description to parent component
+    if (lastSentDescription.current === description) return;
+    lastSentDescription.current = description;
     handleInputChange(description, 'description');
   }, [description, handleInputChange]);
   
@@ -187,6 +233,70 @@ const DescriptionStep = ({
         {/* {stepStatus.visited && !description.trim() && (
           <div className={styles.fieldError}>Event description is required</div>
         )} */}
+      </div>
+
+      <div className={styles.formSection}>
+        <section className={styles.confirmationCard} aria-labelledby="confirmation-message-title">
+          <h3 id="confirmation-message-title" className={styles.confirmationTitle}>
+            Order Confirmation Message<OptionalLabel />
+          </h3>
+          <p className={styles.confirmationDescription}>
+            Add a custom message that will appear in a dedicated section of the order confirmation email
+            sent to ticket buyers. You can include event location details, parking information, entry
+            instructions or other important information.
+          </p>
+
+          <div className={styles.confirmationLabelRow}>
+            <label htmlFor="confirmationEmailMessage" className={styles.confirmationLabel}>
+              Message from Organiser
+            </label>
+            <div className={styles.infoButtonWrap} ref={confirmationInfoRef}>
+              <button
+                type="button"
+                className={styles.infoButton}
+                aria-label="About the organiser message"
+                aria-expanded={isConfirmationInfoOpen}
+                onClick={() => {
+                  if (confirmationInfoOpenedByHover.current) {
+                    confirmationInfoOpenedByHover.current = false;
+                    setConfirmationInfoOpen(true);
+                  } else {
+                    setConfirmationInfoOpen((open) => !open);
+                  }
+                }}
+                onMouseEnter={() => {
+                  if (!isConfirmationInfoOpen) {
+                    confirmationInfoOpenedByHover.current = true;
+                    setConfirmationInfoOpen(true);
+                  }
+                }}
+              >
+                <FiInfo aria-hidden="true" />
+              </button>
+              {isConfirmationInfoOpen && (
+                <div className={styles.infoPopover} role="dialog" aria-label="About the organiser message">
+                  <p className={styles.infoPopoverText}>
+                    This only adds your message to the standard order confirmation email. The rest of the email
+                    remains unchanged.
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+          <textarea
+            id="confirmationEmailMessage"
+            name="confirmationEmailMessage"
+            className={styles.messageTextarea}
+            value={confirmationMessage}
+            onChange={handleConfirmationMessageChange}
+            maxLength={CONFIRMATION_MESSAGE_MAX}
+            rows={5}
+            placeholder="Enter your message here..."
+          />
+          <div className={styles.confirmationCount}>
+            {confirmationMessage.length}/{CONFIRMATION_MESSAGE_MAX}
+          </div>
+        </section>
       </div>
     </div>
   );
