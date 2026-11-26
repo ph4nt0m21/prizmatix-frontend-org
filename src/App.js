@@ -70,10 +70,10 @@ const AppContent = () => {
           path="/login"
           element={isAuthenticated ? <Navigate to={authenticatedHome} /> : <LoginPage />}
         />
-        <Route
-          path="/register"
-          element={isAuthenticated ? <Navigate to={authenticatedHome} /> : <RegisterPage />}
-        />
+        {/* RegisterPage redirects signed-in visitors itself. It must stay mounted while a
+            registration finishes (sign-in happens partway through), so it can send the new
+            organiser to exactly one place once everything is done. */}
+        <Route path="/register" element={<RegisterPage />} />
         <Route
           path="/forgot-password"
           element={isAuthenticated ? <Navigate to={authenticatedHome} /> : <ForgotPasswordPage />}
