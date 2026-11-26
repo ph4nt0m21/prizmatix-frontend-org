@@ -28,6 +28,32 @@ export const normalizeTimeParts = (timeStr) => {
   };
 };
 
+/**
+ * Form wall clock ('YYYY-MM-DD' + 'HH:mm') -> Date for react-datepicker, in the browser's
+ * local time, the same clock the picker displays and the organiser picks in.
+ */
+export const wallClockToPickerDate = (dateStr, timeStr) => {
+  if (!dateStr || !timeStr) return null;
+  const [year, month, day] = String(dateStr).split('-').map(Number);
+  const { hours, minutes } = normalizeTimeParts(timeStr);
+  const date = new Date(year, month - 1, day, Number(hours), Number(minutes));
+  return Number.isNaN(date.getTime()) ? null : date;
+};
+
+/**
+ * Date picked in react-datepicker -> form wall clock, read with LOCAL getters. Never take
+ * the date from toISOString(): that is the UTC date, a day earlier for any morning time in
+ * New Zealand, and feeding it back to the picker moved the date back a day on every click.
+ */
+export const pickerDateToWallClock = (date) => {
+  if (!date || Number.isNaN(date.getTime())) return { date: '', time: '' };
+  const pad = (n) => String(n).padStart(2, '0');
+  return {
+    date: `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`,
+    time: `${pad(date.getHours())}:${pad(date.getMinutes())}`,
+  };
+};
+
 /** HH:mm in 24-hour format from a raw time string. */
 export const formatTime24 = (timeStr) => {
   if (!timeStr) return '';

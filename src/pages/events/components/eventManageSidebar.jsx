@@ -113,6 +113,17 @@ const EventManageSidebar = ({
       group: "manage",
     },
     {
+      key: "refunds",
+      label: "Refund Requests",
+      icon: (
+<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
+  <path d="M7.5 11.6667L3.33333 7.5L7.5 3.33333" stroke="#383C51" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+  <path d="M3.33333 7.5H12.0833C14.6146 7.5 16.6667 9.55208 16.6667 12.0833V12.0833C16.6667 14.6146 14.6146 16.6667 12.0833 16.6667H9.16667" stroke="#383C51" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+</svg>
+      ),
+      group: "manage",
+    },
+    {
       key: "payout",
       label: "Payout",
       icon: (

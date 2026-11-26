@@ -189,6 +189,7 @@ const EventEditPage = () => {
           endDate: fetchedData.endDate || '',
           endTime: normalizeApiTime(fetchedData.endTime),
           description: fetchedData.description || '',
+          confirmationEmailMessage: fetchedData.confirmationEmailMessage || '',
           art: {
             thumbnailFile: null,
             bannerFile: null,
@@ -361,6 +362,7 @@ const EventEditPage = () => {
         }
         case 'description': {
           const payload = prepareDescriptionDataForAPI(eventData.description, eventData.id, eventData.eventType === 'private');
+          payload.confirmationEmailMessage = eventData.confirmationEmailMessage ?? '';
           await UpdateEventDescriptionAPI(eventData.id, payload);
           break;
         }

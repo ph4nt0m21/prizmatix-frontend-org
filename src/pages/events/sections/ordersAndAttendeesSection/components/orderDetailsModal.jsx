@@ -4,6 +4,8 @@ import { FiX, FiDownload, FiMail, FiCopy, FiCheck, FiUser } from 'react-icons/fi
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { ReissueOrderEmailAPI } from '../../../../../services/allApis';
+import RefundBadge from '../../../../../components/common/refundBadge/refundBadge';
+import { orderRefund, ticketRefund } from '../../../../../utils/refundUtil';
 
 const getTicketTypeClass = (type) => {
   switch (String(type).toLowerCase()) {
@@ -133,9 +135,13 @@ const OrderDetailsModal = ({ order, onClose, onViewAttendee }) => {
             </div>
             <div className={styles.infoRow}>
               <span className={styles.infoLabel}>Status</span>
-              <span className={styles.paidBadge}>
-                <FiCheck /> Paid
-              </span>
+              {order.refundStatus ? (
+                <RefundBadge refund={orderRefund(order.refundStatus)} />
+              ) : (
+                <span className={styles.paidBadge}>
+                  <FiCheck /> Paid
+                </span>
+              )}
             </div>
           </div>
 
@@ -154,6 +160,25 @@ const OrderDetailsModal = ({ order, onClose, onViewAttendee }) => {
               </button>
             </div>
           </div>
+
+          {/* Which tickets are refunded or in a refund request */}
+          {(order.tickets || []).some((t) => t.refundStatus) && (
+            <div className={styles.card}>
+              <div className={styles.cardTitle}>Refunds</div>
+              {order.tickets.map((ticket, index) => (
+                <div key={ticket.ticketId || index} className={styles.infoRow}>
+                  <span className={styles.infoLabel}>
+                    {ticket.attendeeName || 'N/A'} · {ticket.ticketType} · {formatCurrency(ticket.amount)}
+                  </span>
+                  {ticket.refundStatus ? (
+                    <RefundBadge refund={ticketRefund(ticket.refundStatus)} />
+                  ) : (
+                    <span className={styles.infoLabel}>Valid</span>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
 
           {/* Attendees (only surfaced separately when the order has more than one) */}
           {attendeeTickets.length > 1 && (
@@ -207,6 +232,12 @@ const OrderDetailsModal = ({ order, onClose, onViewAttendee }) => {
               <span>Total</span>
               <span>{formatCurrency(fees.grandTotal)}</span>
             </div>
+            {Number(order.amountRefunded) > 0 && (
+              <div className={styles.summaryRow}>
+                <span>Refunded</span>
+                <span>-{formatCurrency(order.amountRefunded)}</span>
+              </div>
+            )}
           </div>
         </div>
       </div>

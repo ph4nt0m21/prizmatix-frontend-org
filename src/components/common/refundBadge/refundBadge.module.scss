@@ -1,0 +1,25 @@
+.badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.refunded {
+  color: #b91c1c;
+  background: #fef2f2;
+}
+
+.pending {
+  color: #b45309;
+  background: #fffbeb;
+}
+
+.approved {
+  color: #1d4ed8;
+  background: #eff6ff;
+}

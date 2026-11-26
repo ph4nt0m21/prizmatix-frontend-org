@@ -4,23 +4,7 @@ import DatePicker from 'react-datepicker'; // IMPORTED
 import 'react-datepicker/dist/react-datepicker.css'; // IMPORTED
 import styles from './ticketDetailsModal.module.scss';
 import OptionalLabel from '../../../components/common/optionalLabel/optionalLabel';
-
-/**
- * Helper function to create a Date object from date and time strings.
- * Returns a valid Date object or null if inputs are invalid.
- * @param {string} dateStr - e.g., '2025-06-25'
- * @param {string} timeStr - e.g., '14:30'
- * @returns {Date|null}
- */
-const combineDateAndTime = (dateStr, timeStr) => {
-  if (!dateStr || !timeStr) {
-    return null;
-  }
-  const dateTimeString = `${dateStr}T${timeStr}`;
-  const date = new Date(dateTimeString);
-  // Check if the created date is valid
-  return isNaN(date.getTime()) ? null : date;
-};
+import { wallClockToPickerDate as combineDateAndTime, pickerDateToWallClock } from '../../../utils/datetimeUtil';
 
 /**
  * TicketDetailsModal component for creating and editing tickets
@@ -113,11 +97,7 @@ const TicketDetailsModal = ({
    */
   const handleDateChange = (date, dateFieldName, timeFieldName) => {
     if (date) {
-      // Format to YYYY-MM-DD
-      const dateString = date.toISOString().split('T')[0]; 
-      // Format to HH:mm
-      const timeString = date.toTimeString().split(' ')[0].substring(0, 5); 
-      
+      const { date: dateString, time: timeString } = pickerDateToWallClock(date);
       setLocalTicket(prev => ({
         ...prev,
         [dateFieldName]: dateString,

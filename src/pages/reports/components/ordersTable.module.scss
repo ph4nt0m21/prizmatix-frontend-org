@@ -283,3 +283,8 @@
     font-weight: 600;
   }
 }
+
+/* Refund state, under the ticket type */
+.refundBadge:not(:empty) {
+  margin-top: 6px;
+}

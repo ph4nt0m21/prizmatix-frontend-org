@@ -90,6 +90,7 @@ const ReportsPage = () => {
             attendees: order.tickets.map(t => ({ name: t.attendeeName })),
             paymentMethod: 'Stripe',
             tickets: order.tickets,
+            refundStatus: order.refundStatus || null,
           }));
           setOrders(formattedOrders);
         } else {

@@ -4,35 +4,10 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import styles from "./discountCodeModal.module.scss";
 import OptionalLabel from "../../../components/common/optionalLabel/optionalLabel";
-
-/**
- * Helper function to create a Date object from date and time strings.
- * @param {string} dateStr - e.g., '2025-06-25'
- * @param {string} timeStr - e.g., '14:30'
- * @returns {Date|null}
- */
-const combineDateAndTime = (dateStr, timeStr) => {
-  if (!dateStr || !timeStr) {
-    return null;
-  }
-  const dateTimeString = `${dateStr}T${timeStr}:00.000Z`;
-  const date = new Date(dateTimeString);
-  return isNaN(date.getTime()) ? null : date;
-};
-
-/**
- * Helper to format a Date object into a date and time string.
- * @param {Date} date - The Date object
- * @returns {{date: string, time: string}}
- */
-const formatDateObject = (date) => {
-  if (!date) {
-    return { date: '', time: '' };
-  }
-  const dateStr = date.toISOString().split('T')[0];
-  const timeStr = date.toTimeString().split(' ')[0].substring(0, 5);
-  return { date: dateStr, time: timeStr };
-};
+import {
+  wallClockToPickerDate as combineDateAndTime,
+  pickerDateToWallClock as formatDateObject,
+} from "../../../utils/datetimeUtil";
 
 /**
  * DiscountCodeModal component for creating and editing discount codes

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { OrganizationRegisterAPIComplete, OrganizationRegisterInitiateAPI, UploadOrganizerProfilePhotoAPI } from '../../services/allApis';
 import { useAuth } from '../../context/authContext';
@@ -66,9 +66,16 @@ const MultiStepRegisterPage = () => {
   // Progress state (for progress indicator)
   const [progress, setProgress] = useState(20);
   
-  // Redirect if already authenticated
+  // True from the final "Register" click until handleSubmit has navigated away.
+  const finishingRegistrationRef = useRef(false);
+
+  // Redirect if already authenticated — but not while registration is finishing. Signing
+  // in happens partway through handleSubmit; redirecting then left handleSubmit running
+  // in the background, and its own navigate('/events/create') landed seconds later (after
+  // the logo upload) on top of whatever the organiser had started — it threw them back to
+  // step 1 of an event that had lost its id, so no later step would save.
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthenticated && !finishingRegistrationRef.current) {
       navigate('/', { replace: true });
     }
   }, [isAuthenticated, navigate]);
@@ -241,6 +248,7 @@ const MultiStepRegisterPage = () => {
     const registrationFormData = { ...formData, ...overrides };
 
     let registrationCompleted = false;
+    finishingRegistrationRef.current = true;
 
     try {
       setLoadingState('register', true);
@@ -278,8 +286,18 @@ const MultiStepRegisterPage = () => {
       );
 
       if (uploadedLogo?.file) {
-        await UploadOrganizerProfilePhotoAPI(uploadedLogo.file);
-        await refreshProfile();
+        // The account exists and is signed in by now: a failed logo upload must not
+        // send them back to the login page. They can add it later in Settings.
+        try {
+          await UploadOrganizerProfilePhotoAPI(uploadedLogo.file);
+          await refreshProfile();
+        } catch (logoError) {
+          console.error('Logo upload after registration failed:', logoError);
+          showError(
+            "Your account is ready, but the logo didn't upload. You can add it later in Settings.",
+            'warning'
+          );
+        }
       }
 
       const trimmedEventName = registrationFormData.eventName?.trim();
@@ -299,6 +317,7 @@ const MultiStepRegisterPage = () => {
       }
     } catch (error) {
       console.error('Registration failed:', error);
+      finishingRegistrationRef.current = false;
       if (registrationCompleted) {
         navigate('/login', {
           replace: true,
@@ -500,6 +519,11 @@ const MultiStepRegisterPage = () => {
   // Determine if register button should be disabled
   const isRegisterDisabled = isLoading?.['register'] || authLoading;
   
+  // Already signed in (and not mid-registration): the effect above redirects; show nothing meanwhile.
+  if (isAuthenticated && !finishingRegistrationRef.current) {
+    return null;
+  }
+
   // If still checking auth status, show loading state
   if (authLoading && !isRegisterDisabled) {
     return (

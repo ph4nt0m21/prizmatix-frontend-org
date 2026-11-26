@@ -123,6 +123,8 @@ const OrdersAndAttendeesSection = ({ eventId }) => {
               ? 'International card'
               : 'Domestic card',
           tickets: order.tickets,
+          refundStatus: order.refundStatus || null,
+          amountRefunded: order.amountRefunded || 0,
           feeBreakdown: {
             ticketFaceValue: order.ticketFaceValue || 0,
             platformFee: order.platformFee || 0,

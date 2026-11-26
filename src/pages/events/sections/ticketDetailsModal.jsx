@@ -4,15 +4,7 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import styles from "./ticketDetailsModal.module.scss";
 import OptionalLabel from "../../../components/common/optionalLabel/optionalLabel";
-
-const combineDateAndTime = (dateStr, timeStr) => {
-  if (!dateStr || !timeStr) {
-    return null;
-  }
-  const dateTimeString = `${dateStr}T${timeStr}`;
-  const date = new Date(dateTimeString);
-  return Number.isNaN(date.getTime()) ? null : date;
-};
+import { wallClockToPickerDate as combineDateAndTime, pickerDateToWallClock } from "../../../utils/datetimeUtil";
 
 /**
  * TicketDetailsModal component for creating and editing tickets
@@ -122,8 +114,7 @@ const TicketDetailsModal = ({
 
   const handleDateChange = (date, dateFieldName, timeFieldName) => {
     if (date) {
-      const dateString = date.toISOString().split("T")[0];
-      const timeString = date.toTimeString().split(" ")[0].substring(0, 5);
+      const { date: dateString, time: timeString } = pickerDateToWallClock(date);
       setLocalTicket((prev) => ({
         ...prev,
         [dateFieldName]: dateString,

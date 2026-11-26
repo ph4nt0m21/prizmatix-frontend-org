@@ -357,3 +357,133 @@
     font-size: 14px;
   }
 }
+// Order Confirmation Message card (shown in the order confirmation email)
+.confirmationCard {
+  padding: 24px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #fff;
+
+  @media (max-width: 768px) {
+    padding: 16px;
+  }
+}
+
+.confirmationTitle {
+  margin: 0 0 12px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.confirmationDescription {
+  margin: 0 0 20px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #374151;
+}
+
+.confirmationLabelRow {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.confirmationLabel {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.confirmationCount {
+  margin-top: 6px;
+  text-align: right;
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+// Same look as the info buttons on the overview pages
+.infoButtonWrap {
+  position: relative;
+  display: inline-flex;
+}
+
+.infoButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: #6b7280;
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    color: #4c1d95;
+    outline: none;
+  }
+}
+
+.infoPopover {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 20;
+  width: min(280px, calc(100vw - 48px));
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.12);
+
+  // On phones, anchor to the start of the label row so the note never runs off-screen.
+  @media (max-width: 480px) {
+    width: min(280px, 100%);
+  }
+}
+
+@media (max-width: 480px) {
+  .confirmationLabelRow .infoButtonWrap {
+    position: static;
+  }
+}
+
+.infoPopoverText {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #374151;
+}
+
+.messageTextarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  font: inherit;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #333;
+  resize: vertical;
+
+  &:focus {
+    outline: none;
+    border-color: #7c3aed;
+  }
+
+  &::placeholder {
+    color: #9ca3af;
+  }
+
+  @media (max-width: 768px) {
+    font-size: 16px; // avoids iOS zoom-on-focus
+  }
+}
