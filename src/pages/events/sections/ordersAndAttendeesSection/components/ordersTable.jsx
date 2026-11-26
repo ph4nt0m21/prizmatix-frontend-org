@@ -127,6 +127,8 @@ import { isValid, parse } from 'date-fns';
 import styles from './ordersTable.module.scss';
 import { FiDownload, FiMail } from 'react-icons/fi';
 import { ReissueOrderEmailAPI, GetOrderReceiptPdfAPI } from '../../../../../services/allApis';
+import RefundBadge from '../../../../../components/common/refundBadge/refundBadge';
+import { orderRefund } from '../../../../../utils/refundUtil';
 
 const OrdersTable = ({ orders, onOrderSelect }) => {
   const [sorting, setSorting] = useState([]);
@@ -234,7 +236,14 @@ const OrdersTable = ({ orders, onOrderSelect }) => {
       accessorFn: (row) => row.ticketType ?? '',
       header: 'TICKET TYPE',
       enableSorting: true,
-      cell: ({ row }) => <span className={styles.ticketType}>{row.original.ticketType}</span>,
+      cell: ({ row }) => (
+        <>
+          <span className={styles.ticketType}>{row.original.ticketType}</span>
+          <div className={styles.refundBadge}>
+            <RefundBadge refund={orderRefund(row.original.refundStatus)} />
+          </div>
+        </>
+      ),
     },
     {
       id: 'reissue',

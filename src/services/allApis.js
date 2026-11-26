@@ -362,6 +362,20 @@ export const GetComplimentaryTicketHistoryAPI = async (eventId, orderId) => {
   return await apiClient.get(`/api/events/${eventId}/complimentary-tickets/${orderId}/history`);
 };
 
+// =============== REFUND REQUEST APIs ===============
+// Event ownership and the refund amount are both enforced server-side.
+export const GetRefundRequestsAPI = async (eventId) => {
+  return await apiClient.get(`/api/events/${eventId}/refund-requests`);
+};
+
+export const ApproveRefundRequestAPI = async (eventId, requestId) => {
+  return await apiClient.post(`/api/events/${eventId}/refund-requests/${requestId}/approve`);
+};
+
+export const DeclineRefundRequestAPI = async (eventId, requestId, reason) => {
+  return await apiClient.post(`/api/events/${eventId}/refund-requests/${requestId}/decline`, { reason });
+};
+
 // =============== SCANNER USER APIs ===============
 export const CreateScannerUserAPI = async (data) => {
   return await apiClient.post("/admin/scanner-users", data);

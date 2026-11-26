@@ -19,6 +19,7 @@ import {
 import { getUserData } from "../../utils/authUtil";
 import OverviewSection from "./sections/overviewSection";
 import OrdersAndAttendeesSection from "./sections/ordersAndAttendeesSection/ordersAndAttendeesSection";
+import RefundRequestsSection from "./sections/refunds/refundRequestsSection";
 import PayoutSection from "./sections/payoutSection";
 import TicketSection from "./sections/ticketSection";
 import DiscountSection from "./sections/discountSection";
@@ -189,6 +190,8 @@ const EventManagePage = () => {
         );
       case "ordersAndAttendees":
         return <OrdersAndAttendeesSection eventId={eventId} />;
+      case "refunds":
+        return <RefundRequestsSection eventId={eventId} />;
       case "payout":
         return <PayoutSection eventId={eventId} dashboardData={dashboardData} />;
       case "tickets":

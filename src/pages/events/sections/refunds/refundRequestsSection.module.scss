@@ -1,0 +1,323 @@
+$purple: #6d28d9;
+$text: #1f2937;
+$muted: #6b7280;
+$border: #e5e7eb;
+$red: #dc2626;
+
+.section {
+  background: #fff;
+  border: 1px solid $border;
+  border-radius: 8px;
+  padding: 24px;
+
+  @media (max-width: 768px) {
+    padding: 16px;
+  }
+}
+
+.title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: $text;
+}
+
+.muted {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: $muted;
+  overflow-wrap: anywhere;
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 20px 0 16px;
+}
+
+.filter {
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1px solid $border;
+  background: #fff;
+  color: $muted;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.filterActive {
+  border-color: $purple;
+  color: $purple;
+  background: #f5f3ff;
+}
+
+.placeholder {
+  padding: 40px 16px;
+  text-align: center;
+  font-size: 14px;
+  color: $muted;
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.card {
+  border: 1px solid $border;
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.cardTitle {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: $text;
+}
+
+.status {
+  flex-shrink: 0;
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.pending {
+  color: #b45309;
+}
+
+.approved {
+  color: #1d4ed8;
+}
+
+.refunded {
+  color: #15803d;
+}
+
+.closed {
+  color: $muted;
+}
+
+.cardBody {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(240px, 300px);
+  gap: 24px;
+  margin-top: 16px;
+
+  @media (max-width: 860px) {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+  }
+}
+
+.facts {
+  display: grid;
+  grid-template-columns: 110px minmax(0, 1fr);
+  gap: 8px 12px;
+  margin: 0;
+  font-size: 14px;
+  align-content: start;
+
+  dt {
+    color: $muted;
+  }
+
+  dd {
+    margin: 0;
+    color: $text;
+    overflow-wrap: anywhere;
+  }
+}
+
+.tickets {
+  margin: 4px 0 0;
+  padding-left: 18px;
+  font-size: 13px;
+  color: $muted;
+}
+
+.reason {
+  white-space: pre-wrap;
+}
+
+.money {
+  align-self: start;
+  background: #f9fafb;
+  border-radius: 8px;
+  padding: 12px 14px;
+}
+
+.moneyRow,
+.moneyTotal {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13px;
+  color: $muted;
+  padding: 3px 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.moneyTotal {
+  margin-top: 6px;
+  padding-top: 8px;
+  border-top: 1px solid $border;
+  font-size: 15px;
+  font-weight: 700;
+  color: $text;
+}
+
+.blocked {
+  margin: 14px 0 0;
+  font-size: 13px;
+  color: $red;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.approveButton,
+.declineButton,
+.secondaryButton,
+.dangerButton {
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+}
+
+.approveButton {
+  background: $purple;
+  color: #fff;
+}
+
+.declineButton {
+  background: #fff;
+  color: $red;
+  border-color: $red;
+}
+
+.secondaryButton {
+  background: #fff;
+  color: $text;
+  border-color: $border;
+}
+
+.dangerButton {
+  background: $red;
+  color: #fff;
+}
+
+.linkButton {
+  background: none;
+  border: none;
+  padding: 0;
+  color: $purple;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  z-index: 1000;
+}
+
+.modal {
+  width: 100%;
+  max-width: 460px;
+  max-height: 90vh;
+  overflow-y: auto;
+  background: #fff;
+  border-radius: 10px;
+  padding: 20px 24px 24px;
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 12px;
+
+  h4 {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 600;
+    color: $text;
+  }
+}
+
+.closeButton {
+  background: none;
+  border: none;
+  padding: 4px;
+  line-height: 0;
+  font-size: 20px;
+  color: $muted;
+  cursor: pointer;
+}
+
+.modalText {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: $text;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: $text;
+
+  textarea {
+    padding: 9px 11px;
+    border: 1px solid $border;
+    border-radius: 8px;
+    font: inherit;
+    font-size: 14px;
+    resize: vertical;
+  }
+}
+
+.errorText {
+  margin: 12px 0 0;
+  font-size: 13px;
+  color: $red;
+}
