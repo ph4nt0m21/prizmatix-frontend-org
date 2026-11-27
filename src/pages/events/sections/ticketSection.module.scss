@@ -1,0 +1,208 @@
+@import '../../../styles/variables';
+@import '../../../styles/mixins';
+
+.ticketSectionContainer {
+  background: #FFFFFF;
+  border-radius: 8px;
+  padding: 24px;
+  box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.05);
+  width: 100%;
+}
+
+.loadingContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+}
+
+.errorMessage {
+  padding: 12px 14px;
+  margin-bottom: 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #b91c1c;
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+}
+
+.saveActions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.saveButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 22px;
+  background-color: #7c3aed;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+
+  &:hover:not(:disabled) {
+    background-color: #6d28d9;
+  }
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+}
+
+.createTicketButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background-color: #7C3AED;
+  color: #FFFFFF;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+
+  &:hover {
+    background-color: #6D28D9;
+  }
+}
+
+// New wrapper for horizontal scrolling on mobile
+.tableWrapper {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch; // For smooth scrolling on iOS
+}
+
+.ticketsList {
+  display: flex;
+  flex-direction: column;
+}
+
+.ticketRow {
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid #E9EAEC;
+  padding: 16px 0;
+  transition: background-color 0.2s ease;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &:not(.ticketsHeader):hover {
+    background-color: #F9FAFB;
+  }
+}
+
+.ticketsHeader {
+  border-bottom: 1px solid #D1D5DB;
+  padding-bottom: 12px;
+  margin-bottom: 8px;
+
+  .ticketCell {
+    color: #6B7280;
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+  }
+}
+
+.ticketCell {
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  font-size: 14px;
+  color: #374151;
+  
+  // Flex-basis for desktop view
+  &.cellId { flex-basis: 5%; }
+  &.cellTicket { flex-basis: 30%; font-weight: 500; }
+  &.cellQuantity { flex-basis: 15%; }
+  &.cellSold { flex-basis: 15%; }
+  &.cellMaxPurchase { flex-basis: 15%; }
+  &.cellPrice { flex-basis: 25%; }
+  &.cellActions { flex-basis: 10%; justify-content: flex-end; }
+}
+
+.editButton,
+.deleteButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #9CA3AF;
+  padding: 4px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s, background-color 0.2s;
+
+  &:hover {
+    color: #4B5563;
+    background-color: #E5E7EB;
+  }
+}
+
+.deleteButton {
+  &:hover {
+    color: #EF4444; /* Red color for delete on hover */
+    background-color: #FEE2E2;
+  }
+}
+
+// ===================================
+// ===== Mobile Responsive Styles ====
+// ===================================
+@media (max-width: 768px) {
+  .ticketSectionContainer {
+    padding: 16px;
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .createTicketButton {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .saveActions {
+    justify-content: stretch;
+    margin-top: 20px;
+    padding-top: 16px;
+  }
+
+  .saveButton {
+    width: 100%;
+  }
+
+}

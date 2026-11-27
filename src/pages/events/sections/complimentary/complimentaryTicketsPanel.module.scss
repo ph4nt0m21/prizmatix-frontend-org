@@ -1,0 +1,434 @@
+$purple: #7c3aed;
+$purple-soft: #f3f0ff;
+$text: #1f2937;
+$muted: #6b7280;
+$border: #e5e7eb;
+$red: #dc2626;
+
+.panel {
+  margin-top: 24px;
+  padding: 24px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: $text;
+}
+
+.subtitle {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: $muted;
+  max-width: 52ch;
+}
+
+.hint {
+  margin: 12px 0 0;
+  font-size: 13px;
+  color: $muted;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 20px 0 16px;
+  max-width: 420px;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px 14px;
+  border: 1px solid $border;
+  border-radius: 8px;
+}
+
+.statLabel {
+  font-size: 12px;
+  color: $muted;
+}
+
+.statValue {
+  font-size: 20px;
+  font-weight: 600;
+  color: $text;
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid $border;
+  border-radius: 8px;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: minmax(160px, 1.2fr) minmax(200px, 2fr) auto auto;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 16px;
+
+  & + & {
+    border-top: 1px solid $border;
+  }
+
+  @media (max-width: 860px) {
+    grid-template-columns: 1fr auto;
+    gap: 8px 12px;
+  }
+}
+
+.rowRevoked {
+  background: #fafafa;
+
+  .name,
+  .meta {
+    color: $muted;
+  }
+}
+
+.recipient {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.name {
+  font-weight: 600;
+  color: $text;
+  font-size: 14px;
+}
+
+.email {
+  font-size: 12px;
+  color: $muted;
+  overflow-wrap: anywhere;
+}
+
+.meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 13px;
+  color: $text;
+  min-width: 0;
+
+  @media (max-width: 860px) {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+}
+
+.typeTag {
+  align-self: flex-start;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: $purple-soft;
+  color: $purple;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.issued {
+  font-size: 12px;
+  color: $muted;
+}
+
+.note {
+  font-size: 12px;
+  color: $muted;
+  font-style: italic;
+}
+
+.status {
+  justify-self: start;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid currentColor;
+  white-space: nowrap;
+
+  @media (max-width: 860px) {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: end;
+  }
+}
+
+.status_ACTIVE {
+  color: #15803d;
+}
+
+.status_PARTIALLY_CHECKED_IN,
+.status_CHECKED_IN {
+  color: #1d4ed8;
+}
+
+.status_REVOKED {
+  color: $red;
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+
+  @media (max-width: 860px) {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+  }
+}
+
+.linkButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 0;
+  background: none;
+  border: none;
+  color: $purple;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+}
+
+.danger {
+  color: $red;
+}
+
+.primaryButton,
+.secondaryButton,
+.dangerButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid transparent;
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+}
+
+.primaryButton {
+  background: $purple;
+  color: #fff;
+}
+
+.secondaryButton {
+  background: #fff;
+  color: $text;
+  border-color: $border;
+}
+
+.dangerButton {
+  background: $red;
+  color: #fff;
+}
+
+.muted {
+  font-size: 13px;
+  color: $muted;
+  margin: 8px 0;
+}
+
+.errorText {
+  font-size: 13px;
+  color: $red;
+  margin: 8px 0;
+}
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  z-index: 1000;
+}
+
+.modal {
+  width: 100%;
+  max-width: 520px;
+  max-height: 90vh;
+  overflow-y: auto;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  padding: 20px 24px 24px;
+}
+
+.modalSmall {
+  max-width: 440px;
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+
+  h4 {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 600;
+    color: $text;
+  }
+}
+
+.iconButton {
+  background: none;
+  border: none;
+  color: $muted;
+  font-size: 20px;
+  cursor: pointer;
+  line-height: 0;
+  padding: 4px;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.fieldRow {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 12px;
+
+  @media (max-width: 480px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: $text;
+
+  input,
+  select,
+  textarea {
+    padding: 9px 11px;
+    border: 1px solid $border;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    color: $text;
+    background: #fff;
+    width: 100%;
+    box-sizing: border-box;
+
+    &:focus {
+      outline: 2px solid rgba(124, 58, 237, 0.3);
+      border-color: $purple;
+    }
+  }
+
+  small {
+    font-weight: 400;
+    color: $muted;
+    font-size: 12px;
+  }
+}
+
+.modalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.confirmList {
+  display: grid;
+  grid-template-columns: 130px 1fr;
+  gap: 10px 16px;
+  margin: 0;
+  font-size: 14px;
+
+  dt {
+    color: $muted;
+  }
+
+  dd {
+    margin: 0;
+    color: $text;
+    font-weight: 500;
+    overflow-wrap: anywhere;
+  }
+}
+
+.bodyText {
+  font-size: 14px;
+  color: $text;
+  line-height: 1.5;
+  margin: 0 0 8px;
+}
+
+.history {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+
+  li {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 10px 0;
+
+    & + li {
+      border-top: 1px solid $border;
+    }
+  }
+}
+
+.historyAction {
+  font-weight: 600;
+  font-size: 14px;
+  color: $text;
+}
+
+.historyMeta {
+  font-size: 12px;
+  color: $muted;
+}
+
+.historyDetail {
+  font-size: 13px;
+  color: $text;
+}

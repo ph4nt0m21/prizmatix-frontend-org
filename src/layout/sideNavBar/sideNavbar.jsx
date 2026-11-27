@@ -1,67 +1,80 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink, useNavigate, useLocation } from 'react-router-dom';
+import PropTypes from 'prop-types';
 import Cookies from 'js-cookie';
 import { LoginAPI } from '../../services/allApis';
 import styles from './sideNavBar.module.scss';
 import { getUserData, clearUserData } from '../../utils/authUtil';
+import { clearEventDataOnLogout } from '../../utils/eventUtil';
+import { useAuth } from '../../context/authContext';
+import ProfileAvatar from '../../components/common/profileAvatar/profileAvatar';
 
-// Import SVG components
-import { ReactComponent as OverviewIcon } from '../../assets/icons/overview-icon.svg';
-import { ReactComponent as EventsIcon } from '../../assets/icons/events-icon.svg';
-import { ReactComponent as ReportsIcon } from '../../assets/icons/reports-icon.svg';
-import { ReactComponent as NotificationsIcon } from '../../assets/icons/notifications-icon.svg';
-import { ReactComponent as HelpIcon } from '../../assets/icons/help-icon.svg';
+// ---------------- ICON IMPORTS (3 states per item) ----------------
+// Overview Icons
+import OverviewDefault from '../../assets/icons/Overview-Default.svg';
+import OverviewHover from '../../assets/icons/Overview-Hover.svg';
+import OverviewActive from '../../assets/icons/Overview-Active.svg';
+
+// Events Icons
+import EventsDefault from '../../assets/icons/Events-default.svg';
+import EventsHover from '../../assets/icons/Events-hover.svg';
+import EventsActive from '../../assets/icons/Events-active.svg';
+
+// Reports Icons (added 3-state files)
+import ReportsDefault from '../../assets/icons/Reports-Default.svg';
+import ReportsHover from '../../assets/icons/Reports-Hover.svg';
+import ReportsActive from '../../assets/icons/Reports-Active.svg';
+
+// Campaigns Icons (added 3-state files)
+import CampaignsDefault from '../../assets/icons/Campaigns-Default.svg';
+import CampaignsHover from '../../assets/icons/Campaigns-Hover.svg';
+import CampaignsActive from '../../assets/icons/Campaigns-Active.svg';
+
+// Help Icons (for bottom action) (added 3-state files)
+import HelpDefault from '../../assets/icons/Help-default.svg';
+import HelpHover from '../../assets/icons/Help-Hover.svg';
+import HelpActive from '../../assets/icons/Help-Active.svg';
+
+// Scanner Icons (3 states)
+import ScannerDefault from '../../assets/icons/Scanner-Default.svg';
+import ScannerHover from '../../assets/icons/Scanner-Hover.svg';
+import ScannerActive from '../../assets/icons/Scanner-Active.svg';
+
+// Payout Account Icons (3 states)
+import PayoutAccountDefault from '../../assets/icons/PayoutAccount-Default.svg';
+import PayoutAccountHover from '../../assets/icons/PayoutAccount-Hover.svg';
+import PayoutAccountActive from '../../assets/icons/PayoutAccount-Active.svg';
+
+// Keep these as SVG components (used in profile dropdown / settings)
 import { ReactComponent as SettingsIcon } from '../../assets/icons/settings-icon.svg';
 import { ReactComponent as LogoutIcon } from '../../assets/icons/logout-icon.svg';
-import { clearEventDataOnLogout } from '../../utils/eventUtil';
 
-// Import logo
+// Logo
 import logoImage from '../../assets/images/small-logo.svg';
 
-/**
- * SideNavBar component provides the main navigation for the application
- * 
- * @returns {JSX.Element} SideNavBar component
- */
-const SideNavBar = () => {
-  const navigate = useNavigate();
-  const [currentUser, setCurrentUser] = useState(null);
-  const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const profileDropdownRef = useRef(null);
-  
-  // Check authentication directly using cookie
-  const isAuthenticated = !!Cookies.get('token');
-  
-  // Fetch user data on component mount
-  useEffect(() => {
-    const fetchUserData = async () => {
-      if (isAuthenticated) {
-        try {
-          // First try to get user data from localStorage
-          const storedUserData = getUserData();
-          
-          if (storedUserData) {
-            setCurrentUser(storedUserData);
-          } else {
-            // If not in localStorage, fetch from API
-            const token = Cookies.get('token');
-            const response = await LoginAPI(token);
-            setCurrentUser(response.data);
-          }
-        } catch (error) {
-          console.error('Error fetching user profile:', error);
-        }
-      }
-    };
-    
-    fetchUserData();
-  }, [isAuthenticated]);
+// Overlay / Modal components
+import SettingsOverlay from '../../../src/components/settingsOverlay/settingsOverlay';
+import HelpSupportModal from '../../components/helpSupportModal/helpSupportModal';
 
-  // Close dropdown when clicking outside
+const SideNavBar = ({ isMobileSidebarOpen, toggleMobileSidebar }) => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { isAuthenticated, currentUser, logout } = useAuth();
+
+  const [hoveredItem, setHoveredItem] = useState(null);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isSettingsOverlayOpen, setIsSettingsOverlayOpen] = useState(false);
+  const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
+  const profileDropdownRef = useRef(null);
+  const sideNavRef = useRef(null);
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (profileDropdownRef.current && !profileDropdownRef.current.contains(event.target)) {
         setIsProfileOpen(false);
+      }
+      if (window.innerWidth <= 768 && sideNavRef.current && !sideNavRef.current.contains(event.target) && isMobileSidebarOpen) {
+        toggleMobileSidebar();
       }
     };
 
@@ -69,145 +82,295 @@ const SideNavBar = () => {
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, []);
-  
-  // Handle logout
+  }, [isMobileSidebarOpen, toggleMobileSidebar]);
+
+  useEffect(() => {
+    if (isMobileSidebarOpen && window.innerWidth <= 768) {
+      toggleMobileSidebar();
+    }
+  }, [location.pathname]);
+
   const handleLogout = () => {
-    Cookies.remove('token');
-    clearUserData();
-    setCurrentUser(null);
-    setIsProfileOpen(false);
-    // Clear event data
+    logout();
     clearEventDataOnLogout();
-    navigate('/login');
   };
 
-  // Toggle profile dropdown
   const toggleProfileDropdown = () => {
     setIsProfileOpen(!isProfileOpen);
   };
-  
-  // Navigation items with their respective routes and icons
+
+  const handleOpenSettings = () => {
+    setIsSettingsOverlayOpen(true);
+    setIsProfileOpen(false);
+  };
+
+  const handleOpenHelpModal = () => {
+    setIsHelpModalOpen(true);
+  };
+
+  const userRole = currentUser?.role || '';
+
+  // ---------------- Navigation items with 3-state icon support ----------------
   const navItems = [
-    { id: 'overview', path: '/', icon: OverviewIcon, label: 'Overview' }, 
-    { id: 'events', path: '/events', icon: EventsIcon, label: 'Events' },
-    { id: 'reports', path: '/reports', icon: ReportsIcon, label: 'Reports' },
-    { id: 'notifications', path: '/notifications', icon: NotificationsIcon, label: 'Notifications' }
+    ...(['ORGANIZER', 'SUPER_ADMIN'].includes(userRole)
+      ? [
+          {
+            id: 'overview',
+            path: '/',
+            label: 'Overview',
+            defaultIcon: OverviewDefault,
+            hoverIcon: OverviewHover,
+            activeIcon: OverviewActive,
+          },
+          {
+            id: 'events',
+            path: '/events',
+            label: 'Events',
+            defaultIcon: EventsDefault,
+            hoverIcon: EventsHover,
+            activeIcon: EventsActive,
+          },
+          {
+            id: 'reports',
+            path: '/reports',
+            label: 'Reports',
+            defaultIcon: ReportsDefault,
+            hoverIcon: ReportsHover,
+            activeIcon: ReportsActive,
+          },
+          {
+            id: 'campaigns',
+            path: '/campaigns',
+            label: 'Campaigns',
+            defaultIcon: CampaignsDefault,
+            hoverIcon: CampaignsHover,
+            activeIcon: CampaignsActive,
+          },
+        ]
+      : []),
+    ...(['ORGANIZER', 'SCANNER'].includes(userRole)
+      ? [{
+          id: 'scanner',
+          path: '/scanner',
+          label: 'Scanner',
+          defaultIcon: ScannerDefault,
+          hoverIcon: ScannerHover,
+          activeIcon: ScannerActive,
+        }]
+      : []),
+    ...(userRole === 'ORGANIZER'
+      ? [{
+          id: 'payoutAccount',
+          path: '/payout-account',
+          label: 'Payout Account',
+          defaultIcon: PayoutAccountDefault,
+          hoverIcon: PayoutAccountHover,
+          activeIcon: PayoutAccountActive,
+        }]
+      : []),
   ];
 
-  // Bottom navigation items
+  // Bottom items (help) — action based; hover supported
   const bottomItems = [
-    { id: 'help', path: '/help', icon: HelpIcon, label: 'Help & Support' },
+    ...(['ORGANIZER', 'SUPER_ADMIN'].includes(userRole)
+      ? [
+          {
+            id: 'help',
+            label: 'Help & Support',
+            action: () => setIsHelpModalOpen(true),
+            defaultIcon: HelpDefault,
+            hoverIcon: HelpHover,
+            activeIcon: HelpActive, // not used as route active, but available if needed
+          },
+        ]
+      : []),
   ];
 
-  // Get user initials for profile icon
-  const getUserInitials = () => {
-    if (currentUser?.name) {
-      const nameParts = currentUser.name.split(' ');
-      if (nameParts.length >= 2) {
-        return (nameParts[0][0] + nameParts[1][0]).toUpperCase();
-      }
-      return currentUser.name.substring(0, 2).toUpperCase();
-    }
-    return 'Sa';
+  const profilePhotoUrl = currentUser?.profilePhotoUrl || getUserData()?.profilePhotoUrl || '';
+
+  // Helper to choose icon src for image-based icons.
+  const chooseIconSrc = ({ defaultIcon, hoverIcon, activeIcon, id, isActive }) => {
+    if (isActive && activeIcon) return activeIcon;
+    if (hoveredItem === id && hoverIcon) return hoverIcon;
+    return defaultIcon;
   };
 
   return (
-    <nav className={styles.sideNav}>
-      <div className={styles.logo}>
-        <NavLink to="/" className={styles.logoLink}>
-          <img 
-            src={logoImage}
-            alt="App Logo"
-            className={styles.logoImage}
-            onError={(e) => {
-              e.target.onerror = null;
-              e.target.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><circle cx="16" cy="16" r="15" fill="%237C3AED" /><text x="16" y="20" text-anchor="middle" fill="white" font-family="Arial" font-size="16">P</text></svg>';
-            }}
-          />
-        </NavLink>
-      </div>
-      
-      <ul className={styles.navList}>
-        {navItems.map((item) => {
-          const IconComponent = item.icon;
-          return (
-            <li key={item.id} className={styles.navItem}>
-              <NavLink 
-                to={item.path} 
-                className={({ isActive }) => isActive ? `${styles.navLink} ${styles.active}` : styles.navLink}
-                title={item.label}
+    <>
+      <nav ref={sideNavRef} className={`${styles.sideNav} ${isMobileSidebarOpen ? styles.open : ''}`}>
+        <div className={styles.logo}>
+          <NavLink to="/" className={styles.logoLink}>
+            <img
+              src={logoImage}
+              alt="App Logo"
+              className={styles.logoImage}
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><circle cx="16" cy="16" r="15" fill="%237C3AED" /><text x="16" y="20" text-anchor="middle" fill="white" font-family="Arial" font-size="16">P</text></svg>';
+              }}
+            />
+          </NavLink>
+        </div>
+
+        <ul className={styles.navList}>
+          {navItems.map((item) => (
+            <li
+              key={item.id}
+              className={styles.navItem}
+              onMouseEnter={() => setHoveredItem(item.id)}
+              onMouseLeave={() => setHoveredItem(null)}
+            >
+              <NavLink
+                to={item.path}
+                className={({ isActive }) => (isActive ? `${styles.navLink} ${styles.active}` : styles.navLink)}
               >
-                <div className={styles.iconWrapper}>
-                  <IconComponent className={styles.icon} />
-                </div>
-                <span className={styles.navLabel}></span>
+                {({ isActive }) => (
+                  <>
+                    <div className={styles.iconWrapper}>
+                      {item.defaultIcon ? (
+                        <img
+                          src={chooseIconSrc({ ...item, id: item.id, isActive })}
+                          alt="" /* Decorative, tooltip acts as label */
+                          className={styles.iconImage}
+                        />
+                      ) : item.iconComponent ? (
+                        <item.iconComponent className={styles.icon} />
+                      ) : null}
+                    </div>
+                    <div className={styles.tooltip}>{item.label}</div>
+                  </>
+                )}
               </NavLink>
             </li>
-          );
-        })}
-      </ul>
-      
-      <div className={styles.bottomNav}>
-        {bottomItems.map((item) => {
-          const IconComponent = item.icon;
-          return (
-            <NavLink 
-              key={item.id}
-              to={item.path} 
-              className={({ isActive }) => isActive ? `${styles.navLink} ${styles.active}` : styles.navLink}
-              title={item.label}
-            >
-              <div className={styles.iconWrapper}>
-                <IconComponent className={styles.icon} />
-              </div>
-              <span className={styles.navLabel}></span>
-            </NavLink>
-          );
-        })}
-        
-        {isAuthenticated && (
-          <div className={styles.profileContainer} ref={profileDropdownRef}>
-            <button 
-              className={styles.profileLink} 
-              onClick={toggleProfileDropdown}
-              aria-label="Toggle Profile Menu"
-            >
-              <div className={styles.profileIcon}>
-                {getUserInitials()}
-              </div>
-            </button>
-            
-            {isProfileOpen && (
-              <div className={styles.profileDropdown}>
-                <div className={styles.profileInfo}>
-                  <div className={styles.profileAvatar}>
-                    {getUserInitials()}
-                  </div>
-                  <div className={styles.profileDetails}>
-                    <div className={styles.profileName}>{currentUser?.name || 'Sarath Babu John'}</div>
-                    <div className={styles.profileEmail}>{currentUser?.email || 'sarathbabujohn333@gmail.com'}</div>
-                  </div>
-                </div>
-                
-                <div className={styles.dropdownDivider}></div>
-                
-                <NavLink to="/settings" className={styles.dropdownItem} onClick={() => setIsProfileOpen(false)}>
-                  <SettingsIcon className={styles.dropdownIcon} />
-                  <span>Settings</span>
-                </NavLink>
-                
-                <button className={styles.dropdownItem} onClick={handleLogout}>
-                  <LogoutIcon className={styles.dropdownIcon} />
-                  <span>Log Out</span>
+          ))}
+        </ul>
+
+        <div className={styles.bottomNav}>
+          {bottomItems.map((item) => {
+            // If the item has an 'action' function, render a button and support hover state.
+            if (item.action) {
+              return (
+                <button
+                  key={item.id}
+                  onClick={item.action}
+                  className={styles.navLink} // Re-use style for consistency
+                  onMouseEnter={() => setHoveredItem(item.id)}
+                  onMouseLeave={() => setHoveredItem(null)}
+                >
+                    {item.defaultIcon ? (
+                      <img
+                        src={chooseIconSrc({ ...item, id: item.id, isActive: isHelpModalOpen })}
+                        alt=""
+                        className={styles.iconImage}
+                      />
+                    ) : (
+                      <HelpDefault className={styles.icon} />
+                    )}
+                    <div className={styles.tooltip}>{item.label}</div>
                 </button>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-    </nav>
+              );
+            }
+
+            // Otherwise render NavLink if bottom item is route-based (not used currently)
+            return (
+              <NavLink
+                key={item.id}
+                to={item.path}
+                className={({ isActive }) => (isActive ? `${styles.navLink} ${styles.active}` : styles.navLink)}
+                onMouseEnter={() => setHoveredItem(item.id)}
+                onMouseLeave={() => setHoveredItem(null)}
+              >
+                {({ isActive }) => (
+                  <>
+                    <div className={styles.iconWrapper}>
+                      {item.defaultIcon ? (
+                        <img
+                          src={chooseIconSrc({ ...item, id: item.id, isActive })}
+                          alt=""
+                          className={styles.iconImage}
+                        />
+                      ) : null}
+                    </div>
+                    <div className={styles.tooltip}>{item.label}</div>
+                  </>
+                )}
+              </NavLink>
+            );
+          })}
+
+          {isAuthenticated && (
+            <div className={styles.profileContainer} ref={profileDropdownRef}>
+              <button
+                className={styles.profileLink}
+                onClick={toggleProfileDropdown}
+                aria-label="Toggle Profile Menu"
+              >
+                <div className={styles.profileIcon}>
+                  <ProfileAvatar
+                    src={profilePhotoUrl}
+                    alt="Profile"
+                    className={styles.profilePhoto}
+                  />
+                </div>
+                <div className={styles.tooltip}>Profile</div>
+              </button>
+
+              {isProfileOpen && (
+                <div className={styles.profileDropdown}>
+                  <div className={styles.profileInfo}>
+                    <div className={styles.profileAvatar}>
+                      <ProfileAvatar
+                        src={profilePhotoUrl}
+                        alt="Profile"
+                        className={styles.profileAvatarImage}
+                      />
+                    </div>
+
+                    <div className={styles.profileDetails}>
+                      <div className={styles.profileName} title={currentUser?.name || ''}>
+                        {currentUser?.name || 'Sarath Babu John'}
+                      </div>
+                      <div className={styles.profileEmail} title={currentUser?.email || ''}>
+                        {currentUser?.email || 'sarathbabujohn333@gmail.com'}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className={styles.dropdownDivider}></div>
+
+                  {userRole !== 'SCANNER' && (
+                    <button className={styles.dropdownItem} onClick={handleOpenSettings}>
+                      <SettingsIcon className={styles.dropdownIcon} />
+                      <span>Settings</span>
+                    </button>
+                  )}
+
+                  <button className={styles.dropdownItem} onClick={handleLogout}>
+                    <LogoutIcon className={styles.dropdownIcon} />
+                    <span>Log Out</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </nav>
+
+      <SettingsOverlay
+        isOpen={isSettingsOverlayOpen}
+        onClose={() => setIsSettingsOverlayOpen(false)}
+      />
+      <HelpSupportModal
+        isOpen={isHelpModalOpen}
+        onClose={() => setIsHelpModalOpen(false)}
+      />
+    </>
   );
+};
+
+SideNavBar.propTypes = {
+  isMobileSidebarOpen: PropTypes.bool.isRequired,
+  toggleMobileSidebar: PropTypes.func.isRequired,
 };
 
 export default SideNavBar;

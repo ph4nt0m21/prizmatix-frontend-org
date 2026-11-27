@@ -1,6 +1,8 @@
 // src/pages/events/steps/descriptionStep.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
+import { FiInfo } from 'react-icons/fi';
+import OptionalLabel from '../../../components/common/optionalLabel/optionalLabel';
 import styles from './descriptionStep.module.scss';
 
 /**
@@ -24,9 +26,49 @@ const DescriptionStep = ({
   const editorRef = useRef(null);
 
   const MAX_CHARS = 250;
-  
+  // Keep in step with EventCreationService.CONFIRMATION_EMAIL_MESSAGE_MAX_LENGTH.
+  const CONFIRMATION_MESSAGE_MAX = 1000;
+
   // Extract description data from eventData or use defaults
   const [description, setDescription] = useState(eventData.description || '');
+  const [confirmationMessage, setConfirmationMessage] = useState(
+    eventData.confirmationEmailMessage || ''
+  );
+
+  // (i) beside "Message from Organiser" behaves like the app's other info buttons: opens on
+  // hover or click, closes on a click outside or Escape.
+  const [isConfirmationInfoOpen, setConfirmationInfoOpen] = useState(false);
+  const confirmationInfoRef = useRef(null);
+  // A click right after the hover that opened it (and a tap, which fires both) must keep it
+  // open rather than toggle it shut.
+  const confirmationInfoOpenedByHover = useRef(false);
+
+  useEffect(() => {
+    if (!isConfirmationInfoOpen) {
+      confirmationInfoOpenedByHover.current = false;
+      return undefined;
+    }
+    const handlePointerDown = (event) => {
+      if (confirmationInfoRef.current && !confirmationInfoRef.current.contains(event.target)) {
+        setConfirmationInfoOpen(false);
+      }
+    };
+    const handleEscape = (event) => {
+      if (event.key === 'Escape') setConfirmationInfoOpen(false);
+    };
+    document.addEventListener('mousedown', handlePointerDown);
+    document.addEventListener('keydown', handleEscape);
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [isConfirmationInfoOpen]);
+
+  const handleConfirmationMessageChange = (e) => {
+    const value = e.target.value.slice(0, CONFIRMATION_MESSAGE_MAX);
+    setConfirmationMessage(value);
+    handleInputChange(value, 'confirmationEmailMessage');
+  };
   
   /**
    * Initialize the rich text editor
@@ -40,9 +82,13 @@ const DescriptionStep = ({
     }
   }, []);
   
-  // Effect to propagate description changes to parent component
+  // Send the description to the parent only when it actually changes. The parent's
+  // handleInputChange is re-created on every render, so depending on it alone re-ran this
+  // effect after every update it caused: a render loop React warned about 200+ times.
+  const lastSentDescription = useRef(null);
   useEffect(() => {
-    // Send the updated description to parent component
+    if (lastSentDescription.current === description) return;
+    lastSentDescription.current = description;
     handleInputChange(description, 'description');
   }, [description, handleInputChange]);
   
@@ -71,7 +117,10 @@ const DescriptionStep = ({
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={styles.stepIcon}>
           <path d="M14 2H6C4.9 2 4.01 2.9 4.01 4L4 20C4 21.1 4.89 22 5.99 22H18C19.1 22 20 21.1 20 20V8L14 2ZM16 18H8V16H16V18ZM16 14H8V12H16V14ZM13 9V3.5L18.5 9H13Z" fill="#7C3AED"/>
         </svg>
-        <h2 className={styles.stepTitle}>Event Description</h2>
+        <div className={styles.stepTextContainer}>
+          <h2 className={styles.stepTitle}>Event Description</h2>
+          <p className={styles.stepDescription}>Describe your event in detail.</p>
+        </div>
       </div>
       
       <div className={styles.formSection}>
@@ -134,9 +183,9 @@ const DescriptionStep = ({
             </svg>
           </button>
           
-          <span className={styles.editorDivider}></span>
+          {/* <span className={styles.editorDivider}></span> */}
           
-          <button 
+          {/* <button 
             type="button"
             className={styles.editorButton}
             onClick={() => applyFormatting('createLink', prompt('Enter URL:'))}
@@ -167,9 +216,9 @@ const DescriptionStep = ({
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M6 17H8.6L13.2 9.2V7H6V17ZM14.8 17H17.4L22 9.2V7H14.8V17Z" fill="currentColor"/>
             </svg>
-          </button>
+          </button> */}
           
-          <span className={styles.editorDivider}></span>
+          {/* <span className={styles.editorDivider}></span> */}
         </div>
         
         {/* Rich Text Editor Content */}
@@ -178,28 +227,76 @@ const DescriptionStep = ({
           contentEditable={true}
           ref={editorRef}
           onInput={handleEditorChange}
-          placeholder="Describe your event, including what attendees can expect, highlights, and any other important details..."
+
         ></div>
         
-        {stepStatus.visited && !description.trim() && (
+        {/* {stepStatus.visited && !description.trim() && (
           <div className={styles.fieldError}>Event description is required</div>
-        )}
+        )} */}
+      </div>
 
-        {/* Character count and help text */}
-        <div className={styles.editorHelp}>
-          <div className={styles.characterCount}>
-            {description.length} / {MAX_CHARS} characters
-            <span className={styles.remainingChars}>
-              ({MAX_CHARS - description.length} characters remaining)
-            </span>
+      <div className={styles.formSection}>
+        <section className={styles.confirmationCard} aria-labelledby="confirmation-message-title">
+          <h3 id="confirmation-message-title" className={styles.confirmationTitle}>
+            Order Confirmation Message<OptionalLabel />
+          </h3>
+          <p className={styles.confirmationDescription}>
+            Add a custom message that will appear in a dedicated section of the order confirmation email
+            sent to ticket buyers. You can include event location details, parking information, entry
+            instructions or other important information.
+          </p>
+
+          <div className={styles.confirmationLabelRow}>
+            <label htmlFor="confirmationEmailMessage" className={styles.confirmationLabel}>
+              Message from Organiser
+            </label>
+            <div className={styles.infoButtonWrap} ref={confirmationInfoRef}>
+              <button
+                type="button"
+                className={styles.infoButton}
+                aria-label="About the organiser message"
+                aria-expanded={isConfirmationInfoOpen}
+                onClick={() => {
+                  if (confirmationInfoOpenedByHover.current) {
+                    confirmationInfoOpenedByHover.current = false;
+                    setConfirmationInfoOpen(true);
+                  } else {
+                    setConfirmationInfoOpen((open) => !open);
+                  }
+                }}
+                onMouseEnter={() => {
+                  if (!isConfirmationInfoOpen) {
+                    confirmationInfoOpenedByHover.current = true;
+                    setConfirmationInfoOpen(true);
+                  }
+                }}
+              >
+                <FiInfo aria-hidden="true" />
+              </button>
+              {isConfirmationInfoOpen && (
+                <div className={styles.infoPopover} role="dialog" aria-label="About the organiser message">
+                  <p className={styles.infoPopoverText}>
+                    This only adds your message to the standard order confirmation email. The rest of the email
+                    remains unchanged.
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
-          <div className={styles.editorTip}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 20C7.59 20 4 16.41 4 12C4 7.59 7.59 4 12 4C16.41 4 20 7.59 20 12C20 16.41 16.41 20 12 20ZM11 15H13V17H11V15ZM11 7H13V13H11V7Z" fill="#666666"/>
-            </svg>
-            Rich formatting helps make your event description more engaging
+          <textarea
+            id="confirmationEmailMessage"
+            name="confirmationEmailMessage"
+            className={styles.messageTextarea}
+            value={confirmationMessage}
+            onChange={handleConfirmationMessageChange}
+            maxLength={CONFIRMATION_MESSAGE_MAX}
+            rows={5}
+            placeholder="Enter your message here..."
+          />
+          <div className={styles.confirmationCount}>
+            {confirmationMessage.length}/{CONFIRMATION_MESSAGE_MAX}
           </div>
-        </div>
+        </section>
       </div>
     </div>
   );

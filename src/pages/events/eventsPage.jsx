@@ -1,448 +1,558 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
-import { GetAllOrganizationEventsAPI, DeleteEventAPI } from '../../services/allApis';
+import { toast } from 'react-toastify';
+import { GetAllOrganizationEventsAPI, DeleteEventAPI, RestoreEventAPI, GetEventStatusAPI, GetEventDashboardAPI } from '../../services/allApis';
 import LoadingSpinner from '../../components/common/loadingSpinner/loadingSpinner';
+import EventHeaderNav from '../../pages/events/components/eventHeaderNav'; // Adjust path if necessary
 import styles from './eventsPage.module.scss';
 import { getUserData } from '../../utils/authUtil';
-import { GetEventAPI } from '../../services/allApis';
-import { saveEventData } from '../../utils/eventUtil';
+import { copyPublicEventLink } from '../../utils/eventLinkUtil';
+import { getPublishedEventTimingStatus } from './eventStatusUtils';
+import {
+  ART_PLACEHOLDER_THUMBNAIL,
+  applyArtImageFallback,
+} from '../../constants/artImagePlaceholders';
 
-/**
- * EventsPage component - Displays all user events with filtering and status options
- * Provides functionalities to view, filter, search, and manage events
- * 
- * @returns {JSX.Element} EventsPage component
- */
 const EventsPage = () => {
   const navigate = useNavigate();
-  
-  // State for events and loading
+
   const [events, setEvents] = useState([]);
   const [filteredEvents, setFilteredEvents] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  
-  // State for filters and search
-  const [currentFilter, setCurrentFilter] = useState('All');
+
+  const [currentFilter, setCurrentFilter] = useState('All Events');
   const [searchQuery, setSearchQuery] = useState('');
-  
-  // Filter options
-  const filterOptions = ['All', 'Listed', 'Draft', 'Past', 'Paused', 'Archived'];
-  
-  // Get current user ID
+
+  const [openMenuId, setOpenMenuId] = useState(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [eventToDelete, setEventToDelete] = useState(null);
+
+  const filterOptions = ['All Events', 'Live Events', 'Drafts', 'Paused', 'Archive', 'Deleted'];
   const userId = Cookies.get('userId');
-  
-  /**
-   * Fetch all events on component mount
-   */
+
+  const isPendingDeletion = (event) => Boolean(event?.pendingDeletionAt);
+  const activeEvents = events.filter((event) => !isPendingDeletion(event));
+
+  const liveCount = activeEvents.filter(event => event.status === 'LIVE').length;
+  const draftCount = activeEvents.filter(event => event.status === 'DRAFT').length;
+  const pausedCount = activeEvents.filter(event => event.status === 'Paused').length;
+  const archiveCount = activeEvents.filter(event => event.status === 'PAST').length;
+  const deletedCount = events.filter(isPendingDeletion).length;
+
   useEffect(() => {
     fetchEvents();
   }, []);
-  
-  /**
-   * Apply filters whenever the filter or search changes
-   */
+
   useEffect(() => {
     applyFilters();
   }, [events, currentFilter, searchQuery]);
-  
-  // Modified fetchEvents function in eventsPage.jsx
-const fetchEvents = async () => {
-  try {
-    setIsLoading(true);
-    
-    // Get organizationId from userData using the authUtil function
-    const userData = getUserData();
-    const organizationId = userData?.organizationId;
-    
-    if (!organizationId) {
-      setError('Organization ID not found. Please login again.');
-      setIsLoading(false);
-      return;
-    }
-    
-    // Set some default parameters for pagination
-    const params = {
-      page: 0,
-      size: 100,
-      sort: 'startDate,desc'
+
+  // Close action menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (openMenuId && !event.target.closest(`.${styles.actionsMenuContainer}`)) {
+        setOpenMenuId(null);
+      }
     };
-    
-    // Pass organizationId to the API call
-    const response = await GetAllOrganizationEventsAPI(organizationId, params);
-    setEvents(response.data || []);
-    console.log("events are ....",events)
-    setError(null);
-  } catch (error) {
-    console.error('Error fetching events:', error);
-    setError('Failed to load events. Please try again.');
-  } finally {
-    setIsLoading(false);
-  }
-};
-  
-  /**
-   * Apply filters and search to the events
-   */
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [openMenuId]);
+
+  const fetchEvents = async () => {
+    try {
+      setIsLoading(true);
+      const userData = getUserData();
+      const organizationId = userData?.organizationId;
+
+      if (!organizationId) {
+        setError('Organisation ID not found. Please login again.');
+        setIsLoading(false);
+        return;
+      }
+
+      const params = { page: 0, size: 100, sort: 'startDate,desc' };
+      const response = await GetAllOrganizationEventsAPI(organizationId, params);
+      const initialEvents = response.data || [];
+
+      const eventsWithStatusAndSales = await Promise.all(
+        initialEvents.map(async (event) => {
+          try {
+            const statusResponse = await GetEventStatusAPI(event.id);
+            const isPublished = statusResponse.data?.step8Completed || false;
+
+            let status = 'DRAFT';
+            if (event.pendingDeletionAt) {
+              status = 'DELETED';
+            } else if (isPublished) {
+              status = getPublishedEventTimingStatus(event);
+            }
+
+            const dashboardResponse = await GetEventDashboardAPI(event.id);
+            const totalTicketsIssued = dashboardResponse.data?.totalTicketsIssued || 0;
+            const totalTicketCapacity = dashboardResponse.data?.totalTicketCapacity || 0;
+            const revenue = dashboardResponse.data?.revenue || 0;
+
+            return {
+              ...event,
+              status,
+              totalTicketsIssued,
+              totalTicketCapacity,
+              revenue,
+            };
+          } catch (statusError) {
+            console.error(`Failed to get status or dashboard for event ${event.id}:`, statusError);
+            return { ...event, status: 'DRAFT', totalTicketsIssued: 0, totalTicketCapacity: 0, revenue: 0 };
+          }
+        })
+      );
+
+      setEvents(eventsWithStatusAndSales);
+      setError(null);
+    } catch (error) {
+      console.error('Error fetching events:', error);
+      setError('Failed to load events. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const applyFilters = () => {
     let filtered = [...events];
-    
-    // Apply status filter
-    if (currentFilter !== 'All') {
-      filtered = filtered.filter(event => {
-        if (currentFilter === 'Listed') return event.publishStatus === 'published' && new Date(event.dateTime?.endDate) >= new Date();
-        if (currentFilter === 'Draft') return event.publishStatus === 'draft';
-        if (currentFilter === 'Past') return new Date(event.dateTime?.endDate) < new Date() && event.publishStatus === 'published';
-        if (currentFilter === 'Paused') return event.publishStatus === 'paused';
-        if (currentFilter === 'Archived') return event.publishStatus === 'archived';
-        return true;
-      });
+
+    if (currentFilter === 'Deleted') {
+      filtered = filtered.filter(isPendingDeletion);
+    } else {
+      filtered = filtered.filter((event) => !isPendingDeletion(event));
+      if (currentFilter === 'Live Events') {
+        filtered = filtered.filter(event => event.status === 'LIVE');
+      } else if (currentFilter === 'Drafts') {
+        filtered = filtered.filter(event => event.status === 'DRAFT');
+      } else if (currentFilter === 'Paused') {
+        filtered = filtered.filter(event => event.status === 'Paused');
+      } else if (currentFilter === 'Archive') {
+        filtered = filtered.filter(event => event.status === 'PAST');
+      }
     }
-    
-    // Apply search filter
+
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase().trim();
-      filtered = filtered.filter(event => 
-        event.name?.toLowerCase().includes(query) || 
-        event.location?.city?.toLowerCase().includes(query) ||
-        event.location?.country?.toLowerCase().includes(query) ||
-        event.category?.toLowerCase().includes(query)
+      filtered = filtered.filter(event =>
+        event.name?.toLowerCase().includes(query)
       );
     }
-    
+
     setFilteredEvents(filtered);
   };
-  
-  /**
-   * Handle filter button click
-   * @param {string} filter - Selected filter value
-   */
+
   const handleFilterClick = (filter) => {
     setCurrentFilter(filter);
   };
-  
-  /**
-   * Handle event search
-   * @param {Object} e - Event object
-   */
+
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
   };
-  
-  /**
-   * Navigate to create event page
-   */
+
   const handleCreateEvent = () => {
-    navigate('/events/create');
+    navigate('/events/create/');
   };
-  
-/**
- * Navigate to event details page
- * @param {string} eventId - Event ID
- */
-const handleViewEvent = (eventId) => {
-  // Simply navigate to the event management page with the eventId
-  navigate(`/events/manage/${eventId}/overview`);
-};
-  
-  /**
-   * Navigate to edit event page
-   * @param {string} eventId - Event ID
-   * @param {Object} e - Event object (to stop propagation)
-   */
-  const handleEditEvent = (eventId, e) => {
-    e.stopPropagation();
-    navigate(`/events/create/${eventId}`);
+
+  const handleViewEvent = (event) => {
+    if (isPendingDeletion(event)) return;
+    navigate(`/events/manage/${event.id}/overview`);
   };
-  
-  /**
-   * Delete an event
-   * @param {string} eventId - Event ID
-   * @param {Object} e - Event object (to stop propagation)
-   */
-  const handleDeleteEvent = async (eventId, e) => {
+
+  const handleToggleMenu = (e, eventId) => {
     e.stopPropagation();
-    
-    if (window.confirm('Are you sure you want to delete this event? This action cannot be undone.')) {
-      try {
-        setIsLoading(true);
-        await DeleteEventAPI(eventId, userId);
-        
-        // Remove the deleted event from the state
-        setEvents(prevEvents => prevEvents.filter(event => event.id !== eventId));
-        setError(null);
-      } catch (error) {
-        console.error('Error deleting event:', error);
-        setError('Failed to delete event. Please try again.');
-      } finally {
-        setIsLoading(false);
-      }
+    setOpenMenuId(openMenuId === eventId ? null : eventId);
+  };
+
+  const handleEditEvent = (e, eventId) => {
+    e.stopPropagation();
+    navigate(`/events/edit-page/${eventId}/1`);
+  };
+
+  const handleDeleteClick = (e, event) => {
+    e.stopPropagation();
+    setEventToDelete(event);
+    setShowDeleteConfirm(true);
+    setOpenMenuId(null);
+  };
+
+  const handleRestoreClick = async (e, event) => {
+    e.stopPropagation();
+    setOpenMenuId(null);
+    try {
+      await RestoreEventAPI(event.id);
+      toast.success('Event restored successfully');
+      setEvents((prev) =>
+        prev.map((item) =>
+          item.id === event.id
+            ? { ...item, pendingDeletionAt: null, isActive: true, status: item.status === 'DELETED' ? 'DRAFT' : item.status }
+            : item
+        )
+      );
+      // Refresh to recompute LIVE/DRAFT/PAST accurately
+      fetchEvents();
+    } catch (err) {
+      console.error('Failed to restore event:', err);
+      toast.error(err.response?.data || err.response?.data?.message || 'Failed to restore the event.');
     }
   };
-  
-  /**
-   * Format ticket sales for display
-   * @param {Object} event - Event object
-   * @returns {string} Formatted ticket sales
-   */
-  const formatTicketSales = (event) => {
-    // Calculate total tickets sold and available
-    const totalSold = event.tickets?.reduce((total, ticket) => total + (ticket.quantitySold || 0), 0) || 0;
-    const totalAvailable = event.tickets?.reduce((total, ticket) => total + (ticket.quantity || 0), 0) || 0;
-    
-    return `${totalSold}/${totalAvailable}`;
+
+  const handleCopyEventLink = async (e, event) => {
+    e.stopPropagation();
+    try {
+      const copied = await copyPublicEventLink(event);
+      if (copied) {
+        toast.success('Event link copied');
+      } else {
+        toast.warning('No public link available for this event yet');
+      }
+    } catch (err) {
+      console.error('Failed to copy event link:', err);
+      toast.error('Could not copy event link');
+    }
+    setOpenMenuId(null);
   };
-  
-  /**
-   * Calculate and format gross revenue
-   * @param {Object} event - Event object
-   * @returns {string} Formatted gross revenue
-   */
+
+  const confirmDeleteEvent = async () => {
+    if (!eventToDelete) return;
+    try {
+      const currentUserId = getUserData()?.id || userId;
+      if (!currentUserId) {
+        setError("User ID not found. Cannot delete event.");
+        setShowDeleteConfirm(false);
+        return;
+      }
+      await DeleteEventAPI(eventToDelete.id, currentUserId);
+      const pendingAt = new Date().toISOString();
+      setEvents((prevEvents) =>
+        prevEvents.map((e) =>
+          e.id === eventToDelete.id
+            ? { ...e, pendingDeletionAt: pendingAt, isActive: false, status: 'DELETED' }
+            : e
+        )
+      );
+      toast.success('Event moved to Deleted. You can restore it within 30 days.');
+      setShowDeleteConfirm(false);
+      setEventToDelete(null);
+      setCurrentFilter('Deleted');
+    } catch (err) {
+      console.error('Failed to delete event:', err);
+      setError(err.response?.data?.message || err.response?.data || 'Failed to delete the event.');
+      setShowDeleteConfirm(false);
+    }
+  };
+
+  const getStatusBadgeClass = (status) => {
+    switch (status) {
+      case 'LIVE': return styles.liveBadge;
+      case 'DRAFT': return styles.draftBadge;
+      case 'PAST': return styles.pastBadge;
+      case 'DELETED': return styles.deletedBadge;
+      default: return '';
+    }
+  };
+
+  const formatTicketSales = (event) => {
+    const sold = event.totalTicketsIssued || 0;
+    const total = event.totalTicketCapacity || 0;
+    if (total === 0) return `${sold}/-`;
+    return `${sold}/${total}`;
+  };
+
   const calculateGrossRevenue = (event) => {
-    // Calculate gross revenue from ticket sales
-    const revenue = event.tickets?.reduce((total, ticket) => {
-      return total + ((ticket.quantitySold || 0) * (ticket.price || 0));
-    }, 0) || 0;
-    
-    // Format as currency
-    return new Intl.NumberFormat('en-US', {
+    const revenue = event.revenue || 0;
+    return revenue.toLocaleString('en-US', {
       style: 'currency',
       currency: 'USD',
-      minimumFractionDigits: 2
-    }).format(revenue);
+    });
   };
-  
-  /**
-   * Get the event status badge class based on status
-   * @param {Object} event - Event object
-   * @returns {string} CSS class for status badge
-   */
-  const getStatusBadgeClass = (event) => {
-    if (event.publishStatus === 'draft') return styles.draftBadge;
-    if (event.publishStatus === 'archived') return styles.archivedBadge;
-    if (event.publishStatus === 'paused') return styles.pausedBadge;
-    
-    // Check if event is past based on end date
-    const isPast = new Date(event.dateTime?.endDate) < new Date();
-    if (isPast) return styles.pastBadge;
-    
-    // Default to live for published events that haven't ended
-    return styles.liveBadge;
-  };
-  
-  /**
-   * Get the display status text for an event
-   * @param {Object} event - Event object
-   * @returns {string} Status text to display
-   */
-  const getStatusText = (event) => {
-    if (event.publishStatus === 'draft') return 'Draft';
-    if (event.publishStatus === 'archived') return 'Archived';
-    if (event.publishStatus === 'paused') return 'Paused';
-    
-    // Check if event is past based on end date
-    const isPast = new Date(event.dateTime?.endDate) < new Date();
-    if (isPast) return 'Past';
-    
-    // Default to live for published events that haven't ended
-    return 'Live';
-  };
-  
-  /**
-   * Format the event date for display
-   * @param {Object} event - Event object
-   * @returns {Object} Formatted date details
-   */
+
   const formatEventDate = (event) => {
-    if (!event.dateTime?.startDate) {
-      return { month: 'JUN', day: '20' }; // Default fallback
-    }
-    
-    const date = new Date(event.dateTime.startDate);
-    const month = date.toLocaleString('en-US', { month: 'short' }).toUpperCase();
-    const day = date.getDate();
-    
-    return { month, day };
+    if (!event.startDate) return 'TBD';
+    const date = new Date(event.startDate);
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   };
-  
-  // Show loading spinner while fetching events
+
   if (isLoading && events.length === 0) {
-    return (
-      <div className={styles.loadingContainer}>
-        <LoadingSpinner size="large" />
-      </div>
-    );
+    return <div className={styles.loadingContainer}><LoadingSpinner size="large" /></div>;
   }
-  
+
   return (
-    <div className={styles.eventsPageContainer}>
-      <h1 className={styles.pageTitle}>Your Events</h1>
-      
-      {/* Filters Section */}
-      <div className={styles.filtersContainer}>
-        <div className={styles.filterTabs}>
-          {filterOptions.map(filter => (
-            <button
-              key={filter}
-              className={`${styles.filterTab} ${currentFilter === filter ? styles.activeFilter : ''}`}
-              onClick={() => handleFilterClick(filter)}
-            >
-              {filter}
-            </button>
-          ))}
+    <>
+      <EventHeaderNav>
+        <div className={styles.pageTitle}>
+          <h1>Your Events</h1>
         </div>
-        
-        <div className={styles.searchAndActions}>
-          <div className={styles.searchContainer}>
+        <div className={styles.headerActions}>
+          {/* <div className={styles.searchContainer}>
             <input
               type="text"
-              placeholder="Search events..."
+
               className={styles.searchInput}
               value={searchQuery}
               onChange={handleSearchChange}
             />
-            <button className={styles.searchButton} aria-label="Search">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M15.5 14H14.71L14.43 13.73C15.41 12.59 16 11.11 16 9.5C16 5.91 13.09 3 9.5 3C5.91 3 3 5.91 3 9.5C3 13.09 5.91 16 9.5 16C11.11 16 12.59 15.41 13.73 14.43L14 14.71V15.5L19 20.49L20.49 19L15.5 14ZM9.5 14C7.01 14 5 11.99 5 9.5C5 7.01 7.01 5 9.5 5C11.99 5 14 7.01 14 9.5C14 11.99 11.99 14 9.5 14Z" fill="currentColor"/>
-              </svg>
-            </button>
-          </div>
-          
-          <button className={styles.filterButton} aria-label="Filter">
-            <span>Filter</span>
-          </button>
-          
+            <svg className={styles.searchIcon} width="16" height="16" viewBox="0 0 24 24"><path d="M15.5 14H14.71L14.43 13.73C15.41 12.59 16 11.11 16 9.5C16 5.91 13.09 3 9.5 3C5.91 3 3 5.91 3 9.5C3 13.09 5.91 16 9.5 16C11.11 16 12.59 15.41 13.73 14.43L14 14.71V15.5L19 20.49L20.49 19L15.5 14ZM9.5 14C7.01 14 5 11.99 5 9.5C5 7.01 7.01 5 9.5 5C11.99 5 14 7.01 14 9.5C14 11.99 11.99 14 9.5 14Z" fill="currentColor"/></svg>
+          </div> */}
           <button className={styles.createEventButton} onClick={handleCreateEvent}>
-            <span className={styles.plusIcon}>+</span>
-            Create Event
+            + Create Event
           </button>
         </div>
-      </div>
-      
-      {/* Error Message */}
-      {error && (
-        <div className={styles.errorMessage}>
-          {error}
-          <button 
-            className={styles.dismissButton}
-            onClick={() => setError(null)}
-          >
-            ✕
-          </button>
-        </div>
-      )}
-      
-      {/* Events Table */}
-      <div className={styles.eventsTable}>
-        {/* Table Header */}
-        <div className={styles.tableHeader}>
-          <div className={styles.eventColumn}>Event</div>
-          <div className={styles.statusColumn}>Status</div>
-          <div className={styles.soldColumn}>Sold</div>
-          <div className={styles.grossColumn}>Gross</div>
-          <div className={styles.actionsColumn}></div>
-        </div>
-        
-        {/* Table Body */}
-        {filteredEvents.length === 0 ? (
-          <div className={styles.noEventsMessage}>
-            {searchQuery ? 'No events found matching your search.' : 'No events found. Create your first event!'}
-          </div>
-        ) : (
-          filteredEvents.map(event => {
-            const date = formatEventDate(event);
-            
-            return (
-              <div 
-                key={event.id} 
-                className={styles.eventRow}
-                onClick={() => handleViewEvent(event.id)}
-              >
-                {/* Date Display */}
-                <div className={styles.dateDisplay}>
-                  <div className={styles.dateMonth}>{date.month}</div>
-                  <div className={styles.dateDay}>{date.day}</div>
-                </div>
-                
-                {/* Event Info */}
-                <div className={styles.eventInfo}>
-                  <div className={styles.eventThumbnail}>
-                    {event.art?.thumbnailUrl ? (
-                      <img 
-                        src={event.art.thumbnailUrl} 
-                        alt={event.name} 
-                        className={styles.thumbnailImage}
-                        onError={(e) => {
-                          e.target.onerror = null;
-                          e.target.src = 'https://via.placeholder.com/80';
-                        }}
-                      />
-                    ) : (
-                      <div className={styles.placeholderThumbnail}></div>
-                    )}
-                  </div>
-                  <div className={styles.eventDetails}>
-                    <h3 className={styles.eventName}>{event.name}</h3>
-                    <p className={styles.eventLocation}>
-                      {event.location?.city}{event.location?.city && event.location?.country && ', '}{event.location?.country}
-                    </p>
-                  </div>
-                </div>
-                
-                {/* Status Badge */}
-                <div className={styles.statusColumn}>
-                  <span className={`${styles.statusBadge} ${getStatusBadgeClass(event)}`}>
-                    {getStatusText(event)}
-                  </span>
-                </div>
-                
-                {/* Ticket Sales */}
-                <div className={styles.soldColumn}>
-                  <div className={styles.ticketSales}>
-                    <span className={styles.salesText}>{formatTicketSales(event)}</span>
-                    {event.publishStatus === 'published' && (
-                      <div className={styles.salesProgress}>
-                        <div 
-                          className={styles.progressBar} 
-                          style={{ 
-                            width: `${Math.min(
-                              (event.tickets?.reduce((total, ticket) => total + (ticket.quantitySold || 0), 0) || 0) / 
-                              Math.max((event.tickets?.reduce((total, ticket) => total + (ticket.quantity || 0), 0) || 1), 1) * 100,
-                              100
-                            )}%` 
-                          }}
-                        ></div>
+      </EventHeaderNav>
+      <div className={styles.pageWrapper}>
+        <aside className={styles.sidebarInnerCard}>
+          <h2 className={styles.sidebarTitle}>Manage Event</h2>
+          <nav className={styles.filterNav}>
+            {filterOptions.map(filter => {
+              let count;
+              switch (filter) {
+                case 'All Events': count = activeEvents.length; break;
+                case 'Live Events': count = liveCount; break;
+                case 'Drafts': count = draftCount; break;
+                case 'Paused': count = pausedCount; break;
+                case 'Archive': count = archiveCount; break;
+                case 'Deleted': count = deletedCount; break;
+                default: count = 0;
+              }
+              return (
+                <button
+                  key={filter}
+                  className={`${styles.filterItem} ${currentFilter === filter ? styles.activeFilter : ''}`}
+                  onClick={() => handleFilterClick(filter)}
+                >
+                  {filter}
+                  <span>{count}</span>
+                </button>
+              );
+            })}
+          </nav>
+        </aside>
+
+        <main className={styles.mainContent}>
+          {error && <div className={styles.errorMessage}>{error}</div>}
+
+          <div className={styles.tableContainer}>
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th>Event</th>
+                  <th>Status</th>
+                  <th>Sold</th>
+                  <th>Gross</th>
+                  <th>Date</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredEvents.length > 0 ? (
+                  filteredEvents.map(event => {
+                    const eventDate = formatEventDate(event);
+                    return (
+                      <tr key={event.id} className={styles.eventRow} onClick={() => handleViewEvent(event)}>
+                        <td>
+                          <div className={styles.eventInfoCell}>
+                            <div className={styles.eventThumbnail}>
+                              <img 
+                                src={event.bannerImage || ART_PLACEHOLDER_THUMBNAIL} 
+                                alt={event.name}
+                                onError={(e) =>
+                                  applyArtImageFallback(e, ART_PLACEHOLDER_THUMBNAIL)
+                                }
+                              />
+                            </div>
+                            <div className={styles.eventDetails}>
+                              <h3 className={styles.eventName}>{event.name}</h3>
+                              <p className={styles.eventLocation}>
+                                {event.location?.city}{event.location?.city && ', '}{event.location?.country}
+                              </p>
+                            </div>
+                          </div>
+                        </td>
+
+                        <td>
+                          <div className={styles.statusCell}>
+                            <span className={`${styles.statusBadge} ${getStatusBadgeClass(event.status)}`}>
+                              {event.status}
+                            </span>
+                          </div>
+                        </td>
+
+                        <td>
+                          <div className={styles.soldCell}>
+                            <span>{formatTicketSales(event)}</span>
+                            <div className={styles.salesProgress}>
+                              <div
+                                className={styles.progressBar}
+                                style={{
+                                  width: `${
+                                    event.totalTicketCapacity > 0
+                                      ? (event.totalTicketsIssued / event.totalTicketCapacity) * 100
+                                      : 0
+                                  }%`,
+                                }}
+                              ></div>
+                            </div>
+                          </div>
+                        </td>
+
+                        <td>
+                          <div className={styles.grossCell}>
+                            <span>{calculateGrossRevenue(event)}</span>
+                          </div>
+                        </td>
+
+                        <td>
+                          <div className={styles.dateCell}>
+                            <span>{eventDate}</span>
+                          </div>
+                        </td>
+
+                        <td className={styles.actionsCellTd}>
+                          <div className={styles.actionsCell}>
+                            <div className={styles.actionsMenuContainer}>
+                              <button className={styles.actionsButton} onClick={(e) => handleToggleMenu(e, event.id)}>
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="5" r="1.5" fill="#6B7280"/><circle cx="12" cy="12" r="1.5" fill="#6B7280"/><circle cx="12" cy="19" r="1.5" fill="#6B7280"/></svg>
+                              </button>
+
+                              {openMenuId === event.id && (
+                                <div className={styles.actionsMenu}>
+                                  {isPendingDeletion(event) ? (
+                                    <button onClick={(e) => handleRestoreClick(e, event)}>Restore</button>
+                                  ) : (
+                                    <>
+                                      <button onClick={(e) => handleCopyEventLink(e, event)}>Copy event link</button>
+                                      <button onClick={(e) => handleEditEvent(e, event.id)}>Edit</button>
+                                      <button onClick={(e) => handleDeleteClick(e, event)} className={styles.deleteAction}>Delete</button>
+                                    </>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                ) : (
+                  <tr>
+                    <td colSpan="6">
+                      <div className={styles.noEventsMessage}>
+                        No events found for the selected filter.
                       </div>
-                    )}
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile Card View */}
+          <div className={styles.mobileCardList}>
+            {filteredEvents.length > 0 ? (
+              filteredEvents.map(event => {
+                const eventDate = formatEventDate(event);
+                return (
+                  <div key={event.id} className={styles.eventCard} onClick={() => handleViewEvent(event)}>
+                    <div className={styles.cardHeader}>
+                      <div className={styles.cardThumbnail}>
+                        <img 
+                          src={event.bannerImage || ART_PLACEHOLDER_THUMBNAIL} 
+                          alt={event.name}
+                          onError={(e) =>
+                            applyArtImageFallback(e, ART_PLACEHOLDER_THUMBNAIL)
+                          }
+                        />
+                      </div>
+                      <div className={styles.cardInfo}>
+                        <h3 className={styles.cardEventName}>{event.name}</h3>
+                        <p className={styles.cardEventLocation}>
+                          {event.location?.city}{event.location?.city && ', '}{event.location?.country}
+                        </p>
+                      </div>
+                      <div className={styles.cardActions}>
+                        <span className={`${styles.statusBadge} ${getStatusBadgeClass(event.status)}`}>
+                          {event.status}
+                        </span>
+                        <div className={styles.actionsMenuContainer}>
+                          <button className={styles.actionsButton} onClick={(e) => handleToggleMenu(e, event.id)}>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="5" r="1.5" fill="#6B7280"/><circle cx="12" cy="12" r="1.5" fill="#6B7280"/><circle cx="12" cy="19" r="1.5" fill="#6B7280"/></svg>
+                          </button>
+                          {openMenuId === event.id && (
+                            <div className={styles.actionsMenu}>
+                              {isPendingDeletion(event) ? (
+                                <button onClick={(e) => handleRestoreClick(e, event)}>Restore</button>
+                              ) : (
+                                <>
+                                  <button onClick={(e) => handleCopyEventLink(e, event)}>Copy event link</button>
+                                  <button onClick={(e) => handleEditEvent(e, event.id)}>Edit</button>
+                                  <button onClick={(e) => handleDeleteClick(e, event)} className={styles.deleteAction}>Delete</button>
+                                </>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <div className={styles.cardStats}>
+                      <div className={styles.cardStat}>
+                        <span className={styles.cardStatLabel}>Sold</span>
+                        <span className={styles.cardStatValue}>{formatTicketSales(event)}</span>
+                        <div className={styles.salesProgress}>
+                          <div
+                            className={styles.progressBar}
+                            style={{
+                              width: `${
+                                event.totalTicketCapacity > 0
+                                  ? (event.totalTicketsIssued / event.totalTicketCapacity) * 100
+                                  : 0
+                              }%`,
+                            }}
+                          ></div>
+                        </div>
+                      </div>
+                      <div className={styles.cardStat}>
+                        <span className={styles.cardStatLabel}>Gross</span>
+                        <span className={styles.cardStatValue}>{calculateGrossRevenue(event)}</span>
+                      </div>
+                      <div className={styles.cardStat}>
+                        <span className={styles.cardStatLabel}>Date</span>
+                        <span className={styles.cardStatValue}>{eventDate}</span>
+                      </div>
+                    </div>
                   </div>
-                </div>
-                
-                {/* Gross Revenue */}
-                <div className={styles.grossColumn}>
-                  <span className={styles.grossText}>{calculateGrossRevenue(event)}</span>
-                </div>
-                
-                {/* Actions */}
-                <div className={styles.actionsColumn}>
-                  <button 
-                    className={styles.actionsButton}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      // Toggle actions menu logic here
-                    }}
-                  >
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M12 8C13.1 8 14 7.1 14 6C14 4.9 13.1 4 12 4C10.9 4 10 4.9 10 6C10 7.1 10.9 8 12 8ZM12 10C10.9 10 10 10.9 10 12C10 13.1 10.9 14 12 14C13.1 14 14 13.1 14 12C14 10.9 13.1 10 12 10ZM12 16C10.9 16 10 16.9 10 18C10 19.1 10.9 20 12 20C13.1 20 14 19.1 14 18C14 16.9 13.1 16 12 16Z" fill="#6B7280"/>
-                    </svg>
-                  </button>
-                </div>
+                );
+              })
+            ) : (
+              <div className={styles.noEventsMessage}>
+                No events found for the selected filter.
               </div>
-            );
-          })
+            )}
+          </div>
+        </main>
+        {showDeleteConfirm && (
+          <div className={styles.deleteModalOverlay}>
+            <div className={styles.deleteModal}>
+              <h3>Confirm Deletion</h3>
+              <p>
+                Are you sure you want to delete the event &quot;{eventToDelete?.name}&quot;?
+                It will move to Deleted for 30 days and can be restored during that time.
+                After 30 days it will be permanently removed from your lists.
+              </p>
+              <div className={styles.deleteModalActions}>
+                <button onClick={() => setShowDeleteConfirm(false)} className={styles.cancelButton}>Cancel</button>
+                <button onClick={confirmDeleteEvent} className={styles.confirmDeleteButton}>Delete</button>
+              </div>
+            </div>
+          </div>
         )}
       </div>
-    </div>
+    </>
   );
 };
 

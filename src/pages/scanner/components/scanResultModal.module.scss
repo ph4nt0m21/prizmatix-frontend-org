@@ -1,0 +1,274 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(17, 24, 39, 0.55);
+
+  // Door staff use phones: sit the pop-up at the bottom, within thumb reach.
+  @media (max-width: 480px) {
+    align-items: flex-end;
+    padding: 0;
+  }
+}
+
+.modal {
+  width: 100%;
+  max-width: 480px;
+  max-height: calc(100vh - 2rem);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.5rem;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 20px 40px rgba(17, 24, 39, 0.2);
+  box-sizing: border-box;
+  text-align: left;
+
+  @media (max-width: 480px) {
+    max-height: 90vh;
+    border-radius: 16px 16px 0 0;
+    padding: 1.25rem 1rem calc(1rem + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+
+  h2 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #111827;
+  }
+}
+
+.headerText {
+  min-width: 0;
+}
+
+.eventName {
+  margin: 0.25rem 0 0;
+  font-size: 0.9rem;
+  color: #6b7280;
+  overflow-wrap: anywhere;
+}
+
+.iconButton {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 8px;
+  background: #f3f4f6;
+  color: #4b5563;
+  cursor: pointer;
+
+  &:hover {
+    background: #e5e7eb;
+  }
+}
+
+.status {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.4;
+
+  svg {
+    flex-shrink: 0;
+  }
+
+  &.info {
+    background: #ede9fe;
+    color: #5b21b6;
+    border: 1px solid #ddd6fe;
+  }
+
+  &.success {
+    background: #d1fae5;
+    color: #065f46;
+    border: 1px solid #a7f3d0;
+  }
+
+  &.warning {
+    background: #fef3c7;
+    color: #92400e;
+    border: 1px solid #fde68a;
+  }
+
+  &.error {
+    background: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+  }
+}
+
+.items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+
+  & + & {
+    border-top: 1px solid #e5e7eb;
+  }
+}
+
+.itemInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.itemName {
+  font-weight: 600;
+  color: #111827;
+  overflow-wrap: anywhere;
+}
+
+.itemMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.donationBadge {
+  background: #fce7f3;
+  color: #9d174d;
+}
+
+.checkedBadge {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.usedBadge {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.note {
+  font-size: 0.85rem;
+  color: #6b7280;
+  overflow-wrap: anywhere;
+}
+
+.checkInButton,
+.undoButton,
+.checkInAllButton,
+.scanNextButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.checkInButton {
+  flex-shrink: 0;
+  min-height: 40px;
+  padding: 0.5rem 1rem;
+  border: none;
+  background: #7c3aed;
+  color: #ffffff;
+
+  &:hover:not(:disabled) {
+    background: #6d28d9;
+  }
+}
+
+.undoButton {
+  flex-shrink: 0;
+  min-height: 40px;
+  padding: 0.5rem 1rem;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  color: #4b5563;
+
+  &:hover:not(:disabled) {
+    background: #f3f4f6;
+  }
+}
+
+.footer {
+  display: flex;
+  gap: 0.75rem;
+
+  @media (max-width: 480px) {
+    flex-direction: column;
+  }
+}
+
+.checkInAllButton,
+.scanNextButton {
+  flex: 1;
+  min-height: 48px;
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+}
+
+.checkInAllButton {
+  border: none;
+  background: #7c3aed;
+  color: #ffffff;
+
+  &:hover:not(:disabled) {
+    background: #6d28d9;
+  }
+}
+
+.scanNextButton {
+  border: 1px solid #e5e7eb;
+  background: #f3f4f6;
+  color: #111827;
+
+  &:hover {
+    background: #e5e7eb;
+  }
+}

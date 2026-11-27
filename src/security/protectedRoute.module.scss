@@ -1,0 +1,38 @@
+.noAccess {
+  max-width: 480px;
+  margin: 15vh auto 0;
+  padding: 0 16px;
+  text-align: center;
+  color: #d3d3d3;
+
+  h2 {
+    color: #ffffff;
+    font-size: 22px;
+    margin-bottom: 12px;
+  }
+
+  p {
+    line-height: 1.5;
+    margin-bottom: 24px;
+  }
+
+  strong {
+    color: #ffffff;
+    word-break: break-all;
+  }
+}
+
+.signOutButton {
+  padding: 10px 20px;
+  background-color: #7c3aed;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover {
+    background-color: #6d28d9;
+  }
+}

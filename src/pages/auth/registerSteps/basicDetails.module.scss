@@ -9,6 +9,13 @@
   padding: 4px;
   margin: 0;
   background-color: #ffffff;
+
+  @media (max-width: 768px) {
+    flex-direction: column; // Stack panels vertically
+    padding: 0; // Remove overall padding on mobile
+    height: auto; // Allow height to adjust based on content
+    min-height: 100vh; // Ensure it still takes full viewport height if content is short
+  }
 }
 
 /* Left panel with purple gradient background */
@@ -18,10 +25,9 @@
   background-color: #1d1c3a;
   overflow: hidden;
   border-radius: 16px; /* Added rounded corners to all sides */
-  
+
   @media (max-width: 768px) {
-    width: 100%;
-    height: 30%;
+    display: none; // HIDE THE LEFT PANEL (IMAGE) ON MOBILE
   }
 }
 
@@ -56,6 +62,9 @@
 .leftLogo {
   height: 48px;
   /* Remove the filter to preserve the original logo colors */
+  @media (max-width: 768px) {
+    height: 36px; // Smaller logo on mobile
+  }
 }
 
 @keyframes fadeInUp {
@@ -80,7 +89,16 @@
   border-radius: 16px;
   box-sizing: border-box;
   margin-left: 4px;
-  
+
+  @media (max-width: 768px) {
+    margin-left: 0; // Remove margin on mobile
+    flex: none; // Remove flex grow on mobile
+    width: 100%;
+    min-height: 100vh; // Take full viewport height on mobile
+    border-radius: 0; // Remove border-radius on top for full mobile screen
+    padding-bottom: 80px; /* Add some padding for the footer to not overlap content */
+  }
+
   /* Vector background overlay */
   &::after {
     content: '';
@@ -95,6 +113,11 @@
     background-size: 100% auto;
     z-index: 0;
     opacity: 0.8;
+
+    @media (max-width: 768px) {
+      height: 30%; // Reduce height of wave background on mobile
+      background-size: cover; // Ensure it covers the area
+    }
   }
 }
 
@@ -108,6 +131,12 @@
   border-bottom: 1px solid #f3f3f3;
   position: relative;
   z-index: 1;
+
+  @media (max-width: 768px) {
+    padding: 16px 20px; // Reduce padding on mobile
+    border-bottom: none; // Remove border on mobile if it doesn't look good
+    justify-content: center; // CENTER LOGO ON MOBILE
+  }
 }
 
 .backButton {
@@ -120,9 +149,16 @@
   border-radius: 50%;
   border: grey;
   cursor: pointer;
-  
+
   &:hover {
     background-color: rgba(230, 230, 235, 1);
+  }
+
+  @media (max-width: 768px) {
+    position: absolute; // Position absolutely on mobile
+    left: 20px; // Align to the left padding
+    top: 50%;
+    transform: translateY(-50%);
   }
 }
 
@@ -141,6 +177,10 @@
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
+
+  @media (max-width: 768px) {
+    gap: 4px; // Smaller gap on mobile
+  }
 }
 
 .step {
@@ -148,13 +188,17 @@
   height: 4px;
   background-color: #e5e7eb;
   border-radius: 2px;
-  
+
   &.active {
     background-color: #7c3aed;
   }
-  
+
   &.completed {
     background-color: #7c3aed;
+  }
+
+  @media (max-width: 768px) {
+    width: 25px; // Smaller width on mobile
   }
 }
 
@@ -176,11 +220,21 @@
   box-sizing: border-box;
   position: relative;
   z-index: 1;
+
+  @media (max-width: 768px) {
+    padding: 20px; // Reduce padding on mobile
+    justify-content: flex-start; // Align content to top on mobile
+    margin-top: 20px; // Add some top margin
+  }
 }
 
 .welcomeSection {
   text-align: center;
   margin-bottom: 30px;
+
+  @media (max-width: 768px) {
+    margin-bottom: 20px; // Slightly reduce margin
+  }
 }
 
 .welcomeTitle {
@@ -188,12 +242,20 @@
   font-weight: 600;
   color: #333;
   margin-bottom: 8px;
+
+  @media (max-width: 768px) {
+    font-size: 24px; // Smaller font on mobile
+  }
 }
 
 .welcomeSubtitle {
   font-size: 16px;
   color: #6b7280;
   margin: 0;
+
+  @media (max-width: 768px) {
+    font-size: 14px; // Smaller font on mobile
+  }
 }
 
 /* Form styles */
@@ -208,10 +270,10 @@
   display: flex;
   gap: 16px;
   width: 100%;
-  
+
   @media (max-width: 640px) {
-    flex-direction: column;
-    gap: 20px;
+    flex-direction: column; // Stack items vertically on small screens
+    gap: 20px; // Maintain gap
   }
 }
 
@@ -239,17 +301,17 @@
   font-size: 15px;
   color: #333;
   transition: border-color 0.2s, box-shadow 0.2s;
-  
+
   &:focus {
     outline: none;
     border-color: #7c3aed;
     box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.1);
   }
-  
+
   &::placeholder {
     color: #a0aec0;
   }
-  
+
   &:disabled {
     background-color: #f9fafb;
     color: #9ca3af;
@@ -283,11 +345,11 @@
   align-items: center;
   justify-content: center;
   margin-top: 16px;
-  
+
   &:hover {
     background-color: #6d28d9;
   }
-  
+
   &:disabled {
     background-color: #a78bfa;
     cursor: not-allowed;
@@ -316,6 +378,14 @@
   background: transparent;
   position: relative;
   z-index: 1;
+
+  @media (max-width: 768px) {
+    padding: 16px 20px; // Reduce padding on mobile
+    position: absolute; // Position footer absolutely at the bottom
+    bottom: 0;
+    width: 100%;
+    background-color: #EEEEF9; // Ensure background for footer
+  }
 }
 
 .copyright {
